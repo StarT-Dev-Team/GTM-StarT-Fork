@@ -1,0 +1,31 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "#bot_side",
+    "top_side": "gtceu:block/casings/hermetic_casing/hermetic_casing_overlay"
+  },
+  "elements": [
+    {
+      "from": [  0,  0,  0 ],
+      "to":   [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "texture": "#bot_bottom", "cullface": "down",  "tintindex": 1 },
+        "up":    { "texture": "#bot_top",    "cullface": "up",    "tintindex": 1 },
+        "north": { "texture": "#bot_side",   "cullface": "north", "tintindex": 1 },
+        "south": { "texture": "#bot_side",   "cullface": "south", "tintindex": 1 },
+        "west":  { "texture": "#bot_side",   "cullface": "west",  "tintindex": 1 },
+        "east":  { "texture": "#bot_side",   "cullface": "east",  "tintindex": 1 }
+      }
+    },
+    {
+      "from": [  0,  0,  0 ],
+      "to":   [ 16, 16, 16 ],
+      "faces": {
+        "north": { "texture": "#top_side", "cullface": "north" },
+        "south": { "texture": "#top_side", "cullface": "south" },
+        "west":  { "texture": "#top_side", "cullface": "west"  },
+        "east":  { "texture": "#top_side", "cullface": "east"  }
+      }
+    }
+  ]
+}
