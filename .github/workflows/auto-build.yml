@@ -36,7 +36,7 @@ jobs:
       - name: Build
         run: ./gradlew build
       - name: Publish to Maven
-        if: ${{ github.repository_owner == 'GregTechCEu' && env.PUBLISH == 'true' }}
+        if: ${{ github.repository_owner == 'StarT-Dev-Team' && env.PUBLISH == 'true' }}
         run: ./gradlew publish
       - name: Rename Jars
         if: ${{ env.PUBLISH == 'true' }}
