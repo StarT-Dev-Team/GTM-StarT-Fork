@@ -197,11 +197,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
         if (!isSuspend()) {
             if (!isIdle() && lastRecipe != null) {
                 if (progress < duration) {
-                    if (runDelay > 0) {
-                        runDelay--;
-                    } else {
-                        handleRecipeWorking();
-                    }
+                    handleRecipeWorking();
                 }
                 if (progress >= duration) {
                     onRecipeFinish();
@@ -294,29 +290,24 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                             }
                         }
 
-                        if (machine.self() instanceof IMultiController && !preventPowerFail) {
+                        if (machine.self() instanceof IMultiController && preventPowerFail) {
                             runAttempt = 0;
                             setStatus(Status.SUSPEND);
                         }
                     }
-                    runDelay = runAttempt * 60;
                 }
             }
         } else {
             setWaiting(conditionResult.reason());
         }
-        if (isWaiting() || isSuspend()) {
+        if (isWaiting() /*|| isSuspend() */) {
             regressRecipe();
         }
     }
 
     protected void regressRecipe() {
         if (progress > 0 && machine.regressWhenWaiting()) {
-            if (ConfigHolder.INSTANCE.machines.recipeProgressLowEnergy) {
-                this.progress = 1;
-            } else {
-                this.progress = Math.max(1, progress - 2); // TODO recipe regress
-            }
+            this.progress = Math.max(1, progress - 2);
         }
     }
 
@@ -398,8 +389,8 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
             if (this.status == Status.WORKING) {
                 this.totalContinuousRunningTime = 0;
             }
-            if ((status == Status.WAITING || status == Status.SUSPEND) && suspendAfterFinish) {
-                status = Status.SUSPEND;
+            if ((status == Status.WAITING || status == Status.SUSPEND) /* && suspendAfterFinish */) {
+                // status = Status.SUSPEND;
                 suspendAfterFinish = false;
             }
             machine.notifyStatusChanged(this.status, status);
@@ -451,7 +442,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
         if (!isWorkingAllowed && getStatus() == Status.IDLE) {
             setStatus(Status.SUSPEND);
         } else {
-            setSuspendAfterFinish(!isWorkingAllowed);
+            setStatus(Status.SUSPEND);
             if (isWorkingAllowed) {
                 if (lastRecipe != null && duration > 0) {
                     setStatus(Status.WORKING);

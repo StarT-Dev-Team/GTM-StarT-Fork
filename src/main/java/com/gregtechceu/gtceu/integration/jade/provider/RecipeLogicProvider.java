@@ -113,7 +113,7 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                         float minAmperage = (float) EUt / voltage;
 
                         text = Component
-                                .translatable("gtceu.recipe.eu",
+                                .translatable("gtceu.recipe.eu.total",
                                         FormattingUtil.formatNumbers(EUt))
                                 .withStyle(ChatFormatting.RED);
 
