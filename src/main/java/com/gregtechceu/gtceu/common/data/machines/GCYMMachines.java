@@ -82,7 +82,7 @@ public class GCYMMachines {
             IV, LuV, ZPM, UV);
 
     public final static MultiblockMachineDefinition LARGE_MACERATION_TOWER = REGISTRATE
-            .multiblock("large_maceration_tower", LargeMacerationTowerMachine::new)
+            .multiblock("large_maceration_tower", WorkableElectricMultiblockMachine::new)
             .langValue("Large Maceration Tower")
             .tooltips(Component.translatable("gtceu.multiblock.parallelizable.tooltip"))
             .tooltips(Component.translatable("gtceu.machine.available_recipe_map_1.tooltip",
