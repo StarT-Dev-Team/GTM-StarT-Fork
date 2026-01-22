@@ -74,13 +74,13 @@ public class RecipeLogicInfoProvider extends CapabilityInfoProvider<RecipeLogic>
                     String minAmperage = FormattingUtil
                             .formatNumber2Places((float) (EUt.getTotalEU()) / GTValues.V[tier]) + TextStyleClass.INFO;
 
-                    text = Component.translatable("gtceu.jade.amperage_use", minAmperage).withStyle(ChatFormatting.RED)
-                            .append(Component.translatable("gtceu.jade.at").withStyle(ChatFormatting.GREEN))
-                            .append(GTValues.VNF[tier])
+                    text = (Component.translatable("gtceu.recipe.eu.total",
+                            FormattingUtil.formatNumbers(EUt.getTotalEU()) + TextStyleClass.INFO)
+                                .withStyle(ChatFormatting.WHITE))
                             .append(Component.translatable("gtceu.universal.padded_parentheses",
-                                            (Component.translatable("gtceu.recipe.eu.total",
-                                                    FormattingUtil.formatNumbers(EUt.getTotalEU()) + TextStyleClass.INFO)))
-                                    .withStyle(ChatFormatting.WHITE));
+                                    (Component.translatable("gtceu.jage.amperage_use", minAmperage).withStyle(ChatFormatting.RED))
+                                    .append(Component.translatable("gtceu.jade.at").withStyle(ChatFormatting.GREEN))
+                                    .append(GTValues.VNF[tier])));
                 }
 
                 if (EUt.isInput()) {

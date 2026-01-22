@@ -98,6 +98,7 @@ public class IntegrationLang {
         provider.add("gtceu.jade.progress_tick", "%s / %s t");
         provider.add("gtceu.jade.cleaned_this_second", "Cleaned hazard: %s/s");
         provider.add("gtceu.jade.fluid_use", "%s mB/t");
+        provider.add("gtceu.jade.voltage_use", "%s EU/t");
         provider.add("gtceu.jade.amperage_use", "%s A");
         provider.add("gtceu.jade.at", " @ ");
 

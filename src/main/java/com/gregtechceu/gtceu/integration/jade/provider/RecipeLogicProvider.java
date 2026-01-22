@@ -113,25 +113,27 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                         float minAmperage = (float) EUt / voltage;
 
                         text = Component
-                                .translatable("gtceu.jade.amperage_use",
-                                        FormattingUtil.formatNumber2Places(minAmperage))
-                                .withStyle(ChatFormatting.RED)
-                                .append(Component.translatable("gtceu.jade.at").withStyle(ChatFormatting.GREEN));
+                                .translatable("gtceu.jade.voltage_use",
+                                        FormattingUtil.formatNumbers(EUt))
+                                .withStyle(ChatFormatting.RED);
+
+                        MutableComponent voltageTier;
                         if (tier < GTValues.TIER_COUNT) {
-                            text = text.append(Component.literal(GTValues.VNF[tier])
-                                    .withStyle(style -> style.withColor(GTValues.VC[tier])));
+                            voltageTier = Component.literal(GTValues.VNF[tier])
+                                    .withStyle(style -> style.withColor(GTValues.VC[tier]));
                         } else {
                             int speed = Mth.clamp(tier - GTValues.TIER_COUNT - 1, 0, GTValues.TIER_COUNT);
-                            text = text.append(Component.literal("MAX")
+                            voltageTier = Component.literal("MAX")
                                     .withStyle(style -> style.withColor(TooltipHelper.rainbowColor(speed)))
                                     .append(Component.literal("+")
                                             .withStyle(style -> style.withColor(GTValues.VC[speed]))
-                                            .append(FormattingUtil.formatNumbers(speed))));
+                                            .append(FormattingUtil.formatNumbers(speed)));
 
                         }
-                        text.append(Component.translatable("gtceu.universal.padded_parentheses",
-                                (Component.translatable("gtceu.recipe.eu.total",
-                                        FormattingUtil.formatNumbers(EUt))))
+
+                        text.append(Component.translatable("gtceu.recipe.amp_notation",
+                                                FormattingUtil.formatNumber2Places(minAmperage),
+                                                voltageTier)
                                 .withStyle(ChatFormatting.WHITE));
                     }
 
