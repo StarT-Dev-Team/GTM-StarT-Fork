@@ -149,11 +149,11 @@ public class QuantumFluidHandlerItemStack implements IFluidHandlerItem, ICapabil
     }
 
     public boolean canFillFluidType(FluidStack fluid) {
-        return true;
+        return false;
     }
 
     public boolean canDrainFluidType(FluidStack fluid) {
-        return true;
+        return false;
     }
 
     protected void setContainerToEmpty() {
