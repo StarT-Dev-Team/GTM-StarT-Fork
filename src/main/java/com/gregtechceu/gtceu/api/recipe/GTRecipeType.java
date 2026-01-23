@@ -49,7 +49,7 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     private GTRecipeBuilder recipeBuilder;
     @Getter
     @Setter
-    private ChanceBoostFunction chanceFunction = ChanceBoostFunction.NONE;
+    private ChanceBoostFunction chanceFunction = ChanceBoostFunction.OVERCLOCK;
     @Getter
     @Setter
     private GTRecipeTypeUI recipeUI = new GTRecipeTypeUI(this);
