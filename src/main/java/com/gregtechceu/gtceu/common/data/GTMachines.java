@@ -170,7 +170,7 @@ public class GTMachines {
     public static final MachineDefinition[] ELECTRIC_FURNACE = registerSimpleMachines("electric_furnace",
             GTRecipeTypes.FURNACE_RECIPES);
     public static final MachineDefinition[] ELECTRIC_BLAST_FURNACE = registerSimpleMachines("electric_blast_furnace", GTRecipeTypes.BLAST_FURNACE_RECIPES);
-    public static final MachineDefinition[] ELECTRIC_SMOKING_FURNACE = registerSimpleMachines("electric_smoking_furnace", GTRecipeTypes.SMOKING_FURNACE_RECIPES);
+    public static final MachineDefinition[] ELECTRIC_SMOKING_FURNACE = registerSimpleMachines("electric_smoker", GTRecipeTypes.SMOKING_FURNACE_RECIPES);
     public static final MachineDefinition[] ALLOY_SMELTER = registerSimpleMachines("alloy_smelter",
             GTRecipeTypes.ALLOY_SMELTER_RECIPES);
     public static final MachineDefinition[] ARC_FURNACE = registerSimpleMachines("arc_furnace",
