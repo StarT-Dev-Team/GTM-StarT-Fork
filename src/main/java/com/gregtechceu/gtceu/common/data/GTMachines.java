@@ -766,7 +766,7 @@ public class GTMachines {
             (tier, builder) -> builder
                     .langValue(VNF[tier] + " 16A Dynamo Hatch")
                     .rotationState(RotationState.ALL)
-                    .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.INPUT_ENERGY_16A)
+                    .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.OUTPUT_ENERGY_16A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
                             FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
