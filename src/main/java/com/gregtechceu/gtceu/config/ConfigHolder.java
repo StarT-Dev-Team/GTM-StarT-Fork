@@ -595,7 +595,7 @@ public class ConfigHolder {
 
         @Configurable
         @Configurable.Comment({
-                "Wether to add a parallel version of the LCR.",
+                "Whether to add a parallel version of the LCR.",
                 "Default: false"
         })
         public boolean parallelLCR = false;
@@ -609,6 +609,13 @@ public class ConfigHolder {
                 "Whether the Super/Quantum Tanks should act the same as fluid cells for filling/emptying fluid slots.",
                 "Default: false" })
         public static boolean superTankFluidCellBehavior = false;
+
+        @Configurable
+        @Configurable.Comment({
+                "Whether multiblocks stall (pause) on power fail.",
+                "Default: false"
+        })
+        public static boolean multiblocksStallOnPowerFail = false;
 
         @Configurable
         @Configurable.Comment("Small Steam Boiler Options")

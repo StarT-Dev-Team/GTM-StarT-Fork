@@ -277,7 +277,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                     runAttempt++;
                     runAttempt = (int) GTMath.clamp(runAttempt, 0, 5);
                     if (runAttempt == 5) {
-                        boolean preventPowerFail = false;
+                        boolean preventPowerFail = ConfigHolder.MachineConfigs.multiblocksStallOnPowerFail;
                         if (machine.self() instanceof IMultiController) {
                             var covers = machine.self().getCoverContainer().getCovers();
                             for (var cover : covers) {
