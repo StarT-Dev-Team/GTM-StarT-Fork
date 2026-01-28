@@ -640,6 +640,7 @@ public class MachineLang {
         provider.add("gtceu.machine.fusion_reactor.zpm.tooltip", "A SUN DOWN ON EARTH");
         provider.add("gtceu.machine.fusion_reactor.uv.tooltip", "A WHITE DWARF DOWN ON YOUR BASE");
         provider.add("gtceu.machine.large_chemical_reactor.tooltip", "Black Box Reactor");
+        provider.add("gtceu.machine.extreme_chemical_reactor.tooltip", "Bigger Black Box Reactor");
         provider.add("gtceu.machine.steam_oven.tooltip", "Not to be confused with Multi-Smelter");
         provider.add("gtceu.machine.steam_grinder.tooltip", "A multiblock Macerator without the Byproducts");
         provider.add("gtceu.machine.large_miner.ev.tooltip", "Digging Ore instead of You");

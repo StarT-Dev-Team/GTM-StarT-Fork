@@ -2765,6 +2765,7 @@
   "gtceu.machine.ev_sifter.tooltip": "§7Stay calm and keep sifting",
   "gtceu.machine.ev_thermal_centrifuge.tooltip": "§7Separating Ores more precisely",
   "gtceu.machine.ev_wiremill.tooltip": "§7Produces Wires more efficiently",
+  "gtceu.machine.extreme_chemical_reactor.tooltip": "Bigger Black Box Reactor",
   "gtceu.machine.extreme_combustion_engine.tooltip": "Extreme Chemical Energy Releaser",
   "gtceu.machine.fisher.requirement": "Requires a %dx%d centered square of water directly below.",
   "gtceu.machine.fisher.speed": "Catches something every %d ticks",
