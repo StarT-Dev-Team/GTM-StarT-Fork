@@ -75,6 +75,11 @@ public class GTRecipeModifiers {
 
     public static final RecipeModifier PARALLEL_HATCH = GTRecipeModifiers::hatchParallel;
     public static final RecipeModifier BATCH_MODE = GTRecipeModifiers::batchMode;
+    public static final RecipeModifier CRACKER_OVERCLOCK = GTRecipeModifiers::crackerOverclock;
+    public static final RecipeModifier EBF_OVERCLOCK = GTRecipeModifiers::ebfOverclock;
+    public static final RecipeModifier PYROLYZE_OVEN_OVERCLOCK = GTRecipeModifiers::pyrolyseOvenOverclock;
+    public static final RecipeModifier MULTI_SMELTER_PARALLEL = GTRecipeModifiers::multiSmelterParallel;
+    public static final RecipeModifier CHEMICAL_REACTOR_OVERCLOCK = GTRecipeModifiers::chemicalReactorOverclock;
 
     /**
      * Recipe Modifier for <b>Parallel Multiblock Machines</b> - can be used as a valid {@link RecipeModifier}
@@ -265,5 +270,22 @@ public class GTRecipeModifiers {
                 .build();
 
         return baseModifier.andThen(ocModifier).andThen(parallelModifier);
+    }
+
+    public static @NotNull ModifierFunction chemicalReactorOverclock(@NotNull MetaMachine machine,
+                                                                     @NotNull GTRecipe recipe) {
+        if (!(machine instanceof CoilWorkableElectricMultiblockMachine coilMachine)) {
+            return RecipeModifier.nullWrongType(CoilWorkableElectricMultiblockMachine.class, machine);
+        }
+
+        int coilTier = coilMachine.getCoilTier();
+        var discountModifier = ModifierFunction.builder()
+                .durationMultiplier(1.0 / (0.75 + coilTier * 0.25))
+                .eutMultiplier(1.0 - coilTier * 0.05)
+                .build();
+
+        var oc = NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, recipe, coilMachine.getOverclockVoltage());
+
+        return oc.andThen(discountModifier);
     }
 }
