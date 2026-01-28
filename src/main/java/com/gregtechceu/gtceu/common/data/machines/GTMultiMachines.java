@@ -193,12 +193,16 @@ public class GTMultiMachines {
             .register();
 
     public static final MultiblockMachineDefinition LARGE_CHEMICAL_REACTOR = REGISTRATE
-            .multiblock("large_chemical_reactor", WorkableElectricMultiblockMachine::new)
+            .multiblock("large_chemical_reactor",
+                    ConfigHolder.INSTANCE.machines.lcrCoilBenefits ? CoilWorkableElectricMultiblockMachine::new :
+                            WorkableElectricMultiblockMachine::new)
             .conditionalTooltip(defaultEnvironmentRequirement(),
                     ConfigHolder.INSTANCE.gameplay.environmentalHazards)
             .rotationState(RotationState.ALL)
             .recipeType(GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
-            .recipeModifiers(DEFAULT_ENVIRONMENT_REQUIREMENT, OC_PERFECT_SUBTICK, BATCH_MODE)
+            .recipeModifiers(DEFAULT_ENVIRONMENT_REQUIREMENT,
+                    ConfigHolder.INSTANCE.machines.lcrCoilBenefits ? CHEMICAL_REACTOR_OVERCLOCK : OC_PERFECT_SUBTICK,
+                    BATCH_MODE)
             .appearanceBlock(CASING_PTFE_INERT)
             .pattern(definition -> {
                 var casing = blocks(CASING_PTFE_INERT.get()).setMinGlobalLimited(10);
