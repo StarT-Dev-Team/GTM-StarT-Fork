@@ -680,6 +680,13 @@ public class MetaTileEntityLoader {
                 ChemicalHelper.get(TagPrefix.pipeLargeFluid, GTMaterials.Polytetrafluoroethylene), 'M',
                 GTItems.ELECTRIC_MOTOR_HV.asStack(), 'H', GTMachines.HULL[HV].asStack());
 
+        VanillaRecipeHelper.addShapedRecipe(provider, true, "extreme_chemical_reactor",
+                GTMultiMachines.EXTREME_CHEMICAL_REACTOR.asStack(), "PCP",
+                "FSF", "DWD", 'C', CustomTags.IV_CIRCUITS, 'S', GTMultiMachines.LARGE_CHEMICAL_REACTOR.asStack(), 'F',
+                GTItems.EMITTER_IV.asStack(), 'P', new MaterialEntry(TagPrefix.pipeHugeFluid, GTMaterials.Naquadah),
+                'D', new MaterialEntry(TagPrefix.plateDouble, GTMaterials.Naquadah), 'W',
+                new MaterialEntry(TagPrefix.wireGtQuadruple, GTMaterials.Naquadah));
+
         VanillaRecipeHelper.addShapedRecipe(provider, true, "power_substation",
                 GTMultiMachines.POWER_SUBSTATION.asStack(),
                 "LPL", "CBC", "LPL", 'L', GTItems.LAPOTRON_CRYSTAL, 'P', GTItems.POWER_INTEGRATED_CIRCUIT, 'C',
