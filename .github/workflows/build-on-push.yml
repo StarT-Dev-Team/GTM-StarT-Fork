@@ -4,6 +4,10 @@ on:
   pull_request:
     paths: ['**']
 
+permissions:
+  contents: read
+  pull-requests: read
+
 # Cancel previous jobs if PR gets another push
 concurrency:
   group: PR-build-${{ github.ref }}
