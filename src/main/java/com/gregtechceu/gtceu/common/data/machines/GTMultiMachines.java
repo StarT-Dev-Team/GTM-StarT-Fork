@@ -726,7 +726,7 @@ public class GTMultiMachines {
                                 .where('S', controller(blocks(definition.get())))
                                 .where('G', blocks(FUSION_GLASS.get()).or(casing))
                                 .where('E', casing.or(
-                                        blocks(PartAbility.INPUT_ENERGY.getBlockRange(tier, UV).toArray(Block[]::new))
+                                        blocks(PartAbility.INPUT_ENERGY.getBlockRange(tier, tier).toArray(Block[]::new))
                                                 .setMinGlobalLimited(1).setPreviewCount(16)))
                                 .where('C', casing)
                                 .where('K', blocks(FusionReactorMachine.getCoilState(tier)))
