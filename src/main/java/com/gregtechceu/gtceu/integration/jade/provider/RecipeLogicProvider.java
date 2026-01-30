@@ -62,6 +62,7 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
         }
     }
 
+    // this function always returns 32 for multiblocks
     public static long getVoltage(RecipeLogic capability) {
         long voltage = -1;
         if (capability.machine instanceof SimpleTieredMachine machine) {
@@ -70,7 +71,7 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
             voltage = GTValues.V[machine.getTier()];
         } else if (capability.machine instanceof WorkableElectricMultiblockMachine machine) {
             voltage = machine.getParts().stream()
-                    .filter(EnergyHatchPartMachine.class::isInstance)
+                    .filter(EnergyHatchPartMachine.class::isInstance) // doesn't find instances?
                     .map(EnergyHatchPartMachine.class::cast)
                     .mapToLong(dynamo -> GTValues.V[dynamo.getTier()])
                     .max()
@@ -108,9 +109,9 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                         text = Component.translatable("gtceu.jade.fluid_use", FormattingUtil.formatNumbers(EUt))
                                 .withStyle(ChatFormatting.GREEN);
                     } else {
-                        var voltage = recipeInfo.getLong("voltage");
-                        var tier = GTUtil.getTierByVoltage(voltage);
-                        float minAmperage = (float) EUt / voltage;
+                        // var voltage = recipeInfo.getLong("voltage");
+                        byte tier = GTUtil.getTierByVoltage(EUt);
+                        float minAmperage = (float) EUt / GTValues.V[tier];
 
                         text = Component
                                 .translatable("gtceu.recipe.eu.total",
@@ -131,10 +132,11 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
 
                         }
 
-                        text.append(Component.translatable("gtceu.universal.padded_parentheses", (Component.translatable("gtceu.recipe.eu.amp_notation",
-                                                FormattingUtil.formatNumber2Places(minAmperage),
-                                                voltageTier))
-                                .withStyle(ChatFormatting.WHITE)));
+                        text.append(Component.translatable("gtceu.universal.padded_parentheses",
+                                (Component.translatable("gtceu.recipe.eu.amp_notation",
+                                        FormattingUtil.formatNumber2Places(minAmperage),
+                                        voltageTier))
+                                        .withStyle(ChatFormatting.WHITE)));
                     }
 
                     if (isInput) {
