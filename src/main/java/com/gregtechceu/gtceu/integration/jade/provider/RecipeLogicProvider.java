@@ -118,19 +118,24 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                                 .withStyle(ChatFormatting.RED);
 
                         MutableComponent voltageTier;
-                        if (tier < GTValues.TIER_COUNT) {
+                        if (tier < GTValues.TIER_COUNT - 1) {
                             voltageTier = Component.literal(GTValues.VNF[tier])
                                     .withStyle(style -> style.withColor(GTValues.VC[tier]));
                         } else {
                             int calculatedSpeed = Mth
                                     .ceil(Math.log((double) EUt / GTValues.V[GTValues.MAX]) / Math.log(4));
                             int speed = Mth.clamp(calculatedSpeed, 0, GTValues.TIER_COUNT);
-                            minAmperage = (float) (minAmperage / Math.pow(4, speed));
-                            voltageTier = Component.literal("MAX")
-                                    .withStyle(style -> style.withColor(TooltipHelper.rainbowColor(speed)))
-                                    .append(Component.literal("+")
-                                            .withStyle(style -> style.withColor(GTValues.VC[speed]))
-                                            .append(FormattingUtil.formatNumbers(speed)));
+                            if (speed == 0) {
+                                voltageTier = Component.literal(GTValues.VNF[tier])
+                                        .withStyle(style -> style.withColor(GTValues.VC[tier]));
+                            } else {
+                                minAmperage = (float) (minAmperage / Math.pow(4, speed));
+                                voltageTier = Component.literal("MAX")
+                                        .withStyle(style -> style.withColor(TooltipHelper.rainbowColor(speed)))
+                                        .append(Component.literal("+")
+                                                .withStyle(style -> style.withColor(GTValues.VC[speed]))
+                                                .append(FormattingUtil.formatNumbers(speed)));
+                            }
                         }
 
                         text.append(Component.translatable("gtceu.universal.padded_parentheses",
