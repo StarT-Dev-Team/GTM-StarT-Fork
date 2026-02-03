@@ -154,6 +154,11 @@ public class ConfigHolder {
                 "Default: 1.0f" })
         @Configurable.DecimalRange(min = 0.0f, max = 1.0f)
         public float extractorRecyclingYield = 1.0f;
+        @Configurable
+        @Configurable.Comment({
+                "Chanced input and outputs use the recipe overclock instead of the speed overclock",
+                "Default: true" })
+        public boolean chanceUseRecipeOC = true;
     }
 
     public static class CompatibilityConfigs {

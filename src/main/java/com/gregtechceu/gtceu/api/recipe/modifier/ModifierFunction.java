@@ -102,6 +102,7 @@ public interface ModifierFunction {
         private int subtickParallels = 1;
         private int batchParallels = 1;
         private int addOCs = 0;
+        private int addBaseOCs = 0;
         private ContentModifier eutModifier = ContentModifier.IDENTITY;
         private ContentModifier durationModifier = ContentModifier.IDENTITY;
         private ContentModifier inputModifier = ContentModifier.IDENTITY;
@@ -163,6 +164,7 @@ public interface ModifierFunction {
                 copied.parallels = recipe.parallels * parallels;
                 copied.subtickParallels = recipe.subtickParallels * subtickParallels;
                 copied.ocLevel = recipe.ocLevel + addOCs;
+                copied.baseOcLevel = recipe.baseOcLevel + addBaseOCs;
                 copied.batchParallels = recipe.batchParallels * batchParallels;
                 if (recipe.data.getBoolean("duration_is_total_cwu")) {
                     copied.duration = (int) Math.max(1, (recipe.duration * (1f - 0.025f * addOCs)));

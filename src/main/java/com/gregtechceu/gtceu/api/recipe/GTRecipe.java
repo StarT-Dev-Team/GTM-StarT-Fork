@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.ingredient.EnergyStack;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.RegistryAccess;
@@ -54,6 +55,7 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
     public int subtickParallels = 1;
     public int batchParallels = 1;
     public int ocLevel = 0;
+    public int baseOcLevel = 0;
     public final GTRecipeCategory recipeCategory;
     // Lazy fields, since we need the recipe EUt very often
     @Getter(lazy = true)
@@ -135,6 +137,7 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
             copied.duration = modifier.apply(this.duration);
         }
         copied.ocLevel = ocLevel;
+        copied.baseOcLevel = baseOcLevel;
         copied.parallels = parallels;
         copied.batchParallels = batchParallels;
         copied.subtickParallels = subtickParallels;
@@ -230,6 +233,10 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
 
     public int getTotalRuns() {
         return parallels * subtickParallels * batchParallels;
+    }
+
+    public int getChanceOcLevel() {
+        return ConfigHolder.INSTANCE.recipes.chanceUseRecipeOC ? baseOcLevel : ocLevel;
     }
 
     // Just check id as there *should* only ever be 1 instance of a recipe with this id.
