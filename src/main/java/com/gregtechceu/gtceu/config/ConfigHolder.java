@@ -667,8 +667,8 @@ public class ConfigHolder {
             @Configurable.Comment({ "The heat speed of the Large Bronze Boiler.", "Default: 1" })
             public int bronzeBoilerHeatSpeed = 1;
             @Configurable
-            @Configurable.Comment({ "The max temperature of the Large Steel Boiler.", "Default: 1800" })
-            public int steelBoilerMaxTemperature = 1800;
+            @Configurable.Comment({ "The max temperature of the Large Steel Boiler.", "Default: 1600" })
+            public int steelBoilerMaxTemperature = 1600;
             @Configurable
             @Configurable.Comment({ "The heat speed of the Large Steel Boiler.", "Default: 1" })
             public int steelBoilerHeatSpeed = 1;

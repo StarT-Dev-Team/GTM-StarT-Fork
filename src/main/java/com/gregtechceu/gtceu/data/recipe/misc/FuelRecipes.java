@@ -22,15 +22,13 @@ import static com.gregtechceu.gtceu.common.data.GTRecipeTypes.*;
 public class FuelRecipes {
 
     public static void init(Consumer<FinishedRecipe> provider) {
-        // TODO this all needs to be cleaned up, but this will make it somewhat work for now
-        // do these first because for some reason vanilla fuels are not set up yet at this phase?
         Set<Item> addedItems = new HashSet<>();
         for (var fuelEntry : FurnaceBlockEntity.getFuel().entrySet()) {
             addedItems.add(fuelEntry.getKey());
             var resLoc = BuiltInRegistries.ITEM.getKey(fuelEntry.getKey());
             STEAM_BOILER_RECIPES.recipeBuilder(GTCEu.id(resLoc.getNamespace() + "_" + resLoc.getPath()))
                     .inputItems(fuelEntry.getKey())
-                    .duration(fuelEntry.getValue() * 12) // remove the * 12 if SteamBoilerMachine:240 is uncommented
+                    .duration(fuelEntry.getValue() / 2 )
                     .save(provider);
         }
         for (Item item : BuiltInRegistries.ITEM) {
@@ -39,25 +37,19 @@ public class FuelRecipes {
                 var resLoc = BuiltInRegistries.ITEM.getKey(item);
                 STEAM_BOILER_RECIPES.recipeBuilder(GTCEu.id(resLoc.getNamespace() + "_" + resLoc.getPath()))
                         .inputItems(item)
-                        .duration(burnTime * 12)
+                        .duration(burnTime / 2)
                         .save(provider);
             }
         }
 
         STEAM_BOILER_RECIPES.recipeBuilder("lava")
                 .inputFluids(new FluidStack(Fluids.LAVA, 100))
-                .duration(100 * 12)
+                .duration(2000 / 2)
                 .save(provider);
 
         STEAM_BOILER_RECIPES.recipeBuilder("creosote")
                 .inputFluids(Creosote.getFluid(250))
-                .duration(250 * 12)
-                .save(provider);
-
-        // semi-fluid fuels, like creosote
-        LARGE_BOILER_RECIPES.recipeBuilder("creosote")
-                .inputFluids(Creosote.getFluid(160))
-                .duration(10)
+                .duration(1600 / 2)
                 .save(provider);
 
         LARGE_BOILER_RECIPES.recipeBuilder("biomass")
@@ -292,7 +284,7 @@ public class FuelRecipes {
                 .EUt(-V[LV])
                 .save(provider);
 
-        GAS_TURBINE_FUELS.recipeBuilder("nitrobenzene") // TODO Too OP pls nerf
+        GAS_TURBINE_FUELS.recipeBuilder("nitrobenzene")
                 .inputFluids(Nitrobenzene.getFluid(1))
                 .duration(40)
                 .EUt(-V[LV])
