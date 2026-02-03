@@ -277,7 +277,7 @@ public class GTMultiMachines {
                             .recipeType(GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
                             .recipeModifiers(DEFAULT_ENVIRONMENT_REQUIREMENT, PARALLEL_HATCH,
                                     ConfigHolder.INSTANCE.machines.lcrCoilBenefits ? CHEMICAL_REACTOR_OVERCLOCK :
-                                            OC_PERFECT_SUBTICK,
+                                            OC_NON_PERFECT_SUBTICK,
                                     BATCH_MODE)
                             .appearanceBlock(CASING_PTFE_INERT)
                             .pattern(definition -> {
