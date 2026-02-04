@@ -278,10 +278,15 @@ public class GTRecipeModifiers {
             return RecipeModifier.nullWrongType(CoilWorkableElectricMultiblockMachine.class, machine);
         }
 
+        if (RecipeHelper.getRecipeEUtTier(recipe) > coilMachine.getTier()) return ModifierFunction.NULL;
+
         int coilTier = coilMachine.getCoilTier();
 
-        return ModifierFunction.builder().durationMultiplier(1.0 / (0.75 + coilTier * 0.25)).build()
-                .andThen(NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, recipe, coilMachine.getOverclockVoltage()))
+        var durationModifier = ModifierFunction.builder().durationMultiplier(1.0 / (0.75 + coilTier * 0.25)).build();
+
+        return durationModifier
+                .andThen(NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, durationModifier.apply(recipe),
+                        coilMachine.getOverclockVoltage()))
                 .andThen(ModifierFunction.builder().eutMultiplier(1.0 - coilTier * 0.05).build());
     }
 }
