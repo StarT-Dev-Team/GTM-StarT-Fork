@@ -95,7 +95,7 @@ public class GTMultiMachines {
 
     public static final MultiblockMachineDefinition COKE_OVEN = REGISTRATE.multiblock("coke_oven", CokeOvenMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.COKE_OVEN_RECIPES)
+            .recipeTypes(GTRecipeTypes.COKE_OVEN_RECIPES)
             .appearanceBlock(CASING_COKE_BRICKS)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("XXX", "XXX", "XXX")
@@ -113,7 +113,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition PRIMITIVE_BLAST_FURNACE = REGISTRATE
             .multiblock("primitive_blast_furnace", PrimitiveBlastFurnaceMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.PRIMITIVE_BLAST_FURNACE_RECIPES)
+            .recipeTypes(GTRecipeTypes.PRIMITIVE_BLAST_FURNACE_RECIPES)
             .model(createWorkableCasingMachineModel(GTCEu.id("block/casings/solid/machine_primitive_bricks"),
                     GTCEu.id("block/multiblock/primitive_blast_furnace"))
                     .andThen(b -> b.addDynamicRenderer(DynamicRenderHelper::createPBFLavaRender)))
@@ -134,7 +134,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition ELECTRIC_BLAST_FURNACE = REGISTRATE
             .multiblock("electric_blast_furnace", CoilWorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.BLAST_RECIPES)
+            .recipeTypes(GTRecipeTypes.BLAST_RECIPES)
             .recipeModifiers(EBF_OVERCLOCK, BATCH_MODE)
             .appearanceBlock(CASING_INVAR_HEATPROOF)
             .pattern(definition -> FactoryBlockPattern.start()
@@ -199,7 +199,7 @@ public class GTMultiMachines {
             .conditionalTooltip(defaultEnvironmentRequirement(),
                     ConfigHolder.INSTANCE.gameplay.environmentalHazards)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
+            .recipeTypes(GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
             .recipeModifiers(DEFAULT_ENVIRONMENT_REQUIREMENT,
                     ConfigHolder.INSTANCE.machines.lcrCoilBenefits ? CHEMICAL_REACTOR_OVERCLOCK : OC_PERFECT_SUBTICK,
                     BATCH_MODE)
@@ -274,7 +274,7 @@ public class GTMultiMachines {
                             .conditionalTooltip(defaultEnvironmentRequirement(),
                                     ConfigHolder.INSTANCE.gameplay.environmentalHazards)
                             .rotationState(RotationState.ALL)
-                            .recipeType(GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
+                            .recipeTypes(GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
                             .recipeModifiers(DEFAULT_ENVIRONMENT_REQUIREMENT, PARALLEL_HATCH,
                                     ConfigHolder.INSTANCE.machines.lcrCoilBenefits ? CHEMICAL_REACTOR_OVERCLOCK :
                                             OC_NON_PERFECT_SUBTICK,
@@ -308,7 +308,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition IMPLOSION_COMPRESSOR = REGISTRATE
             .multiblock("implosion_compressor", WorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.IMPLOSION_RECIPES)
+            .recipeTypes(GTRecipeTypes.IMPLOSION_RECIPES)
             .recipeModifiers(OC_NON_PERFECT_SUBTICK, BATCH_MODE)
             .appearanceBlock(CASING_STEEL_SOLID)
             .pattern(definition -> FactoryBlockPattern.start()
@@ -328,7 +328,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition PYROLYSE_OVEN = REGISTRATE
             .multiblock("pyrolyse_oven", CoilWorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.PYROLYSE_RECIPES)
+            .recipeTypes(GTRecipeTypes.PYROLYSE_RECIPES)
             .recipeModifiers(PYROLYZE_OVEN_OVERCLOCK, BATCH_MODE)
             .appearanceBlock(MACHINE_CASING_ULV)
             .pattern(definition -> FactoryBlockPattern.start()
@@ -436,7 +436,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition CRACKER = REGISTRATE
             .multiblock("cracker", CoilWorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.CRACKING_RECIPES)
+            .recipeTypes(GTRecipeTypes.CRACKING_RECIPES)
             .recipeModifiers(CRACKER_OVERCLOCK, BATCH_MODE)
             .appearanceBlock(CASING_STAINLESS_CLEAN)
             .pattern(definition -> FactoryBlockPattern.start()
@@ -485,7 +485,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition DISTILLATION_TOWER = REGISTRATE
             .multiblock("distillation_tower", DistillationTowerMachine::new)
             .rotationState(RotationState.NON_Y_AXIS)
-            .recipeType(GTRecipeTypes.DISTILLATION_RECIPES)
+            .recipeTypes(GTRecipeTypes.DISTILLATION_RECIPES)
             .recipeModifiers(OC_NON_PERFECT_SUBTICK, BATCH_MODE)
             .appearanceBlock(CASING_STAINLESS_CLEAN)
             .pattern(definition -> {
@@ -556,7 +556,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition VACUUM_FREEZER = REGISTRATE
             .multiblock("vacuum_freezer", WorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.VACUUM_RECIPES)
+            .recipeTypes(GTRecipeTypes.VACUUM_RECIPES)
             .recipeModifiers(OC_NON_PERFECT_SUBTICK, BATCH_MODE)
             .appearanceBlock(CASING_ALUMINIUM_FROSTPROOF)
             .pattern(definition -> FactoryBlockPattern.start()
@@ -576,7 +576,7 @@ public class GTMultiMachines {
     public static final MultiblockMachineDefinition ASSEMBLY_LINE = REGISTRATE
             .multiblock("assembly_line", AssemblyLineMachine::new)
             .rotationState(RotationState.ALL)
-            .recipeType(GTRecipeTypes.ASSEMBLY_LINE_RECIPES)
+            .recipeTypes(GTRecipeTypes.ASSEMBLY_LINE_RECIPES)
             .alwaysTryModifyRecipe(true)
             .recipeModifiers(DEFAULT_ENVIRONMENT_REQUIREMENT, OC_NON_PERFECT)
             .appearanceBlock(CASING_STEEL_SOLID)
@@ -645,7 +645,7 @@ public class GTMultiMachines {
             .multiblock("steam_grinder", SteamParallelMultiblockMachine::new)
             .rotationState(RotationState.ALL)
             .appearanceBlock(CASING_BRONZE_BRICKS)
-            .recipeType(GTRecipeTypes.MACERATOR_RECIPES)
+            .recipeTypes(GTRecipeTypes.MACERATOR_RECIPES)
             .recipeModifier(SteamParallelMultiblockMachine::recipeModifier, true)
             .addOutputLimit(ItemRecipeCapability.CAP, 1)
             .pattern(definition -> FactoryBlockPattern.start()
@@ -667,7 +667,7 @@ public class GTMultiMachines {
             .multiblock("steam_oven", SteamParallelMultiblockMachine::new)
             .rotationState(RotationState.ALL)
             .appearanceBlock(CASING_BRONZE_BRICKS)
-            .recipeType(GTRecipeTypes.FURNACE_RECIPES)
+            .recipeTypes(GTRecipeTypes.FURNACE_RECIPES)
             .recipeModifier(SteamParallelMultiblockMachine::recipeModifier, true)
             .addOutputLimit(ItemRecipeCapability.CAP, 1)
             .pattern(definition -> FactoryBlockPattern.start()

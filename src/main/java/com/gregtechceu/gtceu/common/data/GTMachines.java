@@ -75,7 +75,7 @@ public class GTMachines {
             "steam_solid_boiler",
             SteamSolidBoilerMachine::new,
             (pressure, builder) -> builder.rotationState(RotationState.ALL)
-                    .recipeType(STEAM_BOILER_RECIPES)
+                    .recipeTypes(STEAM_BOILER_RECIPES)
                     .recipeModifier(SteamBoilerMachine::recipeModifier)
                     .workableSteamHullModel(pressure, GTCEu.id("block/generators/boiler/coal"))
                     .tooltips(Component.translatable("gtceu.universal.tooltip.produces_fluid",
@@ -88,7 +88,7 @@ public class GTMachines {
             "steam_liquid_boiler",
             SteamLiquidBoilerMachine::new,
             (pressure, builder) -> builder.rotationState(RotationState.ALL)
-                    .recipeType(STEAM_BOILER_RECIPES)
+                    .recipeTypes(STEAM_BOILER_RECIPES)
                     .recipeModifier(SteamBoilerMachine::recipeModifier)
                     .workableSteamHullModel(pressure, GTCEu.id("block/generators/boiler/lava"))
                     .tooltips(Component.translatable("gtceu.universal.tooltip.produces_fluid",
@@ -101,7 +101,7 @@ public class GTMachines {
             "steam_solar_boiler",
             SteamSolarBoiler::new,
             (pressure, builder) -> builder.rotationState(RotationState.NON_Y_AXIS)
-                    .recipeType(STEAM_BOILER_RECIPES)
+                    .recipeTypes(STEAM_BOILER_RECIPES)
                     .recipeModifier(SteamBoilerMachine::recipeModifier)
                     .workableSteamHullModel(pressure, GTCEu.id("block/generators/boiler/solar"))
                     .tooltips(Component.translatable("gtceu.universal.tooltip.produces_fluid",
@@ -115,7 +115,7 @@ public class GTMachines {
     public static final Pair<MachineDefinition, MachineDefinition> STEAM_MACERATOR = registerSteamMachines(
             "steam_macerator", SimpleSteamMachine::new, (pressure, builder) -> builder
                     .rotationState(RotationState.NON_Y_AXIS)
-                    .recipeType(GTRecipeTypes.MACERATOR_RECIPES)
+                    .recipeTypes(GTRecipeTypes.MACERATOR_RECIPES)
                     .recipeModifier(SimpleSteamMachine::recipeModifier)
                     .addOutputLimit(ItemRecipeCapability.CAP, 1)
                     .modelProperty(GTMachineModelProperties.VENT_DIRECTION, RelativeDirection.BACK)

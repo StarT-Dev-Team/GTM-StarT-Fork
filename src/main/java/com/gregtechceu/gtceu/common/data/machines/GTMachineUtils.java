@@ -694,7 +694,7 @@ public class GTMachineUtils {
                 .langValue("Large %s Boiler".formatted(FormattingUtil.toEnglishName(name)))
                 .allowExtendedFacing(false)
                 .rotationState(RotationState.NON_Y_AXIS)
-                .recipeType(GTRecipeTypes.LARGE_BOILER_RECIPES)
+                .recipeTypes(GTRecipeTypes.LARGE_BOILER_RECIPES)
                 .recipeModifier(LargeBoilerMachine::recipeModifier, true)
                 .appearanceBlock(casing)
                 .partAppearance((controller, part, side) ->
@@ -760,7 +760,7 @@ public class GTMachineUtils {
                                                                             ResourceLocation overlayModel) {
         return registrate.multiblock(name, holder -> new LargeCombustionEngineMachine(holder, tier))
                 .rotationState(RotationState.ALL)
-                .recipeType(GTRecipeTypes.COMBUSTION_GENERATOR_FUELS)
+                .recipeTypes(GTRecipeTypes.COMBUSTION_GENERATOR_FUELS)
                 .generator(true)
                 .recipeModifier(LargeCombustionEngineMachine::recipeModifier, true)
                 .appearanceBlock(casing)
@@ -839,7 +839,7 @@ public class GTMachineUtils {
                                                                    boolean needsMuffler) {
         return registrate.multiblock(name, holder -> new LargeTurbineMachine(holder, tier))
                 .rotationState(RotationState.ALL)
-                .recipeType(recipeType)
+                .recipeTypes(recipeType)
                 .generator(true)
                 .recipeModifier(LargeTurbineMachine::recipeModifier, true)
                 .appearanceBlock(casing)
