@@ -1442,7 +1442,10 @@ public class GTRecipeBuilder {
         var layered = new LayeredRecipeInfo.Builder(this);
         config.accept(layered);
         layered.apply();
-        return this;
+
+        var newOnSave = (BiConsumer<GTRecipeBuilder, Consumer<FinishedRecipe>>) LayeredRecipeHelper::onSaveLayeredRecipe;
+        if (onSave != null) newOnSave = newOnSave.andThen(onSave);
+        return onSave(newOnSave);
     }
 
     public void toJson(JsonObject json) {

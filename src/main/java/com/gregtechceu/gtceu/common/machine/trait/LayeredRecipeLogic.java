@@ -81,6 +81,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
         if (LayeredRecipeHelper.hasLayeredSteps(recipe)) {
             // we are starting a layered craft
             layeredRecipe = LayeredRecipeHelper.getLayeredSteps(recipe);
+            assert layeredRecipe != null;
             layeredRecipeLayerIndex = 0;
             recipe = layeredRecipe.get(0).recipe();
         } else if (!recipe.data.getBoolean("is_layer")) {

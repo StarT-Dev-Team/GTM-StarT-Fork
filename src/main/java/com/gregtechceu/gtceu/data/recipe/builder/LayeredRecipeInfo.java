@@ -528,8 +528,8 @@ public record LayeredRecipeInfo(List<Layer> layers, Map<RecipeCapability<?>, Int
 
             var layerIndex = 0;
             for (var layer : layers) {
-                applyLayer(layerIndex, layer.input(), input, info.input());
-                applyLayer(layerIndex, layer.tickInput(), tickInput, info.tickInput());
+                applyLayer(layerIndex, layer.input(), recipeBuilder.input, info.input());
+                applyLayer(layerIndex, layer.tickInput(), recipeBuilder.tickInput, info.tickInput());
                 layerIndex++;
             }
 
