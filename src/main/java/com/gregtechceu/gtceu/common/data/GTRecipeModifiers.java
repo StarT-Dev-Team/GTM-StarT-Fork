@@ -20,7 +20,6 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,8 +38,7 @@ public class GTRecipeModifiers {
             .memoize(logic -> (machine, recipe) -> {
                 if (!(machine instanceof IOverclockMachine overclockMachine)) return ModifierFunction.IDENTITY;
                 if (RecipeHelper.getRecipeEUtTier(recipe) > overclockMachine.getMaxOverclockTier()) {
-                    return ModifierFunction
-                            .cancel(Component.translatable("gtceu.recipe_modifier.insufficient_voltage"));
+                    return ModifierFunction.NULL;
                 }
                 return logic.getModifier(machine, recipe, overclockMachine.getOverclockVoltage());
             });
@@ -181,11 +179,11 @@ public class GTRecipeModifiers {
                 (100 * Math.max(0, coilMachine.getTier() - GTValues.MV));
         int recipeTemp = recipe.data.getInt("ebf_temp");
         if (!recipe.data.contains("ebf_temp") || recipeTemp > blastFurnaceTemperature) {
-            return ModifierFunction.cancel(Component.translatable("gtceu.recipe_modifier.coil_temperature_too_low"));
+            return ModifierFunction.NULL;
         }
 
         if (RecipeHelper.getRecipeEUtTier(recipe) > coilMachine.getTier()) {
-            return ModifierFunction.cancel(Component.translatable("gtceu.recipe_modifier.insufficient_voltage"));
+            return ModifierFunction.NULL;
         }
 
         var discount = ModifierFunction.builder()

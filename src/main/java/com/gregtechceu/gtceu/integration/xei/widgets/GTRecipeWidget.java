@@ -163,14 +163,12 @@ public class GTRecipeWidget extends WidgetGroup {
         if (EUt.voltage() > 0) {
             textsY += 10;
             Component text = Component.translatable(EUt.isInput() ? "gtceu.recipe.eu" : "gtceu.recipe.eu_inverted",
-                    FormattingUtil.formatNumbers(EUt.getTotalEU()))
+                            FormattingUtil.formatNumbers(EUt.getTotalEU()))
                     .withStyle(ChatFormatting.UNDERLINE);
             recipeVoltageText = new LabelWidget(3 - xOffset, textsY, text).setTextColor(-1)
                     .setDropShadow(true);
             recipeVoltageText.setHoverTooltips(
-                    Component
-                            .translatable("gtceu.recipe.eu.amp_notation",
-                                    FormattingUtil.formatNumber2Places(minAmperage), GTValues.VN[minVoltageTier])
+                    Component.translatable("gtceu.recipe.eu.amp_notation", FormattingUtil.formatNumber2Places(minAmperage), GTValues.VN[minVoltageTier])
                             .withStyle(ChatFormatting.UNDERLINE));
             if (recipeVoltageText != null) {
                 addWidget(recipeVoltageText);
@@ -285,13 +283,11 @@ public class GTRecipeWidget extends WidgetGroup {
         voltageTextWidget.setText(tierText);
         voltageTextWidget.setSelfPositionX(getVoltageXOffset() - xOffset);
         if (recipeVoltageText != null) {
-            recipeVoltageText.setComponent(
-                    Component.translatable("gtceu.recipe.eu", FormattingUtil.formatNumbers(inputEUt.getTotalEU()))
-                            .withStyle(ChatFormatting.UNDERLINE));
+            recipeVoltageText.setComponent(Component.translatable("gtceu.recipe.eu", FormattingUtil.formatNumbers(inputEUt.getTotalEU())
+                            )
+                    .withStyle(ChatFormatting.UNDERLINE));
             recipeVoltageText.setHoverTooltips(
-                    Component
-                            .translatable("gtceu.recipe.eu.amp_notation",
-                                    FormattingUtil.formatNumber2Places(minAmperage), GTValues.VN[minVoltageTier])
+                    Component.translatable("gtceu.recipe.eu.amp_notation", FormattingUtil.formatNumber2Places(minAmperage), GTValues.VN[minVoltageTier])
                             .withStyle(ChatFormatting.UNDERLINE));
         }
         detectAndSendChanges();
@@ -311,7 +307,7 @@ public class GTRecipeWidget extends WidgetGroup {
 
                     if (logic != ChanceLogic.NONE && logic != ChanceLogic.OR) {
                         tooltips.add(Component.translatable("gtceu.gui.content.chance_base_logic",
-                                FormattingUtil.formatNumber2Places(baseChanceFloat), logic.getTranslation())
+                                        FormattingUtil.formatNumber2Places(baseChanceFloat), logic.getTranslation())
                                 .withStyle(ChatFormatting.YELLOW));
                     } else {
                         tooltips.add(
@@ -326,7 +322,7 @@ public class GTRecipeWidget extends WidgetGroup {
 
                     if (logic != ChanceLogic.NONE && logic != ChanceLogic.OR) {
                         tooltips.add(Component.translatable("gtceu.gui.content.chance_boosted_logic",
-                                FormattingUtil.formatNumber2Places(boostedChanceFloat), logic.getTranslation())
+                                        FormattingUtil.formatNumber2Places(boostedChanceFloat), logic.getTranslation())
                                 .withStyle(ChatFormatting.YELLOW));
                     } else {
                         tooltips.add(
@@ -336,7 +332,7 @@ public class GTRecipeWidget extends WidgetGroup {
                 } else {
                     if (logic != ChanceLogic.NONE && logic != ChanceLogic.OR) {
                         tooltips.add(Component.translatable("gtceu.gui.content.chance_no_boost_logic",
-                                FormattingUtil.formatNumber2Places(baseChanceFloat), logic.getTranslation())
+                                        FormattingUtil.formatNumber2Places(baseChanceFloat), logic.getTranslation())
                                 .withStyle(ChatFormatting.YELLOW));
                     } else {
                         tooltips.add(

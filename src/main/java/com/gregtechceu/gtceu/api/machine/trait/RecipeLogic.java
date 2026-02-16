@@ -15,7 +15,6 @@ import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
 import com.gregtechceu.gtceu.api.recipe.ActionResult;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
-import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.sound.AutoReleasedSound;
 import com.gregtechceu.gtceu.common.cover.MachineControllerCover;
@@ -82,18 +81,10 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
     @UpdateListener(methodName = "onActiveSynced")
     protected boolean isActive;
 
-    @Getter
     @Nullable
     @Persisted
     @DescSynced
     private Component waitingReason = null;
-
-    @Getter
-    @DescSynced
-    protected final List<Component> failureReasons = new ArrayList<>();
-
-    @Getter
-    protected final Map<GTRecipe, Component> failureReasonMap = new HashMap<>();
     /**
      * unsafe, it may not be found from {@link RecipeManager}. Do not index it.
      */
@@ -168,8 +159,6 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
         duration = 0;
         isActive = false;
         lastFailedMatches = null;
-        waitingReason = null;
-        failureReasons.clear();
         if (status != Status.SUSPEND) {
             setStatus(Status.IDLE);
         }
@@ -234,10 +223,6 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                     unsubscribe = true;
                 }
 
-        if (isIdle()) {
-            failureReasons.clear();
-            failureReasons.addAll(failureReasonMap.values());
-        }
         if (unsubscribe && subscription != null) {
             subscription.unsubscribe();
             subscription = null;
@@ -261,8 +246,6 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
             var recipeMatch = checkRecipe(modified);
             if (recipeMatch.isSuccess()) {
                 setupRecipe(modified);
-            } else {
-                putFailureReason(this, match, recipeMatch.reason());
             }
             if (lastRecipe != null && getStatus() == Status.WORKING) {
                 lastOriginRecipe = match;
@@ -334,16 +317,13 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
 
     public void findAndHandleRecipe() {
         lastFailedMatches = null;
-
         // try to execute last recipe if possible
         if (!recipeDirty && lastRecipe != null && checkRecipe(lastRecipe).isSuccess()) {
             GTRecipe recipe = lastRecipe;
             lastRecipe = null;
             lastOriginRecipe = null;
             setupRecipe(recipe);
-        } else {
-            // try to find and handle a new recipe
-            failureReasonMap.clear();
+        } else { // try to find and handle a new recipe
             lastRecipe = null;
             lastOriginRecipe = null;
             handleSearchingRecipes(searchRecipe());
@@ -395,7 +375,6 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
             if (lastRecipe != null && !recipe.equals(lastRecipe)) {
                 chanceCaches.clear();
             }
-            failureReasonMap.clear();
             recipeDirty = false;
             lastRecipe = recipe;
             setStatus(Status.WORKING);
@@ -603,7 +582,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
 
     @Override
     public IGuiTexture getFancyTooltipIcon() {
-        if (showFancyTooltip()) {
+        if (waitingReason != null) {
             return GuiTextures.INSUFFICIENT_INPUT;
         }
         return IGuiTexture.EMPTY;
@@ -611,18 +590,15 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
 
     @Override
     public List<Component> getFancyTooltip() {
-        if (isWaiting() && waitingReason != null) {
+        if (waitingReason != null) {
             return List.of(waitingReason);
-        }
-        if (isIdle() && !failureReasons.isEmpty()) {
-            return failureReasons;
         }
         return Collections.emptyList();
     }
 
     @Override
     public boolean showFancyTooltip() {
-        return waitingReason != null || !failureReasons.isEmpty();
+        return waitingReason != null;
     }
 
     protected Map<RecipeCapability<?>, Object2IntMap<?>> makeChanceCaches() {
@@ -682,22 +658,5 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
             chanceCache.put(cap.name, cacheTag);
         });
         tag.put("chance_cache", chanceCache);
-    }
-
-    public static void putFailureReason(Object machine, GTRecipe recipe, Component reason) {
-        if (machine instanceof IRecipeLogicMachine rlm) {
-            putFailureReason(rlm.getRecipeLogic(), recipe, reason);
-        }
-    }
-
-    public static void putFailureReason(RecipeLogic logic, GTRecipe recipe, Component reason) {
-        var map = logic.getFailureReasonMap();
-        if (map.containsKey(recipe)) {
-            if (reason != ModifierFunction.DEFAULT_FAILURE) {
-                map.put(recipe, reason);
-            }
-        } else {
-            map.put(recipe, reason);
-        }
     }
 }

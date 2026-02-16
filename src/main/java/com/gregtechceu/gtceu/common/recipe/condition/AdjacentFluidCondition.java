@@ -100,12 +100,7 @@ public class AdjacentFluidCondition extends RecipeCondition {
 
     @Override
     public Component getTooltips() {
-        var tooltips = Component.translatable("recipe.condition.adjacent_fluid.tooltip");
-        fluids.forEach(set -> {
-            var id = set.get(0).get().getFluidType().getDescription();
-            tooltips.append(" ").append(id);
-        });
-        return tooltips;
+        return Component.translatable("recipe.condition.adjacent_fluid.tooltip");
     }
 
     @Override
