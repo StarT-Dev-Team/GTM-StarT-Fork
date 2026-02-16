@@ -28,7 +28,7 @@ public class FuelRecipes {
             var resLoc = BuiltInRegistries.ITEM.getKey(fuelEntry.getKey());
             STEAM_BOILER_RECIPES.recipeBuilder(GTCEu.id(resLoc.getNamespace() + "_" + resLoc.getPath()))
                     .inputItems(fuelEntry.getKey())
-                    .duration(fuelEntry.getValue() / 2 )
+                    .duration(fuelEntry.getValue() / 2)
                     .save(provider);
         }
         for (Item item : BuiltInRegistries.ITEM) {
