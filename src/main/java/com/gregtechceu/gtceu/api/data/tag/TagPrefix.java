@@ -1043,12 +1043,10 @@ public class TagPrefix {
     @Setter
     private int maxStackSize = 64;
 
+    @Accessors(chain = true, fluent = false)
     @Setter
-    private boolean isFallingBlock = false;
-
-    public boolean isFallingBlock() {
-        return isFallingBlock;
-    }
+    @Getter
+    private boolean fallingBlock = false;
 
     @Getter
     private final List<MaterialStack> secondaryMaterials = new ArrayList<>();
@@ -1168,7 +1166,7 @@ public class TagPrefix {
     }
 
     public TagPrefix fallingBlock() {
-        this.isFallingBlock(true);
+        this.setFallingBlock(true);
         return this;
     }
 
