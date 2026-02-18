@@ -587,7 +587,7 @@ public class ConfigHolder {
                 "Whether ULV components should be enabled",
                 "Default: false"
         })
-        public boolean ulvComponentsEnabled = true;
+        public boolean ulvComponentsEnabled = false;
 
         @Configurable
         @Configurable.Comment({ "Whether the Assembly Line should require the item inputs to be in order.",
