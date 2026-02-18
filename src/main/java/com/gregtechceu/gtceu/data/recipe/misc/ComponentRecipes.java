@@ -2,6 +2,7 @@ package com.gregtechceu.gtceu.data.recipe.misc;
 
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.MaterialEntry;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 import com.gregtechceu.gtceu.data.recipe.GTCraftingComponents;
 import com.gregtechceu.gtceu.data.recipe.VanillaRecipeHelper;
@@ -26,6 +27,36 @@ public class ComponentRecipes {
     public static void init(Consumer<FinishedRecipe> provider) {
         // Motors
         // Start--------------------------------------------------------------------------------------------------
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            if (ConfigHolder.INSTANCE.recipes.ulvComponentsHarderRecipes) {
+                VanillaRecipeHelper.addShapedRecipe(provider, "electric_motor_ulv", ELECTRIC_MOTOR_ULV.asStack(), "CWR",
+                        "WMW", "RWC", 'C', new MaterialEntry(cableGtSingle, RedAlloy), 'W',
+                        new MaterialEntry(wireGtSingle, Lead), 'R', new MaterialEntry(rod, Bronze), 'M',
+                        new MaterialEntry(rod, IronMagnetic));
+
+                ASSEMBLER_RECIPES.recipeBuilder("electric_motor_ulv")
+                        .inputItems(cableGtSingle, RedAlloy, 2)
+                        .inputItems(rod, Bronze, 2)
+                        .inputItems(rod, IronMagnetic)
+                        .inputItems(wireGtSingle, Lead, 4)
+                        .outputItems(ELECTRIC_MOTOR_ULV)
+                        .duration(100).EUt(VA[LV]).save(provider);
+            } else {
+                VanillaRecipeHelper.addShapedRecipe(provider, "electric_motor_lv_steel", ELECTRIC_MOTOR_LV.asStack(),
+                        "CWR",
+                        "WMW", "RWC", 'C', new MaterialEntry(cableGtSingle, Tin), 'W',
+                        new MaterialEntry(wireGtSingle, Copper), 'R', new MaterialEntry(rod, Copper), 'M',
+                        new MaterialEntry(rod, IronMagnetic));
+
+                ASSEMBLER_RECIPES.recipeBuilder("electric_motor_ulv")
+                        .inputItems(cableGtSingle, RedAlloy, 2)
+                        .inputItems(rod, Lead, 2)
+                        .inputItems(rod, IronMagnetic)
+                        .inputItems(wireGtSingle, Lead, 4)
+                        .outputItems(ELECTRIC_MOTOR_ULV)
+                        .duration(100).EUt(VA[LV]).save(provider);
+            }
+        }
         VanillaRecipeHelper.addShapedRecipe(provider, "electric_motor_lv_steel", ELECTRIC_MOTOR_LV.asStack(), "CWR",
                 "WMW", "RWC", 'C', new MaterialEntry(cableGtSingle, Tin), 'W',
                 new MaterialEntry(wireGtSingle, Copper), 'R', new MaterialEntry(rod, Steel), 'M',
@@ -164,6 +195,22 @@ public class ComponentRecipes {
             Material material = materialEntry.getValue();
             String name = materialEntry.getKey();
 
+            if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+                VanillaRecipeHelper.addShapedRecipe(provider, material.equals(Rubber),
+                        String.format("conveyor_module_ulv_%s", name), CONVEYOR_MODULE_ULV.asStack(), "RRR", "MCM",
+                        "RRR",
+                        'R', new MaterialEntry(plate, material), 'C', new MaterialEntry(cableGtSingle, RedAlloy), 'M',
+                        ELECTRIC_MOTOR_ULV.asStack());
+
+                ASSEMBLER_RECIPES.recipeBuilder("conveyor_module_ulv_" + name)
+                        .inputItems(cableGtSingle, RedAlloy)
+                        .inputItems(ELECTRIC_MOTOR_ULV, 2)
+                        .inputFluids(materialEntry.getValue().getFluid(L * 6))
+                        .circuitMeta(1)
+                        .outputItems(CONVEYOR_MODULE_ULV)
+                        .duration(100).EUt(VA[LV]).save(provider);
+            }
+
             VanillaRecipeHelper.addShapedRecipe(provider, material.equals(Rubber),
                     String.format("conveyor_module_lv_%s", name), CONVEYOR_MODULE_LV.asStack(), "RRR", "MCM", "RRR",
                     'R', new MaterialEntry(plate, material), 'C', new MaterialEntry(cableGtSingle, Tin), 'M',
@@ -229,6 +276,43 @@ public class ComponentRecipes {
 
             // Pumps
             // Start---------------------------------------------------------------------------------------------------
+            if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+                if (ConfigHolder.INSTANCE.recipes.ulvComponentsHarderRecipes) {
+                    VanillaRecipeHelper.addShapedRecipe(provider, material.equals(Rubber),
+                            String.format("electric_pump_ulv_%s", name), ELECTRIC_PUMP_ULV.asStack(), "SXR", "dPw",
+                            "RMC", 'S',
+                            new MaterialEntry(screw, Bronze), 'X', new MaterialEntry(rotor, Bronze), 'P',
+                            new MaterialEntry(pipeNormalFluid, TinAlloy), 'R', new MaterialEntry(ring, material), 'C',
+                            new MaterialEntry(cableGtSingle, RedAlloy), 'M', ELECTRIC_MOTOR_ULV.asStack());
+
+                    ASSEMBLER_RECIPES.recipeBuilder("electric_pump_ulv_" + name)
+                            .inputItems(cableGtSingle, RedAlloy)
+                            .inputItems(pipeNormalFluid, TinAlloy)
+                            .inputItems(screw, Bronze)
+                            .inputItems(rotor, Bronze)
+                            .inputItems(ring, materialEntry.getValue(), 2)
+                            .inputItems(ELECTRIC_MOTOR_ULV)
+                            .outputItems(ELECTRIC_PUMP_ULV)
+                            .duration(100).EUt(VA[LV]).save(provider);
+                } else {
+                    VanillaRecipeHelper.addShapedRecipe(provider, material.equals(Rubber),
+                            String.format("electric_pump_ulv_%s", name), ELECTRIC_PUMP_LV.asStack(), "SXR", "dPw",
+                            "RMC", 'S',
+                            new MaterialEntry(screw, Copper), 'X', new MaterialEntry(rotor, Copper), 'P',
+                            new MaterialEntry(pipeNormalFluid, TinAlloy), 'R', new MaterialEntry(ring, material), 'C',
+                            new MaterialEntry(cableGtSingle, RedAlloy), 'M', ELECTRIC_MOTOR_ULV.asStack());
+
+                    ASSEMBLER_RECIPES.recipeBuilder("electric_pump_ulv_" + name)
+                            .inputItems(cableGtSingle, RedAlloy)
+                            .inputItems(pipeNormalFluid, TinAlloy)
+                            .inputItems(screw, Copper)
+                            .inputItems(rotor, Copper)
+                            .inputItems(ring, materialEntry.getValue(), 2)
+                            .inputItems(ELECTRIC_MOTOR_ULV)
+                            .outputItems(ELECTRIC_PUMP_ULV)
+                            .duration(100).EUt(VA[LV]).save(provider);
+                }
+            }
             VanillaRecipeHelper.addShapedRecipe(provider, material.equals(Rubber),
                     String.format("electric_pump_lv_%s", name), ELECTRIC_PUMP_LV.asStack(), "SXR", "dPw", "RMC", 'S',
                     new MaterialEntry(screw, Tin), 'X', new MaterialEntry(rotor, Tin), 'P',
@@ -539,6 +623,41 @@ public class ComponentRecipes {
 
         // Pistons
         // Start-------------------------------------------------------------------------------------------------
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            if (ConfigHolder.INSTANCE.recipes.ulvComponentsHarderRecipes) {
+                VanillaRecipeHelper.addShapedRecipe(provider, true, "electric_piston_ulv",
+                        ELECTRIC_PISTON_ULV.asStack(), "PPP",
+                        "CRR", "CMG", 'P', new MaterialEntry(plate, Bronze), 'C',
+                        new MaterialEntry(cableGtSingle, RedAlloy),
+                        'R', new MaterialEntry(rod, Iron), 'G', new MaterialEntry(gearSmall, Iron), 'M',
+                        ELECTRIC_MOTOR_ULV.asStack());
+
+                ASSEMBLER_RECIPES.recipeBuilder("electric_piston_ulv")
+                        .inputItems(rod, Bronze, 2)
+                        .inputItems(cableGtSingle, RedAlloy, 2)
+                        .inputItems(plate, Iron, 3)
+                        .inputItems(gearSmall, Iron)
+                        .inputItems(ELECTRIC_MOTOR_ULV)
+                        .outputItems(ELECTRIC_PISTON_ULV)
+                        .duration(100).EUt(VA[LV]).save(provider);
+            } else {
+                VanillaRecipeHelper.addShapedRecipe(provider, true, "electric_piston_ulv",
+                        ELECTRIC_PISTON_ULV.asStack(), "PPP",
+                        "CRR", "CMG", 'P', new MaterialEntry(plate, Copper), 'C',
+                        new MaterialEntry(cableGtSingle, RedAlloy),
+                        'R', new MaterialEntry(rod, Iron), 'G', new MaterialEntry(gearSmall, Iron), 'M',
+                        ELECTRIC_MOTOR_ULV.asStack());
+
+                ASSEMBLER_RECIPES.recipeBuilder("electric_piston_ulv")
+                        .inputItems(rod, Copper, 2)
+                        .inputItems(cableGtSingle, RedAlloy, 2)
+                        .inputItems(plate, Iron, 3)
+                        .inputItems(gearSmall, Iron)
+                        .inputItems(ELECTRIC_MOTOR_ULV)
+                        .outputItems(ELECTRIC_PISTON_ULV)
+                        .duration(100).EUt(VA[LV]).save(provider);
+            }
+        }
         VanillaRecipeHelper.addShapedRecipe(provider, true, "electric_piston_lv", ELECTRIC_PISTON_LV.asStack(), "PPP",
                 "CRR", "CMG", 'P', new MaterialEntry(plate, Steel), 'C', new MaterialEntry(cableGtSingle, Tin),
                 'R', new MaterialEntry(rod, Steel), 'G', new MaterialEntry(gearSmall, Steel), 'M',
@@ -665,6 +784,21 @@ public class ComponentRecipes {
 
         // Robot Arms Start
         // ---------------------------------------------------------------------------------------------
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            VanillaRecipeHelper.addShapedRecipe(provider, true, "robot_arm_ulv", ROBOT_ARM_ULV.asStack(), "CCC", "MRM",
+                    "PXR",
+                    'C', new MaterialEntry(cableGtSingle, RedAlloy), 'R', new MaterialEntry(rod, Iron), 'M',
+                    ELECTRIC_MOTOR_ULV.asStack(), 'P', ELECTRIC_PISTON_ULV.asStack(), 'X', CustomTags.ULV_CIRCUITS);
+
+            ASSEMBLER_RECIPES.recipeBuilder("robot_arm_ulv")
+                    .inputItems(cableGtSingle, RedAlloy, 3)
+                    .inputItems(rod, Iron, 2)
+                    .inputItems(ELECTRIC_MOTOR_ULV, 2)
+                    .inputItems(ELECTRIC_PISTON_ULV)
+                    .inputItems(CustomTags.ULV_CIRCUITS)
+                    .outputItems(ROBOT_ARM_ULV)
+                    .duration(100).EUt(VA[LV]).save(provider);
+        }
         VanillaRecipeHelper.addShapedRecipe(provider, true, "robot_arm_lv", ROBOT_ARM_LV.asStack(), "CCC", "MRM", "PXR",
                 'C', new MaterialEntry(cableGtSingle, Tin), 'R', new MaterialEntry(rod, Steel), 'M',
                 ELECTRIC_MOTOR_LV.asStack(), 'P', ELECTRIC_PISTON_LV.asStack(), 'X', CustomTags.LV_CIRCUITS);

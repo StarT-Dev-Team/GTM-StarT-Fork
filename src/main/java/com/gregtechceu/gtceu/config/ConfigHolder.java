@@ -122,6 +122,13 @@ public class ConfigHolder {
                 "Default: false" })
         public boolean harderCircuitRecipes = false;
         @Configurable
+        @Configurable.Comment({
+                "Whether ULV components should have harder recipes using bronze",
+                "Requires ULV components to be enabled",
+                "Default: true"
+        })
+        public boolean ulvComponentsHarderRecipes = true;
+        @Configurable
         @Configurable.Comment({ "Whether to nerf machine controller recipes.", "Default: false" })
         public boolean hardMultiRecipes = false; // default false
         @Configurable
@@ -192,7 +199,7 @@ public class ConfigHolder {
 
         @Configurable
         @Configurable.Comment({
-                "Whether Gregtech should remove smelting recipes from the vanilla furnace for ingots requiring the Electric Blast Furnace.",
+                "Whether GregTech should remove smelting recipes from the vanilla furnace for ingots requiring the Electric Blast Furnace.",
                 "Default: true" })
         // todo: implement or purge
         public boolean removeSmeltingForEBFMetals = true;
@@ -308,7 +315,7 @@ public class ConfigHolder {
                 public boolean journeyMapIntegration = true;
 
                 @Configurable
-                @Configurable.Comment({ "Xaerox's map integration enabled" })
+                @Configurable.Comment({ "Xaero's map integration enabled" })
                 public boolean xaerosMapIntegration = true;
             }
 
@@ -549,7 +556,7 @@ public class ConfigHolder {
         @Configurable.Comment({ "Minimum distance between Long Distance Item Pipe Endpoints", "Default: 50" })
         public int ldItemPipeMinDistance = 50;
         @Configurable
-        @Configurable.Comment({ "Minimum distance betweeb Long Distance Fluid Pipe Endpoints", "Default: 50" })
+        @Configurable.Comment({ "Minimum distance between Long Distance Fluid Pipe Endpoints", "Default: 50" })
         public int ldFluidPipeMinDistance = 50;
 
         @Configurable
@@ -574,6 +581,13 @@ public class ConfigHolder {
                 "Other mods can override this to true, regardless of the config file.",
                 "Default: false" })
         public boolean highTierContent = false;
+
+        @Configurable
+        @Configurable.Comment({
+                "Whether ULV components should be enabled",
+                "Default: false"
+        })
+        public boolean ulvComponentsEnabled = false;
 
         @Configurable
         @Configurable.Comment({ "Whether the Assembly Line should require the item inputs to be in order.",
@@ -864,7 +878,7 @@ public class ConfigHolder {
     public static class DeveloperConfigs {
 
         @Configurable
-        @Configurable.Comment({ "Debug general events? (will print recipe conficts etc. to server's debug.log)",
+        @Configurable.Comment({ "Debug general events? (will print recipe conflicts etc. to server's debug.log)",
                 "Default: false" })
         public boolean debug = false;
         @Configurable
