@@ -226,12 +226,14 @@ public class VanillaStandardRecipes {
                 .notConsumable(SHAPE_MOLD_BOTTLE)
                 .outputItems(new ItemStack(Items.GLASS_BOTTLE))
                 .addMaterialInfo(true)
+                .category(GTRecipeCategories.INGOT_MOLDING)
                 .save(provider);
 
         EXTRUDER_RECIPES.recipeBuilder("glass_bottle").duration(32).EUt(16)
                 .inputItems(dust, Glass)
                 .notConsumable(SHAPE_EXTRUDER_BOTTLE)
                 .outputItems(new ItemStack(Items.GLASS_BOTTLE))
+                .category(GTRecipeCategories.INGOT_MOLDING)
                 .save(provider);
 
         FLUID_SOLIDFICATION_RECIPES.recipeBuilder("glass_bottle").duration(12).EUt(4)
