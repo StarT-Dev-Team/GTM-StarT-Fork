@@ -20,8 +20,8 @@ import com.gregtechceu.gtceu.common.blockentity.ItemPipeBlockEntity;
 import com.gregtechceu.gtceu.common.cover.data.DistributionMode;
 import com.gregtechceu.gtceu.common.cover.data.ManualIOMode;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
-import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
+import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
@@ -37,9 +37,7 @@ import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.items.IItemHandler;
@@ -545,25 +543,5 @@ public class ConveyorCover extends CoverBehavior implements IIOCover, IUICover, 
             }
             return super.extractItem(slot, amount, simulate);
         }
-    }
-
-    @Override
-    public CompoundTag copyConfig(CompoundTag tag) {
-        tag.putInt("transferRate", getTransferRate());
-        tag.putInt("io", getIo().ordinal());
-        tag.putInt("distributionMode", getDistributionMode().ordinal());
-        tag.putInt("manualIO", getManualIOMode().ordinal());
-        tag.put("filter", filterHandler.getFilterItem().serializeNBT());
-        return super.copyConfig(tag);
-    }
-
-    @Override
-    public void pasteConfig(ServerPlayer player, CompoundTag tag) {
-        setTransferRate(tag.getInt("transferRate"));
-        setIo(IO.values()[tag.getInt("io")]);
-        setDistributionMode(DistributionMode.values()[tag.getInt("distributionMode")]);
-        setManualIOMode(ManualIOMode.values()[tag.getInt("manualIO")]);
-        filterHandler.setFilterItem(ItemStack.of(tag.getCompound("filter")));
-        super.pasteConfig(player, tag);
     }
 }

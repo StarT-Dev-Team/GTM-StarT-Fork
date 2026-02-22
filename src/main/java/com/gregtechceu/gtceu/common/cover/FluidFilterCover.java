@@ -20,9 +20,6 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import lombok.Getter;
@@ -121,21 +118,5 @@ public class FluidFilterCover extends CoverBehavior implements IUICover {
                 return super.drain(resource, action);
             return FluidStack.EMPTY;
         }
-    }
-
-    @Override
-    public CompoundTag copyConfig(CompoundTag tag) {
-        tag.putInt("manualIO", getAllowFlow().ordinal());
-        tag.putInt("filterMode", getFilterMode().ordinal());
-        tag.put("filter", attachItem.serializeNBT());
-        return super.copyConfig(tag);
-    }
-
-    @Override
-    public void pasteConfig(ServerPlayer player, CompoundTag tag) {
-        setAllowFlow(ManualIOMode.values()[tag.getInt("manualIO")]);
-        setFilterMode(FilterMode.values()[tag.getInt("filterMode")]);
-        fluidFilter = FluidFilter.loadFilter(ItemStack.of(tag.getCompound("filter")));
-        super.pasteConfig(player, tag);
     }
 }
