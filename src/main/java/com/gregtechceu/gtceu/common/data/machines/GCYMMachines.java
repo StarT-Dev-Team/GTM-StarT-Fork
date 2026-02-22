@@ -267,7 +267,6 @@ public class GCYMMachines {
                     .aisle("XXX", "XAX", "XXX")
                     .aisle("XXX", "XAX", "XXX")
                     .aisle("XXX", "XAX", "XXX")
-                    .aisle("XXX", "XAX", "XXX")
                     .aisle("XXX", "XSX", "XXX")
                     .where('S', controller(blocks(definition.get())))
                     .where('X', blocks(CASING_TUNGSTENSTEEL_ROBUST.get()).setMinGlobalLimited(30)
