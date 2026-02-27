@@ -96,6 +96,11 @@ public class PipeCoverContainer implements ICoverable, IEnhancedManaged {
     }
 
     @Override
+    public void notifyAdjacentBlockUpdate() {
+        pipeTile.notifyBlockUpdate();
+    }
+
+    @Override
     public void scheduleRenderUpdate() {
         pipeTile.scheduleRenderUpdate();
     }

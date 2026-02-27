@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class    LangHandler {
+public class LangHandler {
 
     public static void init(RegistrateLangProvider provider) {
         AdvancementLang.init(provider);
@@ -512,6 +512,15 @@ public class    LangHandler {
                 "Behavior: Latched\n\n" + detectorLatchDescription);
         multilineLang(provider, "cover.advanced_detector.latch.disabled",
                 "Behavior: Continuous\n\n" + detectorLatchDescription);
+
+        var detectorOutputSignalDescription = """
+                Change the output signal of this Cover.
+                §eWeak§7 - Default; emit a weak redstone signal
+                §eStrong§7 - emit a strong redstone signal""";
+        multilineLang(provider, "cover.advanced_detector.signal.enabled",
+                "Output Signal: Strong\n\n" + detectorOutputSignalDescription);
+        multilineLang(provider, "cover.advanced_detector.signal.disabled",
+                "Output Signal: Weak\n\n" + detectorOutputSignalDescription);
 
         provider.add("cover.advanced_energy_detector.label", "Advanced Energy Detector");
         provider.add("cover.advanced_energy_detector.min", "Min");

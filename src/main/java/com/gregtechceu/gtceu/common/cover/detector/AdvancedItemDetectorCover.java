@@ -60,6 +60,11 @@ public class AdvancedItemDetectorCover extends ItemDetectorCover implements IUIC
     @DescSynced
     @Getter
     protected final FilterHandler<ItemStack, ItemFilter> filterHandler;
+    @Persisted
+    @DescSynced
+    @Getter
+    @Setter
+    private boolean isStrongSignal;
 
     public AdvancedItemDetectorCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide) {
         super(definition, coverHolder, attachedSide);
@@ -96,12 +101,19 @@ public class AdvancedItemDetectorCover extends ItemDetectorCover implements IUIC
                 storedItems += handler.getStackInSlot(i).getCount();
         }
 
+        var output = 0;
         if (isLatched) {
-            setRedstoneSignalOutput(RedstoneUtil.computeLatchedRedstoneBetweenValues(storedItems, maxValue, minValue,
-                    isInverted(), redstoneSignalOutput));
+            output = RedstoneUtil.computeLatchedRedstoneBetweenValues(storedItems, maxValue, minValue,
+                    isInverted(), redstoneSignalOutput);
         } else {
-            setRedstoneSignalOutput(
-                    RedstoneUtil.computeRedstoneBetweenValues(storedItems, maxValue, minValue, isInverted()));
+            output = RedstoneUtil.computeRedstoneBetweenValues(storedItems, maxValue, minValue, isInverted());
+        }
+        if (isStrongSignal) {
+            setRedstoneSignalOutput(output);
+            setRedstoneDirectSignalOutput(output);
+        } else {
+            setRedstoneSignalOutput(output);
+            setRedstoneDirectSignalOutput(0);
         }
     }
 
@@ -143,6 +155,11 @@ public class AdvancedItemDetectorCover extends ItemDetectorCover implements IUIC
                 .setShouldUseBaseBackground()
                 .isMultiLang()
                 .setTooltipText("cover.advanced_detector.latch"));
+
+        group.addWidget(new ToggleButtonWidget(52, 21, 18, 18,
+                GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
+                .isMultiLang()
+                .setTooltipText("cover.advanced_detector.signal"));
 
         // Item Filter UI:
         group.addWidget(filterHandler.createFilterSlotUI(148, 100));

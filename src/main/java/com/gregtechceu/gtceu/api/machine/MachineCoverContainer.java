@@ -95,6 +95,11 @@ public class MachineCoverContainer implements ICoverable, IEnhancedManaged {
     }
 
     @Override
+    public void notifyAdjacentBlockUpdate() {
+        machine.notifyAdjacentBlockUpdate();
+    }
+
+    @Override
     public void scheduleRenderUpdate() {
         machine.scheduleRenderUpdate();
     }

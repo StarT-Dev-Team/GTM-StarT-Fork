@@ -64,6 +64,9 @@ public abstract class CoverBehavior implements IEnhancedManaged, IToolGridHighli
     @Getter
     @Persisted
     protected int redstoneSignalOutput = 0;
+    @Getter
+    @Persisted
+    protected int redstoneDirectSignalOutput = 0;
 
     public CoverBehavior(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide) {
         this.coverDefinition = definition;
@@ -146,7 +149,14 @@ public abstract class CoverBehavior implements IEnhancedManaged, IToolGridHighli
     public void setRedstoneSignalOutput(int redstoneSignalOutput) {
         if (this.redstoneSignalOutput == redstoneSignalOutput) return;
         this.redstoneSignalOutput = redstoneSignalOutput;
-        coverHolder.notifyBlockUpdate();
+        coverHolder.notifyAdjacentBlockUpdate();
+        coverHolder.markDirty();
+    }
+
+    public void setRedstoneDirectSignalOutput(int redstoneSignalOutput) {
+        if (this.redstoneDirectSignalOutput == redstoneSignalOutput) return;
+        this.redstoneDirectSignalOutput = redstoneSignalOutput;
+        coverHolder.notifyAdjacentBlockUpdate();
         coverHolder.markDirty();
     }
 

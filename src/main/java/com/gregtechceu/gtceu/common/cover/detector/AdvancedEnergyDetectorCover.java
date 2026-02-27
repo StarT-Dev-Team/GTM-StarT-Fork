@@ -14,6 +14,7 @@ import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.TextBoxWidget;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
@@ -58,6 +59,12 @@ public class AdvancedEnergyDetectorCover extends EnergyDetectorCover implements 
     private LongInputWidget minValueInput;
     private LongInputWidget maxValueInput;
 
+    @Persisted
+    @DescSynced
+    @Getter
+    @Setter
+    private boolean isStrongSignal;
+
     public AdvancedEnergyDetectorCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide) {
         super(definition, coverHolder, attachedSide);
         this.minValue = DEFAULT_MIN_PERCENT;
@@ -75,34 +82,42 @@ public class AdvancedEnergyDetectorCover extends EnergyDetectorCover implements 
         IEnergyInfoProvider.EnergyInfo energyInfo = energyInfoProvider.getEnergyInfo();
         boolean isBigInt = energyInfoProvider.supportsBigIntEnergyValues();
 
+        var output = 0;
         if (isBigInt) {
             if (usePercent) {
                 if (energyInfo.capacity().compareTo(BigInteger.ZERO) > 0) {
                     float ratio = GTMath.ratio(energyInfo.stored(), energyInfo.capacity());
-                    setRedstoneSignalOutput(computeLatchedRedstoneBetweenValues(ratio * 100, maxValue,
-                            minValue, isInverted(), redstoneSignalOutput));
+                    output = computeLatchedRedstoneBetweenValues(ratio * 100, maxValue,
+                            minValue, isInverted(), redstoneSignalOutput);
                 } else {
-                    setRedstoneSignalOutput(isInverted() ? 15 : 0);
+                    output = isInverted() ? 15 : 0;
                 }
             } else {
-                setRedstoneSignalOutput(computeLatchedRedstoneBetweenValues(energyInfo.stored(),
+                output = computeLatchedRedstoneBetweenValues(energyInfo.stored(),
                         BigInteger.valueOf(this.maxValue), BigInteger.valueOf(this.minValue),
-                        isInverted(), redstoneSignalOutput));
+                        isInverted(), redstoneSignalOutput);
             }
         } else {
             if (usePercent) {
                 if (energyInfo.capacity().longValue() > 0) {
                     float ratio = energyInfo.stored().floatValue() / energyInfo.capacity().floatValue();
-                    setRedstoneSignalOutput(computeLatchedRedstoneBetweenValues(ratio * 100, maxValue,
-                            minValue, isInverted(), redstoneSignalOutput));
+                    output = computeLatchedRedstoneBetweenValues(ratio * 100, maxValue,
+                            minValue, isInverted(), redstoneSignalOutput);
                 } else {
-                    setRedstoneSignalOutput(isInverted() ? 15 : 0);
+                    output = isInverted() ? 15 : 0;
                 }
             } else {
-                setRedstoneSignalOutput(computeLatchedRedstoneBetweenValues(energyInfo.stored().longValue(),
+                output = computeLatchedRedstoneBetweenValues(energyInfo.stored().longValue(),
                         this.maxValue, this.minValue,
-                        isInverted(), redstoneSignalOutput));
+                        isInverted(), redstoneSignalOutput);
             }
+        }
+        if (isStrongSignal) {
+            setRedstoneSignalOutput(output);
+            setRedstoneDirectSignalOutput(output);
+        } else {
+            setRedstoneSignalOutput(output);
+            setRedstoneDirectSignalOutput(0);
         }
     }
 
@@ -140,6 +155,11 @@ public class AdvancedEnergyDetectorCover extends EnergyDetectorCover implements 
                 GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
                 .isMultiLang()
                 .setTooltipText("cover.advanced_energy_detector.invert"));
+
+        group.addWidget(new ToggleButtonWidget(31, 21, 18, 18,
+                GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
+                .isMultiLang()
+                .setTooltipText("cover.advanced_detector.signal"));
 
         // Mode (EU / Percent) Toggle:
         group.addWidget(new ToggleButtonWidget(

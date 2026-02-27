@@ -45,6 +45,8 @@ public interface ICoverable extends ITickSubscription {
 
     void notifyBlockUpdate();
 
+    void notifyAdjacentBlockUpdate();
+
     void scheduleRenderUpdate();
 
     void scheduleNeighborShapeUpdate();

@@ -63,6 +63,11 @@ public class AdvancedFluidDetectorCover extends FluidDetectorCover implements IU
     @DescSynced
     @Getter
     protected final FilterHandler<FluidStack, FluidFilter> filterHandler;
+    @Persisted
+    @DescSynced
+    @Getter
+    @Setter
+    private boolean isStrongSignal;
 
     public AdvancedFluidDetectorCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide) {
         super(definition, coverHolder, attachedSide);
@@ -101,11 +106,19 @@ public class AdvancedFluidDetectorCover extends FluidDetectorCover implements IU
                 storedFluid += content.getAmount();
         }
 
+        var output = 0;
         if (isLatched) {
-            setRedstoneSignalOutput(computeLatchedRedstoneBetweenValues(storedFluid, maxValue, minValue,
-                    isInverted(), redstoneSignalOutput));
+            output = computeLatchedRedstoneBetweenValues(storedFluid, maxValue, minValue, isInverted(),
+                    redstoneSignalOutput);
         } else {
-            setRedstoneSignalOutput(computeRedstoneBetweenValues(storedFluid, maxValue, minValue, isInverted()));
+            output = computeRedstoneBetweenValues(storedFluid, maxValue, minValue, isInverted());
+        }
+        if (isStrongSignal) {
+            setRedstoneSignalOutput(output);
+            setRedstoneDirectSignalOutput(output);
+        } else {
+            setRedstoneSignalOutput(output);
+            setRedstoneDirectSignalOutput(0);
         }
     }
 
@@ -147,6 +160,11 @@ public class AdvancedFluidDetectorCover extends FluidDetectorCover implements IU
                         .setShouldUseBaseBackground()
                         .isMultiLang()
                         .setTooltipText("cover.advanced_detector.latch"));
+
+        group.addWidget(new ToggleButtonWidget(52, 21, 18, 18,
+                GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
+                .isMultiLang()
+                .setTooltipText("cover.advanced_detector.signal"));
 
         group.addWidget(filterHandler.createFilterSlotUI(148, 100));
         group.addWidget(filterHandler.createFilterConfigUI(10, 100, 156, 60));

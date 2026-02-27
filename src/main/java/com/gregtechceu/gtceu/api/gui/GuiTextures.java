@@ -116,6 +116,8 @@ public class GuiTextures {
     public static final ResourceTexture BUTTON_ITEM_OUTPUT = new ResourceTexture(
             "gtceu:textures/gui/widget/button_item_output_overlay.png");
     public static final ResourceTexture BUTTON_LOCK = new ResourceTexture("gtceu:textures/gui/widget/button_lock.png");
+    public static final ResourceTexture BUTTON_REDSTONE_STRENGTH = new ResourceTexture(
+            "gtceu:textures/gui/widget/button_redstone_strength.png");
     public static final ResourceTexture BUTTON_VOID = new ResourceTexture("gtceu:textures/gui/widget/button_void.png");
     public static final ResourceTexture BUTTON_VOID_PARTIAL = new ResourceTexture(
             "gtceu:textures/gui/widget/button_void_partial.png");
