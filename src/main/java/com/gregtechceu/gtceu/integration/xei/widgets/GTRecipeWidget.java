@@ -113,10 +113,16 @@ public class GTRecipeWidget extends WidgetGroup {
 
         EnergyStack EUt = RecipeHelper.getRealEUt(recipe);
         int yOffset = 5 + size.height;
-        if (recipe.data.getBoolean("hide_duration")) yOffset -= 10;
-        if (recipe.data.getBoolean("hide_total_eu")) yOffset -= 10;
+        int eutOffset = 21;
+        if (recipe.data.getBoolean("hide_duration")) {
+            yOffset += 10;
+        }
+        if (recipe.data.getBoolean("hide_total_eu")) {
+            yOffset += 10;
+            eutOffset -= 10;
+        }
         this.yOffset = yOffset;
-        yOffset += !EUt.isEmpty() ? 21 : 0;
+        yOffset += !EUt.isEmpty() ? eutOffset : 0;
 
         /// add text based on i/o's
         MutableInt yOff = new MutableInt(yOffset);

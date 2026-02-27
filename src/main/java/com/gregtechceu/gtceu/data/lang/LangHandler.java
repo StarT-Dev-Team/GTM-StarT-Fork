@@ -1178,6 +1178,14 @@ public class LangHandler {
         provider.add("gtceu.multiblock.pattern.location_end", "§cVery End§r");
         provider.add("gtceu.multiblock.pattern.replaceable_air", "Replaceable by Air");
 
+        provider.add("gtceu.multiblock.layered.progress", "Total Progress: %ss / %ss (%s%%)");
+        provider.add("gtceu.multiblock.layered.step", "Current Step: %s/%s");
+        provider.add("gtceu.multiblock.layered.step_progress", "Step Progress: %ss / %ss (%s%%)");
+        provider.add("gtceu.multiblock.layered.recipe_contents_line", "%s x §e%s§r");
+        provider.add("gtceu.multiblock.layered.next_step_inputs", "Next Step Inputs:");
+        provider.add("gtceu.multiblock.layered.cancel", "Cancel");
+        provider.add("gtceu.multiblock.layered.final_step_outputs", "Final Step Outputs:");
+
         provider.add("gtceu.multiblock.computation.max", "Max CWU/t: %s");
         provider.add("gtceu.multiblock.computation.usage", "Using: %s");
         provider.add("gtceu.multiblock.computation.non_bridging", "Non-bridging connection found");

@@ -8,16 +8,16 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntIntImmutablePair;
 import it.unimi.dsi.fastutil.ints.IntIntPair;
-import com.mojang.serialization.DynamicOps;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public final class GTCodecUtils {
 

@@ -21,6 +21,7 @@ import net.minecraftforge.fluids.FluidStack;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenCustomHashMap;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -40,6 +41,36 @@ public class LayeredRecipeLogic extends RecipeLogic {
 
     public LayeredRecipeLogic(IRecipeLogicMachine machine) {
         super(machine);
+    }
+
+    public @Nullable LayeredRecipeHelper.Layer getCurrentLayer() {
+        if (layeredRecipe == null || layeredRecipeLayerIndex < 0 || layeredRecipeLayerIndex >= layeredRecipe.size()) {
+            return null;
+        }
+        return layeredRecipe.get(layeredRecipeLayerIndex);
+    }
+
+    @Override
+    public boolean hasCustomProgressLine() {
+        return true;
+    }
+
+    @Override
+    public @Nullable Component getCustomProgressLine() {
+        var currentProgress = (int) (getProgressPercent() * 100);
+        var currentInSec = progress / 20.0;
+        var maxInSec = duration / 20.0;
+
+        return Component.translatable("gtceu.multiblock.layered.step_progress",
+                String.format("%.2f", (float) currentInSec),
+                String.format("%.2f", (float) maxInSec), currentProgress);
+    }
+
+    @Override
+    public void interruptRecipe() {
+        super.interruptRecipe();
+        layeredRecipeLayerIndex = -1;
+        layeredRecipe = null;
     }
 
     @Override
