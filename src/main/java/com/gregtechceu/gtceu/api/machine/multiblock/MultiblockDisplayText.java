@@ -10,9 +10,12 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderFluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
+import com.gregtechceu.gtceu.common.machine.trait.LayeredRecipeLogic;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
+
+import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -715,6 +718,135 @@ public class MultiblockDisplayText {
         public Builder addCurrentEnergyProductionLine(long euOutput) {
             textList.add(Component.translatable("gtceu.multiblock.turbine.energy_per_tick_maxed",
                     FormattingUtil.formatNumbers(euOutput)).withStyle(ChatFormatting.GRAY));
+            return this;
+        }
+
+        public Builder addLayeredSteps(LayeredRecipeLogic logic) {
+            var layers = logic.getLayeredRecipe();
+            var step = logic.getLayeredRecipeLayerIndex();
+            if (!isStructureFormed || layers == null)
+                return this;
+
+            textList.add(Component.literal(""));
+            textList.add(Component.translatable("gtceu.multiblock.layered.step", step + 1, layers.size()));
+            return this;
+        }
+
+        public Builder addLayeredTotalProgress(LayeredRecipeLogic logic) {
+            var layers = logic.getLayeredRecipe();
+            if (!isStructureFormed || layers == null)
+                return this;
+
+            var step = logic.getLayeredRecipeLayerIndex();
+            var totalDuration = (int) layers.stream().map(l -> l.recipe().duration).reduce(0, Integer::sum);
+            var totalProgress = logic.getProgress() + layers.stream()
+                    .limit(step)
+                    .map(l -> l.recipe().duration).reduce(0, Integer::sum);
+
+            var progressPercent = totalDuration == 0 ? 0.0 : totalProgress / (totalDuration * 1.0);
+
+            var currentProgress = (int) (progressPercent * 100);
+            var currentInSec = totalProgress / 20.0;
+            var maxInSec = totalDuration / 20.0;
+
+            textList.add(Component.literal(""));
+            textList.add(Component.translatable("gtceu.multiblock.layered.progress",
+                    String.format("%.2f", (float) currentInSec),
+                    String.format("%.2f", (float) maxInSec), currentProgress));
+            return this;
+        }
+
+        public Builder addLayeredNextStepInputs(LayeredRecipeLogic logic) {
+            var layers = logic.getLayeredRecipe();
+            if (!isStructureFormed || layers == null || logic.getLastRecipe() == null)
+                return this;
+
+            textList.add(Component.literal(""));
+            textList.add(Component.translatable("gtceu.multiblock.layered.next_step_inputs")
+                    .append(ComponentPanelWidget.withButton(Component.literal(" [")
+                            .append(Component.translatable("gtceu.multiblock.layered.cancel"))
+                            .append(Component.literal("]")), "layered_cancel")));
+
+            var recipe = layers.get(logic.getLayeredRecipeLayerIndex()).recipe();
+            var itemInputs = recipe.getInputContents(ItemRecipeCapability.CAP);
+            var fluidInputs = recipe.getInputContents(FluidRecipeCapability.CAP);
+
+            for (var item : itemInputs) {
+                ItemStack stack;
+                if (item.content instanceof IntProviderIngredient provider) {
+                    stack = provider.getMaxSizeStack();
+                } else {
+                    var stacks = ItemRecipeCapability.CAP.of(item.content).getItems();
+                    if (stacks.length == 0) continue;
+                    stack = stacks[0];
+                }
+                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
+                        stack.getHoverName(), FormattingUtil.formatNumberReadable(stack.getCount())));
+            }
+
+            for (var fluid : fluidInputs) {
+                FluidStack stack;
+                if (fluid.content instanceof IntProviderFluidIngredient provider) {
+                    stack = provider.getMaxSizeStack();
+                } else {
+                    var stacks = FluidRecipeCapability.CAP.of(fluid.content).getStacks();
+                    if (stacks.length == 0) continue;
+                    stack = stacks[0];
+                }
+                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
+                        stack.getDisplayName(), FormattingUtil.formatBuckets(stack.getAmount())));
+            }
+            return this;
+        }
+
+        public Builder addLayeredFinalStepOutputs(LayeredRecipeLogic logic) {
+            var layers = logic.getLayeredRecipe();
+            if (!isStructureFormed || layers == null)
+                return this;
+
+            textList.add(Component.literal(""));
+            textList.add(Component.translatable("gtceu.multiblock.layered.final_step_outputs"));
+
+            var recipe = layers.get(layers.size() - 1).recipe();
+            var itemOutputs = recipe.getOutputContents(ItemRecipeCapability.CAP);
+            var fluidOutputs = recipe.getOutputContents(FluidRecipeCapability.CAP);
+
+            for (var item : itemOutputs) {
+                ItemStack stack;
+                Component displaycount;
+                if (item.content instanceof IntProviderIngredient provider) {
+                    stack = provider.getMaxSizeStack();
+                    displaycount = Component.translatable("gtceu.gui.content.range",
+                            provider.getCountProvider().getMinValue(),
+                            provider.getCountProvider().getMaxValue());
+                } else {
+                    var stacks = ItemRecipeCapability.CAP.of(item.content).getItems();
+                    if (stacks.length == 0) continue;
+                    stack = stacks[0];
+                    displaycount = Component.literal(String.valueOf(stack.getCount()));
+                }
+
+                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
+                        stack.getHoverName(), displaycount));
+            }
+
+            for (var fluid : fluidOutputs) {
+                FluidStack stack;
+                Component displaycount;
+                if (fluid.content instanceof IntProviderFluidIngredient provider) {
+                    stack = provider.getMaxSizeStack();
+                    displaycount = Component.translatable("gtceu.gui.content.range",
+                            provider.getCountProvider().getMinValue(),
+                            provider.getCountProvider().getMaxValue());
+                } else {
+                    var stacks = FluidRecipeCapability.CAP.of(fluid.content).getStacks();
+                    if (stacks.length == 0) continue;
+                    stack = stacks[0];
+                    displaycount = Component.literal(String.valueOf(stack.getAmount()));
+                }
+                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
+                        stack.getDisplayName(), displaycount));
+            }
             return this;
         }
     }

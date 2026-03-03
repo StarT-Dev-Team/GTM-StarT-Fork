@@ -3,30 +3,22 @@ package com.gregtechceu.gtceu.api.recipe.ui;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
-import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.editor.IEditableUI;
-import com.gregtechceu.gtceu.api.machine.feature.multiblock.IWorkableMultiController;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.LayeredRecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
-import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderFluidIngredient;
-import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
-import com.gregtechceu.gtceu.common.machine.trait.LayeredRecipeLogic;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
 import com.lowdragmc.lowdraglib.gui.widget.*;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
 
 import com.google.common.collect.Tables;
 
@@ -35,131 +27,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class LayeredRecipeUIHelper {
-
-    public static void handleLayeredDisplayClick(IWorkableMultiController controller, String componentData,
-                                                 ClickData clickData) {
-        if (clickData.isRemote) return;
-
-        if (componentData.equals("layered_cancel")) {
-            controller.getRecipeLogic().interruptRecipe();
-        }
-    }
-
-    public static void getLayeredAdditionalDisplay(IWorkableMultiController controller, List<Component> textList) {
-        if (!controller.isFormed()) return;
-        if (!(controller.getRecipeLogic() instanceof LayeredRecipeLogic layeredLogic)) return;
-
-        var layers = layeredLogic.getLayeredRecipe();
-        var step = layeredLogic.getLayeredRecipeLayerIndex();
-
-        if (layers != null) {
-            textList.add(Component.literal(""));
-            textList.add(Component.translatable("gtceu.multiblock.layered.step",
-                    layeredLogic.getLayeredRecipeLayerIndex() + 1, layers.size()));
-        }
-
-        if (layers != null) {
-            var totalDuration = (int) layers.stream().map(l -> l.recipe().duration).reduce(0, Integer::sum);
-            var totalProgress = layeredLogic.getProgress() + layers.stream()
-                    .limit(layeredLogic.getLayeredRecipeLayerIndex())
-                    .map(l -> l.recipe().duration).reduce(0, Integer::sum);
-
-            var progressPercent = totalDuration == 0 ? 0.0 : totalProgress / (totalDuration * 1.0);
-
-            var currentProgress = (int) (progressPercent * 100);
-            var currentInSec = totalProgress / 20.0;
-            var maxInSec = totalDuration / 20.0;
-
-            textList.add(Component.literal(""));
-            textList.add(Component.translatable("gtceu.multiblock.layered.progress",
-                    String.format("%.2f", (float) currentInSec),
-                    String.format("%.2f", (float) maxInSec), currentProgress));
-        }
-
-        if (layers != null && layeredLogic.getLastRecipe() == null) {
-            textList.add(Component.literal(""));
-            textList.add(Component.translatable("gtceu.multiblock.layered.next_step_inputs")
-                    .append(ComponentPanelWidget.withButton(Component.literal(" [")
-                            .append(Component.translatable("gtceu.multiblock.layered.cancel"))
-                            .append(Component.literal("]")), "layered_cancel")));
-
-            var recipe = layers.get(step).recipe();
-            var itemInputs = recipe.getInputContents(ItemRecipeCapability.CAP);
-            var fluidInputs = recipe.getInputContents(FluidRecipeCapability.CAP);
-
-            for (var item : itemInputs) {
-                ItemStack stack;
-                if (item.content instanceof IntProviderIngredient provider) {
-                    stack = provider.getMaxSizeStack();
-                } else {
-                    var stacks = ItemRecipeCapability.CAP.of(item.content).getItems();
-                    if (stacks.length == 0) continue;
-                    stack = stacks[0];
-                }
-                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
-                        stack.getHoverName(), FormattingUtil.formatNumberReadable(stack.getCount())));
-            }
-
-            for (var fluid : fluidInputs) {
-                FluidStack stack;
-                if (fluid.content instanceof IntProviderFluidIngredient provider) {
-                    stack = provider.getMaxSizeStack();
-                } else {
-                    var stacks = FluidRecipeCapability.CAP.of(fluid.content).getStacks();
-                    if (stacks.length == 0) continue;
-                    stack = stacks[0];
-                }
-                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
-                        stack.getDisplayName(), FormattingUtil.formatBuckets(stack.getAmount())));
-            }
-        }
-
-        if (layers != null && (step < layers.size() - 1 || layeredLogic.getLastRecipe() == null)) {
-            textList.add(Component.literal(""));
-            textList.add(Component.translatable("gtceu.multiblock.layered.final_step_outputs"));
-
-            var recipe = layers.get(layers.size() - 1).recipe();
-            var itemOutputs = recipe.getOutputContents(ItemRecipeCapability.CAP);
-            var fluidOutputs = recipe.getOutputContents(FluidRecipeCapability.CAP);
-
-            for (var item : itemOutputs) {
-                ItemStack stack;
-                Component displaycount;
-                if (item.content instanceof IntProviderIngredient provider) {
-                    stack = provider.getMaxSizeStack();
-                    displaycount = Component.translatable("gtceu.gui.content.range",
-                            provider.getCountProvider().getMinValue(),
-                            provider.getCountProvider().getMaxValue());
-                } else {
-                    var stacks = ItemRecipeCapability.CAP.of(item.content).getItems();
-                    if (stacks.length == 0) continue;
-                    stack = stacks[0];
-                    displaycount = Component.literal(String.valueOf(stack.getCount()));
-                }
-
-                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
-                        stack.getHoverName(), displaycount));
-            }
-
-            for (var fluid : fluidOutputs) {
-                FluidStack stack;
-                Component displaycount;
-                if (fluid.content instanceof IntProviderFluidIngredient provider) {
-                    stack = provider.getMaxSizeStack();
-                    displaycount = Component.translatable("gtceu.gui.content.range",
-                            provider.getCountProvider().getMinValue(),
-                            provider.getCountProvider().getMaxValue());
-                } else {
-                    var stacks = FluidRecipeCapability.CAP.of(fluid.content).getStacks();
-                    if (stacks.length == 0) continue;
-                    stack = stacks[0];
-                    displaycount = Component.literal(String.valueOf(stack.getAmount()));
-                }
-                textList.add(Component.translatable("gtceu.multiblock.layered.recipe_contents_line",
-                        stack.getDisplayName(), displaycount));
-            }
-        }
-    }
 
     public static GTRecipeTypeUI createRecipeUI(GTRecipeType recipeType) {
         return new GTRecipeTypeUI(recipeType) {
