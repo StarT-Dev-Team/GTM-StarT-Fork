@@ -131,6 +131,19 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
     }
 
     @Override
+    default void attachAutoPushConfigurators(ConfiguratorPanel configuratorPanel) {
+        if (this instanceof MetaMachine machine) {
+            for (var direction : Direction.values()) {
+                if (machine.getCoverContainer().hasCover(direction)) {
+                    var configurator = machine.getCoverContainer().getCoverAtSide(direction).getConfigurator();
+                    if (configurator != null)
+                        configuratorPanel.attachConfigurators(configurator);
+                }
+            }
+        }
+    }
+
+    @Override
     default void attachTooltips(TooltipsPanel tooltipsPanel) {
         tooltipsPanel.attachTooltips(self());
         self().getTraits().stream().filter(IFancyTooltip.class::isInstance).map(IFancyTooltip.class::cast)

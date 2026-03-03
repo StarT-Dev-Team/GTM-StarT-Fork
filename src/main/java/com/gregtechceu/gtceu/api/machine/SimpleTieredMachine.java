@@ -67,7 +67,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SimpleTieredMachine extends WorkableTieredMachine
-        implements IAutoOutputBoth, IFancyUIMachine, IHasCircuitSlot {
+                                 implements IAutoOutputBoth, IFancyUIMachine, IHasCircuitSlot {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(SimpleTieredMachine.class,
             WorkableTieredMachine.MANAGED_FIELD_HOLDER);
@@ -318,15 +318,20 @@ public class SimpleTieredMachine extends WorkableTieredMachine
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         IFancyUIMachine.super.attachConfigurators(configuratorPanel);
 
+        if (isCircuitSlotEnabled()) {
+            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
+        }
+    }
+
+    @Override
+    public void attachAutoPushConfigurators(ConfiguratorPanel configuratorPanel) {
+        IFancyUIMachine.super.attachAutoPushConfigurators(configuratorPanel);
+
         if (hasAutoOutputFluid()) {
             configuratorPanel.attachConfigurators(createAutoOutputFluidConfigurator());
         }
         if (hasAutoOutputItem()) {
             configuratorPanel.attachConfigurators(createAutoOutputItemConfigurator());
-        }
-
-        if (isCircuitSlotEnabled()) {
-            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
         }
     }
 
