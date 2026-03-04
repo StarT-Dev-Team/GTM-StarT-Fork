@@ -20,25 +20,37 @@ import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.*;
 import com.gregtechceu.gtceu.api.recipe.ingredient.nbtpredicate.NBTPredicate;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
+import com.gregtechceu.gtceu.integration.kjs.recipe.GTRecipeSchema;
+import com.gregtechceu.gtceu.integration.kjs.recipe.components.CapabilityMap;
+import com.gregtechceu.gtceu.integration.kjs.recipe.components.ExtendedOutputItem;
+import com.gregtechceu.gtceu.integration.kjs.recipe.components.GTRecipeComponents;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.common.crafting.StrictNBTIngredient;
 import net.minecraftforge.fluids.FluidStack;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.latvian.mods.kubejs.fluid.FluidStackJS;
+import dev.latvian.mods.kubejs.item.InputItem;
+import dev.latvian.mods.kubejs.item.OutputItem;
+import dev.latvian.mods.kubejs.recipe.RecipeExceptionJS;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -64,6 +76,452 @@ public record LayeredRecipeInfo(List<Layer> layers, Map<RecipeCapability<?>, Int
         public static final Codec<Layer> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.INT.fieldOf("duration").forGetter(Layer::duration),
                 Codec.INT.fieldOf("timeout").forGetter(Layer::timeout)).apply(instance, Layer::new));
+    }
+
+    @Accessors(chain = true, fluent = true)
+    public static class JSBuilder {
+
+        private final GTRecipeSchema.GTRecipeJS recipeJS;
+
+        private final List<Builder.Layer> layers = new ArrayList<>();
+
+        public Map<RecipeCapability<?>, List<Content>> input = new IdentityHashMap<>();
+        public Map<RecipeCapability<?>, List<Content>> tickInput = new IdentityHashMap<>();
+
+        public List<MaterialStack> itemMaterialStacks = new ArrayList<>();
+        public List<MaterialStack> fluidMaterialStacks = new ArrayList<>();
+        public List<ItemStack> tempItemStacks = new ArrayList<>();
+
+        @Setter
+        public boolean perTick;
+        @Setter
+        public int chance = ChanceLogic.getMaxChancedValue();
+        @Setter
+        public int maxChance = ChanceLogic.getMaxChancedValue();
+        @Setter
+        public int tierChanceBoost = 0;
+        @Setter
+        public int duration = -1;
+        @Setter
+        public int timeout = -1;
+
+        public JSBuilder(GTRecipeSchema.GTRecipeJS recipeJS) {
+            this.recipeJS = recipeJS;
+        }
+
+        public JSBuilder next() {
+            if (input.isEmpty() && !tickInput.isEmpty()) return this;
+
+            layers.add(new Builder.Layer(new IdentityHashMap<>(input), new IdentityHashMap<>(tickInput), duration,
+                    timeout));
+
+            input.clear();
+            tickInput.clear();
+            perTick = false;
+            chance = ChanceLogic.getMaxChancedValue();
+            maxChance = ChanceLogic.getMaxChancedValue();
+            tierChanceBoost = 0;
+            duration = -1;
+            timeout = -1;
+
+            return this;
+        }
+
+        public <T> JSBuilder input(RecipeCapability<T> capability, Object... obj) {
+            var t = (perTick ? tickInput : input);
+            var newContents = Arrays.stream(obj).map(this::makeContent).toList();
+            t.computeIfAbsent(capability, c -> new ArrayList<>()).addAll(newContents);
+            return this;
+        }
+
+        public JSBuilder inputEU(EnergyStack eu) {
+            return input(EURecipeCapability.CAP, eu);
+        }
+
+        public JSBuilder inputEU(long voltage, long amperage) {
+            return inputEU(new EnergyStack(voltage, amperage));
+        }
+
+        public JSBuilder EUt(EnergyStack.WithIO eu) {
+            if (eu.isEmpty()) {
+                throw new RecipeExceptionJS(String.format("EUt can't be explicitly set to 0, id: %s", recipeJS.id));
+            }
+            if (eu.amperage() < 1) {
+                throw new RecipeExceptionJS(String.format("Amperage must be a positive integer, id: %s", recipeJS.id));
+            }
+            if (eu.isOutput()) {
+                throw new RecipeExceptionJS(String.format("EUt can't be output, id: %s", recipeJS.id));
+            }
+            var lastPerTick = perTick;
+            perTick = true;
+            inputEU(eu.stack());
+            perTick = lastPerTick;
+            return this;
+        }
+
+        public JSBuilder EUt(long voltage, long amperage) {
+            return EUt(EnergyStack.WithIO.fromVA(voltage, amperage));
+        }
+
+        public JSBuilder itemInputs(InputItem... inputs) {
+            return inputItems(inputs);
+        }
+
+        public JSBuilder itemInput(MaterialEntry input) {
+            return inputItems(input);
+        }
+
+        public JSBuilder itemInput(MaterialEntry input, int count) {
+            return inputItems(input, count);
+        }
+
+        public JSBuilder inputItems(InputItem... inputs) {
+            validateItems("input", inputs);
+
+            for (var stack : inputs) {
+                // test simple item that have pure singular material stack
+                var matStack = ChemicalHelper.getMaterialStack(stack.ingredient.getItems()[0].getItem());
+                // test item that has multiple material stacks
+                var matInfo = ChemicalHelper.getMaterialInfo(stack.ingredient.getItems()[0].getItem());
+                if (chance == maxChance && chance != 0) {
+                    if (!matStack.isEmpty()) {
+                        itemMaterialStacks.add(matStack.multiply(stack.count));
+                    }
+                    if (matInfo != null) {
+                        for (var ms : matInfo.getMaterials()) {
+                            itemMaterialStacks.add(ms.multiply(stack.count));
+                        }
+                    } else {
+                        tempItemStacks.add(stack.ingredient.getItems()[0].copyWithCount(stack.count));
+                    }
+                }
+            }
+            return input(ItemRecipeCapability.CAP, (Object[]) inputs);
+        }
+
+        public JSBuilder inputItems(ItemStack... inputs) {
+            validateItems("input", inputs);
+
+            for (ItemStack itemStack : inputs) {
+                if (itemStack.isEmpty()) {
+                    throw new RecipeExceptionJS(String.format("Input items is empty, id: %s", recipeJS.id));
+                }
+                gatherMaterialInfoFromStacks(itemStack);
+            }
+            return input(ItemRecipeCapability.CAP,
+                    Arrays.stream(inputs)
+                            .map(stack -> InputItem.of(
+                                    stack.hasTag() ? StrictNBTIngredient.of(stack) : Ingredient.of(stack),
+                                    stack.getCount()))
+                            .toArray());
+        }
+
+        public JSBuilder inputItems(TagKey<Item> tag, int amount) {
+            return inputItems(InputItem.of(Ingredient.of(tag), amount));
+        }
+
+        public JSBuilder inputItems(Item input, int amount) {
+            return inputItems(new ItemStack(input, amount));
+        }
+
+        public JSBuilder inputItems(Item input) {
+            return inputItems(InputItem.of(Ingredient.of(input), 1));
+        }
+
+        public JSBuilder inputItems(Supplier<? extends Item> input) {
+            return inputItems(input.get());
+        }
+
+        public JSBuilder inputItems(Supplier<? extends Item> input, int amount) {
+            return inputItems(new ItemStack(input.get(), amount));
+        }
+
+        public JSBuilder inputItems(TagPrefix orePrefix, Material material) {
+            return inputItems(orePrefix, material, 1);
+        }
+
+        public JSBuilder inputItems(MaterialEntry input) {
+            return inputItems(input.tagPrefix(), input.material(), 1);
+        }
+
+        public JSBuilder inputItems(MaterialEntry input, int count) {
+            return inputItems(input.tagPrefix(), input.material(), count);
+        }
+
+        public JSBuilder inputItems(TagPrefix orePrefix, Material material, int count) {
+            itemMaterialStacks.add(new MaterialStack(material, orePrefix.getMaterialAmount(material) * count));
+            return inputItems(ChemicalHelper.getTag(orePrefix, material), count);
+        }
+
+        public JSBuilder inputItems(MachineDefinition machine) {
+            return inputItems(machine, 1);
+        }
+
+        public JSBuilder inputItems(MachineDefinition machine, int count) {
+            return inputItems(machine.asStack(count));
+        }
+
+        public JSBuilder itemInputsRanged(ExtendedOutputItem ingredient, int min, int max) {
+            return inputItemsRanged(ingredient.ingredient.getInner(), min, max);
+        }
+
+        public JSBuilder inputItemsRanged(Ingredient ingredient, int min, int max) {
+            validateItems("ranged input", ingredient);
+            return input(ItemRecipeCapability.CAP, new ExtendedOutputItem(ingredient, 1, UniformInt.of(min, max)));
+        }
+
+        public JSBuilder inputItemsRanged(ItemStack stack, int min, int max) {
+            validateItems("ranged input", stack);
+            return input(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, UniformInt.of(min, max)));
+        }
+
+        public JSBuilder itemInputsRanged(TagPrefix orePrefix, Material material, int min, int max) {
+            return inputItemsRanged(ChemicalHelper.get(orePrefix, material), min, max);
+        }
+
+        public JSBuilder inputItemNbtPredicate(ItemStack itemStack, NBTPredicate predicate) {
+            if (itemStack.isEmpty()) {
+                throw new RecipeExceptionJS(String.format("Input items is empty, id: %s", recipeJS.id));
+            }
+            gatherMaterialInfoFromStacks(itemStack);
+
+            return itemInputs(InputItem.of(new NBTPredicateIngredient(itemStack, predicate), itemStack.getCount()));
+        }
+
+        public JSBuilder notConsumable(InputItem itemStack) {
+            validateItems("not consumable", itemStack);
+
+            int lastChance = this.chance;
+            this.chance = 0;
+            inputItems(itemStack);
+            this.chance = lastChance;
+            return this;
+        }
+
+        public JSBuilder notConsumable(TagPrefix orePrefix, Material material) {
+            validateItems("not consumable", orePrefix);
+
+            int lastChance = this.chance;
+            this.chance = 0;
+            inputItems(orePrefix, material);
+            this.chance = lastChance;
+            return this;
+        }
+
+        public JSBuilder notConsumableFluid(GTRecipeComponents.FluidIngredientJS fluid) {
+            validateFluids("not consumable", fluid);
+
+            int lastChance = this.chance;
+            this.chance = 0;
+            inputFluids(fluid);
+            this.chance = lastChance;
+            return this;
+        }
+
+        public JSBuilder chancedInput(InputItem stack, int chance, int tierChanceBoost) {
+            validateItems("chanced input", stack);
+
+            if (0 >= chance || chance > ChanceLogic.getMaxChancedValue()) {
+                throw new RecipeExceptionJS(
+                        String.format("Chance cannot be less or equal to 0 or more than %s, Actual: %s, id: %s",
+                                ChanceLogic.getMaxChancedValue(), chance, recipeJS.id));
+            }
+            int lastChance = this.chance;
+            int lastTierChanceBoost = this.tierChanceBoost;
+            this.chance = chance;
+            this.tierChanceBoost = tierChanceBoost;
+            inputItems(stack);
+            this.chance = lastChance;
+            this.tierChanceBoost = lastTierChanceBoost;
+            return this;
+        }
+
+        public JSBuilder chancedFluidInput(GTRecipeComponents.FluidIngredientJS stack, int chance,
+                                           int tierChanceBoost) {
+            validateFluids("chanced input", stack);
+
+            if (0 >= chance || chance > ChanceLogic.getMaxChancedValue()) {
+                throw new RecipeExceptionJS(
+                        String.format("Chance cannot be less or equal to 0 or more than %s, Actual: %s, id: %s",
+                                ChanceLogic.getMaxChancedValue(), chance, recipeJS.id));
+            }
+            int lastChance = this.chance;
+            int lastTierChanceBoost = this.tierChanceBoost;
+            this.chance = chance;
+            this.tierChanceBoost = tierChanceBoost;
+            inputFluids(stack);
+            this.chance = lastChance;
+            this.tierChanceBoost = lastTierChanceBoost;
+            return this;
+        }
+
+        public JSBuilder fluidInputs(GTRecipeComponents.FluidIngredientJS... inputs) {
+            return inputFluids(inputs);
+        }
+
+        public JSBuilder inputFluids(GTRecipeComponents.FluidIngredientJS... inputs) {
+            validateFluids("input", inputs);
+
+            for (var fluidIng : inputs) {
+                for (var stack : fluidIng.ingredient().getStacks()) {
+                    var mat = ChemicalHelper.getMaterial(stack.getFluid());
+                    if (!mat.isNull()) {
+                        fluidMaterialStacks.add(new MaterialStack(mat,
+                                ((long) stack.getAmount() * GTValues.M) / GTValues.L));
+                    }
+                }
+            }
+            return input(FluidRecipeCapability.CAP, (Object[]) inputs);
+        }
+
+        public JSBuilder inputFluidsRanged(FluidStackJS input, int min, int max) {
+            return inputFluidsRanged(input, UniformInt.of(min, max));
+        }
+
+        public JSBuilder inputFluidsRanged(FluidStackJS input, IntProvider range) {
+            validateFluids("ranged input", input);
+            FluidStack stack = new FluidStack(input.getFluid(), (int) input.getAmount(), input.getNbt());
+            return input(FluidRecipeCapability.CAP,
+                    IntProviderFluidIngredient.of(FluidIngredient.of(stack), range));
+        }
+
+        private Content makeContent(Object o) {
+            return new Content(o, chance, maxChance, tierChanceBoost);
+        }
+
+        @HideFromJS
+        public void apply() {
+            next();
+
+            var info = new LayeredRecipeInfo(
+                    layers.stream().map(layer -> new LayeredRecipeInfo.Layer(layer.duration(), layer.timeout()))
+                            .toList(),
+                    new IdentityHashMap<>(),
+                    new IdentityHashMap<>());
+
+            var layerIndex = 0;
+            for (var layer : layers) {
+                var allInputs = recipeJS.getValue(GTRecipeSchema.ALL_INPUTS);
+                if (allInputs == null)
+                    recipeJS.setValue(GTRecipeSchema.ALL_INPUTS, allInputs = new CapabilityMap());
+
+                var allTickInputs = recipeJS.getValue(GTRecipeSchema.ALL_TICK_INPUTS);
+                if (allTickInputs == null)
+                    recipeJS.setValue(GTRecipeSchema.ALL_TICK_INPUTS, allTickInputs = new CapabilityMap());
+
+                applyLayer(layerIndex, layer.input(), allInputs, info.input());
+                applyLayer(layerIndex, layer.tickInput(), allTickInputs, info.tickInput());
+                layerIndex++;
+            }
+
+            var layeredData = LayeredRecipeInfo.CODEC.encodeStart(NbtOps.INSTANCE, info).result().orElseThrow();
+            recipeJS.addData("layered_info", layeredData);
+        }
+
+        private void applyLayer(int layerIndex, Map<RecipeCapability<?>, List<Content>> layer,
+                                CapabilityMap cMap,
+                                Map<RecipeCapability<?>, Int2IntMap> cLayerMap) {
+            for (var entry : layer.entrySet()) {
+                var capability = entry.getKey();
+                var contents = entry.getValue();
+
+                var cMapCap = cMap.get(capability);
+                var indexStart = cMapCap != null ? cMapCap.length : 0;
+                cMap.put(capability, ArrayUtils.addAll(cMapCap, contents.toArray(Content[]::new)));
+                var indexEnd = indexStart + contents.size();
+                var layerMap = cLayerMap.computeIfAbsent(capability, c -> new Int2IntArrayMap());
+                IntStream.range(indexStart, indexEnd).forEach((index) -> layerMap.put(index, layerIndex));
+            }
+        }
+
+        private void validateItems(@NotNull String type, InputItem... items) {
+            for (var stack : items) {
+                if (stack == null || stack.isEmpty()) {
+                    throw new RecipeExceptionJS(
+                            String.format("Invalid or empty %s item (recipe ID: %s)", type, recipeJS.id));
+                }
+            }
+        }
+
+        private void validateItems(@NotNull String type, ItemStack... stacks) {
+            for (var stack : stacks) {
+                if (stack == null || stack.isEmpty()) {
+                    throw new RecipeExceptionJS(
+                            String.format("Invalid or empty %s item (recipe ID: %s)", type, recipeJS.id));
+                }
+            }
+        }
+
+        private void validateItems(@NotNull String type, Ingredient... ingredients) {
+            for (var ingredient : ingredients) {
+                if (ingredient == null || ingredient.isEmpty()) {
+                    throw new RecipeExceptionJS(
+                            String.format("Invalid or empty %s item (recipe ID: %s)", type, recipeJS.id));
+                }
+            }
+        }
+
+        private void validateItems(@NotNull String type, OutputItem... items) {
+            for (var item : items) {
+                if (item == null || item.item == null || item.item.isEmpty()) {
+                    throw new RecipeExceptionJS(
+                            String.format("Invalid or empty %s item (recipe ID: %s)", type, recipeJS.id));
+                }
+            }
+        }
+
+        private void validateItems(@NotNull String type, TagPrefix... items) {
+            for (var item : items) {
+                if (item == null || item.isEmpty()) {
+                    throw new RecipeExceptionJS(
+                            String.format("Invalid or empty %s item (recipe ID: %s)", type, recipeJS.id));
+                }
+            }
+        }
+
+        private void validateFluids(@NotNull String type, GTRecipeComponents.FluidIngredientJS... fluids) {
+            for (var fluid : fluids) {
+                if (fluid == null || fluid.ingredient() == null || fluid.ingredient().getStacks() == null) {
+                    throw new RecipeExceptionJS(
+                            String.format("Invalid or empty %s fluid (recipe ID: %s)", type, recipeJS.id));
+                }
+
+                for (var stack : fluid.ingredient().getStacks()) {
+                    if (stack == null || stack.isEmpty()) {
+                        throw new RecipeExceptionJS(
+                                String.format("Invalid or empty %s fluid (recipe ID: %s)", type, recipeJS.id));
+                    }
+                }
+            }
+        }
+
+        private void validateFluids(@NotNull String type, FluidStackJS... stacks) {
+            for (var stack : stacks) {
+                if (stack == null || stack.getFluidStack() == null || stack.getFluidStack().isEmpty()) {
+                    throw new RecipeExceptionJS(
+                            String.format("Invalid or empty %s fluid (recipe ID: %s)", type, recipeJS.id));
+                }
+            }
+        }
+
+        private void gatherMaterialInfoFromStacks(ItemStack itemStack) {
+            // test simple item that have pure singular material stack
+            var matStack = ChemicalHelper.getMaterialStack(itemStack);
+            // test item that has multiple material stacks
+            var matInfo = ChemicalHelper.getMaterialInfo(itemStack);
+            if (chance == maxChance && chance != 0) {
+                if (!matStack.isEmpty()) {
+                    itemMaterialStacks.add(matStack.multiply(itemStack.getCount()));
+                }
+                if (matInfo != null) {
+                    for (var ms : matInfo.getMaterials()) {
+                        itemMaterialStacks.add(ms.multiply(itemStack.getCount()));
+                    }
+                } else {
+                    tempItemStacks.add(itemStack);
+                }
+            }
+        }
     }
 
     @ParametersAreNonnullByDefault
@@ -514,10 +972,10 @@ public record LayeredRecipeInfo(List<Layer> layers, Map<RecipeCapability<?>, Int
         }
 
         protected Content makeContent(Object o) {
-            return new Content(o, ChanceLogic.getMaxChancedValue(), ChanceLogic.getMaxChancedValue(), 0);
+            return new Content(o, chance, maxChance, 0);
         }
 
-        void apply() {
+        public void apply() {
             next();
 
             var info = new LayeredRecipeInfo(

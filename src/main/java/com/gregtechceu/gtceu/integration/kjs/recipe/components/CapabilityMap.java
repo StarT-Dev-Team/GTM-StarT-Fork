@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,6 +25,10 @@ public class CapabilityMap extends IdentityHashMap<RecipeCapability<?>, Content[
 
     public void add(RecipeCapability<?> capability, Content value) {
         this.put(capability, ArrayUtils.add(this.get(capability), value));
+    }
+
+    public void addAll(RecipeCapability<?> capability, List<Content> contents) {
+        this.put(capability, ArrayUtils.addAll(this.get(capability), contents.toArray(Content[]::new)));
     }
 
     public boolean isInput(RecipeJS recipe, ReplacementMatch match) {

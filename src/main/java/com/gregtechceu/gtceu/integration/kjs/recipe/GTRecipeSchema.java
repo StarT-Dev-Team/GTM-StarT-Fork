@@ -25,6 +25,7 @@ import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.common.recipe.condition.*;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
+import com.gregtechceu.gtceu.data.recipe.builder.LayeredRecipeInfo;
 import com.gregtechceu.gtceu.integration.kjs.recipe.components.CapabilityMap;
 import com.gregtechceu.gtceu.integration.kjs.recipe.components.ExtendedOutputItem;
 import com.gregtechceu.gtceu.integration.kjs.recipe.components.GTRecipeComponents;
@@ -1207,6 +1208,19 @@ public interface GTRecipeSchema {
 
         public GTRecipeJS removePreviousMaterialInfo() {
             this.removeMaterialInfo = true;
+            return this;
+        }
+
+        public GTRecipeJS layeredRecipe(Consumer<LayeredRecipeInfo.JSBuilder> config) {
+            var recipeType = GTRegistries.RECIPE_TYPES.get(type.id);
+            assert recipeType != null;
+            if (!recipeType.isLayered()) {
+                GTCEu.LOGGER.error("Can't use layeredRecipe on a non-layered recipe type");
+                return this;
+            }
+            var layered = new LayeredRecipeInfo.JSBuilder(this);
+            config.accept(layered);
+            layered.apply();
             return this;
         }
 
