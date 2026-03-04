@@ -716,7 +716,7 @@ public class GTRecipeBuilder {
         return notConsumable(IntCircuitIngredient.of(configuration));
     }
 
-    public GTRecipeBuilder chancedInput(Ingredient stack, int chance, int tierChanceBoost) {
+    public GTRecipeBuilder chancedInput(SizedIngredient stack, int chance, int tierChanceBoost) {
         if (checkChanceAndPrintError(chance)) {
             return this;
         }
@@ -744,7 +744,7 @@ public class GTRecipeBuilder {
         return this;
     }
 
-    public GTRecipeBuilder chancedOutput(Ingredient stack, int chance, int tierChanceBoost) {
+    public GTRecipeBuilder chancedOutput(SizedIngredient stack, int chance, int tierChanceBoost) {
         if (checkChanceAndPrintError(chance)) {
             return this;
         }
@@ -773,7 +773,7 @@ public class GTRecipeBuilder {
     }
 
     public GTRecipeBuilder chancedInput(ItemStack stack, int chance, int tierChanceBoost) {
-        return chancedInput(Ingredient.of(stack), chance, tierChanceBoost);
+        return chancedInput(SizedIngredient.create(stack), chance, tierChanceBoost);
     }
 
     public GTRecipeBuilder chancedInput(FluidStack stack, int chance, int tierChanceBoost) {
@@ -781,7 +781,7 @@ public class GTRecipeBuilder {
     }
 
     public GTRecipeBuilder chancedOutput(ItemStack stack, int chance, int tierChanceBoost) {
-        return chancedOutput(Ingredient.of(stack), chance, tierChanceBoost);
+        return chancedOutput(SizedIngredient.create(stack), chance, tierChanceBoost);
     }
 
     public GTRecipeBuilder chancedOutput(FluidStack stack, int chance, int tierChanceBoost) {
