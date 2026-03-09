@@ -219,11 +219,8 @@ public class GTMaterials {
         cableGtOctal.addSecondaryMaterial(new MaterialStack(Rubber, plate.materialAmount() * 3));
         cableGtHex.addSecondaryMaterial(new MaterialStack(Rubber, plate.materialAmount() * 5));
 
-        plateDouble.setIgnored(BorosilicateGlass);
         plateDouble.setIgnored(Wood);
         plateDouble.setIgnored(TreatedWood);
-        plate.setIgnored(BorosilicateGlass);
-        foil.setIgnored(BorosilicateGlass);
 
         dye.setIgnored(DyeBlack, Items.BLACK_DYE);
         dye.setIgnored(DyeRed, Items.RED_DYE);
