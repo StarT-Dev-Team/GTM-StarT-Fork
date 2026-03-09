@@ -1,5 +1,5 @@
 
-<p align="center"><img src="https://raw.githubusercontent.com/GregTechCEu/Branding/refs/heads/master/gregtech_ceu_modern_logo_large_modern.png" alt="Logo"></p>
+<p align="center"><img src="logo.png" alt="Logo"></p>
 <h1 align="center">GregTech CEu: Modern - StarT Fork</h1>
 <p align="center">A community fork of GregTech CEu: Modern maintained by the StarT Development Team</p>
 <h1 align="center">
@@ -84,6 +84,9 @@ This fork should be considered a separate project with its own design goals.
 - **trulyno** - Fork Maintainer
 - **KillLaAqua** - Developer
 - **stellaurora** - Developer
+- **n1xx1** - Dev helper
+- **Luzifer Senpai** - Dev helper
+- **Kolja** - Dev helper
 
 ### Original GregTech CEu: Modern Team
 
