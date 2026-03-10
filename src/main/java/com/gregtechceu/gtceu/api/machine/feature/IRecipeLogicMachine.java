@@ -91,6 +91,13 @@ public interface IRecipeLogicMachine extends IRecipeCapabilityHolder, IMachineFe
     /**
      * Called per tick in {@link RecipeLogic#handleRecipeWorking()}
      */
+    default boolean testRecipeTick() {
+        return self().getDefinition().getTestRecipeTick().test(this);
+    }
+
+    /**
+     * Called per tick in {@link RecipeLogic#handleRecipeWorking()}
+     */
     default void onWaiting() {
         self().getDefinition().getOnWaiting().accept(this);
     }

@@ -276,46 +276,48 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
     public void handleRecipeWorking() {
         assert lastRecipe != null;
         var conditionResult = RecipeHelper.checkConditions(lastRecipe, this);
-        if (conditionResult.isSuccess()) {
-            var handleTick = handleTickRecipe(lastRecipe);
-            if (handleTick.isSuccess()) {
-                setStatus(Status.WORKING);
-                if (!machine.onWorking()) {
-                    this.interruptRecipe();
-                    return;
-                }
-                progress++;
-                totalContinuousRunningTime++;
-            } else {
-                setWaiting(handleTick.reason());
+        if (machine.testRecipeTick()) {
+            if (conditionResult.isSuccess()) {
+                var handleTick = handleTickRecipe(lastRecipe);
+                if (handleTick.isSuccess()) {
+                    setStatus(Status.WORKING);
+                    if (!machine.onWorking()) {
+                        this.interruptRecipe();
+                        return;
+                    }
+                    progress++;
+                    totalContinuousRunningTime++;
+                } else {
+                    setWaiting(handleTick.reason());
 
-                // Machine isn't getting enough power, suspend after 5 attempts.
-                if (handleTick.io() == IO.IN && handleTick.capability() == EURecipeCapability.CAP) {
-                    runAttempt++;
-                    runAttempt = (int) GTMath.clamp(runAttempt, 0, 5);
-                    if (runAttempt == 5) {
-                        boolean preventPowerFail = ConfigHolder.INSTANCE.machines.multiblocksStallOnPowerFail;
-                        if (machine.self() instanceof IMultiController) {
-                            var covers = machine.self().getCoverContainer().getCovers();
-                            for (var cover : covers) {
-                                if (cover instanceof MachineControllerCover mcc) {
-                                    if (mcc.preventPowerFail()) {
-                                        preventPowerFail = true;
-                                        break;
+                    // Machine isn't getting enough power, suspend after 5 attempts.
+                    if (handleTick.io() == IO.IN && handleTick.capability() == EURecipeCapability.CAP) {
+                        runAttempt++;
+                        runAttempt = (int) GTMath.clamp(runAttempt, 0, 5);
+                        if (runAttempt == 5) {
+                            boolean preventPowerFail = ConfigHolder.INSTANCE.machines.multiblocksStallOnPowerFail;
+                            if (machine.self() instanceof IMultiController) {
+                                var covers = machine.self().getCoverContainer().getCovers();
+                                for (var cover : covers) {
+                                    if (cover instanceof MachineControllerCover mcc) {
+                                        if (mcc.preventPowerFail()) {
+                                            preventPowerFail = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        if (machine.self() instanceof IMultiController && preventPowerFail) {
-                            runAttempt = 0;
-                            setStatus(Status.SUSPEND);
+                            if (machine.self() instanceof IMultiController && preventPowerFail) {
+                                runAttempt = 0;
+                                setStatus(Status.SUSPEND);
+                            }
                         }
                     }
                 }
+            } else {
+                setWaiting(conditionResult.reason());
             }
-        } else {
-            setWaiting(conditionResult.reason());
         }
         if (isWaiting() /* || isSuspend() */) {
             regressRecipe();

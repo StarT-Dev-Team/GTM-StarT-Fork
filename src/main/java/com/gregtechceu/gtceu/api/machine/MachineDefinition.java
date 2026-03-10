@@ -87,6 +87,10 @@ public class MachineDefinition implements Supplier<IMachineBlock> {
     @NotNull
     @Getter
     @Setter
+    private Predicate<IRecipeLogicMachine> testRecipeTick = (machine) -> true;
+    @NotNull
+    @Getter
+    @Setter
     private Consumer<IRecipeLogicMachine> onWaiting = (machine) -> {};
     @NotNull
     @Getter
