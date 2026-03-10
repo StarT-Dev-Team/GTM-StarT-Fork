@@ -13,6 +13,7 @@ import com.gregtechceu.gtceu.api.data.chemical.material.stack.MaterialEntry;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.data.tag.TagUtil;
 import com.gregtechceu.gtceu.api.item.*;
+import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.multiblock.IBatteryData;
 import com.gregtechceu.gtceu.api.pipenet.longdistance.LongDistancePipeBlock;
 import com.gregtechceu.gtceu.common.block.*;
@@ -580,7 +581,7 @@ public class GTBlocks {
 
     private static BlockEntry<BatteryBlock> createBatteryBlock(IBatteryData batteryData) {
         var batteryBlock = REGISTRATE.block("%s_battery".formatted(batteryData.getBatteryName()),
-                        p -> new BatteryBlock(p, batteryData))
+                p -> new BatteryBlock(p, batteryData))
                 .initialProperties(() -> Blocks.IRON_BLOCK)
                 .properties(p -> p.isValidSpawn((state, level, pos, entityType) -> false))
                 .blockstate(GTModels.createBatteryBlockModel(batteryData))
@@ -1220,7 +1221,7 @@ public class GTBlocks {
                         .build();
                 if (type == StoneBlockType.STONE && strata.isNatural()) {
                     entry.tag(BlockTags.STONE_ORE_REPLACEABLES, BlockTags.BASE_STONE_OVERWORLD,
-                                    BlockTags.DRIPSTONE_REPLACEABLE, BlockTags.MOSS_REPLACEABLE)
+                            BlockTags.DRIPSTONE_REPLACEABLE, BlockTags.MOSS_REPLACEABLE)
                             .blockstate(GTModels.randomRotatedModel(GTCEu.id(ModelProvider.BLOCK_FOLDER + "/stones/" +
                                     strata.getSerializedName() + "/" + type.id)));
                 } else {
@@ -1297,6 +1298,7 @@ public class GTBlocks {
                             .properties(p -> p.strength(0.3f, 8.0f).sound(SoundType.GLASS))
                             .addLayer(() -> RenderType::cutout)
                             .blockstate(GTModels.lampModel(dyeColor, true))
+                            .tag(BlockTags.MINEABLE_WITH_PICKAXE, GTToolType.WRENCH.harvestTags.get(0))
                             .item(LampBlockItem::new)
                             .build()
                             .register());
@@ -1309,6 +1311,7 @@ public class GTBlocks {
                     .initialProperties(() -> Blocks.GLASS)
                     .properties(p -> p.strength(0.3f, 8.0f).sound(SoundType.GLASS))
                     .blockstate(GTModels.lampModel(dyeColor, false))
+                    .tag(BlockTags.MINEABLE_WITH_PICKAXE, GTToolType.WRENCH.harvestTags.get(0))
                     .item(LampBlockItem::new)
                     .build()
                     .register());
