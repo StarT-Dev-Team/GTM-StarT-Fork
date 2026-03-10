@@ -339,7 +339,7 @@ public class GTUtil {
         if (GTCEu.isClientSide()) {
             var id = Minecraft.getInstance().getWindow().getWindow();
             return InputConstants.isKeyDown(id, GLFW.GLFW_KEY_LEFT_SHIFT) ||
-                    InputConstants.isKeyDown(id, GLFW.GLFW_KEY_LEFT_SHIFT);
+                    InputConstants.isKeyDown(id, GLFW.GLFW_KEY_RIGHT_SHIFT);
         }
         return false;
     }
