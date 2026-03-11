@@ -1,8 +1,11 @@
 package com.gregtechceu.gtceu.api.recipe;
 
+import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
+import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.data.recipe.builder.LayeredRecipeInfo;
 
@@ -12,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Ingredient;
 
 import com.google.common.collect.Streams;
 import com.mojang.serialization.Codec;
@@ -22,10 +26,7 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -78,18 +79,39 @@ public class LayeredRecipeHelper {
 
         var serializedSteps = Layer.CODEC.listOf().encodeStart(NbtOps.INSTANCE, layers).result().orElseThrow();
 
-        var xei = GTRecipeBuilder.of(builder.id, builder.recipeType)
+        var xei = GTRecipeBuilder.of(builder.id.withPrefix("/"), builder.recipeType)
                 .addData("layered_steps", serializedSteps)
-                .addData("hide_duration", true)
-                .addData("hide_total_eu", true)
                 .EUt(layers.get(0).recipe.getInputEUt().getTotalEU())
+                .inputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.inputs))
+                        .toArray(Ingredient[]::new))
+                .outputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.outputs))
+                        .toArray(Ingredient[]::new))
+                .inputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.inputs))
+                        .toArray(FluidIngredient[]::new))
+                .outputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.outputs))
+                        .toArray(FluidIngredient[]::new))
+                .perTick(true)
+                .inputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.tickInputs))
+                        .toArray(Ingredient[]::new))
+                .outputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.tickOutputs))
+                        .toArray(Ingredient[]::new))
+                .inputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.tickInputs))
+                        .toArray(FluidIngredient[]::new))
+                .outputFluids(
+                        layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.tickOutputs))
+                                .toArray(FluidIngredient[]::new))
+                .duration(layers.stream().reduce(0, (sum, layer) -> sum + layer.recipe().duration, Integer::sum))
                 .buildRawRecipe();
         var serializedXei = Layer.RECIPE_WITH_ID_CODEC.encodeStart(NbtOps.INSTANCE, xei).result().orElseThrow();
 
-        resetRecipeBuilder(builder, layers.get(0).recipe, builder.recipeType);
+        resetRecipeBuilderContents(builder, layers.get(0).recipe);
         builder.data.remove("is_layer");
         builder.data.put("layered_steps", serializedSteps);
         builder.data.put("layered_xei", serializedXei);
+    }
+
+    private static <T> Stream<T> getLayerData(RecipeCapability<T> cap, Map<RecipeCapability<?>, List<Content>> map) {
+        return map.getOrDefault(cap, Collections.emptyList()).stream().map(content -> cap.of(content.getContent()));
     }
 
     public static void buildRepresentativeRecipes(GTRecipeType recipeType) {
@@ -103,21 +125,27 @@ public class LayeredRecipeHelper {
         }
     }
 
-    private static void resetRecipeBuilder(GTRecipeBuilder builder, ResourceLocation id, GTRecipeType recipeType) {
-        builder.input.clear();
-        builder.tickInput.clear();
+    private static void resetRecipeBuilderContents(GTRecipeBuilder builder, GTRecipe toCopy) {
+        toCopy.inputs.forEach((k, v) -> builder.input.put(k, new ArrayList<>(v)));
         builder.output.clear();
+        toCopy.outputs.forEach((k, v) -> builder.output.put(k, new ArrayList<>(v)));
+        builder.tickInput.clear();
+        toCopy.tickInputs.forEach((k, v) -> builder.tickInput.put(k, new ArrayList<>(v)));
         builder.tickOutput.clear();
+        toCopy.tickOutputs.forEach((k, v) -> builder.tickOutput.put(k, new ArrayList<>(v)));
         builder.inputChanceLogic.clear();
+        builder.inputChanceLogic.putAll(toCopy.inputChanceLogics);
         builder.outputChanceLogic.clear();
+        builder.outputChanceLogic.putAll(toCopy.outputChanceLogics);
         builder.tickInputChanceLogic.clear();
+        builder.tickInputChanceLogic.putAll(toCopy.tickInputChanceLogics);
         builder.tickOutputChanceLogic.clear();
+        builder.tickOutputChanceLogic.putAll(toCopy.tickOutputChanceLogics);
         builder.conditions.clear();
-        builder.data = new CompoundTag();
-        builder.id = id;
-        builder.recipeType = recipeType;
-        builder.recipeCategory = recipeType.getCategory();
-        builder.duration = 100;
+        builder.conditions.addAll(toCopy.conditions);
+        builder.data = toCopy.data.copy();
+        builder.duration = toCopy.duration;
+        builder.recipeCategory = toCopy.recipeCategory;
         builder.perTick = false;
         builder.chance = ChanceLogic.getMaxChancedValue();
         builder.maxChance = ChanceLogic.getMaxChancedValue();
@@ -128,22 +156,6 @@ public class LayeredRecipeHelper {
         builder.setTempItemStacks(new ArrayList<>());
         builder.setTempItemMaterialStacks(new ArrayList<>());
         builder.setTempFluidMaterialStacks(new ArrayList<>());
-    }
-
-    private static void resetRecipeBuilder(GTRecipeBuilder builder, GTRecipe toCopy, GTRecipeType recipeType) {
-        resetRecipeBuilder(builder, toCopy.id, recipeType);
-        toCopy.inputs.forEach((k, v) -> builder.input.put(k, new ArrayList<>(v)));
-        toCopy.outputs.forEach((k, v) -> builder.output.put(k, new ArrayList<>(v)));
-        toCopy.tickInputs.forEach((k, v) -> builder.tickInput.put(k, new ArrayList<>(v)));
-        toCopy.tickOutputs.forEach((k, v) -> builder.tickOutput.put(k, new ArrayList<>(v)));
-        builder.inputChanceLogic.putAll(toCopy.inputChanceLogics);
-        builder.outputChanceLogic.putAll(toCopy.outputChanceLogics);
-        builder.tickInputChanceLogic.putAll(toCopy.tickInputChanceLogics);
-        builder.tickOutputChanceLogic.putAll(toCopy.tickOutputChanceLogics);
-        builder.conditions.addAll(toCopy.conditions);
-        builder.data = toCopy.data.copy();
-        builder.duration = toCopy.duration;
-        builder.recipeCategory = toCopy.recipeCategory;
     }
 
     private static Map<RecipeCapability<?>, List<Content>> copyLayeredInputs(Map<RecipeCapability<?>, List<Content>> inputMap,

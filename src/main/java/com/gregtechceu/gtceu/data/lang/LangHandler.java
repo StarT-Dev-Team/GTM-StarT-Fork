@@ -947,6 +947,7 @@ public class LangHandler {
         provider.add("gtceu.recipe.eu.total", "%s EU/t");
         provider.add("gtceu.recipe.eu.amp_notation", "%s A @ %s");
         provider.add("gtceu.recipe.duration", "Duration: %s secs");
+        provider.add("gtceu.recipe.total_duration", "Total Duration: %s secs");
         provider.add("gtceu.recipe.voltage", "Voltage: %s V @ %s A");
         provider.add("gtceu.recipe.total_eu", "Total Usage: %s EU/t");
         provider.add("gtceu.recipe.not_consumed", "Does not get consumed in the process");
@@ -966,6 +967,9 @@ public class LangHandler {
         provider.add("gtceu.recipe.computation_per_tick", "Min. Computation: %s CWU/t");
         provider.add("gtceu.recipe.total_computation", "Computation: %s CWU");
         provider.add("gtceu.recipe.byproduct_tier", "Byproducts from %s§r+");
+        provider.add("gtceu.recipe.layered.output", "Output after %s steps");
+        provider.add("gtceu.recipe.layered.step", "Step %s");
+        provider.add("gtceu.recipe.layered.timeout", "Timeout: %s");
         provider.add("gtceu.fluid.click_to_fill",
                 "§7Click with a Fluid Container to §bfill §7the tank (Shift-click for a full stack).");
         provider.add("gtceu.fluid.click_combined",

@@ -8,10 +8,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.WidgetUtils;
 import com.gregtechceu.gtceu.api.gui.widget.PredicatedButtonWidget;
-import com.gregtechceu.gtceu.api.recipe.GTRecipe;
-import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
-import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
-import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
+import com.gregtechceu.gtceu.api.recipe.*;
 import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
@@ -56,6 +53,7 @@ public class GTRecipeWidget extends WidgetGroup {
 
     public static final int LINE_HEIGHT = 10;
 
+    @Getter
     private final int xOffset;
     private final GTRecipe recipe;
     private final List<LabelWidget> recipeParaTexts = new ArrayList<>();
@@ -113,16 +111,11 @@ public class GTRecipeWidget extends WidgetGroup {
 
         EnergyStack EUt = RecipeHelper.getRealEUt(recipe);
         int yOffset = 5 + size.height;
-        int eutOffset = 21;
-        if (recipe.data.getBoolean("hide_duration")) {
-            yOffset += 10;
-        }
-        if (recipe.data.getBoolean("hide_total_eu")) {
-            yOffset += 10;
-            eutOffset -= 10;
-        }
         this.yOffset = yOffset;
-        yOffset += !EUt.isEmpty() ? eutOffset : 0;
+        yOffset += !EUt.isEmpty() ? 21 : 0;
+        if (recipe.data.getBoolean("duration_is_total_cwu")) {
+            yOffset -= 10;
+        }
 
         /// add text based on i/o's
         MutableInt yOff = new MutableInt(yOffset);
@@ -170,7 +163,7 @@ public class GTRecipeWidget extends WidgetGroup {
             recipeParaTexts.add(labelWidget);
         }
 
-        if (EUt.voltage() > 0 && !recipe.data.getBoolean("hide_eupt")) {
+        if (EUt.voltage() > 0) {
             textsY += 10;
             Component text = Component.translatable(EUt.isInput() ? "gtceu.recipe.eu" : "gtceu.recipe.eu_inverted",
                     FormattingUtil.formatNumbers(EUt.getTotalEU()))
@@ -209,9 +202,12 @@ public class GTRecipeWidget extends WidgetGroup {
                                                      EnergyStack.WithIO eu) {
         List<Component> texts = new ArrayList<>();
         if (!recipe.data.getBoolean("hide_duration")) {
-            texts.add(Component.translatable("gtceu.recipe.duration", FormattingUtil.formatNumbers(duration / 20f)));
+            texts.add(Component.translatable(
+                    LayeredRecipeHelper.hasLayeredSteps(recipe) ? "gtceu.recipe.total_duration" :
+                            "gtceu.recipe.duration",
+                    FormattingUtil.formatNumbers(duration / 20f)));
         }
-        if (eu.voltage() > 0 && !recipe.data.getBoolean("hide_total_eu")) {
+        if (eu.voltage() > 0) {
             long euTotal = eu.getTotalEU() * duration;
             // sadly we still need a custom override here, since computation uses duration and EU/t very differently
             if (recipe.data.getBoolean("duration_is_total_cwu") &&
