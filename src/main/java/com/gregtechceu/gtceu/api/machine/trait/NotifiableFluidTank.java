@@ -94,6 +94,12 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     @Override
     public List<FluidIngredient> handleRecipeInner(IO io, GTRecipe recipe, List<FluidIngredient> left,
                                                    boolean simulate) {
+        return handleRecipe(io, recipe, left, simulate, handlerIO, storages, allowSameFluids);
+    }
+
+    public static List<FluidIngredient> handleRecipe(IO io, GTRecipe recipe, List<FluidIngredient> left,
+                                                     boolean simulate, IO handlerIO, CustomFluidTank[] storages,
+                                                     boolean allowSameFluids) {
         if (io != handlerIO) return left;
         if (io != IO.IN && io != IO.OUT) return left.isEmpty() ? null : left;
 
@@ -168,7 +174,7 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
             }
 
             for (int tank = 0; tank < storages.length; ++tank) {
-                FluidStack current = visited[tank] == null ? getFluidInTank(tank) : visited[tank];
+                FluidStack current = visited[tank] == null ? storages[tank].getFluid() : visited[tank];
                 int count = current.getAmount();
 
                 if (io == IO.IN) {

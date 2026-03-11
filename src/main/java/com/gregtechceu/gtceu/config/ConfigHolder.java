@@ -595,6 +595,10 @@ public class ConfigHolder {
         })
         public boolean ulvComponentsEnabled = false;
 
+        public boolean registerULVComponents() {
+            return GTCEu.isDataGen() || ulvComponentsEnabled;
+        }
+
         @Configurable
         @Configurable.Comment({ "Whether the Assembly Line should require the item inputs to be in order.",
                 "Default: true" })
@@ -624,6 +628,10 @@ public class ConfigHolder {
                 "Default: true"
         })
         public boolean parallelLCR = true;
+
+        public boolean registerParallelLCR() {
+            return GTCEu.isDataGen() || parallelLCR;
+        }
 
         @Configurable
         @Configurable.Comment("Whether the Drums can input fluids from the output side (bottom).")
