@@ -49,6 +49,7 @@ This fork should be considered a separate project with its own design goals.
 - Chance boosting now scales with recipe tier instead of speed overclocks (configurable)
 - Steam boiler balance adjustments
 - Large Packer size changed from 6-long to 5-long
+- Enabled borosilicate glass plates and foils
 
 #### Configurability Improvements
 - Multiblocks stalling on power loss is now configurable
@@ -71,11 +72,18 @@ This fork should be considered a separate project with its own design goals.
 #### Bug Fixes
 - Fixed voltage display not handling MAX+X values correctly
 - Fixed 2A energy hatches using incorrect 1A overlays
+- Fixed not being able to use RShift when viewing extended tooltips
+- Fixed bronze armor being stronger than steel armor
+- Fixed lamp blocks not being able to be broken with a pickaxe and wrench
+- Fixed AOE on mining hammer using N+1 durability when mining N blocks
+- Fixed idle and paused overlay for assembler not being the same height as the active overlay
+- Fixed torch recipe using creosote consuming the fluid containers
 
-#### UI Changes
+#### UI and Texture Changes
 - Voltage display format adjusted (EU/t and amperage order for clarity)
 - Fluid drills and miners added to XEI diagrams
 - Auto-push buttons moved to the right side of the machine UI
+- Mega Blast Chiller ow uses the vacuum freezer overlay
 
 ## Credits
 
