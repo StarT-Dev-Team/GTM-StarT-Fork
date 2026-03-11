@@ -329,10 +329,15 @@ public class ItemBusPartMachine extends TieredIOPartMachine
             rowSize = 4;
             colSize = 2;
         }
+        // Longer than 8 slots may place the slot on the ui due to UI increasing in width
+        int offset = 0;
+        if (rowSize > 8) offset -= 7; // UV output bus fix
+        if (rowSize > 9) offset -= 9; // UHV+ output bus fix
         var group = new WidgetGroup(0, 0, 18 * rowSize + 16, 18 * colSize + 16);
         var container = new WidgetGroup(4, 4, 18 * rowSize + 8, 18 * colSize + 8);
+        var filterSlot = new WidgetGroup(-104 + offset + (18 * rowSize) / 2, 27 + 11 * rowSize, 24, 24);
         int index = 0;
-        group.addWidget(filterHandler.createFilterSlotUI(-115 + (18 * rowSize) / 2, 35 + 11 * rowSize));
+        filterSlot.addWidget(filterHandler.createFilterSlotUI(3, 3)).setBackground(GuiTextures.BACKGROUND);
         for (int y = 0; y < colSize; y++) {
             for (int x = 0; x < rowSize; x++) {
                 container.addWidget(
@@ -344,6 +349,7 @@ public class ItemBusPartMachine extends TieredIOPartMachine
 
         container.setBackground(GuiTextures.BACKGROUND_INVERSE);
         group.addWidget(container);
+        group.addWidget(filterSlot);
         return group;
     }
 }
