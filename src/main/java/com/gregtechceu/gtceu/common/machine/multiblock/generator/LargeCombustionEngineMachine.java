@@ -23,7 +23,6 @@ import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
-import com.gregtechceu.gtceu.utils.GTMath;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -201,7 +200,9 @@ public class LargeCombustionEngineMachine extends WorkableElectricMultiblockMach
             builder.addCurrentEnergyProductionLine(lastEUt);
         }
 
-        builder.addFuelNeededLine(getRecipeFluidInputInfo(), recipeLogic.getDuration());
+        if (!recipeLogic.isWaiting()) {
+            builder.addFuelNeededLine(getRecipeFluidInputInfo(), recipeLogic.getDuration());
+        }
 
         if (isFormed && isOxygenBoosted) {
             final var key = isExtreme() ? "gtceu.multiblock.large_combustion_engine.liquid_oxygen_boosted" :
@@ -214,15 +215,11 @@ public class LargeCombustionEngineMachine extends WorkableElectricMultiblockMach
 
     @Nullable
     public String getRecipeFluidInputInfo() {
-        // Previous Recipe is always null on first world load, so try to acquire a new recipe
         GTRecipe recipe = recipeLogic.getLastRecipe();
-        if (recipe == null) {
-            Iterator<GTRecipe> iterator = recipeLogic.searchRecipe();
-            recipe = iterator.hasNext() ? iterator.next() : null;
-            if (recipe == null) return null;
-        }
+        if (recipe == null) return null;
 
-        return ChatFormatting.RED + FormattingUtil.formatNumbers(RecipeHelper.getInputFluids(recipe).get(0)) + "mB";
+        return ChatFormatting.RED +
+                FormattingUtil.formatNumbers(RecipeHelper.getInputFluids(recipe).get(0).getAmount()) + "mB";
     }
 
     @Override
