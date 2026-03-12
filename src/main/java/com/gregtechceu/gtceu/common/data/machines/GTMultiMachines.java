@@ -43,7 +43,6 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraftforge.client.model.generators.BlockModelBuilder;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
-import net.minecraftforge.data.loading.DatagenModLoader;
 
 import appeng.api.networking.pathing.ChannelMode;
 import appeng.core.AEConfig;
@@ -264,8 +263,8 @@ public class GTMultiMachines {
                     GTCEu.id("block/multiblock/large_chemical_reactor"))
             .register();
 
-    public static MultiblockMachineDefinition EXTREME_CHEMICAL_REACTOR = (ConfigHolder.INSTANCE.machines.parallelLCR ||
-            DatagenModLoader.isRunningDataGen()) ?
+    public static MultiblockMachineDefinition EXTREME_CHEMICAL_REACTOR = ConfigHolder.INSTANCE.machines
+            .registerParallelLCR() ?
                     REGISTRATE
                             .multiblock("extreme_chemical_reactor",
                                     ConfigHolder.INSTANCE.machines.lcrCoilBenefits ?

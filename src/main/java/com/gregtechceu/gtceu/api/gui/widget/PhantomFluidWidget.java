@@ -232,6 +232,7 @@ public class PhantomFluidWidget extends TankWidget implements IGhostIngredientTa
             super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
             return;
         }
+        if (phantomFluidGetter == null) return;
         Position pos = getPosition();
         Size size = getSize();
         FluidStack stack = phantomFluidGetter.get();

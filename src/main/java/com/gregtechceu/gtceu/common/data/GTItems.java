@@ -673,7 +673,7 @@ public class GTItems {
             .onRegister(attach(ElectricStats.createRechargeableBattery(Long.MAX_VALUE, GTValues.UHV)))
             .tag(CustomTags.UHV_BATTERIES).register();
 
-    public static ItemEntry<Item> ELECTRIC_MOTOR_ULV = ConfigHolder.INSTANCE.machines.ulvComponentsEnabled ?
+    public static ItemEntry<Item> ELECTRIC_MOTOR_ULV = ConfigHolder.INSTANCE.machines.registerULVComponents() ?
             REGISTRATE.item("ulv_electric_motor", Item::new).lang("ULV Electric Motor")
                     .register() :
             null;
@@ -730,7 +730,7 @@ public class GTItems {
                     .register() :
             null;
 
-    public static ItemEntry<ComponentItem> ELECTRIC_PUMP_ULV = ConfigHolder.INSTANCE.machines.ulvComponentsEnabled ?
+    public static ItemEntry<ComponentItem> ELECTRIC_PUMP_ULV = ConfigHolder.INSTANCE.machines.registerULVComponents() ?
             REGISTRATE.item("ulv_electric_pump", ComponentItem::create)
                     .lang("ULV Electric Pump")
                     .onRegister(attach(new CoverPlaceBehavior(GTCovers.PUMPS[0])))
@@ -1030,16 +1030,17 @@ public class GTItems {
             .tab(TOOL.getKey())
             .register();
 
-    public static ItemEntry<ComponentItem> CONVEYOR_MODULE_ULV = ConfigHolder.INSTANCE.machines.ulvComponentsEnabled ?
-            REGISTRATE.item("ulv_conveyor_module", ComponentItem::create)
-                    .lang("ULV Conveyor Module")
-                    .onRegister(attach(new CoverPlaceBehavior(GTCovers.CONVEYORS[0])))
-                    .onRegister(attach(new TooltipBehavior(lines -> {
-                        lines.add(Component.translatable("item.gtceu.conveyor.module.tooltip"));
-                        lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate", 4));
-                    })))
-                    .register() :
-            null;
+    public static ItemEntry<ComponentItem> CONVEYOR_MODULE_ULV = ConfigHolder.INSTANCE.machines
+            .registerULVComponents() ?
+                    REGISTRATE.item("ulv_conveyor_module", ComponentItem::create)
+                            .lang("ULV Conveyor Module")
+                            .onRegister(attach(new CoverPlaceBehavior(GTCovers.CONVEYORS[0])))
+                            .onRegister(attach(new TooltipBehavior(lines -> {
+                                lines.add(Component.translatable("item.gtceu.conveyor.module.tooltip"));
+                                lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate", 4));
+                            })))
+                            .register() :
+                    null;
     public static ItemEntry<ComponentItem> CONVEYOR_MODULE_LV = REGISTRATE
             .item("lv_conveyor_module", ComponentItem::create)
             .lang("LV Conveyor Module")
@@ -1171,7 +1172,7 @@ public class GTItems {
                     .register() :
             null;
 
-    public static ItemEntry<Item> ELECTRIC_PISTON_ULV = ConfigHolder.INSTANCE.machines.ulvComponentsEnabled ?
+    public static ItemEntry<Item> ELECTRIC_PISTON_ULV = ConfigHolder.INSTANCE.machines.registerULVComponents() ?
             REGISTRATE.item("ulv_electric_piston", Item::new).lang("ULV Electric Piston")
                     .register() :
             null;
@@ -1228,7 +1229,7 @@ public class GTItems {
                     .register() :
             null;
 
-    public static ItemEntry<ComponentItem> ROBOT_ARM_ULV = ConfigHolder.INSTANCE.machines.ulvComponentsEnabled ?
+    public static ItemEntry<ComponentItem> ROBOT_ARM_ULV = ConfigHolder.INSTANCE.machines.registerULVComponents() ?
             REGISTRATE.item("ulv_robot_arm", ComponentItem::create)
                     .lang("ULV Robot Arm")
                     .onRegister(attach(new CoverPlaceBehavior(GTCovers.ROBOT_ARMS[0])))
