@@ -31,7 +31,7 @@ public class ConverterTrait extends NotifiableEnergyContainer {
     @Persisted
     @DescSynced
     @RequireRerender
-    private boolean feToEu;
+    private boolean feToEu = true;
     @Getter
     private final int amps;
     @Getter

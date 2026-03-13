@@ -435,7 +435,7 @@ public class GTMachineUtils {
                         .rotationState(RotationState.ALL)
                         .langValue("%s %s§eA§r Energy Converter".formatted(VCF[tier] + VN[tier] + ChatFormatting.RESET,
                                 amperage))
-                        .modelProperty(GTMachineModelProperties.IS_FE_TO_EU, false)
+                        .modelProperty(GTMachineModelProperties.IS_FE_TO_EU, true)
                         .model(GTMachineModels.createConverterModel(amperage))
                         .tooltips(Component.translatable("gtceu.machine.energy_converter.description"),
                                 Component.translatable("gtceu.machine.energy_converter.tooltip_tool_usage"),
