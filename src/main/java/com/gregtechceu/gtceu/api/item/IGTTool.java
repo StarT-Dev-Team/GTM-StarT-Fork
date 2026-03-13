@@ -759,9 +759,8 @@ public interface IGTTool extends HeldItemUIFactory.IHeldItemUIHolder, ItemLike, 
 
                 tooltip.add(enchant.getFullname(entry.getValue()));
             }
+            tooltip.add(CommonComponents.EMPTY);
         }
-
-        tooltip.add(CommonComponents.EMPTY);
 
         // valid tools
         tooltip.add(Component.translatable("item.gtceu.tool.usable_as",
