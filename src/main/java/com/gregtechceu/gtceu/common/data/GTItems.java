@@ -1917,15 +1917,15 @@ public class GTItems {
             .lang("Advanced Energy Detector")
             .onRegister(attach(new CoverPlaceBehavior(GTCovers.ENERGY_DETECTOR_ADVANCED)))
             .register();
-    public static ItemEntry<ComponentItem> COVER_MAINTENANCE_DETECTOR = REGISTRATE
-            .item("maintenance_detector_cover", ComponentItem::create)
-            .lang("Maintenance Detector")
-            .onRegister(attach(new CoverPlaceBehavior(GTCovers.MAINTENANCE_DETECTOR)))
-            .register();
     public static ItemEntry<ComponentItem> COVER_LAYERED_STEP_DETECTOR = REGISTRATE
             .item("layered_step_detector_cover", ComponentItem::create)
             .lang("Layered Step Detector")
             .onRegister(attach(new CoverPlaceBehavior(GTCovers.LAYERED_STEP_DETECTOR)))
+            .register();
+    public static ItemEntry<ComponentItem> COVER_MAINTENANCE_DETECTOR = REGISTRATE
+            .item("maintenance_detector_cover", ComponentItem::create)
+            .lang("Maintenance Detector")
+            .onRegister(attach(new CoverPlaceBehavior(GTCovers.MAINTENANCE_DETECTOR)))
             .register();
 
     public static ItemEntry<ComponentItem> COVER_SCREEN = REGISTRATE

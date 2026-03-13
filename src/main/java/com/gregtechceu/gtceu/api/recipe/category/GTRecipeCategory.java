@@ -33,11 +33,9 @@ public class GTRecipeCategory {
     @Nullable
     @Setter
     private IGuiTexture icon = null;
-    @Setter
-    private boolean isXEIVisible = true;
     @Getter
     @Setter
-    private boolean forceXEIHidden = false;
+    private boolean isXEIVisible = true;
 
     public GTRecipeCategory(@NotNull GTRecipeType recipeType) {
         this.recipeType = recipeType;
@@ -71,12 +69,8 @@ public class GTRecipeCategory {
         recipeType.addToCategoryMap(this, recipe);
     }
 
-    public boolean isXEIVisible() {
-        return !forceXEIHidden && (isXEIVisible || GTCEu.isDev());
-    }
-
     public boolean shouldRegisterDisplays() {
-        return isXEIVisible() && this != GTRecipeTypes.FURNACE_RECIPES.getCategory() &&
+        return (isXEIVisible() || !GTCEu.isDev()) && this != GTRecipeTypes.FURNACE_RECIPES.getCategory() &&
                 this != GTRecipeTypes.BLAST_FURNACE_RECIPES.getCategory() &&
                 this != GTRecipeTypes.SMOKING_FURNACE_RECIPES.getCategory();
     }

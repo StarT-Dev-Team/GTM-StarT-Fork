@@ -1,12 +1,17 @@
 package com.gregtechceu.gtceu.integration.jei.recipe;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
+import com.gregtechceu.gtceu.core.mixins.ldlib.ModularUIRecipeCategoryMixin;
 
+import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
+import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
+import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.jei.IGui2IDrawable;
 import com.lowdragmc.lowdraglib.jei.ModularUIRecipeCategory;
 
@@ -16,12 +21,18 @@ import net.minecraft.resources.ResourceLocation;
 
 import lombok.Getter;
 import mezz.jei.api.constants.RecipeTypes;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.helpers.IJeiHelpers;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.runtime.IClickableIngredient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,14 +66,11 @@ public class GTRecipeJEICategory extends ModularUIRecipeCategory<GTRecipe> {
         List<GTRecipeCategory> subCategories = new ArrayList<>();
         // run main categories first
         for (GTRecipeCategory category : GTRegistries.RECIPE_CATEGORIES) {
+            if (!category.shouldRegisterDisplays()) continue;
             var type = category.getRecipeType();
             if (category == type.getCategory()) {
                 type.buildRepresentativeRecipes();
-            }
-            if (!category.shouldRegisterDisplays()) {
-                continue;
-            }
-            if (category != type.getCategory()) {
+            } else {
                 subCategories.add(category);
                 continue;
             }
@@ -82,7 +90,7 @@ public class GTRecipeJEICategory extends ModularUIRecipeCategory<GTRecipe> {
         for (MachineDefinition machine : GTRegistries.MACHINES) {
             for (GTRecipeType type : machine.getRecipeTypes()) {
                 for (GTRecipeCategory category : type.getCategories()) {
-                    if (!category.isXEIVisible()) continue;
+                    if (!category.isXEIVisible() && !GTCEu.isDev()) continue;
                     registration.addRecipeCatalyst(machine.asStack(), machineType(category));
                 }
             }
@@ -111,5 +119,77 @@ public class GTRecipeJEICategory extends ModularUIRecipeCategory<GTRecipe> {
     @Override
     public @Nullable ResourceLocation getRegistryName(@NotNull GTRecipe recipe) {
         return recipe.id;
+    }
+
+    @Override
+    public void setRecipe(IRecipeLayoutBuilder builder, GTRecipe recipe, IFocusGroup focuses) {
+        @SuppressWarnings("unchecked")
+        var wrapper = ((ModularUIRecipeCategoryMixin<GTRecipe>) this).gtceu$getModularWrapper(recipe);
+
+        wrapper.setRecipeWidget(0, 0);
+        List<Widget> flatVisibleWidgetCollection = wrapper.modularUI.getFlatWidgetCollection();
+        for (int i = 0; i < flatVisibleWidgetCollection.size(); i++) {
+            var widget = flatVisibleWidgetCollection.get(i);
+            if (widget instanceof IRecipeIngredientSlot slot) {
+                if (widget.getParent() instanceof DraggableScrollableWidgetGroup draggable &&
+                        draggable.isUseScissor()) {
+                    // don't add the JEI widget at all if we have a draggable group, let the draggable widget handle it
+                    // instead.
+                    continue;
+                }
+
+                var role = mapToRole(slot.getIngredientIO());
+                if (role == null) { // both
+                    ModularUIRecipeCategoryMixin.gtceu$addJEISlot(builder, slot, RecipeIngredientRole.INPUT, i);
+                    ModularUIRecipeCategoryMixin.gtceu$addJEISlot(builder, slot, RecipeIngredientRole.OUTPUT, i);
+                } else {
+                    ModularUIRecipeCategoryMixin.gtceu$addJEISlot(builder, slot, role, i);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void getTooltip(ITooltipBuilder tooltip, GTRecipe recipe, IRecipeSlotsView recipeSlotsView, double mouseX,
+                           double mouseY) {
+        @SuppressWarnings("unchecked")
+        var wrapper = ((ModularUIRecipeCategoryMixin<GTRecipe>) this).gtceu$getModularWrapper(recipe);
+
+        if (wrapper.tooltipTexts == null || wrapper.tooltipTexts.isEmpty()) {
+            super.getTooltip(tooltip, recipe, recipeSlotsView, mouseX, mouseY);
+            return;
+        }
+
+        var hovered = wrapper.modularUI.mainGroup.getHoverElement(mouseX + wrapper.getLeft(),
+                mouseY + wrapper.getTop());
+        if (hovered instanceof IRecipeIngredientSlot hoveredSlot) {
+            if (!(hovered.getParent() instanceof DraggableScrollableWidgetGroup draggable &&
+                    draggable.isUseScissor())) {
+                super.getTooltip(tooltip, recipe, recipeSlotsView, mouseX, mouseY);
+                return;
+            }
+
+            for (Object ingredient : hoveredSlot.getXEIIngredients()) {
+                if (ingredient instanceof IClickableIngredient<?> clickableIngredient) {
+                    // noinspection removal
+                    tooltip.setIngredient(clickableIngredient.getTypedIngredient());
+                    break;
+                }
+            }
+            // if (tooltip instanceof JeiTooltip jeiTooltip) {
+            // try {
+            // var field = JeiTooltip.class.getDeclaredField("lines");
+            // field.setAccessible(true);
+            // ((List<?>)field.get(jeiTooltip)).clear();
+            // } catch (IllegalAccessException | NoSuchFieldException ignored) {
+            // }
+            // }
+            // tooltip.addAll(hoveredSlot.getFullTooltipTexts());
+        }
+
+        tooltip.addAll(wrapper.tooltipTexts);
+        if (wrapper.tooltipComponent != null) {
+            tooltip.add(wrapper.tooltipComponent);
+        }
     }
 }

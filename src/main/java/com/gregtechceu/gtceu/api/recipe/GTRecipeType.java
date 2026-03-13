@@ -113,12 +113,20 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     }
 
     public GTRecipeType enableSyntheticCategory() {
-        if (syntheticCategory != null) return this;
+        if (syntheticCategory == null) {
+            syntheticCategory = new GTRecipeCategory(registryName.withSuffix("_synthetic").getPath(), this);
+            syntheticCategory.setXEIVisible(false);
+            GTRegistries.RECIPE_CATEGORIES.register(syntheticCategory.registryKey, syntheticCategory);
+        }
 
-        category.setForceXEIHidden(true);
-        syntheticCategory = new GTRecipeCategory(registryName.withSuffix("_synthetic").getPath(), this);
-        GTRegistries.RECIPE_CATEGORIES.register(syntheticCategory.registryKey, syntheticCategory);
+        resetSyntheticCategories();
         return this;
+    }
+
+    public void resetSyntheticCategories() {
+        // always add both categories to the categoryMap even if they don't have recipes
+        categoryMap.computeIfAbsent(category, (k) -> new ObjectLinkedOpenHashSet<>());
+        categoryMap.computeIfAbsent(syntheticCategory, (k) -> new ObjectLinkedOpenHashSet<>());
     }
 
     public GTRecipeType setLayered() {

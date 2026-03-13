@@ -549,6 +549,16 @@ public class MachineRecipeLoader {
                 .addMaterialInfo(true, true)
                 .save(provider);
 
+        ASSEMBLER_RECIPES.recipeBuilder("layered_step_detector_cover")
+                .inputItems(wireFine, Cobalt, 4)
+                .inputItems(COVER_ACTIVITY_DETECTOR_ADVANCED)
+                .inputItems(new ItemStack(Items.COMPARATOR))
+                .inputFluids(SolderingAlloy, L / 2)
+                .outputItems(COVER_LAYERED_STEP_DETECTOR)
+                .EUt(64).duration(100)
+                .addMaterialInfo(true, true)
+                .save(provider);
+
         ASSEMBLER_RECIPES.recipeBuilder("cover_fluid_detector")
                 .inputItems(new ItemStack(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE))
                 .inputItems(plate, Iron)

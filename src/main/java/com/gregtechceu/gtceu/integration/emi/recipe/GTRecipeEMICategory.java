@@ -1,5 +1,6 @@
 package com.gregtechceu.gtceu.integration.emi.recipe;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
@@ -37,14 +38,11 @@ public class GTRecipeEMICategory extends EmiRecipeCategory {
         List<GTRecipeCategory> subCategories = new ArrayList<>();
         // run main categories first
         for (GTRecipeCategory category : GTRegistries.RECIPE_CATEGORIES) {
+            if (!category.shouldRegisterDisplays()) continue;
             var type = category.getRecipeType();
             if (category == type.getCategory()) {
                 type.buildRepresentativeRecipes();
-            }
-            if (!category.shouldRegisterDisplays()) {
-                continue;
-            }
-            if (category != type.getCategory()) {
+            } else {
                 subCategories.add(category);
                 continue;
             }
@@ -83,7 +81,7 @@ public class GTRecipeEMICategory extends EmiRecipeCategory {
                 .toList()) {
             for (GTRecipeType type : machine.getRecipeTypes()) {
                 for (GTRecipeCategory category : type.getCategories()) {
-                    if (!category.isXEIVisible()) continue;
+                    if (!category.isXEIVisible() && !GTCEu.isDev()) continue;
                     registry.addWorkstation(machineCategory(category), EmiStack.of(machine.asStack()));
                 }
             }

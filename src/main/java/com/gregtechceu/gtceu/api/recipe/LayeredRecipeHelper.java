@@ -105,6 +105,7 @@ public class LayeredRecipeHelper {
         var serializedXei = Layer.RECIPE_WITH_ID_CODEC.encodeStart(NbtOps.INSTANCE, xei).result().orElseThrow();
 
         resetRecipeBuilderContents(builder, layers.get(0).recipe);
+        builder.category(builder.recipeType.getSyntheticCategory());
         builder.data.remove("is_layer");
         builder.data.put("layered_steps", serializedSteps);
         builder.data.put("layered_xei", serializedXei);
@@ -117,8 +118,8 @@ public class LayeredRecipeHelper {
     public static void buildRepresentativeRecipes(GTRecipeType recipeType) {
         assert recipeType.isLayered();
 
-        var category = recipeType.getSyntheticCategory();
-        for (var recipe : recipeType.getRecipesInCategory(recipeType.getCategory())) {
+        var category = recipeType.getCategory();
+        for (var recipe : recipeType.getRecipesInCategory(recipeType.getSyntheticCategory())) {
             var original = LayeredRecipeHelper.getXeiLayeredRecipe(recipe);
             if (original == null) continue;
             category.addRecipe(original);

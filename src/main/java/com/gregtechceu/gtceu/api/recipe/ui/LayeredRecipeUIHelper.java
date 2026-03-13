@@ -35,13 +35,13 @@ public class LayeredRecipeUIHelper {
             public IEditableUI<WidgetGroup, RecipeHolder> createEditableUITemplate(boolean isSteam,
                                                                                    boolean isHighPressure) {
                 return new IEditableUI.Normal<>(() -> {
-                    var group = new WidgetGroup(0, 0, 154, 138);
+                    var group = new WidgetGroup(0, 0, 154, 106);
 
                     var outputsGroup = new WidgetGroup(3, 3, 148, 34);
                     outputsGroup.setId("outputs");
                     group.addWidget(outputsGroup);
 
-                    var layersGroup = new DraggableScrollableWidgetGroup(3, 37, 148, 138 - 34);
+                    var layersGroup = new DraggableScrollableWidgetGroup(3, 37, 148, 100 - 34);
                     layersGroup.setYScrollBarWidth(8);
                     layersGroup.setYBarStyle(GuiTextures.SLIDER_BACKGROUND_VERTICAL, GuiTextures.BUTTON);
                     layersGroup.setId("layers");
@@ -191,7 +191,6 @@ public class LayeredRecipeUIHelper {
             var slot = cap.createWidget();
             assert slot != null;
             slot.setBackground(getOverlaysForSlot(recipeUI, io == IO.OUT, cap, isLast));
-            slot.setId("layered_" + cap.slotName(io, storageIndex));
             cap.applyWidgetInfo(slot, storageIndex, true, io, recipeHolder, recipe.getType(), recipe, recipeInput,
                     storage,
                     recipeWidget.getMinTier(), recipeWidget.getTier());
