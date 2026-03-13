@@ -268,6 +268,8 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
     @Override
     protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide,
                                                    BlockHitResult hitResult) {
+        var superResult = super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+        if (superResult != InteractionResult.PASS) return superResult;
         if (!isRemote()) {
             setAutoPull(!autoPull);
             if (autoPull) {

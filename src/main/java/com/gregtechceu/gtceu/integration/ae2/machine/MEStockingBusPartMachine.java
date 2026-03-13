@@ -281,6 +281,8 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
     @Override
     protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide,
                                                    BlockHitResult hitResult) {
+        var superResult = super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+        if (superResult != InteractionResult.PASS) return superResult;
         if (!isRemote()) {
             setAutoPull(!autoPull);
             if (autoPull) {

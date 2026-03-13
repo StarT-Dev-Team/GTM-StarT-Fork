@@ -802,6 +802,7 @@ public class MachineLang {
                 "§oME Input Bus Configuration Data");
         provider.add("gtceu.machine.me.fluid_import.data_stick.name",
                 "§oME Input Hatch Configuration Data");
+        provider.add("gtceu.machine.me.io.expose.description", "Expose all sides: %s");
 
         provider.add("gtceu.gui.title.adv_stocking_config.min_item_count",
                 "Min. Item Count");

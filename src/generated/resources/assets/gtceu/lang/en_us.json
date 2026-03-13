@@ -3055,6 +3055,7 @@
   "gtceu.machine.me.fluid_import.tooltip": "Fetches fluids from an ME network automatically.",
   "gtceu.machine.me.import_copy_settings": "Saved settings to Data Stick",
   "gtceu.machine.me.import_paste_settings": "Applied settings from Data Stick",
+  "gtceu.machine.me.io.expose.description": "Expose all sides: %s",
   "gtceu.machine.me.item_export.tooltip": "Stores items directly into an ME network.",
   "gtceu.machine.me.item_import.data_stick.name": "§oME Input Bus Configuration Data",
   "gtceu.machine.me.item_import.tooltip": "Fetches items from an ME network automatically.",

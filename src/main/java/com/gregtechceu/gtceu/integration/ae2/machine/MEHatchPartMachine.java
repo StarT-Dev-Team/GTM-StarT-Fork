@@ -18,6 +18,11 @@ import appeng.api.networking.*;
 import appeng.api.networking.security.IActionSource;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.EnumSet;
 
@@ -39,6 +44,8 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
     @Getter
     @Setter
     protected boolean isOnline;
+    @Persisted
+    protected boolean exposeAllSides = false;
 
     protected final IActionSource actionSource;
 
@@ -80,7 +87,9 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
     @Override
     public void onRotated(Direction oldFacing, Direction newFacing) {
         super.onRotated(oldFacing, newFacing);
-        getMainNode().setExposedOnSides(EnumSet.of(newFacing));
+        if (!exposeAllSides) {
+            getMainNode().setExposedOnSides(EnumSet.of(newFacing));
+        }
     }
 
     @Override
@@ -93,5 +102,20 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
     @Override
     public boolean swapIO() {
         return false;
+    }
+
+    /// Let either only the front facing or all sides be exposed
+    @Override
+    protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide, BlockHitResult hitResult) {
+        var superResult = super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+        if (superResult != InteractionResult.PASS) return superResult;
+        if (io == IO.BOTH) return InteractionResult.PASS;
+        if (playerIn.isShiftKeyDown()) {
+            exposeAllSides = !exposeAllSides;
+            getMainNode().setExposedOnSides(exposeAllSides ? EnumSet.allOf(Direction.class) : EnumSet.of(getFrontFacing()));
+            playerIn.sendSystemMessage(Component.translatable("gtceu.machine.me.io.expose.description", exposeAllSides));
+            return InteractionResult.sidedSuccess(playerIn.level().isClientSide);
+        }
+        return InteractionResult.PASS;
     }
 }
