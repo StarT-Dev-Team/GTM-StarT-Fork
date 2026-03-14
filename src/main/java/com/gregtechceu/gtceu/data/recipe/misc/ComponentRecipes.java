@@ -42,7 +42,7 @@ public class ComponentRecipes {
                         .outputItems(ELECTRIC_MOTOR_ULV)
                         .duration(100).EUt(VA[LV]).save(provider);
             } else {
-                VanillaRecipeHelper.addShapedRecipe(provider, "electric_motor_Ulv", ELECTRIC_MOTOR_ULV.asStack(),
+                VanillaRecipeHelper.addShapedRecipe(provider, "electric_motor_ulv", ELECTRIC_MOTOR_ULV.asStack(),
                         "CWR",
                         "WMW", "RWC", 'C', new MaterialEntry(cableGtSingle, Tin), 'W',
                         new MaterialEntry(wireGtSingle, Copper), 'R', new MaterialEntry(rod, Copper), 'M',
