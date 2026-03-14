@@ -42,7 +42,7 @@ public class ComponentRecipes {
                         .outputItems(ELECTRIC_MOTOR_ULV)
                         .duration(100).EUt(VA[LV]).save(provider);
             } else {
-                VanillaRecipeHelper.addShapedRecipe(provider, "electric_motor_lv_steel", ELECTRIC_MOTOR_LV.asStack(),
+                VanillaRecipeHelper.addShapedRecipe(provider, "electric_motor_ulv", ELECTRIC_MOTOR_ULV.asStack(),
                         "CWR",
                         "WMW", "RWC", 'C', new MaterialEntry(cableGtSingle, Tin), 'W',
                         new MaterialEntry(wireGtSingle, Copper), 'R', new MaterialEntry(rod, Copper), 'M',
@@ -296,7 +296,7 @@ public class ComponentRecipes {
                             .duration(100).EUt(VA[LV]).save(provider);
                 } else {
                     VanillaRecipeHelper.addShapedRecipe(provider, material.equals(Rubber),
-                            String.format("electric_pump_ulv_%s", name), ELECTRIC_PUMP_LV.asStack(), "SXR", "dPw",
+                            String.format("electric_pump_ulv_%s", name), ELECTRIC_PUMP_ULV.asStack(), "SXR", "dPw",
                             "RMC", 'S',
                             new MaterialEntry(screw, Copper), 'X', new MaterialEntry(rotor, Copper), 'P',
                             new MaterialEntry(pipeNormalFluid, TinAlloy), 'R', new MaterialEntry(ring, material), 'C',
