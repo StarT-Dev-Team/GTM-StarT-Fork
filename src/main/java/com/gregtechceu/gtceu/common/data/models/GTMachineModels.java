@@ -322,7 +322,8 @@ public class GTMachineModels {
                     .parent(prov.models().getExistingFile(TRANSFORMER_LIKE))
                     .texture("overlay_in_io", overlay.getIoPart())
                     .texture("overlay_in_tinted", overlay.getTintedPart())
-                    .texture("overlay_out_io", BLANK_TEXTURE);
+                    .texture("overlay_out_io", BLANK_TEXTURE)
+                    .texture("overlay_out_io_emissive", BLANK_TEXTURE);
             tieredHullTextures(model, builder.getOwner().getTier());
 
             builder.forAllStatesModels(state -> model);
