@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 
 import static com.gregtechceu.gtceu.api.GTValues.*;
 import static com.gregtechceu.gtceu.api.data.tag.TagPrefix.*;
+import static com.gregtechceu.gtceu.common.data.GTBlocks.*;
 import static com.gregtechceu.gtceu.common.data.GTItems.*;
 import static com.gregtechceu.gtceu.common.data.GTMachines.*;
 import static com.gregtechceu.gtceu.common.data.GTMaterials.*;
@@ -711,6 +712,40 @@ public class MachineRecipeLoader {
                 .circuitMeta(8).duration(50)
                 .addMaterialInfo(true).save(provider);
 
+        ASSEMBLER_RECIPES.recipeBuilder("bronze_hull")
+                .inputItems(plate, Bronze, 8)
+                .outputItems(BRONZE_HULL)
+                .circuitMeta(7)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("steel_hull")
+                .inputItems(plate, Steel, 8)
+                .outputItems(STEEL_HULL)
+                .circuitMeta(7)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("bronze_bricks_hull")
+                .inputItems(plate, Bronze, 5)
+                .inputItems(Blocks.BRICKS.asItem(), 3)
+                .outputItems(BRONZE_BRICKS_HULL)
+                .circuitMeta(5)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("steel_bricks_hull")
+                .inputItems(plate, Steel, 5)
+                .inputItems(Blocks.BRICKS.asItem(), 3)
+                .outputItems(STEEL_BRICKS_HULL)
+                .circuitMeta(5)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
         ASSEMBLER_RECIPES.recipeBuilder("coil_cupronickel").EUt(VA[LV]).inputItems(wireGtDouble, Cupronickel, 8)
                 .inputItems(foil, Bronze, 8).inputFluids(TinAlloy, GTValues.L)
                 .outputItems(GTBlocks.COIL_CUPRONICKEL.asStack()).duration(200)
@@ -1090,6 +1125,139 @@ public class MachineRecipeLoader {
                 .outputItems(FLUID_CELL_LARGE_TUNGSTEN_STEEL)
                 .duration(200).EUt(VA[HV])
                 .addMaterialInfo(true).save(provider);
+
+        // Pipe Casings
+        ASSEMBLER_RECIPES.recipeBuilder("casing_bronze_pipe")
+                .inputItems(plate, Bronze, 4)
+                .inputItems(frameGt, Bronze)
+                .inputItems(pipeNormalFluid, Bronze, 4)
+                .outputItems(CASING_BRONZE_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_steel_pipe")
+                .inputItems(plate, Steel, 4)
+                .inputItems(frameGt, Steel)
+                .inputItems(pipeNormalFluid, Steel, 4)
+                .outputItems(CASING_STEEL_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_titanium_pipe")
+                .inputItems(plate, Titanium, 4)
+                .inputItems(frameGt, Titanium)
+                .inputItems(pipeNormalFluid, Titanium, 4)
+                .outputItems(CASING_TITANIUM_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_tungstensteel_pipe")
+                .inputItems(plate, TungstenSteel, 4)
+                .inputItems(frameGt, TungstenSteel)
+                .inputItems(pipeNormalFluid, TungstenSteel, 4)
+                .outputItems(CASING_TUNGSTENSTEEL_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_ptfe_pipe")
+                .inputItems(plate, Polytetrafluoroethylene, 4)
+                .inputItems(frameGt, Polytetrafluoroethylene)
+                .inputItems(pipeNormalFluid, Polytetrafluoroethylene, 4)
+                .outputItems(CASING_POLYTETRAFLUOROETHYLENE_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        // Hermetic Casings
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_lv")
+                .inputItems(plate, Steel, 8)
+                .inputItems(pipeLargeFluid, Polyethylene)
+                .outputItems(HERMETIC_CASING_LV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_mv")
+                .inputItems(plate, Aluminium, 8)
+                .inputItems(pipeLargeItem, PolyvinylChloride)
+                .outputItems(HERMETIC_CASING_MV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_hv")
+                .inputItems(plate, StainlessSteel, 8)
+                .inputItems(pipeLargeFluid, Polytetrafluoroethylene)
+                .outputItems(HERMETIC_CASING_HV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_ev")
+                .inputItems(plate, Titanium, 8)
+                .inputItems(pipeLargeFluid, StainlessSteel)
+                .outputItems(HERMETIC_CASING_EV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_iv")
+                .inputItems(plate, TungstenSteel, 8)
+                .inputItems(pipeLargeFluid, Titanium)
+                .outputItems(HERMETIC_CASING_IV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_luv")
+                .inputItems(plate, RhodiumPlatedPalladium, 8)
+                .inputItems(pipeLargeFluid, TungstenSteel)
+                .outputItems(HERMETIC_CASING_LuV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_zpm")
+                .inputItems(plate, NaquadahAlloy, 8)
+                .inputItems(pipeLargeFluid, NiobiumTitanium)
+                .outputItems(HERMETIC_CASING_ZPM)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_uv")
+                .inputItems(plate, Darmstadtium, 8)
+                .inputItems(pipeLargeFluid, Naquadah)
+                .outputItems(HERMETIC_CASING_UV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("hermetic_casing_uhv")
+                .inputItems(plate, Neutronium, 8)
+                .inputItems(pipeLargeFluid, Duranium)
+                .outputItems(HERMETIC_CASING_UHV)
+                .circuitMeta(10)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
     }
 
     private static void registerBlastFurnaceRecipes(Consumer<FinishedRecipe> provider) {

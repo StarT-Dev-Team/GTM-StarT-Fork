@@ -189,7 +189,7 @@ public class GCYMRecipes {
     private static void registerAssemblerRecipes(Consumer<FinishedRecipe> provider) {
         ASSEMBLER_RECIPES.recipeBuilder("crushing_wheels")
                 .inputItems(gearSmall, TungstenCarbide, 2)
-                .inputItems(gear, Ultimet, 3)
+                .inputItems(gear, Ultimet, 4)
                 .inputItems(CASING_SECURE_MACERATION.asStack())
                 .inputItems(ELECTRIC_MOTOR_IV.asStack())
                 .outputItems(CRUSHING_WHEELS.asStack(ConfigHolder.INSTANCE.recipes.casingsPerCraft))
@@ -198,7 +198,7 @@ public class GCYMRecipes {
 
         ASSEMBLER_RECIPES.recipeBuilder("slicing_blades")
                 .inputItems(plate, TungstenCarbide, 2)
-                .inputItems(gear, Ultimet, 3)
+                .inputItems(gear, Ultimet, 4)
                 .inputItems(CASING_SHOCK_PROOF.asStack())
                 .inputItems(ELECTRIC_MOTOR_IV.asStack())
                 .outputItems(SLICING_BLADES.asStack(ConfigHolder.INSTANCE.recipes.casingsPerCraft))
@@ -209,7 +209,7 @@ public class GCYMRecipes {
                 .inputItems(wireGtDouble, Platinum, 4)
                 .inputItems(cableGtSingle, Tungsten, 1)
                 .inputItems(CASING_NONCONDUCTING.asStack())
-                .inputItems(CustomTags.IV_CIRCUITS)
+                .inputItems(CustomTags.IV_CIRCUITS, 2)
                 .outputItems(ELECTROLYTIC_CELL.asStack(ConfigHolder.INSTANCE.recipes.casingsPerCraft))
                 .duration(50).EUt(16)
                 .addMaterialInfo(true).save(provider);
@@ -223,7 +223,7 @@ public class GCYMRecipes {
                 .addMaterialInfo(true, true).save(provider);
 
         ASSEMBLER_RECIPES.recipeBuilder("heat_vent")
-                .inputItems(plate, TantalumCarbide, 3)
+                .inputItems(plate, TantalumCarbide, 4)
                 .inputItems(plateDouble, MolybdenumDisilicide, 2)
                 .inputItems(rotor, Titanium, 1)
                 .inputItems(rodLong, MolybdenumDisilicide, 1)
