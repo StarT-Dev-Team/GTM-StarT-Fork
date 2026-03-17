@@ -51,6 +51,7 @@ This fork should be considered a separate project with its own design goals.
 - Steam boiler balance adjustments
 - Large Packer size changed from 6 blocks long to 5 blocks long
 - Enabled borosilicate glass plates and foils
+- Energy converters now default to FE to EU mode
 
 #### Configurability Improvements
 - Multiblocks stalling on power loss is now configurable
@@ -70,6 +71,7 @@ This fork should be considered a separate project with its own design goals.
 - TagPrefix blocks can easily use falling block behavior
 - Disabled auto generation of recycling recipes after KubeJS recipe event which caused recycling recipes to non-removable through KubeJS
 - You can now use `.colors(primary, secondary)` to set both colors of a material
+- Improved error message for using incompatible category for recipe type
 
 #### Bug Fixes
 - Fixed voltage display not handling MAX+X values correctly
@@ -81,6 +83,9 @@ This fork should be considered a separate project with its own design goals.
 - Fixed the idle and paused overlays for the assembler not being the same height as the active overlay
 - Fixed the torch recipe using creosote consuming the fluid container
 - Fixed combustion generators displaying incorrect information fuel usage
+- Fixed glass bottle recipe in extruder not registering
+- Fixed extra line for tools that don't have enchantments
+- Fixed batter buffers showing the input overlay on the sides
 
 #### UI and Texture Changes
 - Voltage display format adjusted (EU/t and amperage order for clarity)
