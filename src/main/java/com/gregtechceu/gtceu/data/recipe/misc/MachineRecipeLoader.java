@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 
 import static com.gregtechceu.gtceu.api.GTValues.*;
 import static com.gregtechceu.gtceu.api.data.tag.TagPrefix.*;
+import static com.gregtechceu.gtceu.common.data.GTBlocks.*;
 import static com.gregtechceu.gtceu.common.data.GTItems.*;
 import static com.gregtechceu.gtceu.common.data.GTMachines.*;
 import static com.gregtechceu.gtceu.common.data.GTMaterials.*;
@@ -1090,6 +1091,56 @@ public class MachineRecipeLoader {
                 .outputItems(FLUID_CELL_LARGE_TUNGSTEN_STEEL)
                 .duration(200).EUt(VA[HV])
                 .addMaterialInfo(true).save(provider);
+        //Pipe Casings
+        ASSEMBLER_RECIPES.recipeBuilder("casing_bronze_pipe")
+                .inputItems(plate, Bronze, 4)
+                .inputItems(frameGt, Bronze)
+                .inputItems(pipeNormalFluid, Bronze, 4)
+                .outputItems(CASING_BRONZE_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_steel_pipe")
+                .inputItems(plate, Steel, 4)
+                .inputItems(frameGt, Steel)
+                .inputItems(pipeNormalFluid, Steel, 4)
+                .outputItems(CASING_STEEL_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_titanium_pipe")
+                .inputItems(plate, Titanium, 4)
+                .inputItems(frameGt, Titanium)
+                .inputItems(pipeNormalFluid, Titanium, 4)
+                .outputItems(CASING_TITANIUM_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_tungstensteel_pipe")
+                .inputItems(plate, TungstenSteel, 4)
+                .inputItems(frameGt, TungstenSteel)
+                .inputItems(pipeNormalFluid, TungstenSteel, 4)
+                .outputItems(CASING_TUNGSTENSTEEL_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("casing_ptfe_pipe")
+                .inputItems(plate, Polytetrafluoroethylene, 4)
+                .inputItems(frameGt, Polytetrafluoroethylene)
+                .inputItems(pipeNormalFluid, Polytetrafluoroethylene, 4)
+                .outputItems(CASING_POLYTETRAFLUOROETHYLENE_PIPE)
+                .circuitMeta(9)
+                .duration(50)
+                .EUt(16)
+                .save(provider);
     }
 
     private static void registerBlastFurnaceRecipes(Consumer<FinishedRecipe> provider) {
