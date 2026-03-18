@@ -716,39 +716,29 @@ public interface IGTTool extends HeldItemUIFactory.IHeldItemUIHolder, ItemLike, 
                 tooltip.add(Component.translatable("item.gtceu.tool.tooltip.harvest_level", harvestLevel));
             }
         }
+        tooltip.add(CommonComponents.EMPTY);
 
         // behaviors
-        boolean addedBehaviorNewLine = false;
         AoESymmetrical aoeDefinition = getAoEDefinition(stack);
 
         if (!aoeDefinition.isZero()) {
-            addedBehaviorNewLine = tooltip.add(CommonComponents.EMPTY);
             tooltip.add(Component.translatable("item.gtceu.tool.behavior.aoe_mining",
                     aoeDefinition.column * 2 + 1, aoeDefinition.row * 2 + 1, aoeDefinition.layer + 1));
+            tooltip.add(CommonComponents.EMPTY);
         }
 
+        boolean addedMagneticLine = false;
         CompoundTag behaviorsTag = getBehaviorsTag(stack);
         if (behaviorsTag.getBoolean(RELOCATE_MINED_BLOCKS_KEY)) {
-            if (!addedBehaviorNewLine) {
-                addedBehaviorNewLine = true;
-                tooltip.add(CommonComponents.EMPTY);
-            }
             tooltip.add(Component.translatable("item.gtceu.tool.behavior.relocate_mining"));
+            addedMagneticLine = true;
         }
-
-        if (!addedBehaviorNewLine && !toolStats.getBehaviors().isEmpty()) {
-            tooltip.add(CommonComponents.EMPTY);
-        }
+        int length = tooltip.size();
         toolStats.getBehaviors().forEach(behavior -> behavior.addInformation(stack, world, tooltip, flag));
 
-        // unique tooltip
-        String uniqueTooltip = this.getToolType().getUnlocalizedName() + ".tooltip";
-        if (Language.getInstance().has(uniqueTooltip)) {
+        if (tooltip.size() != length || addedMagneticLine) {
             tooltip.add(CommonComponents.EMPTY);
-            tooltip.add(Component.translatable(uniqueTooltip));
         }
-
-        tooltip.add(CommonComponents.EMPTY);
 
         var defaultEnchants = getDefaultEnchantments(stack);
         if (!defaultEnchants.isEmpty()) {
