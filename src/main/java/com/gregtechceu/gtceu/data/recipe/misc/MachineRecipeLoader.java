@@ -560,6 +560,17 @@ public class MachineRecipeLoader {
                 .addMaterialInfo(true, true)
                 .save(provider);
 
+        ASSEMBLER_RECIPES.recipeBuilder("machine_mode_cover")
+                .inputItems(wireFine, Platinum, 4)
+                .inputItems(COVER_MACHINE_CONTROLLER)
+                .inputItems(new ItemStack(Items.COMPARATOR))
+                .inputItems(CustomTags.EV_CIRCUITS)
+                .inputFluids(SolderingAlloy, L / 2)
+                .outputItems(COVER_MACHINE_MODE)
+                .EUt(256).duration(100)
+                .addMaterialInfo(true, true)
+                .save(provider);
+
         ASSEMBLER_RECIPES.recipeBuilder("cover_fluid_detector")
                 .inputItems(new ItemStack(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE))
                 .inputItems(plate, Iron)

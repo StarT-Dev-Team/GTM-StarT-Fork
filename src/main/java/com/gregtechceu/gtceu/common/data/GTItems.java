@@ -1922,6 +1922,11 @@ public class GTItems {
             .lang("Layered Step Detector")
             .onRegister(attach(new CoverPlaceBehavior(GTCovers.LAYERED_STEP_DETECTOR)))
             .register();
+    public static ItemEntry<ComponentItem> COVER_MACHINE_MODE = REGISTRATE
+            .item("machine_mode_cover", ComponentItem::create)
+            .lang("Machine Mode Cover")
+            .onRegister(attach(new CoverPlaceBehavior(GTCovers.MACHINE_MODE)))
+            .register();
     public static ItemEntry<ComponentItem> COVER_MAINTENANCE_DETECTOR = REGISTRATE
             .item("maintenance_detector_cover", ComponentItem::create)
             .lang("Maintenance Detector")
