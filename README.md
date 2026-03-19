@@ -44,6 +44,8 @@ This fork should be considered a separate project with its own design goals.
 - Advanced redstone detectors can optionally output strong redstone signals
 - ULV components added
 - ME hatches can connect to the same network via sides by using a screwdriver
+- Added assembler recipes for casings that don't have one
+- Added machine mode cover
 
 #### Gameplay & Balance Changes
 - LCR coil benefits and parallel LCR support (configurable)
@@ -52,6 +54,8 @@ This fork should be considered a separate project with its own design goals.
 - Large Packer size changed from 6 blocks long to 5 blocks long
 - Enabled borosilicate glass plates and foils
 - Energy converters now default to FE to EU mode
+- Readded the sodium to sodium hydroxide recipe and increased it's duration
+- Increased duration of formic acid recipe
 
 #### Configurability Improvements
 - Multiblocks stalling on power loss is now configurable
@@ -84,7 +88,7 @@ This fork should be considered a separate project with its own design goals.
 - Fixed the torch recipe using creosote consuming the fluid container
 - Fixed combustion generators displaying incorrect information fuel usage
 - Fixed glass bottle recipe in extruder not registering
-- Fixed extra line for tools that don't have enchantments
+- Fixed some issues ith tooltips for tools
 - Fixed battery buffers showing the input overlay on the sides
 
 #### UI and Texture Changes
