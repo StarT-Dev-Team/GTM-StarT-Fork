@@ -108,6 +108,8 @@ public class GTCovers {
             MaintenanceDetectorCover::new);
     public final static CoverDefinition LAYERED_STEP_DETECTOR = register("layered_step_detector",
             LayeredStepDetectorCover::new);
+    public final static CoverDefinition MACHINE_MODE = register("machine_mode",
+            MachineModeCover::new);
 
     // Solar Panels
     public final static CoverDefinition SOLAR_PANEL_BASIC = register("solar_panel", CoverSolarPanel::new);
