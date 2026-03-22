@@ -344,13 +344,13 @@ public class MachineRecipeLoader {
          * .inputFluids(Concrete.getFluid(L))
          * .outputItems(MetaBlocks.ASPHALT.getItemVariant(BlockAsphalt.BlockType.ASPHALT))
          * .duration(60).EUt(16).save(provider);
-         * 
+         *
          * MIXER_RECIPES.recipeBuilder()
          * .inputItems(dust, Charcoal)
          * .inputFluids(Concrete.getFluid(L))
          * .outputItems(MetaBlocks.ASPHALT.getItemVariant(BlockAsphalt.BlockType.ASPHALT))
          * .duration(60).EUt(16).save(provider);
-         * 
+         *
          * MIXER_RECIPES.recipeBuilder()
          * .inputItems(dust, Carbon)
          * .inputFluids(Concrete.getFluid(L))
@@ -841,6 +841,7 @@ public class MachineRecipeLoader {
                 .inputItems(plate, Bronze, 3)
                 .outputItems(GTBlocks.FIREBOX_BRONZE, ConfigHolder.INSTANCE.recipes.casingsPerCraft)
                 .addMaterialInfo(true, true)
+                .circuitMeta(11)
                 .duration(100)
                 .EUt(VA[LV])
                 .save(provider);
@@ -850,6 +851,7 @@ public class MachineRecipeLoader {
                 .inputItems(plate, Steel, 3)
                 .outputItems(GTBlocks.FIREBOX_STEEL, ConfigHolder.INSTANCE.recipes.casingsPerCraft)
                 .addMaterialInfo(true, true)
+                .circuitMeta(11)
                 .duration(200)
                 .EUt(VA[LV])
                 .save(provider);
@@ -859,6 +861,7 @@ public class MachineRecipeLoader {
                 .inputItems(plate, Titanium, 3)
                 .outputItems(GTBlocks.FIREBOX_TITANIUM, ConfigHolder.INSTANCE.recipes.casingsPerCraft)
                 .addMaterialInfo(true, true)
+                .circuitMeta(11)
                 .duration(300)
                 .EUt(VA[HV])
                 .save(provider);
@@ -868,6 +871,7 @@ public class MachineRecipeLoader {
                 .inputItems(plate, TungstenSteel, 3)
                 .outputItems(GTBlocks.FIREBOX_TUNGSTENSTEEL, ConfigHolder.INSTANCE.recipes.casingsPerCraft)
                 .addMaterialInfo(true, true)
+                .circuitMeta(11)
                 .duration(400)
                 .EUt(VA[EV])
                 .save(provider);
