@@ -41,11 +41,13 @@ This fork should be considered a separate project with its own design goals.
 - Electric versions of Blast Furnaces and Smokers
 - Multiblocks can require specific energy hatch amperage (2A / 4A / 16A)
 - Multiblocks can support layered inputs (stepped recipes)
-- Advanced redstone detectors can optionally output strong redstone signals
+- Advanced detector covers can optionally output strong redstone signals
+- Advanced detector covers have now configurable cycle durations
 - ULV components added
 - ME hatches can connect to the same network via sides by using a screwdriver
 - Added assembler recipes for casings that don't have one
 - Added machine mode cover
+- ME stocking hatches can now have configurable cycle durations
 
 #### Gameplay & Balance Changes
 - LCR coil benefits and parallel LCR support (configurable)
@@ -61,6 +63,7 @@ This fork should be considered a separate project with its own design goals.
 - Multiblocks stalling on power loss is now configurable
 - Super tanks acting as drums is now configurable
 - ULV components can be enabled/disabled via config
+- Minimum stocking cycle duration can now be configured 
 
 #### Restored / Reverted Upstream Changes
 - Chance boosting restored to base recipes
@@ -90,6 +93,8 @@ This fork should be considered a separate project with its own design goals.
 - Fixed glass bottle recipe in extruder not registering
 - Fixed some issues ith tooltips for tools
 - Fixed battery buffers showing the input overlay on the sides
+- Fixed "water bottle" fluid being registered in EMI
+- Fixed fluid regulators not checking amount
 
 #### UI and Texture Changes
 - Voltage display format adjusted (EU/t and amperage order for clarity)
