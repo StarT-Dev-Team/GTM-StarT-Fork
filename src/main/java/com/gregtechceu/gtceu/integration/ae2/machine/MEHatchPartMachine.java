@@ -2,12 +2,17 @@ package com.gregtechceu.gtceu.integration.ae2.machine;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.fancyconfigurator.MEPartFancyConfigurator;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.ae2.machine.feature.IGridConnectedMachine;
+import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEPart;
 import com.gregtechceu.gtceu.integration.ae2.machine.trait.GridNodeHolder;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DropSaved;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
@@ -30,7 +35,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class MEHatchPartMachine extends FluidHatchPartMachine implements IGridConnectedMachine {
+public abstract class MEHatchPartMachine extends FluidHatchPartMachine implements IMEPart, IGridConnectedMachine {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MEHatchPartMachine.class,
             FluidHatchPartMachine.MANAGED_FIELD_HOLDER);
@@ -46,6 +51,12 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
     protected boolean isOnline;
     @Persisted
     protected boolean exposeAllSides = false;
+    @Getter
+    @Setter
+    @Persisted
+    @DropSaved
+    private int ticksPerCycle = Math.max(ConfigHolder.INSTANCE.compat.ae2.updateIntervals,
+            ConfigHolder.INSTANCE.compat.ae2.minUpdateIntervals);
 
     protected final IActionSource actionSource;
 
@@ -102,6 +113,21 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
     @Override
     public boolean swapIO() {
         return false;
+    }
+
+    @Override
+    public boolean shouldSyncME() {
+        return self().getOffsetTimer() % ticksPerCycle == 0;
+    }
+
+    @Override
+    public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
+        attachHatchConfigurators(configuratorPanel);
+        configuratorPanel.attachConfigurators(new MEPartFancyConfigurator(this));
+    }
+
+    protected void attachHatchConfigurators(ConfiguratorPanel configuratorPanel) {
+        super.attachConfigurators(configuratorPanel);
     }
 
     /// Let either only the front facing or all sides be exposed

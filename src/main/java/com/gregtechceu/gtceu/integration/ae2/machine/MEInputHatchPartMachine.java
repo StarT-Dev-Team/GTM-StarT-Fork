@@ -7,6 +7,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.AEFluidConfigWidget;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEFluidList;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEFluidSlot;
@@ -15,6 +16,8 @@ import com.gregtechceu.gtceu.utils.GTMath;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DropSaved;
+import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import com.lowdragmc.lowdraglib.utils.Position;
 
@@ -29,6 +32,8 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import appeng.api.config.Actionable;
 import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -41,6 +46,13 @@ public class MEInputHatchPartMachine extends MEHatchPartMachine
             MEInputHatchPartMachine.class, MEHatchPartMachine.MANAGED_FIELD_HOLDER);
 
     protected ExportOnlyAEFluidList aeFluidHandler;
+
+    @Getter
+    @Setter
+    @Persisted
+    @DropSaved
+    protected int ticksPerCycle = Math.max(ConfigHolder.INSTANCE.compat.ae2.updateIntervals,
+            ConfigHolder.INSTANCE.compat.ae2.minUpdateIntervals);
 
     public MEInputHatchPartMachine(IMachineBlockEntity holder, Object... args) {
         super(holder, IO.IN, args);

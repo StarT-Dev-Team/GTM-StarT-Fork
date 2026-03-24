@@ -245,10 +245,16 @@ public class ConfigHolder {
         public static class AE2CompatConfig {
 
             @Configurable
-            @Configurable.Comment({ "The interval between ME Hatch/Bus interact ME network.",
-                    "It may cause lag if the interval is too small.", "Default: 2 sec" })
+            @Configurable.Comment({ "The default interval between ME Hatch/Bus interact ME network.",
+                    "Can't be lower than minUpdateIntervals.", "Default: 2 sec" })
             @Configurable.Range(min = 1) // Do Not Set a Maximum, if someone wants >80 ticks let them.
             public int updateIntervals = 40;
+
+            @Configurable
+            @Configurable.Comment({ "The minimum interval between ME Hatch/Bus interact ME network.",
+                    "It may cause lag if the interval is too small.", "Default: 2 ticks" })
+            @Configurable.Range(min = 1)
+            public int minUpdateIntervals = 2;
 
             @Configurable
             @Configurable.Comment({ "The energy consumption of ME Hatch/Bus.", "Default: 4.0AE/t" })

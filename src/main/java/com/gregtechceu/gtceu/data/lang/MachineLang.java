@@ -804,6 +804,11 @@ public class MachineLang {
                 "§oME Input Hatch Configuration Data");
         provider.add("gtceu.machine.me.io.expose.description", "Expose all sides: %s");
 
+        provider.add("gtceu.gui.title.me_config.ticks_per_cycle", "Ticks Per Cycle");
+        provider.add("gtceu.gui.me_config.ticks_per_cycle", "Delay between item or fluid list updates");
+        provider.add("gtceu.gui.me_hatch_config.title", "Configure ME Hatch");
+        provider.add("gtceu.gui.me_bus_config.title", "Configure ME Bus");
+
         provider.add("gtceu.gui.title.adv_stocking_config.min_item_count",
                 "Min. Item Count");
         provider.add("gtceu.gui.title.adv_stocking_config.min_fluid_count",

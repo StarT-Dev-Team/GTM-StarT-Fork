@@ -2,12 +2,17 @@ package com.gregtechceu.gtceu.integration.ae2.machine;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.fancyconfigurator.MEPartFancyConfigurator;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.ItemBusPartMachine;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.ae2.machine.feature.IGridConnectedMachine;
+import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEPart;
 import com.gregtechceu.gtceu.integration.ae2.machine.trait.GridNodeHolder;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DropSaved;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
@@ -31,7 +36,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Getter
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class MEBusPartMachine extends ItemBusPartMachine implements IGridConnectedMachine {
+public abstract class MEBusPartMachine extends ItemBusPartMachine implements IMEPart, IGridConnectedMachine {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MEBusPartMachine.class,
             ItemBusPartMachine.MANAGED_FIELD_HOLDER);
@@ -45,6 +50,12 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IGr
     protected boolean isOnline;
     @Persisted
     protected boolean exposeAllSides = false;
+    @Getter
+    @Setter
+    @Persisted
+    @DropSaved
+    protected int ticksPerCycle = Math.max(ConfigHolder.INSTANCE.compat.ae2.updateIntervals,
+            ConfigHolder.INSTANCE.compat.ae2.minUpdateIntervals);
 
     protected final IActionSource actionSource;
 
@@ -101,6 +112,16 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IGr
     @Override
     public boolean swapIO() {
         return false;
+    }
+
+    @Override
+    public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
+        attachBusConfigurators(configuratorPanel);
+        configuratorPanel.attachConfigurators(new MEPartFancyConfigurator(this));
+    }
+
+    protected void attachBusConfigurators(ConfiguratorPanel configuratorPanel) {
+        super.attachConfigurators(configuratorPanel);
     }
 
     /// Let either only the front facing or all sides be exposed
