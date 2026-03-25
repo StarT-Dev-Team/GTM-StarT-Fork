@@ -48,7 +48,7 @@ import static com.lowdragmc.lowdraglib.gui.texture.ProgressTexture.FillDirection
 public class LayeredRecipeUIHelper {
 
     private static final int LAYERED_GUI_WIDTH = 164;
-    private static final int LAYERED_GUI_HEIGHT = 144;
+    private static final int LAYERED_GUI_HEIGHT = 128;
 
     public static GTRecipeTypeUI createRecipeUI(GTRecipeType recipeType) {
         var ui = new GTRecipeTypeUI(recipeType) {

@@ -100,6 +100,7 @@ public class LayeredRecipeHelper {
                 .outputFluids(
                         layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.tickOutputs))
                                 .toArray(FluidIngredient[]::new))
+                .addConditions(layers.get(0).recipe.conditions)
                 .duration(layers.stream().reduce(0, (sum, layer) -> sum + layer.recipe().duration, Integer::sum))
                 .buildRawRecipe();
         var serializedXei = Layer.RECIPE_WITH_ID_CODEC.encodeStart(NbtOps.INSTANCE, xei).result().orElseThrow();

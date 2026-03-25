@@ -220,6 +220,16 @@ public class GTRecipeBuilder {
         return this;
     }
 
+    public GTRecipeBuilder addConditions(RecipeCondition<?>... conditions) {
+        return addConditions(Arrays.asList(conditions));
+    }
+
+    public GTRecipeBuilder addConditions(List<RecipeCondition<?>> conditions) {
+        this.conditions.addAll(conditions);
+        recipeType.setMinRecipeConditions(this.conditions.size());
+        return this;
+    }
+
     public GTRecipeBuilder duration(int duration) {
         if (duration < 0) {
             GTCEu.LOGGER.error("Recipe duration must be non negative, id: {}", this.id);
