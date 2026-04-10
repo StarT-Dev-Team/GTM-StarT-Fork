@@ -37,7 +37,6 @@ import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.stack.Comparison;
 import dev.emi.emi.api.stack.EmiStack;
-import net.minecraftforge.fluids.FluidType;
 
 @EmiEntrypoint
 public class GTEMIPlugin implements EmiPlugin {
