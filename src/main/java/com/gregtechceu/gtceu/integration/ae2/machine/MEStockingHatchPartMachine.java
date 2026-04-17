@@ -311,7 +311,7 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
         super.readConfigFromTag(tag);
     }
 
-    private class ExportOnlyAEStockingFluidList extends ExportOnlyAEFluidList {
+    public class ExportOnlyAEStockingFluidList extends ExportOnlyAEFluidList {
 
         public ExportOnlyAEStockingFluidList(MetaMachine holder, int slots) {
             super(holder, slots, ExportOnlyAEStockingFluidSlot::new);
@@ -338,7 +338,7 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
         }
     }
 
-    private class ExportOnlyAEStockingFluidSlot extends ExportOnlyAEFluidSlot {
+    public class ExportOnlyAEStockingFluidSlot extends ExportOnlyAEFluidSlot {
 
         public ExportOnlyAEStockingFluidSlot() {
             super();

@@ -325,7 +325,7 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
         super.readConfigFromTag(tag);
     }
 
-    private class ExportOnlyAEStockingItemList extends ExportOnlyAEItemList {
+    public class ExportOnlyAEStockingItemList extends ExportOnlyAEItemList {
 
         public ExportOnlyAEStockingItemList(MetaMachine holder, int slots) {
             super(holder, slots, ExportOnlyAEStockingItemSlot::new);
@@ -352,7 +352,7 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
         }
     }
 
-    private class ExportOnlyAEStockingItemSlot extends ExportOnlyAEItemSlot {
+    public class ExportOnlyAEStockingItemSlot extends ExportOnlyAEItemSlot {
 
         public ExportOnlyAEStockingItemSlot() {
             super();
