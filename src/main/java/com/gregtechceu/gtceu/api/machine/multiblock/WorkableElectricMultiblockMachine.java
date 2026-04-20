@@ -31,10 +31,8 @@ import net.minecraft.world.entity.player.Player;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -177,8 +175,28 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
 
     @Override
     public void attachTooltips(TooltipsPanel tooltipsPanel) {
+        Set<String> addedTooltipTexts = new HashSet<>();
+
         for (IMultiPart part : getParts()) {
-            part.attachFancyTooltipsToController(this, tooltipsPanel);
+            List<IFancyTooltip> partTooltips = new ArrayList<>();
+
+            part.attachFancyTooltipsToController(this, new TooltipsPanel() {
+
+                @Override
+                public void attachTooltips(IFancyTooltip... tooltips) {
+                    partTooltips.addAll(Arrays.asList(tooltips));
+                }
+            });
+
+            for (IFancyTooltip tooltip : partTooltips) {
+                String tooltipText = tooltip.getFancyTooltip().stream()
+                        .map(Component::getString)
+                        .collect(Collectors.joining(" "));
+
+                if (addedTooltipTexts.add(tooltipText)) {
+                    tooltipsPanel.attachTooltips(tooltip);
+                }
+            }
         }
     }
 
