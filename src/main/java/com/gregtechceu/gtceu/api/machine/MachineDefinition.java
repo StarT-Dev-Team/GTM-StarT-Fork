@@ -35,6 +35,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -140,6 +141,10 @@ public class MachineDefinition implements Supplier<IMachineBlock> {
     @Getter
     private MachineRenderState defaultRenderState;
 
+    @Getter
+    @Setter
+    private List<List<Component>> paginatedTooltips = new ArrayList<>();
+
     public MachineDefinition(ResourceLocation id) {
         this.id = id;
     }
@@ -226,5 +231,13 @@ public class MachineDefinition implements Supplier<IMachineBlock> {
 
     public static void clearBuilt() {
         STATE.remove();
+    }
+
+    public boolean hasPaginatedTooltips() {
+        return !paginatedTooltips.isEmpty();
+    }
+
+    public int getMaxPaginationPages() {
+        return paginatedTooltips.size();
     }
 }

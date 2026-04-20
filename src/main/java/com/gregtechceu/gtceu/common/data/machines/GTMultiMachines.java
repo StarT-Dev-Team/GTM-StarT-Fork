@@ -259,6 +259,16 @@ public class GTMultiMachines {
                         .build());
                 return shapeInfo;
             })
+            .paginatedTooltips(
+                    List.of(
+                            Component.translatable("gtceu.multiblock.hpca.warning_no_computation"),
+                            Component.translatable("gtceu.multiblock.hpca.warning_low_cooling"),
+                            Component.translatable("gtceu.multiblock.hpca.info_coolant_name")),
+                    List.of(
+                            Component.translatable("gtceu.machine.computation_receiver_hatch.tooltip"),
+                            Component.translatable("gtceu.machine.computation_transmitter_hatch.tooltip")),
+                    List.of(
+                            Component.translatable("gtceu.maintenance.configurable_duration.changed_description")))
             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"),
                     GTCEu.id("block/multiblock/large_chemical_reactor"))
             .register();

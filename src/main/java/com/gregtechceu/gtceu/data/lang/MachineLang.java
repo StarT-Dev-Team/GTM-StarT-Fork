@@ -998,6 +998,8 @@ public class MachineLang {
         provider.add("gtceu.creative.computation.average", "Average Requested CWUt");
         provider.add("gtceu.creative.activity.on", "Active");
         provider.add("gtceu.creative.activity.off", "Not active");
+
+        provider.add("gtceu.paginated_tooltip", "◀ %s Page %s/%s %s ▶");
     }
 
     public static void standardTooltips(RegistrateLangProvider provider, String root, String machine,
