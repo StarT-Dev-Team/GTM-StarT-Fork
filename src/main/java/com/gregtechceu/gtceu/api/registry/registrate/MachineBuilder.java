@@ -151,6 +151,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
             GTValues.VC[tier] : tintIndex == 1 ? paintingColor : -1);
     private PartAbility[] abilities = new PartAbility[0];
     private final List<Component> tooltips = new ArrayList<>();
+    private final List<List<Component>> paginatedTooltips = new ArrayList<>();
+    private final List<Component> bottomTooltips = new ArrayList<>();
     @Nullable
     @Setter
     private BiConsumer<ItemStack, List<Component>> tooltipBuilder;
@@ -189,8 +191,6 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
     @Setter
     @Nullable
     private String langValue = null;
-
-    private final List<List<Component>> paginatedTooltips = new ArrayList<>();
 
     public MachineBuilder(GTRegistrate registrate, String name,
                           Function<ResourceLocation, DEFINITION> definition,
@@ -414,12 +414,14 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return this;
     }
 
-    public boolean hasPaginatedTooltips() {
-        return !paginatedTooltips.isEmpty();
+    public MachineBuilder<DEFINITION> bottomTooltips(@Nullable Component... components) {
+        return bottomTooltips(Arrays.asList(components));
     }
 
-    public List<List<Component>> getPaginatedTooltips() {
-        return new ArrayList<>(paginatedTooltips);
+    public MachineBuilder<DEFINITION> bottomTooltips(List<? extends @Nullable Component> components) {
+        bottomTooltips.addAll(components.stream().filter(Objects::nonNull).toList());
+
+        return this;
     }
 
     public MachineBuilder<DEFINITION> abilities(PartAbility... abilities) {
@@ -636,6 +638,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                                 .withStyle(ChatFormatting.LIGHT_PURPLE))
                         .withStyle(ChatFormatting.GRAY));
             }
+
+            components.addAll(bottomTooltips);
 
             if (tooltipBuilder != null) tooltipBuilder.accept(itemStack, components);
         });
