@@ -37,7 +37,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.util.valueproviders.IntProviderType;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -357,12 +359,12 @@ public interface GTRecipeSchema {
 
         public GTRecipeJS inputItemsRanged(Ingredient ingredient, int min, int max) {
             validateItems("ranged input", ingredient);
-            return input(ItemRecipeCapability.CAP, new ExtendedOutputItem(ingredient, 1, UniformInt.of(min, max)));
+            return input(ItemRecipeCapability.CAP, new ExtendedOutputItem(ingredient, 1, createUnlimitedUniformInt(min, max)));
         }
 
         public GTRecipeJS inputItemsRanged(ItemStack stack, int min, int max) {
             validateItems("ranged input", stack);
-            return input(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, UniformInt.of(min, max)));
+            return input(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, createUnlimitedUniformInt(min, max)));
         }
 
         public GTRecipeJS itemInputsRanged(TagPrefix orePrefix, Material material, int min, int max) {
@@ -430,12 +432,12 @@ public interface GTRecipeSchema {
 
         public GTRecipeJS outputItemsRanged(Ingredient ingredient, int min, int max) {
             validateItems("ranged output", ingredient);
-            return output(ItemRecipeCapability.CAP, new ExtendedOutputItem(ingredient, 1, UniformInt.of(min, max)));
+            return output(ItemRecipeCapability.CAP, new ExtendedOutputItem(ingredient, 1, createUnlimitedUniformInt(min, max)));
         }
 
         public GTRecipeJS outputItemsRanged(ItemStack stack, int min, int max) {
             validateItems("ranged output", stack);
-            return output(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, UniformInt.of(min, max)));
+            return output(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, createUnlimitedUniformInt(min, max)));
         }
 
         public GTRecipeJS outputItemsRanged(TagPrefix orePrefix, Material material, int min, int max) {
@@ -1350,6 +1352,37 @@ public interface GTRecipeSchema {
 
             var fluid = ((FluidStackJS) value).getFluidStack();
             return FluidIngredient.of(fluid.getFluid(), (int) fluid.getAmount(), fluid.getTag()).toJson();
+        }
+
+        private static IntProvider createUnlimitedUniformInt(int min, int max) {
+            if (max < min) {
+                throw new IllegalArgumentException("Max must be >= min");
+            }
+            if (max - min <= 1024) {
+                return UniformInt.of(min, max);
+            } else {
+                return new IntProvider() {
+                    @Override
+                    public int sample(@NotNull RandomSource random) {
+                        return random.nextInt(min, max + 1);
+                    }
+
+                    @Override
+                    public int getMinValue() {
+                        return min;
+                    }
+
+                    @Override
+                    public int getMaxValue() {
+                        return max;
+                    }
+
+                    @Override
+                    public @NotNull IntProviderType<?> getType() {
+                        return (IntProviderType<?>) UniformInt.CODEC;
+                    }
+                };
+            }
         }
     }
 
