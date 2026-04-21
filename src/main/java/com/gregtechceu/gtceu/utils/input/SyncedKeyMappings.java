@@ -42,9 +42,9 @@ public final class SyncedKeyMappings {
             "gtceu.key.enable_step_assist", KeyConflictContext.IN_GAME,
             InputConstants.KEY_APOSTROPHE);
     public static final SyncedKeyMapping TOOLTIP_NEXT_PAGE = SyncedKeyMapping.createConfigurable(
-            "gtceu.key.tooltip_next_page", KeyConflictContext.IN_GAME, InputConstants.KEY_PAGEUP);
+            "gtceu.key.tooltip_next_page", KeyConflictContext.IN_GAME, InputConstants.KEY_RIGHT);
     public static final SyncedKeyMapping TOOLTIP_PREV_PAGE = SyncedKeyMapping.createConfigurable(
-            "gtceu.key.tooltip_previous_page", KeyConflictContext.IN_GAME, InputConstants.KEY_PAGEDOWN);
+            "gtceu.key.tooltip_previous_page", KeyConflictContext.IN_GAME, InputConstants.KEY_LEFT);
 
     public static void init() {
         if (GTCEu.isClientSide()) {
