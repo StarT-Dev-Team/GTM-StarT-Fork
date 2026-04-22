@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.common.recipe.condition;
 
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
+import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
@@ -11,6 +12,7 @@ import net.minecraft.network.chat.Component;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,6 +25,7 @@ public class EUToStartCondition extends RecipeCondition<EUToStartCondition> {
     ).apply(instance, EUToStartCondition::new));
     // spotless:on
 
+    @Getter
     private long euToStart;
 
     public EUToStartCondition(long euToStart) {
@@ -46,6 +49,11 @@ public class EUToStartCondition extends RecipeCondition<EUToStartCondition> {
 
     @Override
     public boolean testCondition(@NotNull GTRecipe recipe, @NotNull RecipeLogic recipeLogic) {
+        var machine = recipeLogic.getMachine();
+        if (machine instanceof WorkableElectricMultiblockMachine multiblockMachine) {
+            var container = multiblockMachine.getEnergyContainer();
+            return container.getEnergyCapacity() > euToStart;
+        }
         return recipeLogic.getMachine().getTraits().stream().filter(IEnergyContainer.class::isInstance)
                 .anyMatch(energyContainer -> ((IEnergyContainer) energyContainer).getEnergyCapacity() > euToStart);
     }

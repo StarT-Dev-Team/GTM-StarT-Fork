@@ -1112,6 +1112,10 @@ public interface GTRecipeSchema {
             return ftbQuest(questId, false);
         }
 
+        public GTRecipeJS genericStartEU(long eu) {
+            return addCondition(new EUToStartCondition(eu));
+        }
+
         private boolean applyResearchProperty(ResearchData.ResearchEntry researchEntry) {
             if (!ConfigHolder.INSTANCE.machines.enableResearch) return false;
             if (researchEntry == null) {

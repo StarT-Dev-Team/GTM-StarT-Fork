@@ -1,12 +1,15 @@
 package com.gregtechceu.gtceu.common.data;
 
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.data.medicalcondition.MedicalCondition;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IOverclockMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.multiblock.CoilWorkableElectricMultiblockMachine;
+import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
+import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
@@ -16,6 +19,7 @@ import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.common.capability.EnvironmentalHazardSavedData;
+import com.gregtechceu.gtceu.common.recipe.condition.EUToStartCondition;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import net.minecraft.Util;
@@ -82,6 +86,7 @@ public class GTRecipeModifiers {
     public static final RecipeModifier PYROLYZE_OVEN_OVERCLOCK = GTRecipeModifiers::pyrolyseOvenOverclock;
     public static final RecipeModifier MULTI_SMELTER_PARALLEL = GTRecipeModifiers::multiSmelterParallel;
     public static final RecipeModifier CHEMICAL_REACTOR_OVERCLOCK = GTRecipeModifiers::chemicalReactorOverclock;
+    public static final RecipeModifier CONSUME_EU_TO_START = GTRecipeModifiers::consumeEuToStart;
 
     /**
      * Recipe Modifier for <b>Parallel Multiblock Machines</b> - can be used as a valid {@link RecipeModifier}
@@ -290,5 +295,43 @@ public class GTRecipeModifiers {
                 .andThen(NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, durationModifier.apply(recipe),
                         coilMachine.getOverclockVoltage()))
                 .andThen(ModifierFunction.builder().eutMultiplier(1.0 - coilTier * 0.05).build());
+    }
+
+    public static @NotNull ModifierFunction consumeEuToStart(@NotNull MetaMachine machine, @NotNull GTRecipe recipe) {
+        var euToStartConditions = recipe.conditions.stream()
+                .filter(EUToStartCondition.class::isInstance)
+                .map(EUToStartCondition.class::cast)
+                .toList();
+
+        if (euToStartConditions.isEmpty()) return ModifierFunction.IDENTITY;
+
+        var recipeLogic = machine.getTraits().stream().filter(RecipeLogic.class::isInstance)
+                .map(RecipeLogic.class::cast).findFirst();
+        if (recipeLogic.isEmpty()) return ModifierFunction.IDENTITY; // should never happen
+
+        if (!RecipeHelper.checkConditions(recipe, recipeLogic.get()).isSuccess()) {
+            return ModifierFunction
+                    .cancel(Component.translatable("gtceu.recipe_modifier.insufficient_eu_to_start_recipe"));
+        }
+
+        var energyToConsume = euToStartConditions.stream()
+                .reduce(0L, (acc, condition) -> acc + condition.getEuToStart(), Long::sum);
+
+        if (machine instanceof WorkableElectricMultiblockMachine multiblockMachine) {
+            multiblockMachine.getEnergyContainer().removeEnergy(energyToConsume);
+        } else {
+            var toConsume = machine.getTraits().stream().filter(IEnergyContainer.class::isInstance)
+                    .map(IEnergyContainer.class::cast)
+                    .filter(energyContainer -> energyContainer.getEnergyCapacity() > energyToConsume)
+                    .findFirst();
+            if (toConsume.isEmpty()) {
+                return ModifierFunction
+                        .cancel(Component.translatable("gtceu.recipe_modifier.insufficient_eu_to_start_recipe"));
+            }
+
+            toConsume.get().removeEnergy(energyToConsume);
+        }
+
+        return ModifierFunction.IDENTITY;
     }
 }

@@ -1345,6 +1345,10 @@ public class GTRecipeBuilder {
         return ftbQuest(questId, false);
     }
 
+    public GTRecipeBuilder genericStartEU(long eu) {
+        return addCondition(new EUToStartCondition(eu));
+    }
+
     private boolean applyResearchProperty(ResearchData.ResearchEntry researchEntry) {
         if (!ConfigHolder.INSTANCE.machines.enableResearch) return false;
         if (researchEntry == null) {
