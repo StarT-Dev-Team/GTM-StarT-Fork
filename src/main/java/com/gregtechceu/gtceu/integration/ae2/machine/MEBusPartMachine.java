@@ -115,6 +115,11 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
     }
 
     @Override
+    public boolean shouldSyncME() {
+        return self().getOffsetTimer() % ticksPerCycle == 0;
+    }
+
+    @Override
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         attachBusConfigurators(configuratorPanel);
         configuratorPanel.attachConfigurators(new MEPartFancyConfigurator(this));

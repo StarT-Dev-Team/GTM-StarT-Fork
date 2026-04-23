@@ -98,7 +98,7 @@ public class LayeredWorkableElectricMultiblockMachine extends WorkableElectricMu
         if (clickData.isRemote) return;
 
         if (componentData.equals("layered_cancel")) {
-            getRecipeLogic().interruptRecipe();
+            getRecipeLogic().resetRecipeLogic();
         }
     }
 }

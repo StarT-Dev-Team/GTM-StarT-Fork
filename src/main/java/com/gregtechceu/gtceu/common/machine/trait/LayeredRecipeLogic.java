@@ -87,7 +87,18 @@ public class LayeredRecipeLogic extends RecipeLogic {
 
     @Override
     public void interruptRecipe() {
-        super.interruptRecipe();
+        machine.afterWorking();
+        setStatus(Status.IDLE);
+        progress = 0;
+        duration = 0;
+        layeredRecipeLayerIndex = -1;
+        layeredRecipe = null;
+        lastRecipe = null;
+    }
+
+    @Override
+    public void resetRecipeLogic() {
+        super.resetRecipeLogic();
         layeredRecipeLayerIndex = -1;
         layeredRecipe = null;
     }

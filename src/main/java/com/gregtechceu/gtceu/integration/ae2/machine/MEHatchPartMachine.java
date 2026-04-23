@@ -55,7 +55,7 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
     @Setter
     @Persisted
     @DropSaved
-    private int ticksPerCycle = Math.max(ConfigHolder.INSTANCE.compat.ae2.updateIntervals,
+    protected int ticksPerCycle = Math.max(ConfigHolder.INSTANCE.compat.ae2.updateIntervals,
             ConfigHolder.INSTANCE.compat.ae2.minUpdateIntervals);
 
     protected final IActionSource actionSource;

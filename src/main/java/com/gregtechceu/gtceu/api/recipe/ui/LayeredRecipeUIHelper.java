@@ -113,8 +113,9 @@ public class LayeredRecipeUIHelper {
                     GuiTextures.PROGRESS_BAR_ARROW.getSubTexture(0, 0.5, 1, 0.5))
                     .setFillDirection(LEFT_TO_RIGHT);
             progressBarTexture.rotate(90f);
-            var progressWidget = new ProgressWidget(ProgressWidget.JEIProgress, (int) (centerX - 10f), bottomY, 20, 20,
-                    progressBarTexture);
+            var outputsEndX = centerX + (steps.size() / 2f) * sliceWidth + 1f;
+            var progressWidget = new ProgressWidget(ProgressWidget.JEIProgress,
+                    (int) (outputsEndX - 21f), bottomY, 20, 20, progressBarTexture);
             group.addWidget(progressWidget);
 
             progressWidget.setProgressSupplier(ProgressWidget.JEIProgress);
@@ -145,7 +146,7 @@ public class LayeredRecipeUIHelper {
 
             var lastStepLayer = steps.get(steps.size() - 1);
             var recipe = lastStepLayer.recipe();
-            buildStepOutput(centerX, bottomY + 22, getRecipeHolder(recipe), recipe);
+            buildStepOutput(outputsEndX, bottomY + 22, getRecipeHolder(recipe), recipe);
         }
 
         private GTRecipeTypeUI.RecipeHolder getRecipeHolder(GTRecipe recipe) {
@@ -161,7 +162,7 @@ public class LayeredRecipeUIHelper {
                     recipe.conditions, false, false);
         }
 
-        private void buildStepOutput(float centerX, int posY, GTRecipeTypeUI.RecipeHolder recipeHolder,
+        private void buildStepOutput(float outputsEndX, int posY, GTRecipeTypeUI.RecipeHolder recipeHolder,
                                      GTRecipe recipe) {
             var slots = new ArrayList<Widget>();
 
@@ -187,7 +188,7 @@ public class LayeredRecipeUIHelper {
             }
 
             var slotWidth = 18f;
-            var startX = centerX - (slots.size() / 2f) * slotWidth;
+            var startX = outputsEndX - slots.size() * slotWidth - 2;
             for (var slotIndex = 0; slotIndex < slots.size(); slotIndex++) {
                 var posX = startX + slotIndex * slotWidth;
                 var slot = slots.get(slotIndex);
