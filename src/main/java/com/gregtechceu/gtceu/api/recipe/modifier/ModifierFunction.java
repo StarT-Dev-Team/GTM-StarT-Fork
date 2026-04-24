@@ -18,11 +18,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a function that accepts a GTRecipe and returns a modified version of the GTRecipe, or null.
@@ -185,7 +181,7 @@ public interface ModifierFunction {
                         new HashMap<>(recipe.inputChanceLogics), new HashMap<>(recipe.outputChanceLogics),
                         new HashMap<>(recipe.tickInputChanceLogics), new HashMap<>(recipe.tickOutputChanceLogics),
                         newConditions, new ArrayList<>(recipe.ingredientActions),
-                        recipe.data, recipe.duration, recipe.recipeCategory);
+                        recipe.data.copy(), recipe.duration, recipe.recipeCategory);
                 copied.parallels = recipe.parallels * parallels;
                 copied.subtickParallels = recipe.subtickParallels * subtickParallels;
                 copied.ocLevel = recipe.ocLevel + addOCs;
@@ -201,16 +197,12 @@ public interface ModifierFunction {
                     EnergyStack eut = EURecipeCapability.CAP.copyWithModifier(preEUt.stack(), eutModifier);
                     EURecipeCapability.putEUContent(preEUt.isInput() ? copied.tickInputs : copied.tickOutputs, eut);
                 }
-                var steps = LayeredRecipeHelper.getLayeredSteps(copied);
-                if (steps != null) {
-                    copied.data = copied.data.copy();
+                Optional.ofNullable(LayeredRecipeHelper.getLayeredSteps(copied)).ifPresent(steps -> {
                     LayeredRecipeHelper.setLayeredSteps(copied, steps.stream()
-                            .map((layer) -> {
-                                var newRecipe = build().apply(layer.recipe());
-                                return new LayeredRecipeHelper.Layer(newRecipe, layer.timeout());
-                            })
+                            .map((layer) -> new LayeredRecipeHelper.Layer(build().apply(layer.recipe()),
+                                    layer.timeout()))
                             .toList());
-                }
+                });
                 return copied;
             };
         }
