@@ -63,6 +63,8 @@
         "TagManagerMixin",
         "TagValueAccessor",
         "client.ItemEntityMixin",
+        "ae2.AbstractRecipeHandlerMixin",
+        "ae2.EmiUseCraftingRecipeHandlerMixin",
         "emi.EmiRecipeFillerMixin",
         "emi.FillRecipePacketMixin",
         "emi.FluidEmiStackMixin",

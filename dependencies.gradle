@@ -30,7 +30,7 @@ dependencies {
     modCompileOnly(variantOf(forge.curios) { classifier("api") })
 
     // AE2
-    modCompileOnly(forge.ae2)
+    modCompileOnly(forge.ae2) { transitive = true }
     modCompileOnly(forge.ae2wtlib)
 
     // Create
@@ -73,6 +73,7 @@ dependencies {
 
     // Standard runtime mods //
     modLocalRuntime(forge.jade)
+    modLocalRuntime(forge.guideme)
     modLocalRuntime(forge.ae2)
     modLocalRuntime(forge.spark)
     modLocalRuntime(forge.modernfix)

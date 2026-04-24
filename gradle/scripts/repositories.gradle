@@ -12,6 +12,14 @@ repositories {
         url = "https://modmaven.dev"
     }
 
+    maven { // GuideME
+        name = 'sonatype Central'
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+        content {
+            includeModule('org.appliedenergistics', 'guideme')
+        }
+    }
+
     maven { // LDLib, Shimmer
         name = "FirstDarkDev Maven"
         url = "https://maven.firstdark.dev/snapshots"
