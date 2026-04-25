@@ -3,6 +3,7 @@ package com.gregtechceu.gtceu.data.lang;
 import com.tterrag.registrate.providers.RegistrateLangProvider;
 
 import static com.gregtechceu.gtceu.data.lang.LangHandler.*;
+import static com.gregtechceu.gtceu.data.lang.LangHandler.multiLang;
 
 public class MachineLang {
 
@@ -1000,18 +1001,20 @@ public class MachineLang {
         provider.add("gtceu.creative.activity.off", "Not active");
 
         provider.add("gtceu.paginated_tooltip", "◀ %s Page %s/%s %s ▶");
-        provider.add("gtceu.tooltip.show_capabilities", "Hold %d[SHIFT]%r to see capabilities");
-        provider.add("gtceu.tooltip.show_capabilities_shift", "Capabilities: (Hold %d[CTRL]%r to see descriptions)");
-        provider.add("gtceu.tooltip.show_capabilities_ctrl", "Capabilities:");
+        provider.add("gtceu.tooltip.show_capabilities", "§6Hold §d[SHIFT]§6 to see capabilities");
+        provider.add("gtceu.tooltip.show_capabilities_shift", "§6Capabilities: (Hold §d[CTRL]§6 to see descriptions)");
+        provider.add("gtceu.tooltip.show_capabilities_ctrl", "§6Capabilities:");
         provider.add("gtceu.modifier.oc_perfect.name", "- Perfect Overclock");
         provider.add("gtceu.modifier.oc_perfect.description",
                 "  - It makes the recipe faster without increasing total energy use.");
         provider.add("gtceu.modifier.oc_perfect_subtick.name", "- Perfect Overclock Subtick");
-        provider.add("gtceu.modifier.oc_perfect_subtick.description",
-                "  - It makes the recipe faster without increasing total energy use. If the recipe time goes under 1 tick, it turns into parallel outputs with no extra energy cost.");
+        multiLang(provider, "gtceu.modifier.oc_perfect_subtick.description",
+                "  - It makes the recipe faster without increasing total energy use.",
+                "    If the recipe time goes under 1 tick,",
+                "    it turns into parallel outputs with no extra energy cost.");
         provider.add("gtceu.modifier.oc_non_perfect_subtick.name", "- Subtick");
         provider.add("gtceu.modifier.oc_non_perfect_subtick.description",
-                "    If the recipe time goes under 1 tick, it turns into parallel outputs.");
+                "  - If the recipe time goes under 1 tick, it turns into parallel outputs.");
     }
 
     public static void standardTooltips(RegistrateLangProvider provider, String root, String machine,

@@ -27,6 +27,7 @@ import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.data.models.GTMachineModels;
 import com.gregtechceu.gtceu.config.ConfigHolder;
+import com.gregtechceu.gtceu.data.lang.LangHandler;
 import com.gregtechceu.gtceu.data.model.builder.MachineModelBuilder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
@@ -629,8 +630,9 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
 
                     shiftTooltips.add(modifierName);
                     shiftCtrlTooltips.add(modifierName);
-                    shiftCtrlTooltips.add(Component
-                            .translatable("gtceu.modifier.%s.description".formatted(recipeModifierId)));
+
+                    shiftCtrlTooltips.addAll(LangHandler
+                            .getSingleOrMultiLang("gtceu.modifier.%s.description".formatted(recipeModifierId)));
                 });
             } else {
                 if (paginatedTooltips.isEmpty()) useShift = true;
@@ -649,8 +651,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                     for (String recipeModifierId : chunk) {
                         components.add(Component
                                 .translatable("gtceu.modifier.%s.name".formatted(recipeModifierId)));
-                        components.add(Component.translatable(
-                                "gtceu.modifier.%s.description".formatted(recipeModifierId)));
+                        components.addAll(LangHandler
+                                .getSingleOrMultiLang("gtceu.modifier.%s.description".formatted(recipeModifierId)));
                     }
 
                     paginatedTooltips.add(components);
