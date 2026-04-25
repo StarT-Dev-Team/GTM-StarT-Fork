@@ -28,6 +28,7 @@ import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.data.models.GTMachineModels;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.model.builder.MachineModelBuilder;
+import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
 import net.minecraft.ChatFormatting;
@@ -598,10 +599,88 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         definition.setRecipeOutputLimits(recipeOutputLimits);
         definition.setBlockEntityTypeSupplier(blockEntity::get);
         definition.setMachineSupplier(machine);
+
+        List<Component> shiftTooltips = new ArrayList<>();
+        List<Component> shiftCtrlTooltips = new ArrayList<>();
+        List<String> recipeModifierIds = new ArrayList<>();
+        Component showCapabilities = Component.translatable("gtceu.tooltip.show_capabilities");
+        Component showCapabilitiesShift = Component.translatable("gtceu.tooltip.show_capabilities_shift");
+        Component showCapabilitiesCtrl = Component.translatable("gtceu.tooltip.show_capabilities_ctrl");
+
+        boolean useShift = false;
+
+        if (recipeModifier instanceof RecipeModifierList recipeModifiers) {
+            for (RecipeModifier modifier : recipeModifiers.modifiers()) {
+                String id = modifier.getId();
+
+                if (!GTRecipeModifiers.ignoreModifiers.contains(id) && !id.contains("lambda")) {
+                    recipeModifierIds.add(id);
+                }
+            }
+        }
+
+        if (!recipeModifierIds.isEmpty()) {
+            int size = recipeModifierIds.size();
+
+            if (size <= 3 && paginatedTooltips.isEmpty()) {
+                recipeModifierIds.forEach(recipeModifierId -> {
+                    Component modifierName = Component
+                            .translatable("gtceu.modifier.%s.name".formatted(recipeModifierId));
+
+                    shiftTooltips.add(modifierName);
+                    shiftCtrlTooltips.add(modifierName);
+                    shiftCtrlTooltips.add(Component
+                            .translatable("gtceu.modifier.%s.description".formatted(recipeModifierId)));
+                });
+            } else {
+                if (paginatedTooltips.isEmpty()) useShift = true;
+
+                List<List<String>> chunks = new ArrayList<>();
+
+                for (int i = 0; i < size; i += 3) {
+                    chunks.add(new ArrayList<>(recipeModifierIds.subList(i, Math.min(i + 3, size))));
+                }
+
+                for (List<String> chunk : chunks) {
+                    List<Component> components = new ArrayList<>();
+
+                    components.add(showCapabilitiesCtrl);
+
+                    for (String recipeModifierId : chunk) {
+                        components.add(Component
+                                .translatable("gtceu.modifier.%s.name".formatted(recipeModifierId)));
+                        components.add(Component.translatable(
+                                "gtceu.modifier.%s.description".formatted(recipeModifierId)));
+                    }
+
+                    paginatedTooltips.add(components);
+                }
+            }
+        }
+
+        boolean finalUseShift = useShift;
+
         definition.setTooltipBuilder((itemStack, components) -> {
+            boolean isShiftDown = GTUtil.isShiftDown();
+            boolean isCtrlDown = GTUtil.isCtrlDown();
+
             components.addAll(tooltips);
 
-            if (!paginatedTooltips.isEmpty()) {
+            if (paginatedTooltips.isEmpty()) {
+                if (!shiftTooltips.isEmpty()) {
+                    if (isShiftDown) {
+                        if (GTUtil.isCtrlDown()) {
+                            components.add(showCapabilitiesCtrl);
+                            components.addAll(shiftCtrlTooltips);
+                        } else {
+                            components.add(showCapabilitiesShift);
+                            components.addAll(shiftTooltips);
+                        }
+                    } else {
+                        components.add(showCapabilities);
+                    }
+                }
+            } else {
                 ResourceLocation id = definition.getId();
                 long windowId = Minecraft.getInstance().getWindow().getWindow();
                 long currentTime = System.currentTimeMillis();
@@ -617,26 +696,43 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                 if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
                     if (nextPressed && !prevPressed) {
                         currentPage = (currentPage + 1) % maxPages;
-                    } else if (prevPressed && !nextPressed) {
+                    } else if (!nextPressed) {
                         currentPage = currentPage == 0 ? maxPages - 1 : currentPage - 1;
                     }
+
                     TooltipPageManager.setCurrentPage(id, currentPage);
                     TooltipPageManager.setLastChangeTime(id, currentTime);
                 }
 
-                TooltipPageManager.setCurrentPage(id, currentPage);
+                if (finalUseShift) {
+                    if (isShiftDown) {
+                        if (currentPage < paginatedTooltips.size()) {
+                            components.addAll(paginatedTooltips.get(currentPage));
+                        }
 
-                if (currentPage < paginatedTooltips.size()) {
-                    components.addAll(paginatedTooltips.get(currentPage));
+                        components.add(Component.translatable("gtceu.paginated_tooltip",
+                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
+                                        .withStyle(ChatFormatting.LIGHT_PURPLE),
+                                currentPage + 1, maxPages,
+                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
+                                        .withStyle(ChatFormatting.LIGHT_PURPLE))
+                                .withStyle(ChatFormatting.GRAY));
+                    } else {
+                        components.add(showCapabilities);
+                    }
+                } else {
+                    if (currentPage < paginatedTooltips.size()) {
+                        components.addAll(paginatedTooltips.get(currentPage));
+                    }
+
+                    components.add(Component.translatable("gtceu.paginated_tooltip",
+                            Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
+                                    .withStyle(ChatFormatting.LIGHT_PURPLE),
+                            currentPage + 1, maxPages,
+                            Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
+                                    .withStyle(ChatFormatting.LIGHT_PURPLE))
+                            .withStyle(ChatFormatting.GRAY));
                 }
-
-                components.add(Component.translatable("gtceu.paginated_tooltip",
-                        Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
-                                .withStyle(ChatFormatting.LIGHT_PURPLE),
-                        currentPage + 1, maxPages,
-                        Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
-                                .withStyle(ChatFormatting.LIGHT_PURPLE))
-                        .withStyle(ChatFormatting.GRAY));
             }
 
             components.addAll(bottomTooltips);
@@ -651,7 +747,6 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         definition.setAfterWorking(this.afterWorking);
         definition.setRegressWhenWaiting(this.regressWhenWaiting);
         definition.setAllowCoverOnFront(this.allowCoverOnFront);
-        definition.setPaginatedTooltips(new ArrayList<>(paginatedTooltips));
 
         for (GTRecipeType type : recipeTypes) {
             if (type.getIconSupplier() == null) {

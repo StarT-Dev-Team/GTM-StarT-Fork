@@ -158,7 +158,7 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
     @Override
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         IVoidable.attachConfigurators(configuratorPanel, this);
-        if (getDefinition().getRecipeModifier() instanceof RecipeModifierList list && Arrays.stream(list.getModifiers())
+        if (getDefinition().getRecipeModifier() instanceof RecipeModifierList list && Arrays.stream(list.modifiers())
                 .anyMatch(modifier -> modifier == GTRecipeModifiers.BATCH_MODE)) {
             configuratorPanel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
                     GuiTextures.BUTTON_BATCH.getSubTexture(0, 0, 1, 0.5),

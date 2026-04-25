@@ -15,6 +15,7 @@ import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.ingredient.EnergyStack;
+import com.gregtechceu.gtceu.api.recipe.modifier.IdentifiedRecipeModifier;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
@@ -29,12 +30,17 @@ import net.minecraft.server.level.ServerLevel;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.gregtechceu.gtceu.api.recipe.OverclockingLogic.*;
 
 public class GTRecipeModifiers {
+
+    public static final List<String> ignoreModifiers = new ArrayList<>(
+            List.of("default_environment_requirement", "oc_non_perfect", "consume_eu_to_start"));
 
     /**
      * Given an {@link OverclockingLogic}, creates a {@link RecipeModifier} designed for an {@link IOverclockMachine}
@@ -50,10 +56,14 @@ public class GTRecipeModifiers {
             });
 
     // Shortcuts for common OC logics
-    public static final RecipeModifier OC_PERFECT = ELECTRIC_OVERCLOCK.apply(PERFECT_OVERCLOCK);
-    public static final RecipeModifier OC_NON_PERFECT = ELECTRIC_OVERCLOCK.apply(NON_PERFECT_OVERCLOCK);
-    public static final RecipeModifier OC_PERFECT_SUBTICK = ELECTRIC_OVERCLOCK.apply(PERFECT_OVERCLOCK_SUBTICK);
-    public static final RecipeModifier OC_NON_PERFECT_SUBTICK = ELECTRIC_OVERCLOCK.apply(NON_PERFECT_OVERCLOCK_SUBTICK);
+    public static final RecipeModifier OC_PERFECT = new IdentifiedRecipeModifier("oc_perfect",
+            ELECTRIC_OVERCLOCK.apply(PERFECT_OVERCLOCK));
+    public static final RecipeModifier OC_NON_PERFECT = new IdentifiedRecipeModifier("oc_non_perfect",
+            ELECTRIC_OVERCLOCK.apply(NON_PERFECT_OVERCLOCK));
+    public static final RecipeModifier OC_PERFECT_SUBTICK = new IdentifiedRecipeModifier("oc_perfect_subtick",
+            ELECTRIC_OVERCLOCK.apply(PERFECT_OVERCLOCK_SUBTICK));
+    public static final RecipeModifier OC_NON_PERFECT_SUBTICK = new IdentifiedRecipeModifier("oc_non_perfect_subtick",
+            ELECTRIC_OVERCLOCK.apply(NON_PERFECT_OVERCLOCK_SUBTICK));
 
     public static final BiFunction<MedicalCondition, Integer, RecipeModifier> ENVIRONMENT_REQUIREMENT = Util
             .memoize((condition, maxAllowedStrength) -> (machine, recipe) -> {
@@ -76,17 +86,26 @@ public class GTRecipeModifiers {
                         .build();
             });
 
-    public static final RecipeModifier DEFAULT_ENVIRONMENT_REQUIREMENT = ENVIRONMENT_REQUIREMENT
-            .apply(GTMedicalConditions.CARBON_MONOXIDE_POISONING, 1000);
+    public static final RecipeModifier DEFAULT_ENVIRONMENT_REQUIREMENT = new IdentifiedRecipeModifier(
+            "default_environment_requirement", ENVIRONMENT_REQUIREMENT
+                    .apply(GTMedicalConditions.CARBON_MONOXIDE_POISONING, 1000));
 
-    public static final RecipeModifier PARALLEL_HATCH = GTRecipeModifiers::hatchParallel;
-    public static final RecipeModifier BATCH_MODE = GTRecipeModifiers::batchMode;
-    public static final RecipeModifier CRACKER_OVERCLOCK = GTRecipeModifiers::crackerOverclock;
-    public static final RecipeModifier EBF_OVERCLOCK = GTRecipeModifiers::ebfOverclock;
-    public static final RecipeModifier PYROLYZE_OVEN_OVERCLOCK = GTRecipeModifiers::pyrolyseOvenOverclock;
-    public static final RecipeModifier MULTI_SMELTER_PARALLEL = GTRecipeModifiers::multiSmelterParallel;
-    public static final RecipeModifier CHEMICAL_REACTOR_OVERCLOCK = GTRecipeModifiers::chemicalReactorOverclock;
-    public static final RecipeModifier CONSUME_EU_TO_START = GTRecipeModifiers::consumeEuToStart;
+    public static final RecipeModifier PARALLEL_HATCH = new IdentifiedRecipeModifier("parallel_hatch",
+            GTRecipeModifiers::hatchParallel);
+    public static final RecipeModifier BATCH_MODE = new IdentifiedRecipeModifier("batch_mode",
+            GTRecipeModifiers::batchMode);
+    public static final RecipeModifier CRACKER_OVERCLOCK = new IdentifiedRecipeModifier("cracker_oc",
+            GTRecipeModifiers::crackerOverclock);
+    public static final RecipeModifier EBF_OVERCLOCK = new IdentifiedRecipeModifier("ebf_oc",
+            GTRecipeModifiers::ebfOverclock);
+    public static final RecipeModifier PYROLYZE_OVEN_OVERCLOCK = new IdentifiedRecipeModifier("pyrolize_oven_oc",
+            GTRecipeModifiers::pyrolyseOvenOverclock);
+    public static final RecipeModifier MULTI_SMELTER_PARALLEL = new IdentifiedRecipeModifier("multi_smellter_parallel",
+            GTRecipeModifiers::multiSmelterParallel);
+    public static final RecipeModifier CHEMICAL_REACTOR_OVERCLOCK = new IdentifiedRecipeModifier("chemical_reactor_oc",
+            GTRecipeModifiers::chemicalReactorOverclock);
+    public static final RecipeModifier CONSUME_EU_TO_START = new IdentifiedRecipeModifier("consume_eu_to_start",
+            GTRecipeModifiers::consumeEuToStart);
 
     /**
      * Recipe Modifier for <b>Parallel Multiblock Machines</b> - can be used as a valid {@link RecipeModifier}
@@ -333,5 +352,9 @@ public class GTRecipeModifiers {
         }
 
         return ModifierFunction.IDENTITY;
+    }
+
+    public static void addToIgnoreList(String ignoreId) {
+        ignoreModifiers.add(ignoreId);
     }
 }
