@@ -617,6 +617,21 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
             }
         }
 
+        if (recipeTypes.length > 0) {
+            Component combined = Arrays.stream(recipeTypes)
+                .map(GTRecipeType::toString)
+                .filter(name -> !name.equals("gtceu:dummy"))
+                .map(name -> name.replace(":", "."))
+                .map(Component::translatable)
+                .reduce((c1, c2) -> Component.empty()
+                    .append(c1)
+                    .append(", ")
+                    .append(c2))
+                .orElse(Component.empty());
+
+            tooltips.add(Component.translatable("gtceu.machine.available_recipe_map_1.tooltip", combined));
+        }
+
         definition.setTooltipBuilder((itemStack, components) -> {
             boolean isShiftDown = GTUtil.isShiftDown();
             ResourceLocation id = definition.getId();

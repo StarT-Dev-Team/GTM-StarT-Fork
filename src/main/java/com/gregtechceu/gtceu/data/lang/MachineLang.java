@@ -450,11 +450,6 @@ public class MachineLang {
                 "Allows §fHPCA§7 to connect to §fNetwork Switches§7");
         provider.add("gtceu.machine.hpca.component_type.damaged", "Can be damaged by HPCA overheating!");
 
-        multiLang(provider, "gtceu.machine.electric_blast_furnace.tooltip",
-                "For every §f900K§7 above the recipe temperature, a multiplicative §f95%%§7 energy multiplier is applied pre-overclocking.",
-                "For every §f1800K§7 above the recipe temperature, one overclock becomes §f100%% efficient§7 (perfect overclock).",
-                "For every voltage tier above §bMV§7, temperature is increased by §f100K§7.");
-
         provider.add("gtceu.machine.coke_oven_hatch.tooltip", "§7Allows automation access for the Coke Oven.");
 
         provider.add("gtceu.machine.canner.jei_description",
@@ -619,15 +614,11 @@ public class MachineLang {
         provider.add("gtceu.machine.vacuum_freezer.tooltip", "Aluminium Ice Box");
         provider.add("gtceu.machine.implosion_compressor.tooltip", "The only Machine you want to go Boom");
         provider.add("gtceu.machine.pyrolyse_oven.tooltip", "Electric Coke Oven");
-        provider.add("gtceu.machine.pyrolyse_oven.tooltip.1",
-                "§6Cupronickel §7coils are §f25%%§7 slower. Every coil after §bKanthal§7 increases speed by §f50%%§7.");
         provider.add("gtceu.machine.distillation_tower.tooltip", "Fluid Refinery");
         provider.add("gtceu.machine.multi_furnace.tooltip", "Just like the Oven at Home");
         provider.add("gtceu.machine.large_combustion_engine.tooltip", "Fuel Ignition Chamber");
         provider.add("gtceu.machine.extreme_combustion_engine.tooltip", "Extreme Chemical Energy Releaser");
         provider.add("gtceu.machine.cracker.tooltip", "Makes Oil useful");
-        provider.add("gtceu.machine.cracker.tooltip.1",
-                "Every coil after §6Cupronickel§7 reduces energy usage by §f10%%§7.");
         provider.add("gtceu.machine.large_turbine.steam.tooltip", "Do not put your Head in it");
         provider.add("gtceu.machine.large_turbine.gas.tooltip", "Not a Jet Engine");
         provider.add("gtceu.machine.large_turbine.plasma.tooltip", "Plasma Energy Siphon");
@@ -1007,46 +998,52 @@ public class MachineLang {
 
         provider.add("gtceu.modifier.oc_perfect.name", "%sPerfect Overclock:");
         provider.add("gtceu.modifier.oc_perfect.description",
-                "§7It makes the recipe faster without increasing total energy use.");
+                "  §7It makes the recipe faster without increasing total energy use.");
 
         provider.add("gtceu.modifier.oc_perfect_subtick.name", "%sPerfect Overclock Subtick:");
         multiLang(provider, "gtceu.modifier.oc_perfect_subtick.description",
-                "§7It makes the recipe faster without increasing total energy use.",
-                "§7If the recipe time goes under 1 tick,",
-                "§7it turns into parallel outputs with no extra energy cost.");
+                "  §7It makes the recipe faster without increasing total energy use.",
+                "  §7If the recipe time goes under 1 tick,",
+                "  §7it turns into parallel outputs with no extra energy cost.");
 
         provider.add("gtceu.modifier.oc_non_perfect_subtick.name", "%sSubtick:");
         provider.add("gtceu.modifier.oc_non_perfect_subtick.description",
-                "§7If the recipe time goes under 1 tick, it turns into parallel outputs.");
+                "  §7If the recipe time goes under 1 tick, it turns into parallel outputs.");
 
         provider.add("gtceu.modifier.parallel_hatch.name", "%sParallel Hatch:");
         multiLang(provider, "gtceu.modifier.parallel_hatch.description",
-                "§7Enables the use of parallel hatches.",
-                "§7Which run the recipe X amounts of time.");
+                "  §7Enables the use of parallel hatches.",
+                "  §7Which run the recipe X amounts of time.");
 
         provider.add("gtceu.modifier.batch_mode.name", "%sBatch Mode:");
         multiLang(provider, "gtceu.modifier.batch_mode.description",
-                "§7Enables the use of Batch Mode.",
-                "§7The configured batch mode duration will be divided by recipe time.",
-                "§7Then it will use that to get the actual parallel to multiply to the current amount.");
+                "  §7Enables the use of Batch Mode.",
+                "  §7The configured batch mode duration will be divided by recipe time.",
+                "  §7Then it will use that to get the actual parallel to multiply to the current amount.");
 
         provider.add("gtceu.modifier.cracker_oc.name", "%sCracker Overclock:");
-        provider.add("gtceu.modifier.cracker_oc.description", "§7Enables Cracker Overclock.");
+        provider.add("gtceu.modifier.cracker_oc.description",
+                "  §7Every coil after §6Cupronickel§7 reduces energy usage by §f10%%§7.");
 
         provider.add("gtceu.modifier.ebf_oc.name", "%sElectric Blast Furnace Overclock:");
-        provider.add("gtceu.modifier.ebf_oc.description", "§7Enables Electric Blast Furnace Overclock.");
+        multiLang(provider, "gtceu.modifier.ebf_oc.description",
+                "  §7For every §f900K§7 above the recipe temperature, a multiplicative §f95%%§7 energy multiplier is applied pre-overclocking.",
+                "  §7For every §f1800K§7 above the recipe temperature, one overclock becomes §f100%% efficient§7 (perfect overclock).",
+                "  §7For every voltage tier above §bMV§7, temperature is increased by §f100K§7.");
 
         provider.add("gtceu.modifier.pyrolize_oven_oc.name", "%sPyrolize Oven Overclock:");
-        provider.add("gtceu.modifier.pyrolize_oven_oc.description", "§7Enables Pyrolize Oven Overclock.");
+        multiLang(provider, "gtceu.modifier.pyrolize_oven_oc.description",
+                "  §6Cupronickel §7coils are §f25%%§7 slower.",
+                "  §7Every coil after §bKanthal§7 increases speed by §f50%%§7.");
 
         provider.add("gtceu.modifier.multi_smellter_parallel.name", "%sMulti Smelter Parallel:");
-        provider.add("gtceu.modifier.multi_smellter_parallel.description", "§7Enables Multi Smelter Parallels.");
+        provider.add("gtceu.modifier.multi_smellter_parallel.description", "  §7Enables Multi Smelter Parallels.");
 
         provider.add("gtceu.modifier.chemical_reactor_oc.name", "%sChemical Reactor Overclock:");
-        provider.add("gtceu.modifier.chemical_reactor_oc.description", "§7Enables Chemical Reactor Overclock.");
+        provider.add("gtceu.modifier.chemical_reactor_oc.description", "  §7Enables Chemical Reactor Overclock.");
 
         provider.add("gtceu.modifier.consume_eu_to_start.name", "%sConsume EU to start:");
-        provider.add("gtceu.modifier.consume_eu_to_start.description", "§7Needs X EU to start the recipe.");
+        provider.add("gtceu.modifier.consume_eu_to_start.description", "  §7Needs X EU to start the recipe.");
     }
 
     public static void standardTooltips(RegistrateLangProvider provider, String root, String machine,
