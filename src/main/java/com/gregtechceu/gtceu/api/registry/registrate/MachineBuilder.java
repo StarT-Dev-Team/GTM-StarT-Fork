@@ -601,139 +601,104 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         definition.setBlockEntityTypeSupplier(blockEntity::get);
         definition.setMachineSupplier(machine);
 
-        List<Component> shiftTooltips = new ArrayList<>();
-        List<Component> shiftCtrlTooltips = new ArrayList<>();
-        List<String> recipeModifierIds = new ArrayList<>();
+        List<String> shiftTooltips = new ArrayList<>();
+        List<String> shiftTooltipDescriptions = new ArrayList<>();
         Component showCapabilities = Component.translatable("gtceu.tooltip.show_capabilities");
         Component showCapabilitiesShift = Component.translatable("gtceu.tooltip.show_capabilities_shift");
-        Component showCapabilitiesCtrl = Component.translatable("gtceu.tooltip.show_capabilities_ctrl");
-
-        boolean useShift = false;
 
         if (recipeModifier instanceof RecipeModifierList recipeModifiers) {
             for (RecipeModifier modifier : recipeModifiers.modifiers()) {
-                String id = modifier.getId();
+                String modifierId = modifier.getId();
 
-                if (!GTRecipeModifiers.ignoreModifiers.contains(id) && !id.contains("lambda")) {
-                    recipeModifierIds.add(id);
+                if (!GTRecipeModifiers.ignoreModifiers.contains(modifierId) && !modifierId.contains("lambda")) {
+                    shiftTooltips.add("gtceu.modifier.%s.name".formatted(modifierId));
+                    shiftTooltipDescriptions.add("gtceu.modifier.%s.description".formatted(modifierId));
                 }
             }
         }
-
-        if (!recipeModifierIds.isEmpty()) {
-            int size = recipeModifierIds.size();
-
-            if (size <= 3 && paginatedTooltips.isEmpty()) {
-                recipeModifierIds.forEach(recipeModifierId -> {
-                    Component modifierName = Component
-                            .translatable("gtceu.modifier.%s.name".formatted(recipeModifierId));
-
-                    shiftTooltips.add(modifierName);
-                    shiftCtrlTooltips.add(modifierName);
-
-                    shiftCtrlTooltips.addAll(LangHandler
-                            .getSingleOrMultiLang("gtceu.modifier.%s.description".formatted(recipeModifierId)));
-                });
-            } else {
-                if (paginatedTooltips.isEmpty()) useShift = true;
-
-                List<List<String>> chunks = new ArrayList<>();
-
-                for (int i = 0; i < size; i += 3) {
-                    chunks.add(new ArrayList<>(recipeModifierIds.subList(i, Math.min(i + 3, size))));
-                }
-
-                for (List<String> chunk : chunks) {
-                    List<Component> components = new ArrayList<>();
-
-                    components.add(showCapabilitiesCtrl);
-
-                    for (String recipeModifierId : chunk) {
-                        components.add(Component
-                                .translatable("gtceu.modifier.%s.name".formatted(recipeModifierId)));
-                        components.addAll(LangHandler
-                                .getSingleOrMultiLang("gtceu.modifier.%s.description".formatted(recipeModifierId)));
-                    }
-
-                    paginatedTooltips.add(components);
-                }
-            }
-        }
-
-        boolean finalUseShift = useShift;
 
         definition.setTooltipBuilder((itemStack, components) -> {
             boolean isShiftDown = GTUtil.isShiftDown();
-            boolean isCtrlDown = GTUtil.isCtrlDown();
+            ResourceLocation id = definition.getId();
+            long windowId = Minecraft.getInstance().getWindow().getWindow();
+            long currentTime = System.currentTimeMillis();
+            long lastChange = TooltipPageManager.getLastChangeTime(id);
 
             components.addAll(tooltips);
 
-            if (paginatedTooltips.isEmpty()) {
-                if (!shiftTooltips.isEmpty()) {
-                    if (isShiftDown) {
-                        if (GTUtil.isCtrlDown()) {
-                            components.add(showCapabilitiesCtrl);
-                            components.addAll(shiftCtrlTooltips);
-                        } else {
-                            components.add(showCapabilitiesShift);
-                            components.addAll(shiftTooltips);
-                        }
-                    } else {
-                        components.add(showCapabilities);
-                    }
-                }
-            } else {
-                ResourceLocation id = definition.getId();
-                long windowId = Minecraft.getInstance().getWindow().getWindow();
-                long currentTime = System.currentTimeMillis();
-                long lastChange = TooltipPageManager.getLastChangeTime(id);
+            if (!shiftTooltips.isEmpty() && isShiftDown) {
                 boolean nextPressed = InputConstants.isKeyDown(windowId,
-                        SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getKeyCode());
+                        SyncedKeyMappings.TOOLTIP_DOWN_PAGE.getKeyCode());
                 boolean prevPressed = InputConstants.isKeyDown(windowId,
-                        SyncedKeyMappings.TOOLTIP_PREV_PAGE.getKeyCode());
-                int currentPage = TooltipPageManager.getCurrentPage(id);
-                int maxPages = paginatedTooltips.size();
+                        SyncedKeyMappings.TOOLTIP_UP_PAGE.getKeyCode());
+                int currentModifierPage = TooltipPageManager.getCurrentModifierPage(id);
+                int maxModifierPages = shiftTooltips.size();
 
                 // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
                 if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
                     if (nextPressed && !prevPressed) {
-                        currentPage = (currentPage + 1) % maxPages;
+                        currentModifierPage = (currentModifierPage + 1) % maxModifierPages;
                     } else if (!nextPressed) {
-                        currentPage = currentPage == 0 ? maxPages - 1 : currentPage - 1;
+                        currentModifierPage = currentModifierPage == 0 ? maxModifierPages - 1 : currentModifierPage - 1;
                     }
 
-                    TooltipPageManager.setCurrentPage(id, currentPage);
+                    TooltipPageManager.setCurrentModifierPage(id, currentModifierPage);
                     TooltipPageManager.setLastChangeTime(id, currentTime);
                 }
 
-                if (finalUseShift) {
-                    if (isShiftDown) {
-                        if (currentPage < paginatedTooltips.size()) {
-                            components.addAll(paginatedTooltips.get(currentPage));
+                components.add(showCapabilitiesShift);
+
+                for (int i = 0; i < maxModifierPages; i++) {
+                    if (i == currentModifierPage) {
+                        components.add(Component.translatable(shiftTooltips.get(i), "[x] "));
+                        components.addAll(LangHandler.getSingleOrMultiLang(shiftTooltipDescriptions.get(i)));
+                    } else {
+                        components.add(Component.translatable(shiftTooltips.get(i), "[ ] "));
+                    }
+                }
+
+                components.add(Component.translatable("gtceu.tooltip.capabilities_info",
+                        Component.literal("[" + SyncedKeyMappings.TOOLTIP_UP_PAGE.getDisplayName() + "]")
+                                .withStyle(ChatFormatting.LIGHT_PURPLE),
+                        Component.literal("[" + SyncedKeyMappings.TOOLTIP_DOWN_PAGE.getDisplayName() + "]")
+                                .withStyle(ChatFormatting.LIGHT_PURPLE))
+                        .withStyle(ChatFormatting.GRAY));
+            } else {
+                if (!paginatedTooltips.isEmpty()) {
+                    boolean nextPressed = InputConstants.isKeyDown(windowId,
+                            SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getKeyCode());
+                    boolean prevPressed = InputConstants.isKeyDown(windowId,
+                            SyncedKeyMappings.TOOLTIP_PREV_PAGE.getKeyCode());
+                    int currentPage = TooltipPageManager.getCurrentPage(id);
+                    int maxPages = paginatedTooltips.size();
+
+                    // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
+                    if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
+                        if (nextPressed && !prevPressed) {
+                            currentPage = (currentPage + 1) % maxPages;
+                        } else if (!nextPressed) {
+                            currentPage = currentPage == 0 ? maxPages - 1 : currentPage - 1;
                         }
 
-                        components.add(Component.translatable("gtceu.paginated_tooltip",
-                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
-                                        .withStyle(ChatFormatting.LIGHT_PURPLE),
-                                currentPage + 1, maxPages,
-                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
-                                        .withStyle(ChatFormatting.LIGHT_PURPLE))
-                                .withStyle(ChatFormatting.GRAY));
-                    } else {
-                        components.add(showCapabilities);
+                        TooltipPageManager.setCurrentPage(id, currentPage);
+                        TooltipPageManager.setLastChangeTime(id, currentTime);
                     }
-                } else {
+
                     if (currentPage < paginatedTooltips.size()) {
                         components.addAll(paginatedTooltips.get(currentPage));
                     }
 
-                    components.add(Component.translatable("gtceu.paginated_tooltip",
+                    components.add(Component.translatable("gtceu.tooltip.paginated_info",
                             Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
                                     .withStyle(ChatFormatting.LIGHT_PURPLE),
                             currentPage + 1, maxPages,
                             Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
                                     .withStyle(ChatFormatting.LIGHT_PURPLE))
                             .withStyle(ChatFormatting.GRAY));
+                }
+
+                if (!shiftTooltips.isEmpty()) {
+                    components.add(showCapabilities);
                 }
             }
 
@@ -816,13 +781,13 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         public static <DEFINITION extends MachineDefinition> BlockBuilder<Block, ? extends AbstractRegistrate<?>> makeBlockBuilder(MachineBuilder<DEFINITION> builder,
                                                                                                                                    DEFINITION definition) {
             return builder.registrate.block(properties -> makeBlock(builder, definition, properties))
-                    .color(() -> () -> IMachineBlock::colorTinted)
-                    .initialProperties(() -> Blocks.DISPENSER)
-                    .properties(BlockBehaviour.Properties::noLootTable)
-                    .addLayer(() -> RenderType::cutout)
-                    .exBlockstate(builder.blockModel != null ? builder.blockModel : createMachineModel(builder.model))
-                    .properties(builder.blockProp)
-                    .onRegister(b -> Arrays.stream(builder.abilities).forEach(a -> a.register(builder.tier, b)));
+                .color(() -> () -> IMachineBlock::colorTinted)
+                .initialProperties(() -> Blocks.DISPENSER)
+                .properties(BlockBehaviour.Properties::noLootTable)
+                .addLayer(() -> RenderType::cutout)
+                .exBlockstate(builder.blockModel != null ? builder.blockModel : createMachineModel(builder.model))
+                .properties(builder.blockProp)
+                .onRegister(b -> Arrays.stream(builder.abilities).forEach(a -> a.register(builder.tier, b)));
         }
 
         private static <DEFINITION extends MachineDefinition> Block makeBlock(MachineBuilder<DEFINITION> builder, DEFINITION definition,
@@ -839,15 +804,15 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         public static <DEFINITION extends MachineDefinition> ItemBuilder<MetaMachineItem, ? extends AbstractRegistrate<?>> makeItemBuilder(MachineBuilder<DEFINITION> builder,
                                                                                                                                            BlockEntry<Block> block) {
             return builder.registrate
-                    .item(properties -> builder.itemFactory.apply((IMachineBlock) block.get(), properties))
-                    .setData(ProviderType.LANG, NonNullBiConsumer.noop()) // do not gen any lang keys
-                    // copied from BlockBuilder#item
-                    .model((ctx, prov) -> {
-                        prov.withExistingParent(ctx.getName(), new ResourceLocation(builder.registrate.getModid(),
-                                "block/machine/" + ctx.getName()));
-                    })
-                    .color(() -> () -> builder.itemColor::apply)
-                    .properties(builder.itemProp);
+                .item(properties -> builder.itemFactory.apply((IMachineBlock) block.get(), properties))
+                .setData(ProviderType.LANG, NonNullBiConsumer.noop()) // do not gen any lang keys
+                // copied from BlockBuilder#item
+                .model((ctx, prov) -> {
+                    prov.withExistingParent(ctx.getName(), new ResourceLocation(builder.registrate.getModid(),
+                        "block/machine/" + ctx.getName()));
+                })
+                .color(() -> () -> builder.itemColor::apply)
+                .properties(builder.itemProp);
         }
     }
     // spotless:on

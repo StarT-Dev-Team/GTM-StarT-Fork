@@ -259,22 +259,6 @@ public class GTMultiMachines {
                         .build());
                 return shapeInfo;
             })
-            .tooltips(
-                    Component.literal("1"),
-                    Component.literal("2"),
-                    Component.literal("3"),
-                    Component.literal("4"))
-            .paginatedTooltips(
-                    List.of(
-                            Component.literal("P1.1"),
-                            Component.literal("P1.2"),
-                            Component.literal("P1.3"),
-                            Component.literal("P1.4")),
-                    List.of(
-                            Component.literal("P2.1"),
-                            Component.literal("P2.2"),
-                            Component.literal("P2.3"),
-                            Component.literal("P2.4")))
             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"),
                     GTCEu.id("block/multiblock/large_chemical_reactor"))
             .register();
@@ -344,9 +328,7 @@ public class GTMultiMachines {
             .multiblock("pyrolyse_oven", CoilWorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
             .recipeTypes(GTRecipeTypes.PYROLYSE_RECIPES)
-            .recipeModifiers(PYROLYZE_OVEN_OVERCLOCK, BATCH_MODE, PARALLEL_HATCH, EBF_OVERCLOCK,
-                    CHEMICAL_REACTOR_OVERCLOCK, CRACKER_OVERCLOCK, MULTI_SMELTER_PARALLEL,
-                    OC_PERFECT_SUBTICK, OC_NON_PERFECT_SUBTICK, OC_PERFECT)
+            .recipeModifiers(PYROLYZE_OVEN_OVERCLOCK, BATCH_MODE)
             .appearanceBlock(MACHINE_CASING_ULV)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("XXX", "XXX", "XXX")
