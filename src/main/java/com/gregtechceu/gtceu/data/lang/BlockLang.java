@@ -19,7 +19,7 @@ public class BlockLang {
         replace(provider, "block.gtceu.hssg_coil_block", "HSS-G Coil Block");
         replace(provider, "block.gtceu.rtm_alloy_coil_block", "RTM Alloy Coil Block");
 
-        replace(provider, "block.gtceu.wire_coil.tooltip_extended_info", "§7Hold SHIFT to show Coil Bonus Info");
+        replace(provider, "block.gtceu.wire_coil.tooltip_extended_info", "§7Hold §d[SHIFT]§7 to show Coil Bonus Info");
         replace(provider, "block.gtceu.wire_coil.tooltip_heat", "§cBase Heat Capacity: §f%d K");
         replace(provider, "block.gtceu.wire_coil.tooltip_smelter", "§8Multi Smelter:");
         replace(provider, "block.gtceu.wire_coil.tooltip_parallel_smelter", "  §5Max Parallel: §f%s");

@@ -1000,21 +1000,53 @@ public class MachineLang {
         provider.add("gtceu.creative.activity.on", "Active");
         provider.add("gtceu.creative.activity.off", "Not active");
 
-        provider.add("gtceu.paginated_tooltip", "◀ %s Page %s/%s %s ▶");
+        provider.add("gtceu.tooltip.paginated_info", "◀ %s Page %s/%s %s ▶");
         provider.add("gtceu.tooltip.show_capabilities", "§6Hold §d[SHIFT]§6 to see capabilities");
-        provider.add("gtceu.tooltip.show_capabilities_shift", "§6Capabilities: (Hold §d[CTRL]§6 to see descriptions)");
-        provider.add("gtceu.tooltip.show_capabilities_ctrl", "§6Capabilities:");
-        provider.add("gtceu.modifier.oc_perfect.name", "- Perfect Overclock");
+        provider.add("gtceu.tooltip.show_capabilities_shift", "§6Capabilities:");
+        provider.add("gtceu.tooltip.capabilities_info", "▲ %s | %s ▼");
+
+        provider.add("gtceu.modifier.oc_perfect.name", "%sPerfect Overclock:");
         provider.add("gtceu.modifier.oc_perfect.description",
-                "  - It makes the recipe faster without increasing total energy use.");
-        provider.add("gtceu.modifier.oc_perfect_subtick.name", "- Perfect Overclock Subtick");
+                "§7It makes the recipe faster without increasing total energy use.");
+
+        provider.add("gtceu.modifier.oc_perfect_subtick.name", "%sPerfect Overclock Subtick:");
         multiLang(provider, "gtceu.modifier.oc_perfect_subtick.description",
-                "  - It makes the recipe faster without increasing total energy use.",
-                "    If the recipe time goes under 1 tick,",
-                "    it turns into parallel outputs with no extra energy cost.");
-        provider.add("gtceu.modifier.oc_non_perfect_subtick.name", "- Subtick");
+                "§7It makes the recipe faster without increasing total energy use.",
+                "§7If the recipe time goes under 1 tick,",
+                "§7it turns into parallel outputs with no extra energy cost.");
+
+        provider.add("gtceu.modifier.oc_non_perfect_subtick.name", "%sSubtick:");
         provider.add("gtceu.modifier.oc_non_perfect_subtick.description",
-                "  - If the recipe time goes under 1 tick, it turns into parallel outputs.");
+                "§7If the recipe time goes under 1 tick, it turns into parallel outputs.");
+
+        provider.add("gtceu.modifier.parallel_hatch.name", "%sParallel Hatch:");
+        multiLang(provider, "gtceu.modifier.parallel_hatch.description",
+                "§7Enables the use of parallel hatches.",
+                "§7Which run the recipe X amounts of time.");
+
+        provider.add("gtceu.modifier.batch_mode.name", "%sBatch Mode:");
+        multiLang(provider, "gtceu.modifier.batch_mode.description",
+                "§7Enables the use of Batch Mode.",
+                "§7The configured batch mode duration will be divided by recipe time.",
+                "§7Then it will use that to get the actual parallel to multiply to the current amount.");
+
+        provider.add("gtceu.modifier.cracker_oc.name", "%sCracker Overclock:");
+        provider.add("gtceu.modifier.cracker_oc.description", "§7Enables Cracker Overclock.");
+
+        provider.add("gtceu.modifier.ebf_oc.name", "%sElectric Blast Furnace Overclock:");
+        provider.add("gtceu.modifier.ebf_oc.description", "§7Enables Electric Blast Furnace Overclock.");
+
+        provider.add("gtceu.modifier.pyrolize_oven_oc.name", "%sPyrolize Oven Overclock:");
+        provider.add("gtceu.modifier.pyrolize_oven_oc.description", "§7Enables Pyrolize Oven Overclock.");
+
+        provider.add("gtceu.modifier.multi_smellter_parallel.name", "%sMulti Smelter Parallel:");
+        provider.add("gtceu.modifier.multi_smellter_parallel.description", "§7Enables Multi Smelter Parallels.");
+
+        provider.add("gtceu.modifier.chemical_reactor_oc.name", "%sChemical Reactor Overclock:");
+        provider.add("gtceu.modifier.chemical_reactor_oc.description", "§7Enables Chemical Reactor Overclock.");
+
+        provider.add("gtceu.modifier.consume_eu_to_start.name", "%sConsume EU to start:");
+        provider.add("gtceu.modifier.consume_eu_to_start.description", "§7Needs X EU to start the recipe.");
     }
 
     public static void standardTooltips(RegistrateLangProvider provider, String root, String machine,

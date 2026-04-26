@@ -1256,7 +1256,9 @@ public class LangHandler {
         provider.add("gtceu.key.tool_aoe_change", "Tool AoE Mode Switch");
         provider.add("gtceu.key.enable_step_assist", "Enable StepAssist");
         provider.add("gtceu.key.tooltip_next_page", "Tooltip Next Page");
-        provider.add("gtceu.key.tooltip_prev_page", "Tooltip Previous Page");
+        provider.add("gtceu.key.tooltip_previous_page", "Tooltip Previous Page");
+        provider.add("gtceu.key.tooltip_up_page", "Tooltip Previous Modifier");
+        provider.add("gtceu.key.tooltip_down_page", "Tooltip Next Modifier");
         provider.add("gtceu.debug.f3_h.enabled",
                 "GregTech has modified the debug info! For Developers: enable the misc:debug config option in the GregTech config file to see more");
         provider.add("config.jade.plugin_gtceu.controllable_provider", "[GTCEu] Controllable");
