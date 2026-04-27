@@ -5745,7 +5745,7 @@
     "recipe.condition.daytime.night.tooltip": "需要夜晚才能工作",
     "recipe.condition.dimension.tooltip": "维度：%s",
     "recipe.condition.dimension_marker.tooltip": "维度：",
-    "recipe.condition.eu_to_start.tooltip": "启动耗能：%d%s",
+    "recipe.condition.eu_to_start.tooltip": "启动耗能：%s",
     "recipe.condition.gamestage.locked_stage": "锁定阶段：%s",
     "recipe.condition.gamestage.unlocked_stage": "解锁阶段：%s",
     "recipe.condition.pos_y.tooltip": "Y轴高度：%d <= Y <= %d",

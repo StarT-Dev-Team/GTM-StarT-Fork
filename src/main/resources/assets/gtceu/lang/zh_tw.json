@@ -5419,7 +5419,7 @@
     "recipe.condition.daytime.night.tooltip": "夜晚才能運作",
     "recipe.condition.dimension.tooltip": "維度：%s",
     "recipe.condition.dimension_marker.tooltip": "維度：",
-    "recipe.condition.eu_to_start.tooltip": "啟動耗能：%d%s",
+    "recipe.condition.eu_to_start.tooltip": "啟動耗能：%s",
     "recipe.condition.gamestage.locked_stage": "鎖定階段：%s",
     "recipe.condition.gamestage.unlocked_stage": "解鎖階段：%s",
     "recipe.condition.pos_y.tooltip": "Y軸高度：%d <= Y <= %d",
