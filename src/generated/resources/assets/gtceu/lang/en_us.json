@@ -5897,7 +5897,7 @@
   "recipe.condition.daytime.night.tooltip": "Requires night time to work",
   "recipe.condition.dimension.tooltip": "Dimension: %s",
   "recipe.condition.dimension_marker.tooltip": "Dimension:",
-  "recipe.condition.eu_to_start.tooltip": "EU to Start: %d%s",
+  "recipe.condition.eu_to_start.tooltip": "EU to Start: %s",
   "recipe.condition.gamestage.locked_stage": "Locked at stage: %s",
   "recipe.condition.gamestage.unlocked_stage": "Unlocked at stage: %s",
   "recipe.condition.pos_y.tooltip": "Y Level: %d <= Y <= %d",

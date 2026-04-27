@@ -5760,7 +5760,7 @@
   "recipe.condition.daytime.night.tooltip": "Потрібен нічний час для роботи",
   "recipe.condition.dimension.tooltip": "Вимір: %s",
   "recipe.condition.dimension_marker.tooltip": "Вимір:",
-  "recipe.condition.eu_to_start.tooltip": "EU до запуску: %d%s",
+  "recipe.condition.eu_to_start.tooltip": "EU до запуску: %s",
   "recipe.condition.gamestage.locked_stage": "Заборонено на етапі: %s",
   "recipe.condition.gamestage.unlocked_stage": "Дозволено на етапі: %s",
   "recipe.condition.pos_y.tooltip": "Рівень Y: %d <= Y <= %d",

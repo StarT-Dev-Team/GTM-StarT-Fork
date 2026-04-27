@@ -2852,7 +2852,7 @@
     "recipe.capability.item.name": "Предмет",
     "recipe.condition.biome.tooltip": "Биом: %s",
     "recipe.condition.dimension.tooltip": "Измерение: §s",
-    "recipe.condition.eu_to_start.tooltip": "Запуск: %d EU",
+    "recipe.condition.eu_to_start.tooltip": "Запуск: %s EU",
     "recipe.condition.pos_y.tooltip": "Высота Y: %d <= Y <= %d",
     "recipe.condition.rain.tooltip": "Уровень дождя: %d",
     "recipe.condition.adjacent_fluid.tooltip": "Блоки жидкости вокруг",

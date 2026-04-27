@@ -5729,7 +5729,7 @@
   "recipe.condition.daytime.night.tooltip": "動作には夜間が必要",
   "recipe.condition.dimension.tooltip": "ディメンション: %s",
   "recipe.condition.dimension_marker.tooltip": "ディメンション:",
-  "recipe.condition.eu_to_start.tooltip": "開始エネルギー: %d%s",
+  "recipe.condition.eu_to_start.tooltip": "開始エネルギー: %s",
   "recipe.condition.gamestage.locked_stage": "ステージでロック: %s",
   "recipe.condition.gamestage.unlocked_stage": "ステージでアンロック: %s",
   "recipe.condition.pos_y.tooltip": "Y座標レベル: %d <= Y <= %d",

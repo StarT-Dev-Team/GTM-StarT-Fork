@@ -7,6 +7,7 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
 import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
 import com.gregtechceu.gtceu.common.data.GTRecipeConditions;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.network.chat.Component;
 
@@ -44,7 +45,8 @@ public class EUToStartCondition extends RecipeCondition<EUToStartCondition> {
 
     @Override
     public Component getTooltips() {
-        return Component.translatable("recipe.condition.eu_to_start.tooltip");
+        return Component.translatable("recipe.condition.eu_to_start.tooltip",
+                FormattingUtil.formatNumberReadable2F(euToStart, false));
     }
 
     @Override
