@@ -682,36 +682,41 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                         .withStyle(ChatFormatting.GRAY));
             } else {
                 if (!paginatedTooltips.isEmpty()) {
-                    boolean nextPressed = InputConstants.isKeyDown(windowId,
-                            SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getKeyCode());
-                    boolean prevPressed = InputConstants.isKeyDown(windowId,
-                            SyncedKeyMappings.TOOLTIP_PREV_PAGE.getKeyCode());
-                    int currentPage = TooltipPageManager.getCurrentPage(id);
                     int maxPages = paginatedTooltips.size();
 
-                    // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
-                    if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
-                        if (nextPressed && !prevPressed) {
-                            currentPage = (currentPage + 1) % maxPages;
-                        } else if (!nextPressed) {
-                            currentPage = currentPage == 0 ? maxPages - 1 : currentPage - 1;
+                    if (maxPages > 1) {
+                        boolean nextPressed = InputConstants.isKeyDown(windowId,
+                            SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getKeyCode());
+                        boolean prevPressed = InputConstants.isKeyDown(windowId,
+                            SyncedKeyMappings.TOOLTIP_PREV_PAGE.getKeyCode());
+                        int currentPage = TooltipPageManager.getCurrentPage(id);
+
+                        // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
+                        if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
+                            if (nextPressed && !prevPressed) {
+                                currentPage = (currentPage + 1) % maxPages;
+                            } else if (!nextPressed) {
+                                currentPage = currentPage == 0 ? maxPages - 1 : currentPage - 1;
+                            }
+
+                            TooltipPageManager.setCurrentPage(id, currentPage);
+                            TooltipPageManager.setLastChangeTime(id, currentTime);
                         }
 
-                        TooltipPageManager.setCurrentPage(id, currentPage);
-                        TooltipPageManager.setLastChangeTime(id, currentTime);
-                    }
+                        if (currentPage < paginatedTooltips.size()) {
+                            components.addAll(paginatedTooltips.get(currentPage));
+                        }
 
-                    if (currentPage < paginatedTooltips.size()) {
-                        components.addAll(paginatedTooltips.get(currentPage));
-                    }
-
-                    components.add(Component.translatable("gtceu.tooltip.paginated_info",
-                            Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
+                        components.add(Component.translatable("gtceu.tooltip.paginated_info",
+                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
                                     .withStyle(ChatFormatting.LIGHT_PURPLE),
-                            currentPage + 1, maxPages,
-                            Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
+                                currentPage + 1, maxPages,
+                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
                                     .withStyle(ChatFormatting.LIGHT_PURPLE))
                             .withStyle(ChatFormatting.GRAY));
+                    } else {
+                        components.addAll(paginatedTooltips.get(0));
+                    }
                 }
 
                 if (!shiftTooltips.isEmpty()) {
