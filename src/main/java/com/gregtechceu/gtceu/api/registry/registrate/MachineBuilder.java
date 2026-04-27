@@ -605,6 +605,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         List<String> shiftTooltipDescriptions = new ArrayList<>();
         Component showCapabilities = Component.translatable("gtceu.tooltip.show_capabilities");
         Component showCapabilitiesShift = Component.translatable("gtceu.tooltip.show_capabilities_shift");
+        Component availableRecipeTypes;
+        boolean isAvailableRecipeTypesEmpty;
 
         if (recipeModifier instanceof RecipeModifierList recipeModifiers) {
             for (RecipeModifier modifier : recipeModifiers.modifiers()) {
@@ -620,7 +622,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         if (recipeTypes.length > 0) {
             Component combined = Arrays.stream(recipeTypes)
                     .map(GTRecipeType::toString)
-                    .filter(name -> !name.equals("gtceu:dummy"))
+                    .filter(name -> !name.equals("gtceu:dummy") && !name.isEmpty())
                     .map(name -> name.replace(":", "."))
                     .map(Component::translatable)
                     .reduce((c1, c2) -> Component.empty()
@@ -630,14 +632,22 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                     .orElse(Component.empty());
 
             if (!combined.toString().isEmpty()) {
-                tooltips.add(Component.translatable("gtceu.machine.available_recipe_map_1.tooltip", combined));
+                isAvailableRecipeTypesEmpty = false;
+                availableRecipeTypes = Component.translatable("gtceu.machine.available_recipe_map_1.tooltip", combined)
+                        .withStyle(ChatFormatting.GREEN);
+            } else {
+                isAvailableRecipeTypesEmpty = true;
+                availableRecipeTypes = Component.empty();
             }
+        } else {
+            isAvailableRecipeTypesEmpty = true;
+            availableRecipeTypes = Component.empty();
         }
 
         ResourceLocation id = definition.getId();
-        long windowId = Minecraft.getInstance().getWindow().getWindow();
         boolean isShiftToolsEmpty = shiftTooltips.isEmpty();
         boolean isPaginatedTooltipsEmpty = paginatedTooltips.isEmpty();
+        long windowId = Minecraft.getInstance().getWindow().getWindow();
         int maxModifierPages = shiftTooltips.size();
         int maxPaginatedPages = paginatedTooltips.size();
 
@@ -724,6 +734,10 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                 if (!isShiftToolsEmpty) {
                     components.add(showCapabilities);
                 }
+            }
+
+            if (!isAvailableRecipeTypesEmpty) {
+                components.add(availableRecipeTypes);
             }
 
             components.addAll(bottomTooltips);
