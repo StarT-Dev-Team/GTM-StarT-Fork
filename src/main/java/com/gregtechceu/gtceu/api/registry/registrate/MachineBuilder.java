@@ -622,7 +622,6 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         if (recipeTypes.length > 1 && Arrays.stream(recipeTypes).noneMatch(rt -> "gtceu:dummy".equals(rt.toString()))) {
             Component combined = Arrays.stream(recipeTypes)
                     .map(GTRecipeType::toString)
-                    .filter(name -> !name.equals("gtceu:dummy"))
                     .map(name -> name.replace(":", "."))
                     .map(Component::translatable)
                     .reduce((c1, c2) -> Component.empty()
