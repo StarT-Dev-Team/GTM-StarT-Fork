@@ -634,22 +634,26 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
             }
         }
 
+        ResourceLocation id = definition.getId();
+        long windowId = Minecraft.getInstance().getWindow().getWindow();
+        boolean isShiftToolsEmpty = shiftTooltips.isEmpty();
+        boolean isPaginatedTooltipsEmpty = paginatedTooltips.isEmpty();
+        int maxModifierPages = shiftTooltips.size();
+        int maxPaginatedPages = paginatedTooltips.size();
+
         definition.setTooltipBuilder((itemStack, components) -> {
             boolean isShiftDown = GTUtil.isShiftDown();
-            ResourceLocation id = definition.getId();
-            long windowId = Minecraft.getInstance().getWindow().getWindow();
             long currentTime = System.currentTimeMillis();
             long lastChange = TooltipPageManager.getLastChangeTime(id);
 
             components.addAll(tooltips);
 
-            if (!shiftTooltips.isEmpty() && isShiftDown) {
+            if (!isShiftToolsEmpty && isShiftDown) {
                 boolean nextPressed = InputConstants.isKeyDown(windowId,
                         SyncedKeyMappings.TOOLTIP_DOWN_PAGE.getKeyCode());
                 boolean prevPressed = InputConstants.isKeyDown(windowId,
                         SyncedKeyMappings.TOOLTIP_UP_PAGE.getKeyCode());
                 int currentModifierPage = TooltipPageManager.getCurrentModifierPage(id);
-                int maxModifierPages = shiftTooltips.size();
 
                 // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
                 if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
@@ -681,45 +685,43 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                                 .withStyle(ChatFormatting.LIGHT_PURPLE))
                         .withStyle(ChatFormatting.GRAY));
             } else {
-                if (!paginatedTooltips.isEmpty()) {
-                    int maxPages = paginatedTooltips.size();
-
-                    if (maxPages > 1) {
+                if (!isPaginatedTooltipsEmpty) {
+                    if (maxPaginatedPages > 1) {
                         boolean nextPressed = InputConstants.isKeyDown(windowId,
-                            SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getKeyCode());
+                                SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getKeyCode());
                         boolean prevPressed = InputConstants.isKeyDown(windowId,
-                            SyncedKeyMappings.TOOLTIP_PREV_PAGE.getKeyCode());
+                                SyncedKeyMappings.TOOLTIP_PREV_PAGE.getKeyCode());
                         int currentPage = TooltipPageManager.getCurrentPage(id);
 
                         // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
                         if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
                             if (nextPressed && !prevPressed) {
-                                currentPage = (currentPage + 1) % maxPages;
+                                currentPage = (currentPage + 1) % maxPaginatedPages;
                             } else if (!nextPressed) {
-                                currentPage = currentPage == 0 ? maxPages - 1 : currentPage - 1;
+                                currentPage = currentPage == 0 ? maxPaginatedPages - 1 : currentPage - 1;
                             }
 
                             TooltipPageManager.setCurrentPage(id, currentPage);
                             TooltipPageManager.setLastChangeTime(id, currentTime);
                         }
 
-                        if (currentPage < paginatedTooltips.size()) {
+                        if (currentPage < maxPaginatedPages) {
                             components.addAll(paginatedTooltips.get(currentPage));
                         }
 
                         components.add(Component.translatable("gtceu.tooltip.paginated_info",
                                 Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
-                                    .withStyle(ChatFormatting.LIGHT_PURPLE),
-                                currentPage + 1, maxPages,
+                                        .withStyle(ChatFormatting.LIGHT_PURPLE),
+                                currentPage + 1, maxPaginatedPages,
                                 Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
-                                    .withStyle(ChatFormatting.LIGHT_PURPLE))
-                            .withStyle(ChatFormatting.GRAY));
+                                        .withStyle(ChatFormatting.LIGHT_PURPLE))
+                                .withStyle(ChatFormatting.GRAY));
                     } else {
                         components.addAll(paginatedTooltips.get(0));
                     }
                 }
 
-                if (!shiftTooltips.isEmpty()) {
+                if (!isShiftToolsEmpty) {
                     components.add(showCapabilities);
                 }
             }
