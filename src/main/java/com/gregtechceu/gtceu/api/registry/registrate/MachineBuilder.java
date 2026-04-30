@@ -650,12 +650,12 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         ResourceLocation id = definition.getId();
         boolean isShiftToolsEmpty = shiftTooltips.isEmpty();
         boolean isPaginatedTooltipsEmpty = paginatedTooltips.isEmpty();
-        long windowId = Minecraft.getInstance().getWindow().getWindow();
         int maxModifierPages = shiftTooltips.size();
         int maxPaginatedPages = paginatedTooltips.size();
 
         definition.setTooltipBuilder((itemStack, components) -> {
             boolean isShiftDown = GTUtil.isShiftDown();
+            long windowId = Minecraft.getInstance().getWindow().getWindow();
             long currentTime = System.currentTimeMillis();
             long lastChange = TooltipPageManager.getLastChangeTime(id);
 
