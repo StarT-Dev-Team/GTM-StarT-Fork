@@ -615,7 +615,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
             for (RecipeModifier modifier : recipeModifiers.modifiers()) {
                 String modifierId = modifier.getId();
 
-                if (!GTRecipeModifiers.ignoreModifiers.contains(modifierId) && !modifierId.contains("lambda")) {
+                if (!GTRecipeModifiers.ignoreModifiers.contains(modifierId) && !modifierId.contains("lambda") &&
+                        !modifierId.contains("proxy")) {
                     shiftTooltips.add("gtceu.modifier.%s.name".formatted(modifierId));
                     shiftTooltipDescriptions.add("gtceu.modifier.%s.description".formatted(modifierId));
                 }
