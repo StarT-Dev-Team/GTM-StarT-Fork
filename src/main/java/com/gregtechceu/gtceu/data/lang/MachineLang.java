@@ -1037,10 +1037,14 @@ public class MachineLang {
                 "  §7Every coil after §bKanthal§7 increases speed by §f50%%§7.");
 
         provider.add("gtceu.modifier.multi_smellter_parallel.name", "%sMulti Smelter Parallel:");
-        provider.add("gtceu.modifier.multi_smellter_parallel.description", "  §7Enables Multi Smelter Parallels.");
+        multiLang(provider, "gtceu.modifier.multi_smellter_parallel.description",
+                "  §7Max parallels: §f32x§7 coil tier.",
+                "  §7Higher tiers increase speed and reduce energy use.");
 
-        provider.add("gtceu.modifier.chemical_reactor_oc.name", "%sChemical Reactor Overclock:");
-        provider.add("gtceu.modifier.chemical_reactor_oc.description", "  §7Enables Chemical Reactor Overclock.");
+        provider.add("gtceu.modifier.chemical_reactor_oc.name", "%sChemical Overclock:");
+        multiLang(provider, "gtceu.modifier.chemical_reactor_oc.description",
+                "  §7Starting at §6Cupronickel, §7every coil after increases speed by §f25%%.",
+                "  §7Energy usage is also decreased by §f5%% §7per tier.");
 
         provider.add("gtceu.modifier.consume_eu_to_start.name", "%sConsume EU to start:");
         provider.add("gtceu.modifier.consume_eu_to_start.description", "  §7Needs X EU to start the recipe.");
