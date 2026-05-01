@@ -4,21 +4,13 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 
-import lombok.Getter;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a list of RecipeModifiers that should be applied in order
  */
-public final class RecipeModifierList implements RecipeModifier {
-
-    @Getter
-    private final RecipeModifier[] modifiers;
-
-    public RecipeModifierList(RecipeModifier... modifiers) {
-        this.modifiers = modifiers;
-    }
+public record RecipeModifierList(RecipeModifier... modifiers) implements RecipeModifier {
 
     /**
      * Builds the final ModifierFunction by applying each RecipeModifier in order

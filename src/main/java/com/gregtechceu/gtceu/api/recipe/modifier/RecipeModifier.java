@@ -55,4 +55,13 @@ public interface RecipeModifier {
                 actual.getDefinition().getName());
         return ModifierFunction.NULL;
     }
+
+    /**
+     * Get the ID of this RecipeModifier
+     *
+     * @return A string identifier for this modifier
+     */
+    default @NotNull String getId() {
+        return getClass().getSimpleName().toLowerCase();
+    }
 }

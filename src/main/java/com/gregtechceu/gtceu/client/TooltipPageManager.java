@@ -11,14 +11,23 @@ import java.util.Map;
 public class TooltipPageManager {
 
     private static final Map<ResourceLocation, Integer> PAGE_STATES = new HashMap<>();
+    private static final Map<ResourceLocation, Integer> MODIFIER_STATES = new HashMap<>();
     private static final Map<ResourceLocation, Long> LAST_CHANGE_TIMES = new HashMap<>();
 
     public static int getCurrentPage(ResourceLocation tooltipId) {
         return PAGE_STATES.getOrDefault(tooltipId, 0);
     }
 
+    public static int getCurrentModifierPage(ResourceLocation tooltipId) {
+        return MODIFIER_STATES.getOrDefault(tooltipId, 0);
+    }
+
     public static void setCurrentPage(ResourceLocation tooltipId, int page) {
         PAGE_STATES.put(tooltipId, Math.max(0, page));
+    }
+
+    public static void setCurrentModifierPage(ResourceLocation tooltipId, int modifier) {
+        MODIFIER_STATES.put(tooltipId, Math.max(0, modifier));
     }
 
     public static Long getLastChangeTime(ResourceLocation tooltipId) {
@@ -29,29 +38,8 @@ public class TooltipPageManager {
         LAST_CHANGE_TIMES.put(tooltipId, time);
     }
 
-    public static void nextPage(ResourceLocation tooltipId, int maxPages) {
-        if (maxPages <= 1) return;
-
-        int current = getCurrentPage(tooltipId);
-
-        setCurrentPage(tooltipId, (current + 1) % maxPages);
-    }
-
-    public static void previousPage(ResourceLocation tooltipId, int maxPages) {
-        if (maxPages <= 1) return;
-
-        int current = getCurrentPage(tooltipId);
-
-        setCurrentPage(tooltipId, current == 0 ? maxPages - 1 : current - 1);
-    }
-
     public static void reset(ResourceLocation tooltipId) {
         PAGE_STATES.put(tooltipId, 0);
         LAST_CHANGE_TIMES.remove(tooltipId);
-    }
-
-    public static void clearAll() {
-        PAGE_STATES.clear();
-        LAST_CHANGE_TIMES.clear();
     }
 }

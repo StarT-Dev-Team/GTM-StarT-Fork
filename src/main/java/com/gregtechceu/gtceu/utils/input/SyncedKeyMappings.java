@@ -45,6 +45,10 @@ public final class SyncedKeyMappings {
             "gtceu.key.tooltip_next_page", KeyConflictContext.IN_GAME, InputConstants.KEY_RIGHT);
     public static final SyncedKeyMapping TOOLTIP_PREV_PAGE = SyncedKeyMapping.createConfigurable(
             "gtceu.key.tooltip_previous_page", KeyConflictContext.IN_GAME, InputConstants.KEY_LEFT);
+    public static final SyncedKeyMapping TOOLTIP_UP_PAGE = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_up_page", KeyConflictContext.IN_GAME, InputConstants.KEY_UP);
+    public static final SyncedKeyMapping TOOLTIP_DOWN_PAGE = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_down_page", KeyConflictContext.IN_GAME, InputConstants.KEY_DOWN);
 
     public static void init() {
         if (GTCEu.isClientSide()) {
