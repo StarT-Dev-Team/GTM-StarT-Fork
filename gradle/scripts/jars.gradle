@@ -19,7 +19,7 @@ java {
 jar.archiveClassifier = "dev"
 
 base {
-    archivesName = "${project.name}-${libs.versions.minecraft.get()}"
+    archivesName = "${project.name}-st-${libs.versions.minecraft.get()}"
 }
 
 afterEvaluate {
@@ -30,10 +30,10 @@ afterEvaluate {
                 'MixinConfigs': 'gtceu.mixins.json',
                 'Specification-Title': project.name,
                 'Specification-Version': mod_version,
-                'Specification-Vendor': 'GregTechCEu Team',
+                'Specification-Vendor': 'StarT Dev Team',
                 'Implementation-Title': base.archivesName,
                 'Implementation-Version': version,
-                'Implementation-Vendor': 'GregTechCEu Team',
+                'Implementation-Vendor': 'StarT Dev Team',
         ])
     }
 }
