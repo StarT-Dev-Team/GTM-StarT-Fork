@@ -389,7 +389,7 @@ public class MultiblockDisplayText {
         }
 
         public Builder addBatchModeLine(boolean batchEnabled, int batchAmount) {
-            if (batchEnabled && batchAmount > 0) {
+            if (batchEnabled && batchAmount > 1) {
                 Component runs = Component.literal(FormattingUtil.formatNumbers(batchAmount))
                         .withStyle(ChatFormatting.DARK_PURPLE);
                 String key = "gtceu.multiblock.batch_enabled";
