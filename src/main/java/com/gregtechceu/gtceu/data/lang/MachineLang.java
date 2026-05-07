@@ -1050,6 +1050,10 @@ public class MachineLang {
         provider.add("gtceu.modifier.consume_eu_to_start.description", "  §7Needs X EU to start the recipe.");
 
         // Multis with Abbreviations
+        replace(provider, "block.gtceu.bronze_large_boiler", "Large Bronze Boiler [LBB]");
+        replace(provider, "block.gtceu.steel_large_boiler", "Large Steel Boiler [LSB]");
+        replace(provider, "block.gtceu.titanium_large_boiler", "Large Titanium Boiler [LTB]");
+        replace(provider, "block.gtceu.tungstensteel_large_boiler", "Large Tungstensteel Boiler [LTsB]");
         replace(provider, "block.gtceu.large_combustion_engine", "Large Combustion Engine [LCE]");
         replace(provider, "block.gtceu.extreme_combustion_engine", "Extreme Combustion Engine [ECE]");
         replace(provider, "block.gtceu.steam_large_turbine", "Large Steam Turbine [LST]");
