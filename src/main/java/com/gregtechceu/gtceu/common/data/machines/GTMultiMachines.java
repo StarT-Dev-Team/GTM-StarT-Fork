@@ -707,11 +707,10 @@ public class GTMultiMachines {
                         .langValue("Fusion Reactor Computer MK %s [FRC %s]".formatted(romanNumeral, romanNumeral))
                         .recipeType(GTRecipeTypes.FUSION_RECIPES)
                         .recipeModifiers(DEFAULT_ENVIRONMENT_REQUIREMENT,
-                                FusionReactorMachine::recipeModifier, BATCH_MODE)
+                                FUSION_OVERCLOCK, BATCH_MODE)
                         .tooltips(
                                 Component.translatable("gtceu.machine.fusion_reactor.capacity",
                                         FusionReactorMachine.calculateEnergyStorageFactor(tier, 16) / 1000000L),
-                                Component.translatable("gtceu.machine.fusion_reactor.overclocking"),
                                 Component.translatable("gtceu.multiblock.%s_fusion_reactor.description"
                                         .formatted(VN[tier].toLowerCase(Locale.ROOT))))
                         .appearanceBlock(() -> FusionReactorMachine.getCasingState(tier))

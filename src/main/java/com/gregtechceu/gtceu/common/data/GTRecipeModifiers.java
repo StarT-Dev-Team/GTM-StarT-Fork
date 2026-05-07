@@ -20,6 +20,7 @@ import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.common.capability.EnvironmentalHazardSavedData;
+import com.gregtechceu.gtceu.common.machine.multiblock.electric.FusionReactorMachine;
 import com.gregtechceu.gtceu.common.recipe.condition.EUToStartCondition;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
@@ -106,6 +107,8 @@ public class GTRecipeModifiers {
             GTRecipeModifiers::chemicalReactorOverclock);
     public static final RecipeModifier CONSUME_EU_TO_START = new IdentifiedRecipeModifier("consume_eu_to_start",
             GTRecipeModifiers::consumeEuToStart);
+    public static final RecipeModifier FUSION_OVERCLOCK = new IdentifiedRecipeModifier("fusion_overclock",
+            FusionReactorMachine::recipeModifier);
 
     /**
      * Recipe Modifier for <b>Parallel Multiblock Machines</b> - can be used as a valid {@link RecipeModifier}
