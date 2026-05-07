@@ -124,6 +124,7 @@ public class NetworkSwitchMachine extends DataBankMachine implements IOpticalCom
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.data_bank.providing")
+                .addPatternErrorLine(getMultiblockState().error)
                 .addEnergyUsageExactLine(getEnergyUsage())
                 .addComputationUsageLine(computationHandler.getMaxCWUtForDisplay())
                 .addWorkingStatusLine();

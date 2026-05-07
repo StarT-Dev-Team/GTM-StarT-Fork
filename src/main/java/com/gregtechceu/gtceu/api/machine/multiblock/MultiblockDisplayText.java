@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
+import com.gregtechceu.gtceu.api.pattern.error.PatternError;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
@@ -23,6 +24,8 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -98,6 +101,12 @@ public class MultiblockDisplayText {
                 this.pausedKey = pausedKey;
             if (runningKey != null)
                 this.runningKey = runningKey;
+            return this;
+        }
+
+        public Builder addPatternErrorLine(@Nullable PatternError error) {
+            if (isStructureFormed || error == null) return this;
+            textList.add(error.getErrorInfo().copy().withStyle(ChatFormatting.RED));
             return this;
         }
 

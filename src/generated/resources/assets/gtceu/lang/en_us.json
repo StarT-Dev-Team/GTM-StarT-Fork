@@ -3526,6 +3526,7 @@
   "gtceu.multiblock.pattern.clear_amount_1": "§6Must have a clear 1x1x1 space in front§r",
   "gtceu.multiblock.pattern.clear_amount_3": "§6Must have a clear 3x3x1 space in front§r",
   "gtceu.multiblock.pattern.error": "Expected components (%s) at (%s).",
+  "gtceu.multiblock.pattern.error.limited_title": "Unexpected number of %s:",
   "gtceu.multiblock.pattern.error.batteries": "§cAll batteries must be the same§r",
   "gtceu.multiblock.pattern.error.coils": "§cAll heating coils must be the same§r",
   "gtceu.multiblock.pattern.error.filters": "§cAll filters must be the same§r",

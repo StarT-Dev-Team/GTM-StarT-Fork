@@ -322,6 +322,7 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
     @Override
     public void addDisplayText(List<Component> textList) {
         MultiblockDisplayText.builder(textList, isFormed())
+                .addPatternErrorLine(getMultiblockState().error)
                 .addWorkingStatusLine();
         getDefinition().getAdditionalDisplay().accept(this, textList);
     }

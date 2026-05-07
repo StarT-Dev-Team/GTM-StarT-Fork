@@ -70,6 +70,7 @@ public class LayeredWorkableElectricMultiblockMachine extends WorkableElectricMu
 
         MultiblockDisplayText.builder(textList, isFormed())
                 .setWorkingStatus(logic.isWorkingEnabled(), logic.isActive())
+                .addPatternErrorLine(getMultiblockState().error)
                 .addEnergyUsageLine(energyContainer)
                 .addEnergyTierLine(tier)
                 .addMachineModeLine(getRecipeType(), getRecipeTypes().length > 1)

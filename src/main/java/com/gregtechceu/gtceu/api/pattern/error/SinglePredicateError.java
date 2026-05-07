@@ -38,6 +38,11 @@ public class SinglePredicateError extends PatternError {
         if (type == 3) {
             number = predicate.minLayerCount;
         }
-        return Component.translatable("gtceu.multiblock.pattern.error.limited." + type, number);
+        var candidate = getCandidates().get(0);
+        return Component.empty()
+                .append(Component.translatable("gtceu.multiblock.pattern.error.limited_title",
+                        formatCandidate(candidate)))
+                .append("\n")
+                .append(Component.translatable("gtceu.multiblock.pattern.error.limited." + type, number));
     }
 }
