@@ -498,8 +498,11 @@ public class GTMultiMachines {
                     GTCEu.id("block/multiblock/cracking_unit"))
             .additionalDisplay((controller, components) -> {
                 if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
+                    var coilTier = coilMachine.getCoilTier();
+                    var discount = coilTier > 9 ? (0.9 + (coilTier - 9) * 0.025) : coilTier * 0.1;
+
                     components.add(Component.translatable("gtceu.multiblock.cracking_unit.energy",
-                            100 - 10 * coilMachine.getCoilTier()));
+                            FormattingUtil.DECIMAL_FORMAT_0F.format((1.0 - discount) * 100.0)));
                 }
             })
             .register();
