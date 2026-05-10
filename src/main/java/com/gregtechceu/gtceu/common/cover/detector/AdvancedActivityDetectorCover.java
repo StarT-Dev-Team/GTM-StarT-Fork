@@ -36,7 +36,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AdvancedActivityDetectorCover extends ActivityDetectorCover implements IUICover {
 
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            ActivityDetectorCover.class, DetectorCover.MANAGED_FIELD_HOLDER);
+            AdvancedActivityDetectorCover.class, ActivityDetectorCover.MANAGED_FIELD_HOLDER);
 
     @Override
     public ManagedFieldHolder getFieldHolder() {
