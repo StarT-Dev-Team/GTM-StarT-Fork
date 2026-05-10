@@ -3718,7 +3718,7 @@
   "gtceu.recipe.duration": "Тривалість: %s секунд",
   "gtceu.recipe.environmental_hazard": "§cВ області повинно бути: %s",
   "gtceu.recipe.environmental_hazard.reverse": "§cОбласть повинна бути захищена від: %s",
-  "gtceu.recipe.eu": "Споживання: %s A @ %s",
+  "gtceu.recipe.eu": "Споживання: %s EU/t",
   "gtceu.recipe.eu.total": "%s EU/т",
   "gtceu.recipe.eu_inverted": "Генерування: %s EU/т",
   "gtceu.recipe.eu_to_start": "Стартове EU: %sEU%s",

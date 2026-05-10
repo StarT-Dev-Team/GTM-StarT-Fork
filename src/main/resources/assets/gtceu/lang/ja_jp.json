@@ -3692,7 +3692,7 @@
   "gtceu.recipe.duration": "処理時間: %s 秒",
   "gtceu.recipe.environmental_hazard": "§cエリアには必ず %s",
   "gtceu.recipe.environmental_hazard.reverse": "§cこのエリアには、以下のものがないこと %s",
-  "gtceu.recipe.eu": "使用量: %s A @ %s",
+  "gtceu.recipe.eu": "使用量: %s EU/t",
   "gtceu.recipe.eu.total": "%s EU/t",
   "gtceu.recipe.eu_inverted": "生成量: %s A @ %s",
   "gtceu.recipe.eu_to_start": "開始EU: %sEU",
