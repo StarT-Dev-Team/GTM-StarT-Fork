@@ -112,10 +112,19 @@ public class LayeredRecipeLogic extends RecipeLogic {
             finishedLastStep = layeredRecipe.size() == layeredRecipeLayerIndex;
         }
 
+        var prevConsecutiveRecipes = 0;
+        var prevSuspendAfterFinish = suspendAfterFinish;
         suspendAfterFinish = true;
         super.onRecipeFinish();
-        setStatus(RecipeLogic.Status.IDLE);
+        suspendAfterFinish = prevSuspendAfterFinish;
 
+        if (suspendAfterFinish) {
+            setStatus(Status.SUSPEND);
+            return;
+        }
+
+        setStatus(Status.IDLE);
+        consecutiveRecipes = prevConsecutiveRecipes + 1;
         if (finishedLastStep) {
             // try the first step again
             var firstStepRecipe = layeredRecipe.get(0).recipe();
@@ -127,13 +136,14 @@ public class LayeredRecipeLogic extends RecipeLogic {
                 layeredRecipe = null;
                 layeredRecipeLayerIndex = -1;
             }
-        } else {
-            // already transformed
-            var nextStepRecipe = layeredRecipe.get(layeredRecipeLayerIndex).recipe();
-            var recipeMatch = checkRecipe(nextStepRecipe);
-            if (recipeMatch.isSuccess()) {
-                setupRecipe(nextStepRecipe);
-            }
+            return;
+        }
+
+        // already transformed
+        var nextStepRecipe = layeredRecipe.get(layeredRecipeLayerIndex).recipe();
+        var recipeMatch = checkRecipe(nextStepRecipe);
+        if (recipeMatch.isSuccess()) {
+            setupRecipe(nextStepRecipe);
         }
     }
 
@@ -179,7 +189,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
                 setupRecipe(modified);
             }
 
-            if (lastRecipe != null && getStatus() == RecipeLogic.Status.WORKING) {
+            if (lastRecipe != null && getStatus() == Status.WORKING) {
                 lastOriginRecipe = null; // custom handling
                 lastFailedMatches = null;
                 return true;
