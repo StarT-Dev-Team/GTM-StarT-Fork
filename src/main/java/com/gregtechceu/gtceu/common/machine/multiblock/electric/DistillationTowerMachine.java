@@ -151,7 +151,7 @@ public class DistillationTowerMachine extends WorkableElectricMultiblockMachine
 
         while (minMultiplier != maxMultiplier) {
             GTRecipe copy = modifyOutputs(recipe, ContentModifier.multiplier(multiplier));
-            boolean filled = getRecipeLogic().applyFluidOutputs(copy, FluidAction.SIMULATE);
+            boolean filled = getRecipeLogic().applyFluidOutputs(copy, FluidAction.SIMULATE, getVoidingMode());
             int[] bin = ParallelLogic.adjustMultiplier(filled, minMultiplier, multiplier, maxMultiplier);
             minMultiplier = bin[0];
             multiplier = bin[1];
@@ -218,7 +218,7 @@ public class DistillationTowerMachine extends WorkableElectricMultiblockMachine
                 if (!result.isSuccess()) return result;
             }
 
-            if (!applyFluidOutputs(recipe, FluidAction.SIMULATE)) {
+            if (!applyFluidOutputs(recipe, FluidAction.SIMULATE, machine.getVoidingMode())) {
                 return ActionResult.fail(Component.translatable("gtceu.recipe_logic.insufficient_out")
                         .append(": ")
                         .append(FluidRecipeCapability.CAP.getName()), FluidRecipeCapability.CAP, IO.OUT);
@@ -255,27 +255,13 @@ public class DistillationTowerMachine extends WorkableElectricMultiblockMachine
                 return handleIO;
             }
 
-            var voidMode = getMachine().getVoidingMode();
-
-            if (voidMode == VoidingMode.VOID_ALL) {
-                workingRecipe = null;
-
-                return ActionResult.SUCCESS;
-            }
-
             var items = recipe.getOutputContents(ItemRecipeCapability.CAP);
-            if (!items.isEmpty() && voidMode != VoidingMode.VOID_ITEMS) {
+            if (!items.isEmpty()) {
                 Map<RecipeCapability<?>, List<Content>> out = Map.of(ItemRecipeCapability.CAP, items);
                 RecipeHelper.handleRecipe(this.machine, recipe, io, out, chanceCaches, false, false);
             }
 
-            if (voidMode == VoidingMode.VOID_FLUIDS) {
-                workingRecipe = null;
-
-                return ActionResult.SUCCESS;
-            }
-
-            if (applyFluidOutputs(recipe, FluidAction.EXECUTE)) {
+            if (applyFluidOutputs(recipe, FluidAction.EXECUTE, machine.getVoidingMode())) {
                 workingRecipe = null;
                 return ActionResult.SUCCESS;
             }
@@ -285,7 +271,7 @@ public class DistillationTowerMachine extends WorkableElectricMultiblockMachine
                     .append(FluidRecipeCapability.CAP.getName()), FluidRecipeCapability.CAP, IO.OUT);
         }
 
-        private boolean applyFluidOutputs(GTRecipe recipe, FluidAction action) {
+        private boolean applyFluidOutputs(GTRecipe recipe, FluidAction action, VoidingMode voidMode) {
             var fluids = recipe.getOutputContents(FluidRecipeCapability.CAP)
                     .stream()
                     .map(Content::getContent)
@@ -311,7 +297,7 @@ public class DistillationTowerMachine extends WorkableElectricMultiblockMachine
                 int filled = (handler instanceof NotifiableFluidTank nft) ?
                         nft.fillInternal(fluid, action) :
                         handler.fill(fluid, action);
-                if (filled != fluid.getAmount()) valid = false;
+                if (filled != fluid.getAmount() && !voidMode.canVoid(FluidRecipeCapability.CAP)) valid = false;
                 if (action.simulate() && !valid) break;
             }
             return valid;
