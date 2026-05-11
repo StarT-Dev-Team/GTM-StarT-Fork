@@ -92,7 +92,7 @@ This fork should be considered a separate project with its own design goals.
 - Assembly line recipes no longer fail if an input bus has a configured circuit set
 - UI height now grows correctly for ME parts with more than 16 slots
 - Made several ME part classes public for use in addons
-- Added `OpticalComputationMachine` to allow proper use of CWU in other multiblocks
+- Added `OpticalComputationMachine` to enable proper use of CWU in other multiblocks and correct display in Jade
 - UI slots now have lower priority than multiblock parts for multiblocks that support both a UI and I/O parts
 
 #### Bug Fixes
