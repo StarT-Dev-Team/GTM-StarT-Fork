@@ -118,6 +118,7 @@ This fork should be considered a separate project with its own design goals.
 - Fixed cracker not working properly with tier 10+ coils
 - Fixed `No energy` tooltip icon appearing in machines when it shouldn't
 - Fixed Advanced Detector Cover data not persisting
+- Fixed Pattern Buffers and Proxies acting as output buses/hatches when they don't have an output handler
 
 #### UI & Texture Changes
 - Voltage display format adjusted (EU/t and amperage order clarified)
