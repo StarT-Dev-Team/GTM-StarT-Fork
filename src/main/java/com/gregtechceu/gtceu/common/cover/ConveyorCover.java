@@ -66,8 +66,8 @@ public class ConveyorCover extends CoverBehavior implements IIOCover, IUICover, 
             CoverBehavior.MANAGED_FIELD_HOLDER);
 
     // 8 32 128 512 1024
-    public static final Int2IntFunction CONVEYOR_SCALING = tier -> 2 *
-            Math.max(1, (int) Math.pow(4, Math.min(tier, GTValues.LuV)));
+    public static final Int2IntFunction CONVEYOR_SCALING = tier -> 4 *
+            Math.max(1, (int) Math.pow(2, Math.min(tier, GTValues.UV)));
 
     public final int tier;
     public final int maxItemTransferRate;
