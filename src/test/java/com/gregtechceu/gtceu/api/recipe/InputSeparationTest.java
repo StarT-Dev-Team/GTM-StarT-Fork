@@ -101,13 +101,11 @@ public class InputSeparationTest {
         busHolder.inputBus1.setPaintingColor(DyeColor.BLACK.getTextColor());
         busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Blocks.COBBLESTONE));
         busHolder.inputBus2.getInventory().setStackInSlot(0, new ItemStack(Blocks.ACACIA_WOOD));
-        helper.succeedWhen(() -> {
-            helper.assertTrue(
-                    TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
-                            new ItemStack(Blocks.STONE)),
-                    "Crafting items in different busses with no color failed, expected STONE but was " +
-                            busHolder.outputBus1.getInventory().getStackInSlot(0).getDisplayName());
+        helper.onEachTick(() -> {
+            helper.assertTrue(busHolder.outputBus1.getInventory().getStackInSlot(0).isEmpty(),
+                "Crafting items in busses with no color succeeded but shouldn't have");
         });
+        TestUtils.succeedAfterTest(helper);
     }
 
     // Test for putting both ingredients in 2 busses with both dyed the same color.
@@ -149,11 +147,13 @@ public class InputSeparationTest {
         busHolder.inputBus1.setDistinct(true);
         busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Blocks.COBBLESTONE));
         busHolder.inputBus2.getInventory().setStackInSlot(0, new ItemStack(Blocks.ACACIA_WOOD));
-        helper.onEachTick(() -> {
-            helper.assertTrue(busHolder.outputBus1.getInventory().getStackInSlot(0).isEmpty(),
-                    "Crafting items in busses with distinct succeeded but shouldn't have");
+        helper.succeedWhen(() -> {
+            helper.assertTrue(
+                TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
+                    new ItemStack(Blocks.STONE)),
+                "Crafting items in different busses with distinct failed, expected STONE but was " +
+                    busHolder.outputBus1.getInventory().getStackInSlot(0).getDisplayName());
         });
-        TestUtils.succeedAfterTest(helper);
     }
 
     // Test for putting both ingredients in 2 busses with both distinct.
