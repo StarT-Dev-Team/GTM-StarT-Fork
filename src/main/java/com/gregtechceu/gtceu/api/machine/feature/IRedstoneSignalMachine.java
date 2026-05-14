@@ -10,7 +10,7 @@ public interface IRedstoneSignalMachine extends IMachineFeature {
         return 0;
     }
 
-    default int getOutputDirectSignal(Direction direction) {
+    default int getOutputDirectSignal(@Nullable Direction direction) {
         return 0;
     }
 

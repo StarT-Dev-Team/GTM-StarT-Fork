@@ -100,10 +100,9 @@ public class LayeredRecipeUIHelper {
 
             for (var recipeStep = 0; recipeStep < steps.size(); recipeStep++) {
                 var posX = startX + recipeStep * sliceWidth;
-                var stepLayer = steps.get(recipeStep);
-                var recipe = stepLayer.recipe();
+                var recipe = steps.get(recipeStep);
                 var inputHeight = buildStepInput((int) posX, recipeStep, getRecipeHolder(recipe), recipe,
-                        stepLayer.timeout());
+                        LayeredRecipeHelper.getLayerTimeout(recipe));
                 if (inputHeight > inputsHeight) inputsHeight = inputHeight;
             }
 
@@ -144,8 +143,7 @@ public class LayeredRecipeUIHelper {
                         }).setHoverTooltips("gtceu.recipe_type.show_recipes"));
             }
 
-            var lastStepLayer = steps.get(steps.size() - 1);
-            var recipe = lastStepLayer.recipe();
+            var recipe = steps.get(steps.size() - 1);
             buildStepOutput(outputsEndX, bottomY + 22, getRecipeHolder(recipe), recipe);
         }
 

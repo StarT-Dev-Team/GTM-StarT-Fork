@@ -58,7 +58,7 @@ public class LayeredRecipeProvider extends CapabilityBlockProvider<LayeredRecipe
             data.putInt("Index", recipeLogic.getLayeredRecipeLayerIndex());
             data.putInt("NumSteps", layeredSteps.size());
 
-            var lastRecipe = layeredSteps.get(layeredSteps.size() - 1).recipe();
+            var lastRecipe = layeredSteps.get(layeredSteps.size() - 1);
             var tagsPair = RecipeOutputProvider.gatherRecipeItemAndFluidsOutput(lastRecipe);
             if (!tagsPair.getFirst().isEmpty()) {
                 data.put("OutputItems", tagsPair.getFirst());

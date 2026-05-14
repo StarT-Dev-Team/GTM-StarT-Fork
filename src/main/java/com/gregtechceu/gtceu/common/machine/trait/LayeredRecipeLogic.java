@@ -8,6 +8,7 @@ import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.ActionResult;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.LayeredRecipeHelper;
+import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.utils.FluidStackHashStrategy;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 
@@ -33,7 +34,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
     @Persisted
     @DescSynced
     @Getter
-    private List<LayeredRecipeHelper.Layer> layeredRecipe;
+    private List<GTRecipe> layeredRecipe;
 
     @Persisted
     @DescSynced
@@ -44,7 +45,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
         super(machine);
     }
 
-    public @Nullable LayeredRecipeHelper.Layer getCurrentLayer() {
+    public @Nullable GTRecipe getCurrentLayer() {
         if (layeredRecipe == null || layeredRecipeLayerIndex < 0 || layeredRecipeLayerIndex >= layeredRecipe.size()) {
             return null;
         }
@@ -52,7 +53,11 @@ public class LayeredRecipeLogic extends RecipeLogic {
     }
 
     public int getCoverRedstoneOutput() {
-        return Mth.clamp(layeredRecipeLayerIndex + (lastRecipe == null ? 0 : 1), 0, 15);
+        var result = layeredRecipeLayerIndex + (lastRecipe == null ? 0 : 1);
+        if (layeredRecipe != null && result == layeredRecipe.size()) {
+            result = 0;
+        }
+        return Mth.clamp(result, 0, 15);
     }
 
     public GTRecipe getNextLayeredRecipe() {
@@ -61,10 +66,10 @@ public class LayeredRecipeLogic extends RecipeLogic {
         }
         if (lastRecipe == null) {
             // not running and waiting for inputs
-            return layeredRecipe.get(layeredRecipeLayerIndex).recipe();
+            return layeredRecipe.get(layeredRecipeLayerIndex);
         }
         if (layeredRecipeLayerIndex < layeredRecipe.size() - 1) {
-            return layeredRecipe.get(layeredRecipeLayerIndex + 1).recipe();
+            return layeredRecipe.get(layeredRecipeLayerIndex + 1);
         }
         return null;
     }
@@ -127,7 +132,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
         consecutiveRecipes = prevConsecutiveRecipes + 1;
         if (finishedLastStep) {
             // try the first step again
-            var firstStepRecipe = layeredRecipe.get(0).recipe();
+            var firstStepRecipe = layeredRecipe.get(0);
             var recipeMatch = checkRecipe(firstStepRecipe);
             if (recipeMatch.isSuccess()) {
                 layeredRecipeLayerIndex = 0;
@@ -140,7 +145,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
         }
 
         // already transformed
-        var nextStepRecipe = layeredRecipe.get(layeredRecipeLayerIndex).recipe();
+        var nextStepRecipe = layeredRecipe.get(layeredRecipeLayerIndex);
         var recipeMatch = checkRecipe(nextStepRecipe);
         if (recipeMatch.isSuccess()) {
             setupRecipe(nextStepRecipe);
@@ -150,11 +155,11 @@ public class LayeredRecipeLogic extends RecipeLogic {
     @Override
     public @NotNull Iterator<GTRecipe> searchRecipe() {
         if (layeredRecipe != null) {
-            return Collections.singleton(layeredRecipe.get(layeredRecipeLayerIndex).recipe()).iterator();
+            return Collections.singleton(layeredRecipe.get(layeredRecipeLayerIndex)).iterator();
         }
         return machine.getRecipeType().searchRecipe(machine, r -> {
             // TODO: maybe add support for running non layered recipes as well
-            // ignore non layered recipes
+            // ignore non-layered recipes
             if (!LayeredRecipeHelper.hasLayeredSteps(r)) return false;
             return matchRecipe(r).isSuccess();
         });
@@ -167,9 +172,9 @@ public class LayeredRecipeLogic extends RecipeLogic {
             layeredRecipe = LayeredRecipeHelper.getLayeredSteps(recipe);
             assert layeredRecipe != null;
             layeredRecipeLayerIndex = 0;
-            recipe = layeredRecipe.get(0).recipe();
+            recipe = layeredRecipe.get(0);
         } else if (!recipe.data.getBoolean("is_layer")) {
-            // non layered recipe, should never happen
+            // non-layered recipe: should never happen
             layeredRecipe = null;
             layeredRecipeLayerIndex = -1;
         }
@@ -182,6 +187,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
     public boolean checkMatchedRecipeAvailable(GTRecipe match) {
         var isAlreadyModified = match.data.getBoolean("is_layer");
         var modified = isAlreadyModified ? match : machine.fullModifyRecipe(match);
+
         if (modified != null) {
             var recipeMatch = checkRecipe(modified);
             if (recipeMatch.isSuccess()) {
@@ -207,32 +213,34 @@ public class LayeredRecipeLogic extends RecipeLogic {
         var inputItems = new Object2LongOpenCustomHashMap<>(ItemStackHashStrategy.comparingAllButCount());
         machine.getCapabilitiesFlat(IO.IN, ItemRecipeCapability.CAP).stream()
                 .flatMap(s -> s.getContents().stream())
-                .filter(ItemStack.class::isInstance).map(ItemStack.class::cast).filter(s -> !s.isEmpty())
+                .filter(ItemStack.class::isInstance).map(ItemStack.class::cast)
+                .filter(s -> !s.isEmpty() && !s.is(GTItems.PROGRAMMED_CIRCUIT.get()))
                 .forEach(s -> inputItems.addTo(s, s.getCount()));
 
         for (var rawContent : recipe.getInputContents(ItemRecipeCapability.CAP)) {
             var content = ItemRecipeCapability.CAP.of(rawContent.getContent());
             inputItems.keySet().stream().filter(content).forEach(inputItems::removeLong);
         }
+
         if (!inputItems.isEmpty()) {
-            // TODO: missing language key
-            return ActionResult.fail(Component.translatable("Layer inputs aren't the only inputs in the machine."),
+            return ActionResult.fail(Component.translatable("gtceu.recipe_logic.layered_inputs"),
                     null, IO.IN);
         }
 
         var inputFluids = new Object2LongOpenCustomHashMap<>(FluidStackHashStrategy.comparingAllButAmount());
         machine.getCapabilitiesFlat(IO.IN, FluidRecipeCapability.CAP).stream()
                 .flatMap(s -> s.getContents().stream())
-                .filter(FluidStack.class::isInstance).map(FluidStack.class::cast).filter(s -> !s.isEmpty())
+                .filter(FluidStack.class::isInstance).map(FluidStack.class::cast)
+                .filter(s -> !s.isEmpty())
                 .forEach(s -> inputFluids.addTo(s, s.getAmount()));
 
         for (var rawContent : recipe.getInputContents(FluidRecipeCapability.CAP)) {
             var content = FluidRecipeCapability.CAP.of(rawContent.getContent());
             inputFluids.keySet().stream().filter(content).forEach(inputFluids::removeLong);
         }
+
         if (!inputFluids.isEmpty()) {
-            // TODO: missing language key
-            return ActionResult.fail(Component.translatable("Layer inputs aren't the only inputs in the machine."),
+            return ActionResult.fail(Component.translatable("gtceu.recipe_logic.layered_inputs"),
                     null, IO.IN);
         }
 

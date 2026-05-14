@@ -3889,6 +3889,7 @@
   "gtceu.recipe_logic.insufficient_fuel": "Insufficient Fuel",
   "gtceu.recipe_logic.insufficient_in": "Insufficient Inputs",
   "gtceu.recipe_logic.insufficient_out": "Insufficient Outputs",
+  "gtceu.recipe_logic.layered_inputs": "Layer inputs aren't the only inputs in the machine.",
   "gtceu.recipe_logic.no_capabilities": "Machine has no Capabilities",
   "gtceu.recipe_logic.no_contents": "Recipe has no Contents",
   "gtceu.recipe_logic.recipe_waiting": "Recipe Waiting: ",

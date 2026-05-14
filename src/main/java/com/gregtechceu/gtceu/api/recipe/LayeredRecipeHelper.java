@@ -9,11 +9,8 @@ import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.data.recipe.builder.LayeredRecipeInfo;
 
-import com.lowdragmc.lowdraglib.syncdata.payload.ObjectTypedPayload;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 
@@ -22,8 +19,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -33,23 +28,37 @@ import java.util.stream.Stream;
 
 public class LayeredRecipeHelper {
 
+    // root recipe keys
+    public static final String KEY_LAYERED_STEPS = "layered_steps"; // List<GTRecipe>
+    public static final String KEY_LAYERED_XEI = "layered_xei"; // GTRecipe
+    public static final String KEY_LAYERED_INFO = "layered_info"; // LayeredRecipeInfo
+
+    // single layer keys
+    public static final String KEY_IS_LAYER = "is_layer"; // boolean
+    public static final String KEY_LAYER_STEP = "layer_step"; // int
+    public static final String KEY_LAYER_TIMEOUT = "layer_timeout"; // int
+
     public static boolean hasLayeredSteps(GTRecipe recipe) {
-        return recipe.data.contains("layered_steps");
+        return recipe.data.contains(KEY_LAYERED_STEPS);
     }
 
-    public static @Nullable List<Layer> getLayeredSteps(GTRecipe recipe) {
+    public static int getLayerTimeout(GTRecipe recipe) {
+        return recipe.data.getInt(KEY_LAYER_TIMEOUT);
+    }
+
+    public static @Nullable List<GTRecipe> getLayeredSteps(GTRecipe recipe) {
         return getLayeredSteps(recipe.data);
     }
 
-    public static @Nullable List<Layer> getLayeredSteps(CompoundTag recipeData) {
-        var serialized = recipeData.get("layered_steps");
+    public static @Nullable List<GTRecipe> getLayeredSteps(CompoundTag recipeData) {
+        var serialized = recipeData.get(KEY_LAYERED_STEPS);
         if (serialized == null) return null;
-        return Layer.CODEC.listOf().parse(NbtOps.INSTANCE, serialized).result().orElse(null);
+        return RECIPE_WITH_ID_CODEC.listOf().parse(NbtOps.INSTANCE, serialized).result().orElse(null);
     }
 
-    public static void setLayeredSteps(GTRecipe recipe, List<Layer> layers) {
-        var serialized = Layer.CODEC.listOf().encodeStart(NbtOps.INSTANCE, layers).result().orElseThrow();
-        recipe.data.put("layered_steps", serialized);
+    public static void setLayeredSteps(GTRecipe recipe, List<GTRecipe> layers) {
+        var serialized = RECIPE_WITH_ID_CODEC.listOf().encodeStart(NbtOps.INSTANCE, layers).result().orElseThrow();
+        recipe.data.put(KEY_LAYERED_STEPS, serialized);
     }
 
     public static @Nullable GTRecipe getXeiLayeredRecipe(GTRecipe recipe) {
@@ -57,12 +66,12 @@ public class LayeredRecipeHelper {
     }
 
     public static @Nullable GTRecipe getXeiLayeredRecipe(CompoundTag recipeData) {
-        if (!recipeData.contains("layered_xei")) return null;
-        var serialized = recipeData.get("layered_xei");
-        return Layer.RECIPE_WITH_ID_CODEC.parse(NbtOps.INSTANCE, serialized).result().orElse(null);
+        if (!recipeData.contains(KEY_LAYERED_XEI)) return null;
+        var serialized = recipeData.get(KEY_LAYERED_XEI);
+        return RECIPE_WITH_ID_CODEC.parse(NbtOps.INSTANCE, serialized).result().orElse(null);
     }
 
-    public static @Nullable List<Layer> calculateRecipeSteps(GTRecipe recipe) {
+    public static @Nullable List<GTRecipe> calculateRecipeSteps(GTRecipe recipe) {
         var layeredInfo = parseRecipeInfo(recipe);
         if (layeredInfo == null) return null;
         var base = createBaseRecipe(recipe, layeredInfo);
@@ -72,44 +81,45 @@ public class LayeredRecipeHelper {
     }
 
     public static void applyLayeredRecipeModifications(GTRecipeBuilder builder) {
-        if (!builder.data.contains("layered_info")) return;
+        if (!builder.data.contains(KEY_LAYERED_INFO)) return;
 
         var layers = calculateRecipeSteps(builder.buildRawRecipe());
         assert layers != null;
 
-        var serializedSteps = Layer.CODEC.listOf().encodeStart(NbtOps.INSTANCE, layers).result().orElseThrow();
+        var serializedSteps = RECIPE_WITH_ID_CODEC.listOf().encodeStart(NbtOps.INSTANCE, layers).result().orElseThrow();
 
         var xei = GTRecipeBuilder.of(builder.id.withPrefix("/"), builder.recipeType)
-                .addData("layered_steps", serializedSteps)
-                .EUt(layers.get(0).recipe.getInputEUt().getTotalEU())
-                .inputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.inputs))
+                .addData(KEY_LAYERED_STEPS, serializedSteps)
+                .EUt(layers.get(0).getInputEUt().getTotalEU())
+                .inputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.inputs))
                         .toArray(Ingredient[]::new))
-                .outputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.outputs))
+                .outputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.outputs))
                         .toArray(Ingredient[]::new))
-                .inputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.inputs))
+                .inputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.inputs))
                         .toArray(FluidIngredient[]::new))
-                .outputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.outputs))
+                .outputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.outputs))
                         .toArray(FluidIngredient[]::new))
                 .perTick(true)
-                .inputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.tickInputs))
+                .inputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.tickInputs))
                         .toArray(Ingredient[]::new))
-                .outputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.recipe.tickOutputs))
+                .outputItems(layers.stream().flatMap(l -> getLayerData(ItemRecipeCapability.CAP, l.tickOutputs))
                         .toArray(Ingredient[]::new))
-                .inputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.tickInputs))
+                .inputFluids(layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.tickInputs))
                         .toArray(FluidIngredient[]::new))
                 .outputFluids(
-                        layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.recipe.tickOutputs))
+                        layers.stream().flatMap(l -> getLayerData(FluidRecipeCapability.CAP, l.tickOutputs))
                                 .toArray(FluidIngredient[]::new))
-                .addConditions(layers.get(0).recipe.conditions)
-                .duration(layers.stream().reduce(0, (sum, layer) -> sum + layer.recipe().duration, Integer::sum))
+                .addConditions(layers.get(0).conditions)
+                .duration(layers.stream().reduce(0, (sum, layer) -> sum + layer.duration, Integer::sum))
                 .buildRawRecipe();
-        var serializedXei = Layer.RECIPE_WITH_ID_CODEC.encodeStart(NbtOps.INSTANCE, xei).result().orElseThrow();
 
-        resetRecipeBuilderContents(builder, layers.get(0).recipe);
+        var serializedXei = RECIPE_WITH_ID_CODEC.encodeStart(NbtOps.INSTANCE, xei).result().orElseThrow();
+
+        resetRecipeBuilderContents(builder, layers.get(0), layers.get(layers.size() - 1));
         builder.category(builder.recipeType.getSyntheticCategory());
         builder.data.remove("is_layer");
-        builder.data.put("layered_steps", serializedSteps);
-        builder.data.put("layered_xei", serializedXei);
+        builder.data.put(KEY_LAYERED_STEPS, serializedSteps);
+        builder.data.put(KEY_LAYERED_XEI, serializedXei);
     }
 
     private static <T> Stream<T> getLayerData(RecipeCapability<T> cap, Map<RecipeCapability<?>, List<Content>> map) {
@@ -127,27 +137,28 @@ public class LayeredRecipeHelper {
         }
     }
 
-    private static void resetRecipeBuilderContents(GTRecipeBuilder builder, GTRecipe toCopy) {
-        toCopy.inputs.forEach((k, v) -> builder.input.put(k, new ArrayList<>(v)));
+    private static void resetRecipeBuilderContents(GTRecipeBuilder builder, GTRecipe firstStep, GTRecipe lastStep) {
+        builder.input.clear();
+        firstStep.inputs.forEach((k, v) -> builder.input.put(k, new ArrayList<>(v)));
         builder.output.clear();
-        toCopy.outputs.forEach((k, v) -> builder.output.put(k, new ArrayList<>(v)));
+        lastStep.outputs.forEach((k, v) -> builder.output.put(k, new ArrayList<>(v)));
         builder.tickInput.clear();
-        toCopy.tickInputs.forEach((k, v) -> builder.tickInput.put(k, new ArrayList<>(v)));
+        firstStep.tickInputs.forEach((k, v) -> builder.tickInput.put(k, new ArrayList<>(v)));
         builder.tickOutput.clear();
-        toCopy.tickOutputs.forEach((k, v) -> builder.tickOutput.put(k, new ArrayList<>(v)));
+        firstStep.tickOutputs.forEach((k, v) -> builder.tickOutput.put(k, new ArrayList<>(v)));
         builder.inputChanceLogic.clear();
-        builder.inputChanceLogic.putAll(toCopy.inputChanceLogics);
+        builder.inputChanceLogic.putAll(firstStep.inputChanceLogics);
         builder.outputChanceLogic.clear();
-        builder.outputChanceLogic.putAll(toCopy.outputChanceLogics);
+        builder.outputChanceLogic.putAll(lastStep.outputChanceLogics);
         builder.tickInputChanceLogic.clear();
-        builder.tickInputChanceLogic.putAll(toCopy.tickInputChanceLogics);
+        builder.tickInputChanceLogic.putAll(firstStep.tickInputChanceLogics);
         builder.tickOutputChanceLogic.clear();
-        builder.tickOutputChanceLogic.putAll(toCopy.tickOutputChanceLogics);
+        builder.tickOutputChanceLogic.putAll(firstStep.tickOutputChanceLogics);
         builder.conditions.clear();
-        builder.conditions.addAll(toCopy.conditions);
-        builder.data = toCopy.data.copy();
-        builder.duration = toCopy.duration;
-        builder.recipeCategory = toCopy.recipeCategory;
+        builder.conditions.addAll(firstStep.conditions);
+        builder.data = firstStep.data.copy();
+        builder.duration = firstStep.duration;
+        builder.recipeCategory = firstStep.recipeCategory;
         builder.perTick = false;
         builder.chance = ChanceLogic.getMaxChancedValue();
         builder.maxChance = ChanceLogic.getMaxChancedValue();
@@ -182,8 +193,8 @@ public class LayeredRecipeHelper {
         return dest;
     }
 
-    private static Layer createStepRecipe(GTRecipe fullRecipe, GTRecipe baseRecipe, LayeredRecipeInfo layeredInfo,
-                                          int recipeStep) {
+    private static GTRecipe createStepRecipe(GTRecipe fullRecipe, GTRecipe baseRecipe, LayeredRecipeInfo layeredInfo,
+                                             int recipeStep) {
         var copy = baseRecipe.copy();
         copy.setId(copy.id.withSuffix("/step" + (recipeStep + 1)));
         for (var entry : copyLayeredInputs(fullRecipe.inputs, layeredInfo.input(), recipeStep).entrySet()) {
@@ -200,13 +211,16 @@ public class LayeredRecipeHelper {
         var layer = layeredInfo.layers().get(recipeStep);
         if (layer.duration() > 0) copy.duration = layer.duration();
 
-        return new Layer(copy, layer.timeout());
+        copy.data = copy.data.copy();
+        copy.data.putInt(KEY_LAYER_STEP, recipeStep);
+        copy.data.putInt(KEY_LAYER_TIMEOUT, layer.timeout());
+        return copy;
     }
 
     private static GTRecipe createBaseRecipe(GTRecipe fullRecipe, LayeredRecipeInfo layeredInfo) {
         var copiedData = fullRecipe.data.copy();
-        copiedData.remove("layered_info");
-        copiedData.putBoolean("is_layer", true);
+        copiedData.remove(KEY_LAYERED_INFO);
+        copiedData.putBoolean(KEY_IS_LAYER, true);
 
         return new GTRecipe(
                 fullRecipe.recipeType, fullRecipe.id,
@@ -226,7 +240,7 @@ public class LayeredRecipeHelper {
     }
 
     public static @Nullable LayeredRecipeInfo parseRecipeInfo(CompoundTag data) {
-        var layeredInfoTag = data.get("layered_info");
+        var layeredInfoTag = data.get(KEY_LAYERED_INFO);
         return LayeredRecipeInfo.CODEC.parse(NbtOps.INSTANCE, layeredInfoTag).result().orElse(null);
     }
 
@@ -234,53 +248,21 @@ public class LayeredRecipeHelper {
         return parseRecipeInfo(recipe.data);
     }
 
-    public static class LayerPayload extends ObjectTypedPayload<Layer> {
-
-        @Override
-        public @Nullable Tag serializeNBT() {
-            return Layer.CODEC.encodeStart(NbtOps.INSTANCE, payload).result().orElseThrow();
-        }
-
-        @Override
-        public void deserializeNBT(Tag tag) {
-            payload = Layer.CODEC.parse(NbtOps.INSTANCE, tag).result().orElseThrow();
-        }
-    }
-
-    @Accessors(chain = true, fluent = true)
-    public static class Layer {
-
-        public static final Codec<GTRecipe> RECIPE_WITH_ID_CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                ResourceLocation.CODEC.fieldOf("id").forGetter(recipe -> recipe.id),
-                Codec.INT.fieldOf("parallels").forGetter(recipe -> recipe.parallels),
-                Codec.INT.fieldOf("subtickParallels").forGetter(recipe -> recipe.subtickParallels),
-                Codec.INT.fieldOf("batchParallels").forGetter(recipe -> recipe.batchParallels),
-                Codec.INT.fieldOf("ocLevel").forGetter(recipe -> recipe.ocLevel),
-                Codec.INT.fieldOf("baseOcLevel").forGetter(recipe -> recipe.baseOcLevel),
-                ((MapCodec.MapCodecCodec<GTRecipe>) GTRecipeSerializer.CODEC).codec().forGetter(recipe -> recipe))
-                .apply(instance, (id, parallels, subtickParallels, batchParallels, ocLevel, baseOcLevel, recipe) -> {
-                    recipe.parallels = parallels;
-                    recipe.subtickParallels = subtickParallels;
-                    recipe.batchParallels = batchParallels;
-                    recipe.ocLevel = ocLevel;
-                    recipe.baseOcLevel = baseOcLevel;
-                    recipe.setId(id);
-                    return recipe;
-                }));
-
-        public static final Codec<Layer> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                RECIPE_WITH_ID_CODEC.fieldOf("recipe").forGetter(Layer::recipe),
-                Codec.INT.fieldOf("timeout").forGetter(Layer::timeout)).apply(instance, Layer::new));
-
-        @Getter
-        private final GTRecipe recipe;
-
-        @Getter
-        private final int timeout;
-
-        public Layer(GTRecipe recipe, int timeout) {
-            this.recipe = recipe;
-            this.timeout = timeout;
-        }
-    }
+    public static final Codec<GTRecipe> RECIPE_WITH_ID_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(recipe -> recipe.id),
+            Codec.INT.fieldOf("parallels").forGetter(recipe -> recipe.parallels),
+            Codec.INT.fieldOf("subtickParallels").forGetter(recipe -> recipe.subtickParallels),
+            Codec.INT.fieldOf("batchParallels").forGetter(recipe -> recipe.batchParallels),
+            Codec.INT.fieldOf("ocLevel").forGetter(recipe -> recipe.ocLevel),
+            Codec.INT.fieldOf("baseOcLevel").forGetter(recipe -> recipe.baseOcLevel),
+            ((MapCodec.MapCodecCodec<GTRecipe>) GTRecipeSerializer.CODEC).codec().forGetter(recipe -> recipe))
+            .apply(instance, (id, parallels, subtickParallels, batchParallels, ocLevel, baseOcLevel, recipe) -> {
+                recipe.parallels = parallels;
+                recipe.subtickParallels = subtickParallels;
+                recipe.batchParallels = batchParallels;
+                recipe.ocLevel = ocLevel;
+                recipe.baseOcLevel = baseOcLevel;
+                recipe.setId(id);
+                return recipe;
+            }));
 }
