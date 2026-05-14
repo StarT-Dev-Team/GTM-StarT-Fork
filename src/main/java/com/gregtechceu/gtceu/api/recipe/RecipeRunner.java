@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.IRecipeCapabilityHolder;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.machine.feature.IVoidable;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroup;
+import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupColor;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
 import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
@@ -16,12 +17,9 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness.BUS_DISTINCT;
 import static com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness.BYPASS_DISTINCT;
@@ -129,108 +127,57 @@ public class RecipeRunner {
             handlers.sort(RecipeHandlerList.COMPARATOR.reversed());
         }
 
-        Map<RecipeHandlerGroup, List<RecipeHandlerList>> handlerGroups = new HashMap<>();
+        var handlerGroups = new HashMap<RecipeHandlerGroup, List<RecipeHandlerList>>();
         for (var handler : handlers) {
             addToRecipeHandlerMap(handler.getGroup(), handler, handlerGroups);
         }
-        // Specifically check distinct handlers first
-        for (RecipeHandlerList handler : handlerGroups.getOrDefault(BUS_DISTINCT, Collections.emptyList())) {
-            // Handle the contents of this handler and also all the bypassed handlers
-            var res = handler.handleRecipe(io, recipe, searchRecipeContents, true);
-            if (!res.isEmpty()) {
-                for (RecipeHandlerList bypassHandler : handlerGroups.getOrDefault(BYPASS_DISTINCT,
-                        Collections.emptyList())) {
-                    res = bypassHandler.handleRecipe(io, recipe, res, true);
-                    if (res.isEmpty()) break;
-                }
-            }
-            if (io == IO.OUT) {
-                if (hasAnyNonVoidingContents(res)) continue;
-            } else if (io == IO.IN) {
-                if (!res.isEmpty()) continue;
-            }
 
-            if (!simulated) {
-                // Actually consume the contents of this handler and also all the bypassed handlers
-                recipeContents = handler.handleRecipe(io, recipe, recipeContents, false);
-                if (!recipeContents.isEmpty()) {
-                    for (RecipeHandlerList bypassHandler : handlerGroups.getOrDefault(BYPASS_DISTINCT,
-                            Collections.emptyList())) {
-                        recipeContents = bypassHandler.handleRecipe(io, recipe, recipeContents, false);
-                        if (recipeContents.isEmpty()) break;
-                    }
-                }
+        // Ordering is first undyed+bypass, then colored, then distinct
+
+        var matched = false;
+
+        var bypassHandlerList = handlerGroups.getOrDefault(BYPASS_DISTINCT, Collections.emptyList());
+        var undyedHandlerList = handlerGroups.getOrDefault(RecipeHandlerGroupColor.UNDYED, Collections.emptyList());
+
+        if (!bypassHandlerList.isEmpty() || !undyedHandlerList.isEmpty()) {
+            matched = handleRecipeHandlerList(undyedHandlerList.stream(), bypassHandlerList.stream());
+        }
+
+        if (!matched) {
+            for (var handlerListEntry : handlerGroups.entrySet()) {
+                var key = handlerListEntry.getKey();
+                if (!(key instanceof RecipeHandlerGroupColor) || key.equals(RecipeHandlerGroupColor.UNDYED)) continue;
+
+                matched = handleRecipeHandlerList(handlerListEntry.getValue().stream(), bypassHandlerList.stream());
+                if (matched) break;
             }
-            recipeContents.clear();
+        }
+        if (!matched) {
+            for (var distinctHandler : handlerGroups.getOrDefault(BUS_DISTINCT, Collections.emptyList())) {
+                matched = handleRecipeHandlerList(Stream.of(distinctHandler), undyedHandlerList.stream(),
+                        bypassHandlerList.stream());
+                if (matched) break;
+            }
+        }
+        if (!matched) {
+            return ActionResult.FAIL_NO_REASON;
+        }
+        if (simulated) {
             return ActionResult.SUCCESS;
         }
 
-        // Check the other groups. For every group, try consuming the ingredients,
-        // see if it succeeds.
-        for (Map.Entry<RecipeHandlerGroup, List<RecipeHandlerList>> handlerListEntry : handlerGroups.entrySet()) {
-            if (handlerListEntry.getKey().equals(BUS_DISTINCT)) continue;
-
-            // List to keep track of the remaining items for this RecipeHandlerGroup
-            Map<RecipeCapability<?>, List<Object>> copiedRecipeContents = searchRecipeContents;
-
-            for (RecipeHandlerList handler : handlerListEntry.getValue()) {
-                copiedRecipeContents = handler.handleRecipe(io, recipe, copiedRecipeContents, true);
-                if (copiedRecipeContents.isEmpty()) {
-                    break;
-                }
-            }
-            // If we're already in the bypass_distinct group, don't check it twice.
-            if (!handlerListEntry.getKey().equals(BYPASS_DISTINCT)) {
-                for (RecipeHandlerList bypassHandler : handlerGroups.getOrDefault(BYPASS_DISTINCT,
-                        Collections.emptyList())) {
-                    copiedRecipeContents = bypassHandler.handleRecipe(io, recipe, copiedRecipeContents, true);
-                    if (copiedRecipeContents.isEmpty()) {
-                        break;
-                    }
-                }
-            }
-
-            if (io == IO.OUT) {
-                if (hasAnyNonVoidingContents(copiedRecipeContents)) continue;
-            } else if (io == IO.IN) {
-                if (!copiedRecipeContents.isEmpty()) continue;
-            }
-
-            if (simulated) return ActionResult.SUCCESS;
-            // Start actually removing items.
-            // Keep track of the remaining items for this RecipeHandlerGroup
-            // First go through the handlers of the group
-            for (RecipeHandlerList handler : handlerListEntry.getValue()) {
-                recipeContents = handler.handleRecipe(io, recipe, recipeContents, false);
-                if (recipeContents.isEmpty()) {
-                    return ActionResult.SUCCESS;
-                }
-            }
-            // Then go through the handlers that bypass the distinctness system and empty those
-            // If we're already in the bypass_distinct group, don't check it twice.
-            if (!handlerListEntry.getKey().equals(BYPASS_DISTINCT)) {
-                for (RecipeHandlerList bypassHandler : handlerGroups.getOrDefault(BYPASS_DISTINCT,
-                        Collections.emptyList())) {
-                    recipeContents = bypassHandler.handleRecipe(io, recipe, recipeContents, false);
-                    if (recipeContents.isEmpty()) {
-                        return ActionResult.SUCCESS;
-                    }
-                }
-            }
-        }
-
         for (var entry : recipeContents.entrySet()) {
-            // void excess real output contents if it can be voided
-            if (!simulated && io == IO.OUT && outputVoid.test(entry.getKey())) {
+            if (io == IO.OUT && outputVoid.test(entry.getKey())) {
+                // void excess real output contents if it can be voided
                 entry.getValue().clear();
-            }
-            if (entry.getValue() != null && !entry.getValue().isEmpty()) {
+            } else if (entry.getValue() != null && !entry.getValue().isEmpty()) {
+                // fail early if there are excess contents
                 return ActionResult.fail(null, entry.getKey(), io);
             }
         }
 
-        // if, post voiding, we don't have stuff, pass instead of fail
-        boolean containsStuff = false;
+        // if, post-voiding, we don't have stuff, pass instead of fail
+        var containsStuff = false;
         for (var entry : recipeContents.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 containsStuff = true;
@@ -242,6 +189,40 @@ public class RecipeRunner {
         }
 
         return ActionResult.FAIL_NO_REASON;
+    }
+
+    @SafeVarargs
+    private boolean handleRecipeHandlerList(Stream<RecipeHandlerList>... streams) {
+        if (streams.length == 0) {
+            return false;
+        }
+        var handlerList = Stream.of(streams).reduce(Stream::concat).get().toList();
+
+        var copiedRecipeContents = searchRecipeContents;
+        for (var handler : handlerList) {
+            copiedRecipeContents = handler.handleRecipe(io, recipe, copiedRecipeContents, true);
+            if (copiedRecipeContents.isEmpty()) {
+                break;
+            }
+        }
+
+        if (io == IO.OUT) {
+            if (hasAnyNonVoidingContents(copiedRecipeContents)) return false;
+        } else if (io == IO.IN) {
+            if (!copiedRecipeContents.isEmpty()) return false;
+        }
+
+        if (!simulated) {
+            // Start actually removing items
+            for (var handler : handlerList) {
+                recipeContents = handler.handleRecipe(io, recipe, recipeContents, false);
+                if (recipeContents.isEmpty()) {
+                    break;
+                }
+            }
+        }
+
+        return true;
     }
 
     private boolean hasAnyNonVoidingContents(Map<RecipeCapability<?>, List<Object>> contents) {
