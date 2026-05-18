@@ -66,6 +66,13 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
         this.actionSource = IActionSource.ofMachine(nodeHolder.getMainNode()::getNode);
     }
 
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (isRemote()) return;
+        getMainNode().setExposedOnSides(exposeAllSides ? EnumSet.allOf(Direction.class) : EnumSet.of(getFrontFacing()));
+    }
+
     protected GridNodeHolder createNodeHolder() {
         return new GridNodeHolder(this);
     }

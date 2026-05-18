@@ -52,6 +52,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.generators.BlockModelBuilder;
+import net.minecraftforge.fml.DistExecutor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.tterrag.registrate.AbstractRegistrate;
@@ -604,24 +605,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         definition.setBlockEntityTypeSupplier(blockEntity::get);
         definition.setMachineSupplier(machine);
 
-        List<String> shiftTooltips = new ArrayList<>();
-        List<String> shiftTooltipDescriptions = new ArrayList<>();
-        Component showCapabilities = Component.translatable("gtceu.tooltip.show_capabilities");
-        Component showCapabilitiesShift = Component.translatable("gtceu.tooltip.show_capabilities_shift");
         Component availableRecipeTypes;
         boolean isAvailableRecipeTypesEmpty;
-
-        if (recipeModifier instanceof RecipeModifierList recipeModifiers) {
-            for (RecipeModifier modifier : recipeModifiers.modifiers()) {
-                String modifierId = modifier.getId();
-
-                if (!GTRecipeModifiers.ignoreModifiers.contains(modifierId) && !modifierId.contains("lambda") &&
-                        !modifierId.contains("proxy")) {
-                    shiftTooltips.add("gtceu.modifier.%s.name".formatted(modifierId));
-                    shiftTooltipDescriptions.add("gtceu.modifier.%s.description".formatted(modifierId));
-                }
-            }
-        }
 
         if (recipeTypes.length > 1 && Arrays.stream(recipeTypes).noneMatch(rt -> "gtceu:dummy".equals(rt.toString()))) {
             Component combined = Arrays.stream(recipeTypes)
@@ -648,18 +633,79 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         }
 
         ResourceLocation id = definition.getId();
+
+        var clientTooltipsHandler = DistExecutor.unsafeRunForDist(() -> this::getClientTooltipsHandler,
+                () -> () -> (itemStack, components) -> {});
+
+        definition.setTooltipBuilder((itemStack, components) -> {
+            components.addAll(tooltips);
+            clientTooltipsHandler.accept(itemStack, components);
+            if (!isAvailableRecipeTypesEmpty) {
+                components.add(availableRecipeTypes);
+            }
+            components.addAll(bottomTooltips);
+            if (tooltipBuilder != null) tooltipBuilder.accept(itemStack, components);
+        });
+
+        definition.setRecipeModifier(recipeModifier);
+        definition.setAlwaysTryModifyRecipe(alwaysTryModifyRecipe);
+        definition.setBeforeWorking(this.beforeWorking);
+        definition.setOnWorking(this.onWorking);
+        definition.setOnWaiting(this.onWaiting);
+        definition.setAfterWorking(this.afterWorking);
+        definition.setRegressWhenWaiting(this.regressWhenWaiting);
+        definition.setAllowCoverOnFront(this.allowCoverOnFront);
+
+        for (GTRecipeType type : recipeTypes) {
+            if (type.getIconSupplier() == null) {
+                type.setIconSupplier(definition::asStack);
+            }
+        }
+        if (appearance == null) {
+            appearance = block::getDefaultState;
+        }
+        if (editableUI != null) {
+            definition.setEditableUI(editableUI);
+        }
+        definition.setAppearance(appearance);
+        definition.setAllowExtendedFacing(allowExtendedFacing);
+        definition.setShape(shape);
+        definition.setDefaultPaintingColor(paintingColor);
+        definition.setRenderXEIPreview(renderMultiblockXEIPreview);
+        definition.setRenderWorldPreview(renderMultiblockWorldPreview);
+        GTRegistries.MACHINES.register(definition.getId(), definition);
+        return value = definition;
+    }
+
+    private BiConsumer<ItemStack, List<Component>> getClientTooltipsHandler() {
+        List<String> shiftTooltips = new ArrayList<>();
+        List<String> shiftTooltipDescriptions = new ArrayList<>();
+
+        Component showCapabilities = Component.translatable("gtceu.tooltip.show_capabilities");
+        Component showCapabilitiesShift = Component.translatable("gtceu.tooltip.show_capabilities_shift");
+
+        if (recipeModifier instanceof RecipeModifierList recipeModifiers) {
+            for (RecipeModifier modifier : recipeModifiers.modifiers()) {
+                String modifierId = modifier.getId();
+
+                if (!GTRecipeModifiers.ignoreModifiers.contains(modifierId) && !modifierId.contains("lambda") &&
+                        !modifierId.contains("proxy")) {
+                    shiftTooltips.add("gtceu.modifier.%s.name".formatted(modifierId));
+                    shiftTooltipDescriptions.add("gtceu.modifier.%s.description".formatted(modifierId));
+                }
+            }
+        }
+
         boolean isShiftToolsEmpty = shiftTooltips.isEmpty();
         boolean isPaginatedTooltipsEmpty = paginatedTooltips.isEmpty();
         int maxModifierPages = shiftTooltips.size();
         int maxPaginatedPages = paginatedTooltips.size();
 
-        definition.setTooltipBuilder((itemStack, components) -> {
+        return (itemStack, components) -> {
             boolean isShiftDown = GTUtil.isShiftDown();
             long windowId = Minecraft.getInstance().getWindow().getWindow();
             long currentTime = System.currentTimeMillis();
             long lastChange = TooltipPageManager.getLastChangeTime(id);
-
-            components.addAll(tooltips);
 
             if (!isShiftToolsEmpty && isShiftDown) {
                 boolean nextPressed = InputConstants.isKeyDown(windowId,
@@ -738,43 +784,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
                     components.add(showCapabilities);
                 }
             }
-
-            if (!isAvailableRecipeTypesEmpty) {
-                components.add(availableRecipeTypes);
-            }
-
-            components.addAll(bottomTooltips);
-
-            if (tooltipBuilder != null) tooltipBuilder.accept(itemStack, components);
-        });
-        definition.setRecipeModifier(recipeModifier);
-        definition.setAlwaysTryModifyRecipe(alwaysTryModifyRecipe);
-        definition.setBeforeWorking(this.beforeWorking);
-        definition.setOnWorking(this.onWorking);
-        definition.setOnWaiting(this.onWaiting);
-        definition.setAfterWorking(this.afterWorking);
-        definition.setRegressWhenWaiting(this.regressWhenWaiting);
-        definition.setAllowCoverOnFront(this.allowCoverOnFront);
-
-        for (GTRecipeType type : recipeTypes) {
-            if (type.getIconSupplier() == null) {
-                type.setIconSupplier(definition::asStack);
-            }
-        }
-        if (appearance == null) {
-            appearance = block::getDefaultState;
-        }
-        if (editableUI != null) {
-            definition.setEditableUI(editableUI);
-        }
-        definition.setAppearance(appearance);
-        definition.setAllowExtendedFacing(allowExtendedFacing);
-        definition.setShape(shape);
-        definition.setDefaultPaintingColor(paintingColor);
-        definition.setRenderXEIPreview(renderMultiblockXEIPreview);
-        definition.setRenderWorldPreview(renderMultiblockWorldPreview);
-        GTRegistries.MACHINES.register(definition.getId(), definition);
-        return value = definition;
+        };
     }
 
     @FunctionalInterface

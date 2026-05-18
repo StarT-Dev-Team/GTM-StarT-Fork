@@ -25,7 +25,7 @@ public class AntidoteRecipes {
                 .inputFluids(Ethenone.getFluid(1000))
                 .inputFluids(AceticAcid.getFluid(1000))
                 .outputFluids(AceticAnhydride.getFluid(1000))
-                .duration(960).EUt(VA[LV]).save(provider);
+                .duration(200).EUt(VH[LV]).save(provider);
 
         CHEMICAL_RECIPES.recipeBuilder("aminophenol")
                 .inputFluids(Phenol.getFluid(1000))
@@ -72,7 +72,7 @@ public class AntidoteRecipes {
                 .inputFluids(Water.getFluid(1000))
                 .outputFluids(FormicAcid.getFluid(1000))
                 .outputFluids(Oxygen.getFluid(1000))
-                .duration(100).EUt(VA[LV]).save(provider);
+                .duration(960).EUt(VA[LV]).save(provider);
 
         CHEMICAL_RECIPES.recipeBuilder("ammonium_formate")
                 .inputFluids(Ammonia.getFluid(1000))

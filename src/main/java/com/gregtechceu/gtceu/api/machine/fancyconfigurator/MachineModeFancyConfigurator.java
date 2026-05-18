@@ -64,10 +64,17 @@ public class MachineModeFancyConfigurator implements IFancyUIProvider {
     }
 
     private void setActiveRecipeTypeAndUpdateTickSubs(int activeRecipeType) {
-        boolean needUpdateTickSubs = !machine.keepSubscribing() && activeRecipeType != machine.getActiveRecipeType();
-        machine.setActiveRecipeType(activeRecipeType);
-        if (needUpdateTickSubs) {
-            machine.getRecipeLogic().updateTickSubscription();
+        boolean isNewType = activeRecipeType != machine.getActiveRecipeType();
+
+        if (isNewType) {
+            boolean needUpdateTickSubs = !machine.keepSubscribing();
+
+            machine.setActiveRecipeType(activeRecipeType);
+            machine.getRecipeLogic().markLastRecipeDirty();
+
+            if (needUpdateTickSubs) {
+                machine.getRecipeLogic().updateTickSubscription();
+            }
         }
     }
 

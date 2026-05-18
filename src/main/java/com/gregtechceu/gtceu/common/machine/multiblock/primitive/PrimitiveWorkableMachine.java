@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.common.machine.multiblock.primitive;
 
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.IFilteredHandler;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
@@ -52,21 +53,25 @@ public class PrimitiveWorkableMachine extends WorkableMultiblockMachine
     }
 
     protected NotifiableItemStackHandler createImportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN);
+        return new NotifiableItemStackHandler(this, getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN)
+                .basePriority(IFilteredHandler.LOW);
     }
 
     protected NotifiableItemStackHandler createExportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT);
+        return new NotifiableItemStackHandler(this, getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT)
+                .basePriority(IFilteredHandler.LOW);
     }
 
     protected NotifiableFluidTank createImportFluidHandler(Object... args) {
         return new NotifiableFluidTank(this, getRecipeType().getMaxInputs(FluidRecipeCapability.CAP),
-                32 * FluidType.BUCKET_VOLUME, IO.IN);
+                32 * FluidType.BUCKET_VOLUME, IO.IN)
+                .basePriority(IFilteredHandler.LOW);
     }
 
     protected NotifiableFluidTank createExportFluidHandler(Object... args) {
         return new NotifiableFluidTank(this, getRecipeType().getMaxOutputs(FluidRecipeCapability.CAP),
-                32 * FluidType.BUCKET_VOLUME, IO.OUT);
+                32 * FluidType.BUCKET_VOLUME, IO.OUT)
+                .basePriority(IFilteredHandler.LOW);
     }
 
     @Override

@@ -91,10 +91,21 @@ public class MachineModeCover extends CoverBehavior {
         int modeIndex = signalStrength - 1;
 
         if (modeIndex >= 0 && modeIndex < recipeTypes.length) {
-            machine.setActiveRecipeType(modeIndex);
-            machine.getRecipeLogic().markLastRecipeDirty();
+            boolean isNewType = modeIndex != machine.getActiveRecipeType();
 
-            this.selectedRecipeType = modeIndex;
+            if (isNewType) {
+                boolean needUpdateTickSubs = !machine.keepSubscribing();
+
+                machine.setActiveRecipeType(modeIndex);
+                machine.getRecipeLogic().markLastRecipeDirty();
+
+                this.selectedRecipeType = modeIndex;
+
+                if (needUpdateTickSubs) {
+                    machine.getRecipeLogic().updateTickSubscription();
+                }
+            }
+
         }
     }
 }

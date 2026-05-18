@@ -83,7 +83,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_MACERATION_TOWER = REGISTRATE
             .multiblock("large_maceration_tower", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Maceration Tower")
+            .langValue("Large Maceration Tower [LMT]")
             .rotationState(RotationState.ALL)
             .recipeTypes(MACERATOR_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -107,7 +107,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_CHEMICAL_BATH = REGISTRATE
             .multiblock("large_chemical_bath", LargeChemicalBathMachine::new)
-            .langValue("Large Chemical Bath")
+            .langValue("Large Chemical Bath [LCB]")
             .rotationState(RotationState.ALL)
             .recipeTypes(CHEMICAL_BATH_RECIPES, ORE_WASHER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -136,7 +136,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_CENTRIFUGE = REGISTRATE
             .multiblock("large_centrifuge", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Centrifugal Unit")
+            .langValue("Large Centrifugal Unit [LCU]")
             .rotationState(RotationState.ALL)
             .recipeTypes(CENTRIFUGE_RECIPES, THERMAL_CENTRIFUGE_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -161,7 +161,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_MIXER = REGISTRATE
             .multiblock("large_mixer", LargeMixerMachine::new)
-            .langValue("Large Mixing Vessel")
+            .langValue("Large Mixing Vessel [LMV]")
             .rotationState(RotationState.ALL)
             .recipeTypes(MIXER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -191,7 +191,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_ELECTROLYZER = REGISTRATE
             .multiblock("large_electrolyzer", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Electrolysis Chamber")
+            .langValue("Large Electrolysis Chamber [LEC]")
             .rotationState(RotationState.ALL)
             .recipeTypes(ELECTROLYZER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -213,7 +213,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_ELECTROMAGNET = REGISTRATE
             .multiblock("large_electromagnet", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Electromagnet")
+            .langValue("Large Electromagnet [LE]")
             .rotationState(RotationState.ALL)
             .recipeTypes(ELECTROMAGNETIC_SEPARATOR_RECIPES, POLARIZER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -235,7 +235,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_PACKER = REGISTRATE
             .multiblock("large_packer", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Packaging Machine")
+            .langValue("Large Packaging Machine [LPM]")
             .rotationState(RotationState.ALL)
             .recipeTypes(GTRecipeTypes.PACKER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -258,7 +258,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_ASSEMBLER = REGISTRATE
             .multiblock("large_assembler", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Assembling Factory")
+            .langValue("Large Assembling Factory [LAF]")
             .tooltips(Component.translatable("gtceu.multiblock.exact_hatch_1.tooltip"))
             .conditionalTooltip(GTMachineUtils.defaultEnvironmentRequirement(),
                     ConfigHolder.INSTANCE.gameplay.environmentalHazards)
@@ -287,7 +287,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_CIRCUIT_ASSEMBLER = REGISTRATE
             .multiblock("large_circuit_assembler", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Circuit Assembling Facility")
+            .langValue("Large Circuit Assembling Facility [LCAF]")
             .tooltips(Component.translatable("gtceu.multiblock.exact_hatch_1.tooltip"))
             .conditionalTooltip(GTMachineUtils.defaultEnvironmentRequirement(),
                     ConfigHolder.INSTANCE.gameplay.environmentalHazards)
@@ -320,7 +320,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_ARC_SMELTER = REGISTRATE
             .multiblock("large_arc_smelter", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Arc Smelter")
+            .langValue("Large Arc Smelter [LAS]")
             .rotationState(RotationState.ALL)
             .recipeTypes(ARC_FURNACE_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -346,7 +346,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_ENGRAVING_LASER = REGISTRATE
             .multiblock("large_engraving_laser", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Engraving Laser")
+            .langValue("Large Engraving Laser [LEL]")
             .conditionalTooltip(GTMachineUtils.defaultEnvironmentRequirement(),
                     ConfigHolder.INSTANCE.gameplay.environmentalHazards)
             .rotationState(RotationState.ALL)
@@ -375,7 +375,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_SIFTING_FUNNEL = REGISTRATE
             .multiblock("large_sifting_funnel", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Sifting Funnel")
+            .langValue("Large Sifting Funnel [LSF]")
             .rotationState(RotationState.ALL)
             .recipeTypes(SIFTER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -400,10 +400,10 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition BLAST_ALLOY_SMELTER = REGISTRATE
             .multiblock("alloy_blast_smelter", CoilWorkableElectricMultiblockMachine::new)
-            .langValue("Alloy Blast Smelter")
+            .langValue("Alloy Blast Smelter [ABS]")
             .rotationState(RotationState.ALL)
             .recipeTypes(ALLOY_BLAST_RECIPES)
-            .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, EBF_OVERCLOCK, BATCH_MODE)
+            .recipeModifiers(EBF_OVERCLOCK, BATCH_MODE)
             .appearanceBlock(CASING_HIGH_TEMPERATURE_SMELTING)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("#XXX#", "#CCC#", "#GGG#", "#CCC#", "#XXX#")
@@ -463,7 +463,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_AUTOCLAVE = REGISTRATE
             .multiblock("large_autoclave", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Crystallization Chamber")
+            .langValue("Large Crystallization Chamber [LCC]")
             .rotationState(RotationState.ALL)
             .recipeTypes(AUTOCLAVE_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -487,7 +487,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_MATERIAL_PRESS = REGISTRATE
             .multiblock("large_material_press", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Material Press")
+            .langValue("Large Material Press [LMP]")
             .rotationState(RotationState.ALL)
             .recipeTypes(BENDER_RECIPES, COMPRESSOR_RECIPES, FORGE_HAMMER_RECIPES, FORMING_PRESS_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -510,7 +510,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_BREWER = REGISTRATE
             .multiblock("large_brewer", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Brewing Vat")
+            .langValue("Large Brewing Vat [LBV]")
             .rotationState(RotationState.ALL)
             .recipeTypes(BREWING_RECIPES, FERMENTING_RECIPES, FLUID_HEATER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -537,7 +537,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_CUTTER = REGISTRATE
             .multiblock("large_cutter", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Cutting Saw")
+            .langValue("Large Cutting Saw [LCS]")
             .rotationState(RotationState.ALL)
             .recipeTypes(CUTTER_RECIPES, LATHE_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -562,7 +562,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_DISTILLERY = REGISTRATE
             .multiblock("large_distillery", DistillationTowerMachine::new)
-            .langValue("Large Fractionating Distillery")
+            .langValue("Large Fractionating Distillery [LFD]")
             .rotationState(RotationState.NON_Y_AXIS)
             .recipeTypes(DISTILLATION_RECIPES, DISTILLERY_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -650,7 +650,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_EXTRACTOR = REGISTRATE
             .multiblock("large_extractor", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Extraction Machine")
+            .langValue("Large Extraction Machine [LExM]")
             .rotationState(RotationState.ALL)
             .recipeTypes(EXTRACTOR_RECIPES, CANNER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -672,7 +672,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_EXTRUDER = REGISTRATE
             .multiblock("large_extruder", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Extrusion Machine")
+            .langValue("Large Extrusion Machine [LEM]")
             .rotationState(RotationState.ALL)
             .recipeTypes(EXTRUDER_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -698,7 +698,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_SOLIDIFIER = REGISTRATE
             .multiblock("large_solidifier", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Solidification Array")
+            .langValue("Large Solidification Array [LSA]")
             .rotationState(RotationState.ALL)
             .recipeTypes(FLUID_SOLIDFICATION_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -723,7 +723,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition LARGE_WIREMILL = REGISTRATE
             .multiblock("large_wiremill", WorkableElectricMultiblockMachine::new)
-            .langValue("Large Wire Factory")
+            .langValue("Large Wire Factory [LWF]")
             .rotationState(RotationState.ALL)
             .recipeTypes(WIREMILL_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)
@@ -746,7 +746,7 @@ public class GCYMMachines {
     // spotless:off
     public final static MultiblockMachineDefinition MEGA_BLAST_FURNACE = REGISTRATE
             .multiblock("mega_blast_furnace", CoilWorkableElectricMultiblockMachine::new)
-            .langValue("Rotary Hearth Furnace")
+            .langValue("Rotary Hearth Furnace [RHF]")
             .rotationState(RotationState.ALL)
             .recipeTypes(BLAST_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, EBF_OVERCLOCK, BATCH_MODE)
@@ -835,7 +835,7 @@ public class GCYMMachines {
 
     public final static MultiblockMachineDefinition MEGA_VACUUM_FREEZER = REGISTRATE
             .multiblock("mega_vacuum_freezer", WorkableElectricMultiblockMachine::new)
-            .langValue("Bulk Blast Chiller")
+            .langValue("Bulk Blast Chiller [BBC]")
             .rotationState(RotationState.ALL)
             .recipeTypes(VACUUM_RECIPES)
             .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH, OC_NON_PERFECT_SUBTICK, BATCH_MODE)

@@ -59,7 +59,7 @@ public class PumpCover extends CoverBehavior implements IIOCover, IUICover, ICon
             CoverBehavior.MANAGED_FIELD_HOLDER);
 
     // .5b 2b 8b
-    public static final Int2IntFunction PUMP_SCALING = tier -> 16 * (int) Math.pow(4, Math.min(tier, GTValues.IV));
+    public static final Int2IntFunction PUMP_SCALING = tier -> 16 * (int) Math.pow(4, Math.min(tier, GTValues.UV));
 
     public final int tier;
     public final int maxFluidTransferRate;

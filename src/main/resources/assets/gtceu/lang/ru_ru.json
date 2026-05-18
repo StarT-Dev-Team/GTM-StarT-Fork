@@ -2123,7 +2123,7 @@
     "gtceu.recipe.cleanroom_sterile.display_name": "Стерильная чистая комната",
     "gtceu.recipe.dimensions": "Измерение: %s",
     "gtceu.recipe.duration": "Длительность: %s сек",
-    "gtceu.recipe.eu": "Потребление: %s A @ %s",
+    "gtceu.recipe.eu": "Потребление: %s EU/t",
     "gtceu.recipe.eu_inverted": "Производство: %s A @ %s",
     "gtceu.recipe.eu_to_start": "EU для запуска: %sEU%s",
     "gtceu.recipe.explosive": "Взрывчатка: %s",

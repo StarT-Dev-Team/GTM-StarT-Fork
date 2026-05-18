@@ -2,8 +2,8 @@ package com.gregtechceu.gtceu.integration.jade.provider;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
+import com.gregtechceu.gtceu.api.capability.IOpticalComputationReceiver;
 import com.gregtechceu.gtceu.api.capability.IWorkable;
-import com.gregtechceu.gtceu.common.machine.multiblock.electric.research.ResearchStationMachine;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.Util;
@@ -39,7 +39,7 @@ public class WorkableBlockProvider extends CapabilityBlockProvider<IWorkable> {
         data.putInt("Progress", capability.getProgress());
         data.putInt("MaxProgress", capability.getMaxProgress());
         // Check if IWorkable is a research station and add flag to data
-        if (capability instanceof ResearchStationMachine rsm) {
+        if (capability instanceof IOpticalComputationReceiver) {
             data.putBoolean("Research", true);
         }
     }

@@ -3708,7 +3708,7 @@
     "gtceu.recipe.duration": "耗时：%s秒",
     "gtceu.recipe.environmental_hazard": "§c区域内必须有%s",
     "gtceu.recipe.environmental_hazard.reverse": "§c区域内必须没有%s",
-    "gtceu.recipe.eu": "功耗：%sA @ %s",
+    "gtceu.recipe.eu": "功耗：%s EU/t",
     "gtceu.recipe.eu.total": "%s EU/t",
     "gtceu.recipe.eu_inverted": "产能功率：%sA @ %s",
     "gtceu.recipe.eu_to_start": "启动耗能：%sEU%s",

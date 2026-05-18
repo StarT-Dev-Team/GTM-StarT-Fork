@@ -389,7 +389,7 @@ public class MultiblockDisplayText {
         }
 
         public Builder addBatchModeLine(boolean batchEnabled, int batchAmount) {
-            if (batchEnabled && batchAmount > 0) {
+            if (batchEnabled && batchAmount > 1) {
                 Component runs = Component.literal(FormattingUtil.formatNumbers(batchAmount))
                         .withStyle(ChatFormatting.DARK_PURPLE);
                 String key = "gtceu.multiblock.batch_enabled";
@@ -738,10 +738,10 @@ public class MultiblockDisplayText {
                 return this;
 
             var step = logic.getLayeredRecipeLayerIndex();
-            var totalDuration = (int) layers.stream().map(l -> l.recipe().duration).reduce(0, Integer::sum);
+            var totalDuration = (int) layers.stream().map(l -> l.duration).reduce(0, Integer::sum);
             var totalProgress = logic.getProgress() + layers.stream()
                     .limit(step)
-                    .map(l -> l.recipe().duration).reduce(0, Integer::sum);
+                    .map(l -> l.duration).reduce(0, Integer::sum);
 
             var progressPercent = totalDuration == 0 ? 0.0 : totalProgress / (totalDuration * 1.0);
 
@@ -806,7 +806,7 @@ public class MultiblockDisplayText {
             textList.add(Component.literal(""));
             textList.add(Component.translatable("gtceu.multiblock.layered.final_step_outputs"));
 
-            var recipe = layers.get(layers.size() - 1).recipe();
+            var recipe = layers.get(layers.size() - 1);
             var itemOutputs = recipe.getOutputContents(ItemRecipeCapability.CAP);
             var fluidOutputs = recipe.getOutputContents(FluidRecipeCapability.CAP);
 

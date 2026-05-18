@@ -19,6 +19,7 @@ public class RecipeLogicLang {
         provider.add("gtceu.recipe_logic.condition_fails", "Condition Fails");
         provider.add("gtceu.recipe_logic.no_contents", "Recipe has no Contents");
         provider.add("gtceu.recipe_logic.no_capabilities", "Machine has no Capabilities");
+        provider.add("gtceu.recipe_logic.layered_inputs", "Layer inputs aren't the only inputs in the machine.");
     }
 
     private static void initModifierLang(RegistrateLangProvider provider) {

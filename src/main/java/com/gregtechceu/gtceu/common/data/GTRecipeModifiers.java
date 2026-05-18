@@ -20,6 +20,7 @@ import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.common.capability.EnvironmentalHazardSavedData;
+import com.gregtechceu.gtceu.common.machine.multiblock.electric.FusionReactorMachine;
 import com.gregtechceu.gtceu.common.recipe.condition.EUToStartCondition;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
@@ -106,6 +107,8 @@ public class GTRecipeModifiers {
             GTRecipeModifiers::chemicalReactorOverclock);
     public static final RecipeModifier CONSUME_EU_TO_START = new IdentifiedRecipeModifier("consume_eu_to_start",
             GTRecipeModifiers::consumeEuToStart);
+    public static final RecipeModifier FUSION_OVERCLOCK = new IdentifiedRecipeModifier("fusion_overclock",
+            FusionReactorMachine::recipeModifier);
 
     /**
      * Recipe Modifier for <b>Parallel Multiblock Machines</b> - can be used as a valid {@link RecipeModifier}
@@ -173,8 +176,10 @@ public class GTRecipeModifiers {
         var oc = OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, recipe,
                 coilMachine.getOverclockVoltage());
         if (coilMachine.getCoilTier() > 0) {
+            var tier = coilMachine.getCoilTier();
+            var discount = tier > 9 ? (0.9 + (tier - 9) * 0.025) : tier * 0.1;
             var coilModifier = ModifierFunction.builder()
-                    .eutMultiplier(1.0 - coilMachine.getCoilTier() * 0.1)
+                    .eutMultiplier(Math.max(0.0001, 1.0 - discount))
                     .build();
             oc = oc.andThen(coilModifier);
         }
@@ -280,7 +285,7 @@ public class GTRecipeModifiers {
         if (parallels == 0) return ModifierFunction.NULL;
 
         int duration = (int) (128 * 2.0 * parallels / maxParallel);
-        long eut = (long) (4 * maxParallel / (8.0 * coilMachine.getCoilType().getEnergyDiscount()));
+        long eut = (long) (4L * maxParallel / (8.0 * coilMachine.getCoilType().getEnergyDiscount()));
         ModifierFunction baseModifier = r -> {
             var copy = r.copy();
             EURecipeCapability.putEUContent(copy.tickInputs, new EnergyStack(Math.max(1, eut)));
@@ -288,14 +293,21 @@ public class GTRecipeModifiers {
             return copy;
         };
 
-        GTRecipe copy = baseModifier.apply(recipe);
-        var ocModifier = NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, copy, coilMachine.getOverclockVoltage());
+        var recipeCopy = baseModifier.apply(recipe);
+        assert recipeCopy != null;
+        var ocModifier = NON_PERFECT_OVERCLOCK.getModifier(machine, recipeCopy, coilMachine.getOverclockVoltage());
+
         var parallelModifier = ModifierFunction.builder()
                 .modifyAllContents(ContentModifier.multiplier(parallels))
                 .parallels(parallels)
                 .build();
 
-        return baseModifier.andThen(ocModifier).andThen(parallelModifier);
+        // apply subtick the overclocks after
+        var recipeCopy2 = baseModifier.andThen(ocModifier).andThen(parallelModifier).apply(recipe);
+        assert recipeCopy2 != null;
+        var ocSubtickModifier = NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, recipeCopy2,
+                coilMachine.getOverclockVoltage());
+        return baseModifier.andThen(ocModifier).andThen(parallelModifier).andThen(ocSubtickModifier);
     }
 
     public static @NotNull ModifierFunction chemicalReactorOverclock(@NotNull MetaMachine machine,

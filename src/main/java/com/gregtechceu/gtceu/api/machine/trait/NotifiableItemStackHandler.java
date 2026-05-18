@@ -51,14 +51,24 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
     @Setter
     private boolean shouldSearchContent = true;
     private Boolean isEmpty;
+    @Accessors(fluent = true)
+    @Getter
+    @Setter
+    private int basePriority;
 
     public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO,
-                                      IntFunction<CustomItemStackHandler> storageFactory) {
+                                      IntFunction<CustomItemStackHandler> storageFactory, int basePriority) {
         super(machine);
         this.handlerIO = handlerIO;
         this.storage = storageFactory.apply(slots);
         this.capabilityIO = capabilityIO;
         this.storage.setOnContentsChanged(this::onContentsChanged);
+        this.basePriority = basePriority;
+    }
+
+    public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO,
+                                      IntFunction<CustomItemStackHandler> storageFactory) {
+        this(machine, slots, handlerIO, capabilityIO, storageFactory, NORMAL);
     }
 
     public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO) {
@@ -271,6 +281,11 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
             GTTransferUtils.getAdjacentItemHandler(level, pos, facing)
                     .ifPresent(adj -> GTTransferUtils.transferItemsFiltered(adj, this, filter));
         }
+    }
+
+    @Override
+    public int getPriority() {
+        return basePriority;
     }
 
     //////////////////////////////////////

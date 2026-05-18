@@ -620,7 +620,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
 
     @Override
     public boolean showFancyTooltip() {
-        return waitingReason != null || !failureReasons.isEmpty();
+        return (isWaiting() && waitingReason != null) || (isIdle() && !failureReasons.isEmpty());
     }
 
     protected Map<RecipeCapability<?>, Object2IntMap<?>> makeChanceCaches() {

@@ -197,12 +197,8 @@ public interface ModifierFunction {
                     EnergyStack eut = EURecipeCapability.CAP.copyWithModifier(preEUt.stack(), eutModifier);
                     EURecipeCapability.putEUContent(preEUt.isInput() ? copied.tickInputs : copied.tickOutputs, eut);
                 }
-                Optional.ofNullable(LayeredRecipeHelper.getLayeredSteps(copied)).ifPresent(steps -> {
-                    LayeredRecipeHelper.setLayeredSteps(copied, steps.stream()
-                            .map((layer) -> new LayeredRecipeHelper.Layer(build().apply(layer.recipe()),
-                                    layer.timeout()))
-                            .toList());
-                });
+                Optional.ofNullable(LayeredRecipeHelper.getLayeredSteps(copied)).ifPresent(steps -> LayeredRecipeHelper
+                        .setLayeredSteps(copied, steps.stream().map((layer) -> build().apply(layer)).toList()));
                 return copied;
             };
         }

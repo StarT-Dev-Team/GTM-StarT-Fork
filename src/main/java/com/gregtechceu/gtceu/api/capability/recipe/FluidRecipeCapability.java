@@ -2,7 +2,7 @@ package com.gregtechceu.gtceu.api.capability.recipe;
 
 import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroup;
-import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness;
+import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupColor;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
@@ -43,7 +43,10 @@ import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness.BUS_DISTINCT;
+import static com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness.BYPASS_DISTINCT;
 import static com.gregtechceu.gtceu.api.recipe.RecipeHelper.addToRecipeHandlerMap;
 
 public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
@@ -284,45 +287,49 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
             addToRecipeHandlerMap(handler.getGroup(), handler, handlerGroups);
         }
 
-        List<RecipeHandlerList> distinctHandlerLists = handlerGroups.getOrDefault(
-                RecipeHandlerGroupDistinctness.BUS_DISTINCT,
-                Collections.emptyList());
-        List<Object2LongMap<FluidStack>> invs = new ArrayList<>(distinctHandlerLists.size() + 1);
-        // Handle distinct groups first, adding an inventory based on their contents individually.
-        for (RecipeHandlerList handlerList : distinctHandlerLists) {
-            var handlers = handlerList.getCapability(FluidRecipeCapability.CAP);
-            Object2LongOpenHashMap<FluidStack> distinctInv = new Object2LongOpenHashMap<>();
+        var bypassHandlerList = handlerGroups.getOrDefault(BYPASS_DISTINCT, Collections.emptyList());
+        var undyedHandlerList = handlerGroups.getOrDefault(RecipeHandlerGroupColor.UNDYED, Collections.emptyList());
 
-            for (IRecipeHandler<?> handler : handlers) {
-                for (var content : handler.getContents()) {
-                    if (content instanceof FluidStack stack && !stack.isEmpty()) {
-                        distinctInv.addTo(stack, stack.getAmount());
-                    }
-                }
-            }
-            if (!distinctInv.isEmpty()) invs.add(distinctInv);
+        var invs = new ArrayList<Object2LongMap<FluidStack>>(handlerGroups.size() + 1);
+
+        if (!bypassHandlerList.isEmpty() || !undyedHandlerList.isEmpty()) {
+            var inv = getRecipeHandlerInputContents(undyedHandlerList.stream(), bypassHandlerList.stream());
+            if (!inv.isEmpty()) invs.add(inv);
         }
 
-        // Then handle other groups. The logic of undyed hatches belonging to
-        // everything has already been taken care of by addToRecipeMap()
-        for (Map.Entry<RecipeHandlerGroup, List<RecipeHandlerList>> handlerListEntry : handlerGroups.entrySet()) {
-            if (handlerListEntry.getKey() == RecipeHandlerGroupDistinctness.BUS_DISTINCT) continue;
+        for (var handlerListEntry : handlerGroups.entrySet()) {
+            var key = handlerListEntry.getKey();
+            if (!(key instanceof RecipeHandlerGroupColor) || key.equals(RecipeHandlerGroupColor.UNDYED)) continue;
 
-            Object2LongOpenHashMap<FluidStack> inventory = new Object2LongOpenHashMap<>();
-            for (RecipeHandlerList handlerList : handlerListEntry.getValue()) {
-                var handlers = handlerList.getCapability(FluidRecipeCapability.CAP);
-                for (var handler : handlers) {
-                    for (var content : handler.getContents()) {
-                        if (content instanceof FluidStack stack && !stack.isEmpty()) {
-                            inventory.addTo(stack, stack.getAmount());
-                        }
-                    }
-                }
-            }
-            if (!inventory.isEmpty()) invs.add(inventory);
+            var inv = getRecipeHandlerInputContents(handlerListEntry.getValue().stream(), bypassHandlerList.stream());
+            if (!inv.isEmpty()) invs.add(inv);
+        }
+
+        for (var distinctHandler : handlerGroups.getOrDefault(BUS_DISTINCT, Collections.emptyList())) {
+            var inv = getRecipeHandlerInputContents(Stream.of(distinctHandler), undyedHandlerList.stream(),
+                    bypassHandlerList.stream());
+            if (!inv.isEmpty()) invs.add(inv);
         }
 
         return invs;
+    }
+
+    @SafeVarargs
+    private static Object2LongOpenHashMap<FluidStack> getRecipeHandlerInputContents(Stream<RecipeHandlerList>... streams) {
+        var inv = new Object2LongOpenHashMap<FluidStack>();
+
+        if (streams.length == 0) return inv;
+
+        Stream.of(streams).reduce(Stream::concat).get().forEach(handlerList -> {
+            for (var handler : handlerList.getCapability(FluidRecipeCapability.CAP)) {
+                for (var content : handler.getContents()) {
+                    if (content instanceof FluidStack stack && !stack.isEmpty()) {
+                        inv.addTo(stack, stack.getAmount());
+                    }
+                }
+            }
+        });
+        return inv;
     }
 
     @Override
