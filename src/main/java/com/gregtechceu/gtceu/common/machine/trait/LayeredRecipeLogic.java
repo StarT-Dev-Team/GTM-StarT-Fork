@@ -41,6 +41,11 @@ public class LayeredRecipeLogic extends RecipeLogic {
     @Getter
     private int layeredRecipeLayerIndex = -1;
 
+    @Nullable
+    @Getter
+    @Persisted
+    protected GTRecipe lastOriginLayeredRecipe;
+
     public LayeredRecipeLogic(IRecipeLogicMachine machine) {
         super(machine);
     }
@@ -106,6 +111,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
         super.resetRecipeLogic();
         layeredRecipeLayerIndex = -1;
         layeredRecipe = null;
+        lastOriginLayeredRecipe = null;
     }
 
     @Override
@@ -135,12 +141,17 @@ public class LayeredRecipeLogic extends RecipeLogic {
         setStatus(Status.IDLE);
         consecutiveRecipes = prevConsecutiveRecipes + 1;
         if (finishedLastStep) {
-            // try the first step again
-            var firstStepRecipe = layeredRecipe.get(0);
-            var recipeMatch = checkRecipe(firstStepRecipe);
-            if (recipeMatch.isSuccess()) {
+            // try the first step again, but attempt to modify
+            GTRecipe retryRecipe = null;
+            if (lastOriginLayeredRecipe != null && machine.alwaysTryModifyRecipe()) {
+                retryRecipe = machine.fullModifyRecipe(lastOriginLayeredRecipe);
+            } else if (layeredRecipe != null) {
+                retryRecipe = layeredRecipe.get(0);
+            }
+
+            if (retryRecipe != null && checkRecipe(retryRecipe).isSuccess()) {
                 layeredRecipeLayerIndex = 0;
-                setupRecipe(firstStepRecipe);
+                setupRecipe(retryRecipe);
             } else {
                 layeredRecipe = null;
                 layeredRecipeLayerIndex = -1;
@@ -195,12 +206,13 @@ public class LayeredRecipeLogic extends RecipeLogic {
         if (modified != null) {
             var recipeMatch = checkRecipe(modified);
             if (recipeMatch.isSuccess()) {
-                // TODO: fail the match if there are other inputs in the machine
                 setupRecipe(modified);
             }
 
             if (lastRecipe != null && getStatus() == Status.WORKING) {
-                lastOriginRecipe = null; // custom handling
+                // only store the lastOriginRecipe if it's an initial recipe, not a subsequent layer
+                if (!isAlreadyModified) lastOriginLayeredRecipe = match;
+                lastOriginRecipe = null;
                 lastFailedMatches = null;
                 return true;
             }
