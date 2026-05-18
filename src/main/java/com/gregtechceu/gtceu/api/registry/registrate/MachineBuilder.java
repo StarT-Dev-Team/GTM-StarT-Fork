@@ -20,15 +20,21 @@ import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifierList;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.registry.registrate.provider.GTBlockstateProvider;
+import com.gregtechceu.gtceu.client.TooltipPageManager;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 import com.gregtechceu.gtceu.client.renderer.BlockEntityWithBERModelRenderer;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.data.models.GTMachineModels;
 import com.gregtechceu.gtceu.config.ConfigHolder;
+import com.gregtechceu.gtceu.data.lang.LangHandler;
 import com.gregtechceu.gtceu.data.model.builder.MachineModelBuilder;
+import com.gregtechceu.gtceu.utils.GTUtil;
+import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -46,7 +52,9 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.generators.BlockModelBuilder;
+import net.minecraftforge.fml.DistExecutor;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.builders.ItemBuilder;
@@ -73,6 +81,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -146,6 +155,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
             GTValues.VC[tier] : tintIndex == 1 ? paintingColor : -1);
     private PartAbility[] abilities = new PartAbility[0];
     private final List<Component> tooltips = new ArrayList<>();
+    private final List<List<Component>> paginatedTooltips = new ArrayList<>();
+    private final List<Component> bottomTooltips = new ArrayList<>();
     @Nullable
     @Setter
     private BiConsumer<ItemStack, List<Component>> tooltipBuilder;
@@ -377,6 +388,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return this;
     }
 
+    @HideFromJS
     public MachineBuilder<DEFINITION> tooltips(@Nullable Component... components) {
         return tooltips(Arrays.asList(components));
     }
@@ -393,6 +405,28 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
     public MachineBuilder<DEFINITION> conditionalTooltip(Component component, boolean condition) {
         if (condition)
             tooltips.add(component);
+        return this;
+    }
+
+    public MachineBuilder<DEFINITION> paginatedTooltips(List<? extends List<? extends Component>> pages) {
+        for (var page : pages) {
+            if (page != null) {
+                paginatedTooltips
+                        .add(page.stream().filter(Objects::nonNull).collect(Collectors.toCollection(ArrayList::new)));
+            }
+        }
+
+        return this;
+    }
+
+    @HideFromJS
+    public MachineBuilder<DEFINITION> bottomTooltips(@Nullable Component... components) {
+        return bottomTooltips(Arrays.asList(components));
+    }
+
+    public MachineBuilder<DEFINITION> bottomTooltips(List<? extends @Nullable Component> components) {
+        bottomTooltips.addAll(components.stream().filter(Objects::nonNull).toList());
+
         return this;
     }
 
@@ -570,10 +604,49 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         definition.setRecipeOutputLimits(recipeOutputLimits);
         definition.setBlockEntityTypeSupplier(blockEntity::get);
         definition.setMachineSupplier(machine);
+
+        Component availableRecipeTypes;
+        boolean isAvailableRecipeTypesEmpty;
+
+        if (recipeTypes.length > 1 && Arrays.stream(recipeTypes).noneMatch(rt -> "gtceu:dummy".equals(rt.toString()))) {
+            Component combined = Arrays.stream(recipeTypes)
+                    .map(GTRecipeType::toString)
+                    .map(name -> name.replace(":", "."))
+                    .map(Component::translatable)
+                    .reduce((c1, c2) -> Component.empty()
+                            .append(c1)
+                            .append(", ")
+                            .append(c2))
+                    .orElse(Component.empty());
+
+            if (!combined.toString().isEmpty()) {
+                isAvailableRecipeTypesEmpty = false;
+                availableRecipeTypes = Component.translatable("gtceu.machine.available_recipe_map_1.tooltip", combined)
+                        .withStyle(ChatFormatting.GREEN);
+            } else {
+                isAvailableRecipeTypesEmpty = true;
+                availableRecipeTypes = Component.empty();
+            }
+        } else {
+            isAvailableRecipeTypesEmpty = true;
+            availableRecipeTypes = Component.empty();
+        }
+
+        ResourceLocation id = definition.getId();
+
+        var clientTooltipsHandler = DistExecutor.unsafeRunForDist(() -> this::getClientTooltipsHandler,
+                () -> () -> (itemStack, components) -> {});
+
         definition.setTooltipBuilder((itemStack, components) -> {
             components.addAll(tooltips);
+            clientTooltipsHandler.accept(itemStack, components);
+            if (!isAvailableRecipeTypesEmpty) {
+                components.add(availableRecipeTypes);
+            }
+            components.addAll(bottomTooltips);
             if (tooltipBuilder != null) tooltipBuilder.accept(itemStack, components);
         });
+
         definition.setRecipeModifier(recipeModifier);
         definition.setAlwaysTryModifyRecipe(alwaysTryModifyRecipe);
         definition.setBeforeWorking(this.beforeWorking);
@@ -602,6 +675,116 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         definition.setRenderWorldPreview(renderMultiblockWorldPreview);
         GTRegistries.MACHINES.register(definition.getId(), definition);
         return value = definition;
+    }
+
+    private BiConsumer<ItemStack, List<Component>> getClientTooltipsHandler() {
+        List<String> shiftTooltips = new ArrayList<>();
+        List<String> shiftTooltipDescriptions = new ArrayList<>();
+
+        Component showCapabilities = Component.translatable("gtceu.tooltip.show_capabilities");
+        Component showCapabilitiesShift = Component.translatable("gtceu.tooltip.show_capabilities_shift");
+
+        if (recipeModifier instanceof RecipeModifierList recipeModifiers) {
+            for (RecipeModifier modifier : recipeModifiers.modifiers()) {
+                String modifierId = modifier.getId();
+
+                if (!GTRecipeModifiers.ignoreModifiers.contains(modifierId) && !modifierId.contains("lambda") &&
+                        !modifierId.contains("proxy")) {
+                    shiftTooltips.add("gtceu.modifier.%s.name".formatted(modifierId));
+                    shiftTooltipDescriptions.add("gtceu.modifier.%s.description".formatted(modifierId));
+                }
+            }
+        }
+
+        boolean isShiftToolsEmpty = shiftTooltips.isEmpty();
+        boolean isPaginatedTooltipsEmpty = paginatedTooltips.isEmpty();
+        int maxModifierPages = shiftTooltips.size();
+        int maxPaginatedPages = paginatedTooltips.size();
+
+        return (itemStack, components) -> {
+            boolean isShiftDown = GTUtil.isShiftDown();
+            long windowId = Minecraft.getInstance().getWindow().getWindow();
+            long currentTime = System.currentTimeMillis();
+            long lastChange = TooltipPageManager.getLastChangeTime(id);
+
+            if (!isShiftToolsEmpty && isShiftDown) {
+                boolean nextPressed = InputConstants.isKeyDown(windowId,
+                        SyncedKeyMappings.TOOLTIP_DOWN_PAGE.getKeyCode());
+                boolean prevPressed = InputConstants.isKeyDown(windowId,
+                        SyncedKeyMappings.TOOLTIP_UP_PAGE.getKeyCode());
+                int currentModifierPage = TooltipPageManager.getCurrentModifierPage(id);
+
+                // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
+                if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
+                    if (nextPressed && !prevPressed) {
+                        currentModifierPage = (currentModifierPage + 1) % maxModifierPages;
+                    } else if (!nextPressed) {
+                        currentModifierPage = currentModifierPage == 0 ? maxModifierPages - 1 : currentModifierPage - 1;
+                    }
+
+                    TooltipPageManager.setCurrentModifierPage(id, currentModifierPage);
+                    TooltipPageManager.setLastChangeTime(id, currentTime);
+                }
+
+                components.add(showCapabilitiesShift);
+
+                for (int i = 0; i < maxModifierPages; i++) {
+                    if (i == currentModifierPage) {
+                        components.add(Component.translatable(shiftTooltips.get(i), "[x] "));
+                        components.addAll(LangHandler.getSingleOrMultiLang(shiftTooltipDescriptions.get(i)));
+                    } else {
+                        components.add(Component.translatable(shiftTooltips.get(i), "[ ] "));
+                    }
+                }
+
+                components.add(Component.translatable("gtceu.tooltip.capabilities_info",
+                        Component.literal("[" + SyncedKeyMappings.TOOLTIP_UP_PAGE.getDisplayName() + "]")
+                                .withStyle(ChatFormatting.LIGHT_PURPLE),
+                        Component.literal("[" + SyncedKeyMappings.TOOLTIP_DOWN_PAGE.getDisplayName() + "]")
+                                .withStyle(ChatFormatting.LIGHT_PURPLE))
+                        .withStyle(ChatFormatting.GRAY));
+            } else {
+                if (!isPaginatedTooltipsEmpty) {
+                    if (maxPaginatedPages > 1) {
+                        boolean nextPressed = InputConstants.isKeyDown(windowId,
+                                SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getKeyCode());
+                        boolean prevPressed = InputConstants.isKeyDown(windowId,
+                                SyncedKeyMappings.TOOLTIP_PREV_PAGE.getKeyCode());
+                        int currentPage = TooltipPageManager.getCurrentPage(id);
+
+                        // This is needed, as SyncedKeyMapping.isKeyDown is not working for this
+                        if ((nextPressed || prevPressed) && (currentTime - lastChange > 200)) {
+                            if (nextPressed && !prevPressed) {
+                                currentPage = (currentPage + 1) % maxPaginatedPages;
+                            } else if (!nextPressed) {
+                                currentPage = currentPage == 0 ? maxPaginatedPages - 1 : currentPage - 1;
+                            }
+
+                            TooltipPageManager.setCurrentPage(id, currentPage);
+                            TooltipPageManager.setLastChangeTime(id, currentTime);
+                        }
+
+                        if (currentPage < maxPaginatedPages) {
+                            components.addAll(paginatedTooltips.get(currentPage));
+                        }
+
+                        components.add(Component.translatable("gtceu.tooltip.paginated_info",
+                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_PREV_PAGE.getDisplayName() + "]")
+                                        .withStyle(ChatFormatting.LIGHT_PURPLE),
+                                currentPage + 1, maxPaginatedPages,
+                                Component.literal("[" + SyncedKeyMappings.TOOLTIP_NEXT_PAGE.getDisplayName() + "]")
+                                        .withStyle(ChatFormatting.LIGHT_PURPLE))
+                                .withStyle(ChatFormatting.GRAY));
+                    } else {
+                        components.addAll(paginatedTooltips.get(0));
+                    }
+                }
+
+                if (!isShiftToolsEmpty) {
+                    components.add(showCapabilities);
+                }
+            }
+        };
     }
 
     @FunctionalInterface
@@ -649,13 +832,13 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         public static <DEFINITION extends MachineDefinition> BlockBuilder<Block, ? extends AbstractRegistrate<?>> makeBlockBuilder(MachineBuilder<DEFINITION> builder,
                                                                                                                                    DEFINITION definition) {
             return builder.registrate.block(properties -> makeBlock(builder, definition, properties))
-                    .color(() -> () -> IMachineBlock::colorTinted)
-                    .initialProperties(() -> Blocks.DISPENSER)
-                    .properties(BlockBehaviour.Properties::noLootTable)
-                    .addLayer(() -> RenderType::cutout)
-                    .exBlockstate(builder.blockModel != null ? builder.blockModel : createMachineModel(builder.model))
-                    .properties(builder.blockProp)
-                    .onRegister(b -> Arrays.stream(builder.abilities).forEach(a -> a.register(builder.tier, b)));
+                .color(() -> () -> IMachineBlock::colorTinted)
+                .initialProperties(() -> Blocks.DISPENSER)
+                .properties(BlockBehaviour.Properties::noLootTable)
+                .addLayer(() -> RenderType::cutout)
+                .exBlockstate(builder.blockModel != null ? builder.blockModel : createMachineModel(builder.model))
+                .properties(builder.blockProp)
+                .onRegister(b -> Arrays.stream(builder.abilities).forEach(a -> a.register(builder.tier, b)));
         }
 
         private static <DEFINITION extends MachineDefinition> Block makeBlock(MachineBuilder<DEFINITION> builder, DEFINITION definition,
@@ -672,15 +855,15 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         public static <DEFINITION extends MachineDefinition> ItemBuilder<MetaMachineItem, ? extends AbstractRegistrate<?>> makeItemBuilder(MachineBuilder<DEFINITION> builder,
                                                                                                                                            BlockEntry<Block> block) {
             return builder.registrate
-                    .item(properties -> builder.itemFactory.apply((IMachineBlock) block.get(), properties))
-                    .setData(ProviderType.LANG, NonNullBiConsumer.noop()) // do not gen any lang keys
-                    // copied from BlockBuilder#item
-                    .model((ctx, prov) -> {
-                        prov.withExistingParent(ctx.getName(), new ResourceLocation(builder.registrate.getModid(),
-                                "block/machine/" + ctx.getName()));
-                    })
-                    .color(() -> () -> builder.itemColor::apply)
-                    .properties(builder.itemProp);
+                .item(properties -> builder.itemFactory.apply((IMachineBlock) block.get(), properties))
+                .setData(ProviderType.LANG, NonNullBiConsumer.noop()) // do not gen any lang keys
+                // copied from BlockBuilder#item
+                .model((ctx, prov) -> {
+                    prov.withExistingParent(ctx.getName(), new ResourceLocation(builder.registrate.getModid(),
+                        "block/machine/" + ctx.getName()));
+                })
+                .color(() -> () -> builder.itemColor::apply)
+                .properties(builder.itemProp);
         }
     }
     // spotless:on

@@ -19,7 +19,7 @@ public class BlockLang {
         replace(provider, "block.gtceu.hssg_coil_block", "HSS-G Coil Block");
         replace(provider, "block.gtceu.rtm_alloy_coil_block", "RTM Alloy Coil Block");
 
-        replace(provider, "block.gtceu.wire_coil.tooltip_extended_info", "§7Hold SHIFT to show Coil Bonus Info");
+        replace(provider, "block.gtceu.wire_coil.tooltip_extended_info", "§7Hold §d[SHIFT]§7 to show Coil Bonus Info");
         replace(provider, "block.gtceu.wire_coil.tooltip_heat", "§cBase Heat Capacity: §f%d K");
         replace(provider, "block.gtceu.wire_coil.tooltip_smelter", "§8Multi Smelter:");
         replace(provider, "block.gtceu.wire_coil.tooltip_parallel_smelter", "  §5Max Parallel: §f%s");
@@ -28,6 +28,9 @@ public class BlockLang {
         replace(provider, "block.gtceu.wire_coil.tooltip_speed_pyro", "  §bProcessing Speed: §f%s%%");
         replace(provider, "block.gtceu.wire_coil.tooltip_cracking", "§8Cracking Unit:");
         replace(provider, "block.gtceu.wire_coil.tooltip_energy_cracking", "  §aEnergy Usage: §f%s%%");
+        replace(provider, "block.gtceu.wire_coil.tooltip_chemical", "§8Chemical Reactor:");
+        replace(provider, "block.gtceu.wire_coil.tooltip_speed_chemical", "  §bProcessing Speed: §f%s%%");
+        replace(provider, "block.gtceu.wire_coil.tooltip_energy_chemical", "  §aEnergy Usage: §f%s%%");
 
         // Substation capacitors
         provider.add("block.gtceu.substation_capacitor.tooltip_empty", "§7For filling space in your Power Substation");

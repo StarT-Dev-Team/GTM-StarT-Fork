@@ -75,7 +75,7 @@ public class GTMachines {
             "steam_solid_boiler",
             SteamSolidBoilerMachine::new,
             (pressure, builder) -> builder.rotationState(RotationState.ALL)
-                    .recipeType(STEAM_BOILER_RECIPES)
+                    .recipeTypes(STEAM_BOILER_RECIPES)
                     .recipeModifier(SteamBoilerMachine::recipeModifier)
                     .workableSteamHullModel(pressure, GTCEu.id("block/generators/boiler/coal"))
                     .tooltips(Component.translatable("gtceu.universal.tooltip.produces_fluid",
@@ -88,7 +88,7 @@ public class GTMachines {
             "steam_liquid_boiler",
             SteamLiquidBoilerMachine::new,
             (pressure, builder) -> builder.rotationState(RotationState.ALL)
-                    .recipeType(STEAM_BOILER_RECIPES)
+                    .recipeTypes(STEAM_BOILER_RECIPES)
                     .recipeModifier(SteamBoilerMachine::recipeModifier)
                     .workableSteamHullModel(pressure, GTCEu.id("block/generators/boiler/lava"))
                     .tooltips(Component.translatable("gtceu.universal.tooltip.produces_fluid",
@@ -101,7 +101,7 @@ public class GTMachines {
             "steam_solar_boiler",
             SteamSolarBoiler::new,
             (pressure, builder) -> builder.rotationState(RotationState.NON_Y_AXIS)
-                    .recipeType(STEAM_BOILER_RECIPES)
+                    .recipeTypes(STEAM_BOILER_RECIPES)
                     .recipeModifier(SteamBoilerMachine::recipeModifier)
                     .workableSteamHullModel(pressure, GTCEu.id("block/generators/boiler/solar"))
                     .tooltips(Component.translatable("gtceu.universal.tooltip.produces_fluid",
@@ -115,7 +115,7 @@ public class GTMachines {
     public static final Pair<MachineDefinition, MachineDefinition> STEAM_MACERATOR = registerSteamMachines(
             "steam_macerator", SimpleSteamMachine::new, (pressure, builder) -> builder
                     .rotationState(RotationState.NON_Y_AXIS)
-                    .recipeType(GTRecipeTypes.MACERATOR_RECIPES)
+                    .recipeTypes(GTRecipeTypes.MACERATOR_RECIPES)
                     .recipeModifier(SimpleSteamMachine::recipeModifier)
                     .addOutputLimit(ItemRecipeCapability.CAP, 1)
                     .modelProperty(GTMachineModelProperties.VENT_DIRECTION, RelativeDirection.BACK)
@@ -169,6 +169,10 @@ public class GTMachines {
 
     public static final MachineDefinition[] ELECTRIC_FURNACE = registerSimpleMachines("electric_furnace",
             GTRecipeTypes.FURNACE_RECIPES);
+    public static final MachineDefinition[] ELECTRIC_BLAST_FURNACE = registerSimpleMachines("electric_blaster",
+            GTRecipeTypes.BLAST_FURNACE_RECIPES);
+    public static final MachineDefinition[] ELECTRIC_SMOKING_FURNACE = registerSimpleMachines("electric_smoker",
+            GTRecipeTypes.SMOKING_FURNACE_RECIPES);
     public static final MachineDefinition[] ALLOY_SMELTER = registerSimpleMachines("alloy_smelter",
             GTRecipeTypes.ALLOY_SMELTER_RECIPES);
     public static final MachineDefinition[] ARC_FURNACE = registerSimpleMachines("arc_furnace",
@@ -672,7 +676,7 @@ public class GTMachines {
             (tier, builder) -> builder
                     .langValue(VNF[tier] + " Energy Hatch")
                     .rotationState(RotationState.ALL)
-                    .abilities(PartAbility.INPUT_ENERGY)
+                    .abilities(PartAbility.INPUT_ENERGY, PartAbility.INPUT_ENERGY_2A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_in",
                             FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
@@ -690,7 +694,7 @@ public class GTMachines {
             (tier, builder) -> builder
                     .langValue(VNF[tier] + " Dynamo Hatch")
                     .rotationState(RotationState.ALL)
-                    .abilities(PartAbility.OUTPUT_ENERGY)
+                    .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.OUTPUT_ENERGY_2A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
                             FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
@@ -708,7 +712,7 @@ public class GTMachines {
             (tier, builder) -> builder
                     .langValue(VNF[tier] + " 4A Energy Hatch")
                     .rotationState(RotationState.ALL)
-                    .abilities(PartAbility.INPUT_ENERGY)
+                    .abilities(PartAbility.INPUT_ENERGY, PartAbility.INPUT_ENERGY_4A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_in",
                             FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
@@ -726,7 +730,7 @@ public class GTMachines {
             (tier, builder) -> builder
                     .langValue(VNF[tier] + " 4A Dynamo Hatch")
                     .rotationState(RotationState.ALL)
-                    .abilities(PartAbility.OUTPUT_ENERGY)
+                    .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.OUTPUT_ENERGY_4A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
                             FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
@@ -744,7 +748,7 @@ public class GTMachines {
             (tier, builder) -> builder
                     .langValue(VNF[tier] + " 16A Energy Hatch")
                     .rotationState(RotationState.ALL)
-                    .abilities(PartAbility.INPUT_ENERGY)
+                    .abilities(PartAbility.INPUT_ENERGY, PartAbility.INPUT_ENERGY_16A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_in",
                             FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
@@ -762,7 +766,7 @@ public class GTMachines {
             (tier, builder) -> builder
                     .langValue(VNF[tier] + " 16A Dynamo Hatch")
                     .rotationState(RotationState.ALL)
-                    .abilities(PartAbility.OUTPUT_ENERGY)
+                    .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.OUTPUT_ENERGY_16A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
                             FormattingUtil.formatNumbers(V[tier]), VNF[tier]),

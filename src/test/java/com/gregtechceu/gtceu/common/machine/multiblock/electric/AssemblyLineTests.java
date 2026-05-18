@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.ItemBusPartMachine;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.gametest.util.TestUtils;
 
 import net.minecraft.core.BlockPos;
@@ -117,19 +118,23 @@ public class AssemblyLineTests {
 
     @GameTest(template = "ass_line_4aev_4in", batch = "Assline")
     public static void AsslineRecipeDoesntRunWhenFluidsMovedByOneTest(GameTestHelper helper) {
-        BusHolder busHolder = getBussesAndForm(helper);
-        busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Items.COBBLESTONE));
-        busHolder.inputBus2.getInventory().setStackInSlot(0, new ItemStack(Items.ACACIA_WOOD));
-        busHolder.inputHatch2.tank.setFluidInTank(0, new FluidStack(Fluids.WATER, 1));
-        busHolder.inputHatch3.tank.setFluidInTank(0, new FluidStack(Fluids.LAVA, 1));
-        helper.onEachTick(() -> {
-            helper.assertFalse(
-                    TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
-                            new ItemStack(Blocks.STONE)),
-                    "Item crafted with inputs moved" +
-                            busHolder.outputBus1.getInventory().getStackInSlot(0).getDisplayName());
-        });
-        TestUtils.succeedAfterTest(helper);
+        if (!ConfigHolder.INSTANCE.machines.orderedAssemblyLineFluids) {
+            helper.succeed(); // skip due to config
+        } else {
+            BusHolder busHolder = getBussesAndForm(helper);
+            busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Items.COBBLESTONE));
+            busHolder.inputBus2.getInventory().setStackInSlot(0, new ItemStack(Items.ACACIA_WOOD));
+            busHolder.inputHatch2.tank.setFluidInTank(0, new FluidStack(Fluids.WATER, 1));
+            busHolder.inputHatch3.tank.setFluidInTank(0, new FluidStack(Fluids.LAVA, 1));
+            helper.onEachTick(() -> {
+                helper.assertFalse(
+                        TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
+                                new ItemStack(Blocks.STONE)),
+                        "Item crafted with inputs moved" +
+                                busHolder.outputBus1.getInventory().getStackInSlot(0).getDisplayName());
+            });
+            TestUtils.succeedAfterTest(helper);
+        }
     }
 
     @GameTest(template = "ass_line_4aev_4in", batch = "Assline")
@@ -226,19 +231,23 @@ public class AssemblyLineTests {
 
     @GameTest(template = "ass_line_4aev_4in", batch = "Assline")
     public static void AsslineRecipeDoesntRunWhenFluidsSwappedTest(GameTestHelper helper) {
-        BusHolder busHolder = getBussesAndForm(helper);
-        busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Items.COBBLESTONE));
-        busHolder.inputBus2.getInventory().setStackInSlot(0, new ItemStack(Items.ACACIA_WOOD));
-        busHolder.inputHatch2.tank.setFluidInTank(0, new FluidStack(Fluids.WATER, 1));
-        busHolder.inputHatch1.tank.setFluidInTank(0, new FluidStack(Fluids.LAVA, 1));
-        helper.onEachTick(() -> {
-            helper.assertFalse(
-                    TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
-                            new ItemStack(Blocks.STONE)),
-                    "Item crafted with inputs moved" +
-                            busHolder.outputBus1.getInventory().getStackInSlot(0).getDisplayName());
-        });
-        TestUtils.succeedAfterTest(helper);
+        if (!ConfigHolder.INSTANCE.machines.orderedAssemblyLineFluids) {
+            helper.succeed(); // skip due to config
+        } else {
+            BusHolder busHolder = getBussesAndForm(helper);
+            busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Items.COBBLESTONE));
+            busHolder.inputBus2.getInventory().setStackInSlot(0, new ItemStack(Items.ACACIA_WOOD));
+            busHolder.inputHatch2.tank.setFluidInTank(0, new FluidStack(Fluids.WATER, 1));
+            busHolder.inputHatch1.tank.setFluidInTank(0, new FluidStack(Fluids.LAVA, 1));
+            helper.onEachTick(() -> {
+                helper.assertFalse(
+                        TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
+                                new ItemStack(Blocks.STONE)),
+                        "Item crafted with inputs moved" +
+                                busHolder.outputBus1.getInventory().getStackInSlot(0).getDisplayName());
+            });
+            TestUtils.succeedAfterTest(helper);
+        }
     }
 
     @GameTest(template = "ass_line_4aev_4in", batch = "Assline")

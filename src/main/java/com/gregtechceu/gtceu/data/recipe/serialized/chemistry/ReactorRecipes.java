@@ -697,6 +697,13 @@ public class ReactorRecipes {
                 .outputItems(dust, Salt, 2)
                 .duration(200).EUt(VA[ULV]).save(provider);
 
+        CHEMICAL_RECIPES.recipeBuilder("sodium_hydroxide")
+                .inputItems(dust, Sodium)
+                .inputFluids(Water.getFluid(1000))
+                .outputItems(dust, SodiumHydroxide, 3)
+                .outputFluids(Hydrogen.getFluid(1000))
+                .duration(800).EUt(VA[MV]).save(provider);
+
         CHEMICAL_RECIPES.recipeBuilder("butraldehyde")
                 .inputFluids(Propene.getFluid(1000))
                 .inputFluids(Hydrogen.getFluid(2000))

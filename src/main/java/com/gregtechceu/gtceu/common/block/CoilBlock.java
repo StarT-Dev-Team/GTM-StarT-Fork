@@ -5,6 +5,8 @@ import com.gregtechceu.gtceu.api.block.ActiveBlock;
 import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.config.ConfigHolder;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
 import net.minecraft.network.chat.Component;
@@ -48,7 +50,17 @@ public class CoilBlock extends ActiveBlock {
             tooltip.add(Component.translatable("block.gtceu.wire_coil.tooltip_speed_pyro",
                     coilTier == 0 ? 75 : 50 * (coilTier + 1)));
             tooltip.add(Component.translatable("block.gtceu.wire_coil.tooltip_cracking"));
-            tooltip.add(Component.translatable("block.gtceu.wire_coil.tooltip_energy_cracking", 100 - 10 * coilTier));
+
+            var discount = coilTier > 9 ? (0.9 + (coilTier - 9) * 0.025) : coilTier * 0.1;
+            tooltip.add(Component.translatable("block.gtceu.wire_coil.tooltip_energy_cracking",
+                    FormattingUtil.DECIMAL_FORMAT_0F.format((1.0 - discount) * 100.0)));
+
+            if (ConfigHolder.INSTANCE.machines.lcrCoilBenefits) {
+                tooltip.add(Component.translatable("block.gtceu.wire_coil.tooltip_chemical"));
+                tooltip.add(Component.translatable("block.gtceu.wire_coil.tooltip_speed_chemical", 75 + coilTier * 25));
+                tooltip.add(
+                        Component.translatable("block.gtceu.wire_coil.tooltip_energy_chemical", 100 - 5 * coilTier));
+            }
         } else {
             tooltip.add(Component.translatable("block.gtceu.wire_coil.tooltip_extended_info"));
         }

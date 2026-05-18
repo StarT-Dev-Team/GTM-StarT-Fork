@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMachines;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.event.CraftingComponentModificationEvent;
 import com.gregtechceu.gtceu.integration.kjs.GTCEuStartupEvents;
 import com.gregtechceu.gtceu.integration.kjs.events.CraftingComponentsEventJS;
@@ -42,6 +43,7 @@ public class GTCraftingComponents {
     public static CraftingComponent PIPE_NONUPLE;
     public static CraftingComponent GLASS;
     public static CraftingComponent PLATE;
+    public static CraftingComponent PLATE_DOUBLE;
     public static CraftingComponent HULL_PLATE;
     public static CraftingComponent MOTOR;
     public static CraftingComponent ROTOR;
@@ -379,6 +381,18 @@ public class GTCraftingComponents {
                 .add(UV, plate, Darmstadtium)
                 .add(UHV, plate, Neutronium);
 
+        PLATE_DOUBLE = CraftingComponent.of("plate_double", plateDouble, Iron)
+                .add(ULV, plateDouble, WroughtIron)
+                .add(LV, plateDouble, Steel)
+                .add(MV, plateDouble, Aluminium)
+                .add(HV, plateDouble, StainlessSteel)
+                .add(EV, plateDouble, Titanium)
+                .add(IV, plateDouble, TungstenSteel)
+                .add(LuV, plateDouble, RhodiumPlatedPalladium)
+                .add(ZPM, plateDouble, NaquadahAlloy)
+                .add(UV, plateDouble, Darmstadtium)
+                .add(UHV, plateDouble, Neutronium);
+
         HULL_PLATE = CraftingComponent.of("hull_plate", plate, Wood)
                 .add(ULV, plate, Wood)
                 .add(LV, plate, WroughtIron)
@@ -427,8 +441,11 @@ public class GTCraftingComponents {
                 .add(UV, toolHeadBuzzSaw, Duranium)
                 .add(UHV, toolHeadBuzzSaw, Duranium);
 
-        MOTOR = CraftingComponent.of("motor", GTItems.ELECTRIC_MOTOR_LV.asStack())
-                .add(LV, GTItems.ELECTRIC_MOTOR_LV.asStack())
+        MOTOR = CraftingComponent.of("motor", GTItems.ELECTRIC_MOTOR_LV.asStack());
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            MOTOR.add(ULV, GTItems.ELECTRIC_MOTOR_ULV.asStack());
+        }
+        MOTOR.add(LV, GTItems.ELECTRIC_MOTOR_LV.asStack())
                 .add(MV, GTItems.ELECTRIC_MOTOR_MV.asStack())
                 .add(HV, GTItems.ELECTRIC_MOTOR_HV.asStack())
                 .add(EV, GTItems.ELECTRIC_MOTOR_EV.asStack())
@@ -444,8 +461,11 @@ public class GTCraftingComponents {
                     .add(OpV, GTItems.ELECTRIC_MOTOR_OpV.asStack());
         }
 
-        PUMP = CraftingComponent.of("pump", GTItems.ELECTRIC_PUMP_LV.asStack())
-                .add(LV, GTItems.ELECTRIC_PUMP_LV.asStack())
+        PUMP = CraftingComponent.of("pump", GTItems.ELECTRIC_PUMP_LV.asStack());
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            PUMP.add(ULV, GTItems.ELECTRIC_PUMP_ULV.asStack());
+        }
+        PUMP.add(LV, GTItems.ELECTRIC_PUMP_LV.asStack())
                 .add(MV, GTItems.ELECTRIC_PUMP_MV.asStack())
                 .add(HV, GTItems.ELECTRIC_PUMP_HV.asStack())
                 .add(EV, GTItems.ELECTRIC_PUMP_EV.asStack())
@@ -461,8 +481,11 @@ public class GTCraftingComponents {
                     .add(OpV, GTItems.ELECTRIC_PUMP_OpV.asStack());
         }
 
-        PISTON = CraftingComponent.of("piston", GTItems.ELECTRIC_PISTON_LV.asStack())
-                .add(LV, GTItems.ELECTRIC_PISTON_LV.asStack())
+        PISTON = CraftingComponent.of("piston", GTItems.ELECTRIC_PISTON_LV.asStack());
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            PISTON.add(ULV, GTItems.ELECTRIC_PISTON_ULV.asStack());
+        }
+        PISTON.add(LV, GTItems.ELECTRIC_PISTON_LV.asStack())
                 .add(MV, GTItems.ELECTRIC_PISTON_MV.asStack())
                 .add(HV, GTItems.ELECTRIC_PISTON_HV.asStack())
                 .add(EV, GTItems.ELECTRIC_PISTON_EV.asStack())
@@ -523,8 +546,11 @@ public class GTCraftingComponents {
                 .add(ZPM, GTItems.QUANTUM_STAR.asStack())
                 .add(UV, GTItems.GRAVI_STAR.asStack());
 
-        CONVEYOR = CraftingComponent.of("conveyor", GTItems.CONVEYOR_MODULE_LV.asStack())
-                .add(LV, GTItems.CONVEYOR_MODULE_LV.asStack())
+        CONVEYOR = CraftingComponent.of("conveyor", GTItems.CONVEYOR_MODULE_LV.asStack());
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            CONVEYOR.add(ULV, GTItems.CONVEYOR_MODULE_ULV.asStack());
+        }
+        CONVEYOR.add(LV, GTItems.CONVEYOR_MODULE_LV.asStack())
                 .add(MV, GTItems.CONVEYOR_MODULE_MV.asStack())
                 .add(HV, GTItems.CONVEYOR_MODULE_HV.asStack())
                 .add(EV, GTItems.CONVEYOR_MODULE_EV.asStack())
@@ -540,8 +566,11 @@ public class GTCraftingComponents {
                     .add(OpV, GTItems.CONVEYOR_MODULE_OpV.asStack());
         }
 
-        ROBOT_ARM = CraftingComponent.of("robot_arm", GTItems.ROBOT_ARM_LV.asStack())
-                .add(LV, GTItems.ROBOT_ARM_LV.asStack())
+        ROBOT_ARM = CraftingComponent.of("robot_arm", GTItems.ROBOT_ARM_LV.asStack());
+        if (ConfigHolder.INSTANCE.machines.ulvComponentsEnabled) {
+            ROBOT_ARM.add(ULV, GTItems.ROBOT_ARM_ULV.asStack());
+        }
+        ROBOT_ARM.add(LV, GTItems.ROBOT_ARM_LV.asStack())
                 .add(MV, GTItems.ROBOT_ARM_MV.asStack())
                 .add(HV, GTItems.ROBOT_ARM_HV.asStack())
                 .add(EV, GTItems.ROBOT_ARM_EV.asStack())

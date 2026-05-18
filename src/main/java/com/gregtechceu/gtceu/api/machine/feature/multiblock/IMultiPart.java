@@ -90,6 +90,13 @@ public interface IMultiPart extends IMachineFeature, IFancyUIMachine {
     /**
      * Called per tick in {@link RecipeLogic#handleRecipeWorking()}
      */
+    default boolean testRecipeTick(IWorkableMultiController controller) {
+        return true;
+    }
+
+    /**
+     * Called per tick in {@link RecipeLogic#handleRecipeWorking()}
+     */
     default boolean onWaiting(IWorkableMultiController controller) {
         return true;
     }

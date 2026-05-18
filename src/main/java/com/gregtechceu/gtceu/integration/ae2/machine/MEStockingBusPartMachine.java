@@ -65,11 +65,6 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
     @Persisted
     @DropSaved
     private int minStackSize = 1;
-    @Getter
-    @Setter
-    @Persisted
-    @DropSaved
-    private int ticksPerCycle = 40;
 
     @Setter
     private Predicate<GenericStack> autoPullTest;
@@ -112,15 +107,19 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
 
     @Override
     public void autoIO() {
-        super.autoIO();
-        if (ticksPerCycle == 0) ticksPerCycle = ConfigHolder.INSTANCE.compat.ae2.updateIntervals; // Emergency Check to
-                                                                                                  // Avoid Crash loops.
-        if (getOffsetTimer() % ticksPerCycle == 0) {
-            if (autoPull) {
-                refreshList();
-            }
-            syncME();
+        if (!this.isWorkingEnabled()) return;
+
+        if (ticksPerCycle < ConfigHolder.INSTANCE.compat.ae2.minUpdateIntervals)
+            ticksPerCycle = ConfigHolder.INSTANCE.compat.ae2.updateIntervals;
+
+        if (getOffsetTimer() % ticksPerCycle != 0) return;
+        if (!updateMEStatus()) return;
+
+        if (autoPull) {
+            refreshList();
         }
+        syncME();
+        updateInventorySubscription();
     }
 
     @Override
@@ -219,8 +218,7 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
 
         // Use a PriorityQueue to sort the stacks on size, take the first CONFIG_SIZE
         // biggest stacks.
-        PriorityQueue<Object2LongMap.Entry<AEKey>> topItems = new PriorityQueue<>(
-                Comparator.comparingLong(Object2LongMap.Entry<AEKey>::getLongValue));
+        PriorityQueue<GenericStack> topItems = new PriorityQueue<>(Comparator.comparingLong(GenericStack::amount));
 
         for (Object2LongMap.Entry<AEKey> entry : counter) {
             long amount = entry.getLongValue();
@@ -229,17 +227,16 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
             if (amount <= 0) continue;
             if (!(what instanceof AEItemKey itemKey)) continue;
 
-            long request = networkStorage.extract(what, amount, Actionable.SIMULATE, actionSource);
-            if (request == 0) continue;
-
+            // Don't check if we can extract, let the next step do it.
             // Ensure that it is valid to configure with this stack
-            if (autoPullTest != null && !autoPullTest.test(new GenericStack(itemKey, amount))) continue;
+            var genericStack = new GenericStack(itemKey, amount);
+            if (autoPullTest != null && !autoPullTest.test(genericStack)) continue;
             if (amount >= minStackSize) {
                 if (topItems.size() < CONFIG_SIZE) {
-                    topItems.offer(entry);
-                } else if (amount > topItems.peek().getLongValue()) {
+                    topItems.offer(genericStack);
+                } else if (amount > topItems.peek().amount()) {
                     topItems.poll();
-                    topItems.offer(entry);
+                    topItems.offer(genericStack);
                 }
             }
         }
@@ -249,13 +246,13 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
         int itemAmount = topItems.size();
         for (index = 0; index < CONFIG_SIZE; index++) {
             if (topItems.isEmpty()) break;
-            Object2LongMap.Entry<AEKey> entry = topItems.poll();
 
-            AEKey what = entry.getKey();
-            long amount = entry.getLongValue();
+            var entry = topItems.poll();
+            AEKey what = entry.what();
+            long amount = entry.amount();
 
-            // If we get here, the item has already been checked by the PQ.
             long request = networkStorage.extract(what, amount, Actionable.SIMULATE, actionSource);
+            if (request == 0) continue;
 
             // Since we want our items to be displayed from highest to lowest, but poll() returns
             // the lowest first, we fill in the slots starting at itemAmount-1
@@ -274,13 +271,15 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
     @Override
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         IMEStockingPart.super.attachConfigurators(configuratorPanel);
-        super.attachConfigurators(configuratorPanel);
+        attachBusConfigurators(configuratorPanel);
         configuratorPanel.attachConfigurators(new AutoStockingFancyConfigurator(this));
     }
 
     @Override
     protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide,
                                                    BlockHitResult hitResult) {
+        var superResult = super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+        if (superResult != InteractionResult.PASS) return superResult;
         if (!isRemote()) {
             setAutoPull(!autoPull);
             if (autoPull) {
@@ -326,7 +325,7 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
         super.readConfigFromTag(tag);
     }
 
-    private class ExportOnlyAEStockingItemList extends ExportOnlyAEItemList {
+    public class ExportOnlyAEStockingItemList extends ExportOnlyAEItemList {
 
         public ExportOnlyAEStockingItemList(MetaMachine holder, int slots) {
             super(holder, slots, ExportOnlyAEStockingItemSlot::new);
@@ -353,7 +352,7 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
         }
     }
 
-    private class ExportOnlyAEStockingItemSlot extends ExportOnlyAEItemSlot {
+    public class ExportOnlyAEStockingItemSlot extends ExportOnlyAEItemSlot {
 
         public ExportOnlyAEStockingItemSlot() {
             super();

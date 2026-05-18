@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.machine.SimpleGeneratorMachine;
 import com.gregtechceu.gtceu.api.machine.SimpleTieredMachine;
+import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.steam.SimpleSteamMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
@@ -62,6 +63,7 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
         }
     }
 
+    // this function always returns 32 for multiblocks
     public static long getVoltage(RecipeLogic capability) {
         long voltage = -1;
         if (capability.machine instanceof SimpleTieredMachine machine) {
@@ -70,7 +72,7 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
             voltage = GTValues.V[machine.getTier()];
         } else if (capability.machine instanceof WorkableElectricMultiblockMachine machine) {
             voltage = machine.getParts().stream()
-                    .filter(EnergyHatchPartMachine.class::isInstance)
+                    .filter(EnergyHatchPartMachine.class::isInstance) // doesn't find instances?
                     .map(EnergyHatchPartMachine.class::cast)
                     .mapToLong(dynamo -> GTValues.V[dynamo.getTier()])
                     .max()
@@ -108,9 +110,8 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                         text = Component.translatable("gtceu.jade.fluid_use", FormattingUtil.formatNumbers(EUt))
                                 .withStyle(ChatFormatting.GREEN);
                     } else {
-                        var voltage = recipeInfo.getLong("voltage");
-                        var tier = GTUtil.getTierByVoltage(voltage);
-                        float minAmperage = (float) EUt / voltage;
+                        var tier = GTUtil.getTierByVoltage(EUt);
+                        float minAmperage = (float) EUt / GTValues.V[tier];
 
                         text = Component
                                 .translatable("gtceu.recipe.eu.total",
@@ -118,23 +119,31 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                                 .withStyle(ChatFormatting.RED);
 
                         MutableComponent voltageTier;
-                        if (tier < GTValues.TIER_COUNT) {
+                        if (tier < GTValues.TIER_COUNT - 1) {
                             voltageTier = Component.literal(GTValues.VNF[tier])
                                     .withStyle(style -> style.withColor(GTValues.VC[tier]));
                         } else {
-                            int speed = Mth.clamp(tier - GTValues.TIER_COUNT - 1, 0, GTValues.TIER_COUNT);
-                            voltageTier = Component.literal("MAX")
-                                    .withStyle(style -> style.withColor(TooltipHelper.rainbowColor(speed)))
-                                    .append(Component.literal("+")
-                                            .withStyle(style -> style.withColor(GTValues.VC[speed]))
-                                            .append(FormattingUtil.formatNumbers(speed)));
-
+                            int calculatedSpeed = Mth
+                                    .ceil(Math.log((double) EUt / GTValues.V[GTValues.MAX]) / Math.log(4));
+                            int speed = Mth.clamp(calculatedSpeed, 0, GTValues.TIER_COUNT);
+                            if (speed == 0) {
+                                voltageTier = Component.literal(GTValues.VNF[tier])
+                                        .withStyle(style -> style.withColor(GTValues.VC[tier]));
+                            } else {
+                                minAmperage = (float) (minAmperage / Math.pow(4, speed));
+                                voltageTier = Component.literal("MAX")
+                                        .withStyle(style -> style.withColor(TooltipHelper.rainbowColor(speed)))
+                                        .append(Component.literal("+")
+                                                .withStyle(style -> style.withColor(GTValues.VC[speed]))
+                                                .append(FormattingUtil.formatNumbers(speed)));
+                            }
                         }
 
-                        text.append(Component.translatable("gtceu.universal.padded_parentheses", (Component.translatable("gtceu.recipe.eu.amp_notation",
-                                                FormattingUtil.formatNumber2Places(minAmperage),
-                                                voltageTier))
-                                .withStyle(ChatFormatting.WHITE)));
+                        text.append(Component.translatable("gtceu.universal.padded_parentheses",
+                                (Component.translatable("gtceu.recipe.eu.amp_notation",
+                                        FormattingUtil.formatNumber2Places(minAmperage),
+                                        voltageTier))
+                                        .withStyle(ChatFormatting.WHITE)));
                     }
 
                     if (isInput) {
@@ -142,6 +151,20 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                     } else {
                         tooltip.add(Component.translatable("gtceu.top.energy_production").append(" ").append(text));
                     }
+                }
+            }
+        } else {
+            if (blockEntity instanceof MetaMachineBlockEntity mbe &&
+                    mbe.metaMachine instanceof IRecipeLogicMachine rlm) {
+                var logic = rlm.getRecipeLogic();
+
+                if (logic.showFancyTooltip() && logic.isWorkingEnabled()) {
+                    Component status = logic.isWaiting() ?
+                            Component.translatable("gtceu.recipe_logic.recipe_waiting")
+                                    .withStyle(ChatFormatting.YELLOW) :
+                            Component.translatable("gtceu.recipe_logic.setup_fail").withStyle(ChatFormatting.RED);
+                    tooltip.add(status);
+                    logic.getFancyTooltip().forEach(tooltip::add);
                 }
             }
         }

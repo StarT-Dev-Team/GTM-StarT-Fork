@@ -28,6 +28,7 @@ public class FancyMachineUIWidget extends WidgetGroup {
     protected final WidgetGroup pageContainer;
     protected final PageSwitcher pageSwitcher;
     protected final ConfiguratorPanel configuratorPanel;
+    protected final ConfiguratorPanel autoPushConfiguratorPanel;
     protected final TooltipsPanel tooltipsPanel;
 
     @Nullable
@@ -68,6 +69,7 @@ public class FancyMachineUIWidget extends WidgetGroup {
         addWidget(this.sideTabsWidget = new VerticalTabsWidget(this::navigate, -20, 0, 24, height));
         addWidget(this.tooltipsPanel = new TooltipsPanel());
         addWidget(this.configuratorPanel = new ConfiguratorPanel(-(24 + 2), height));
+        addWidget(this.autoPushConfiguratorPanel = new ConfiguratorPanel(2, height));
         this.pageSwitcher = new PageSwitcher(this::switchPage);
 
         setBackground(GuiTextures.BACKGROUND.copy()
@@ -212,6 +214,10 @@ public class FancyMachineUIWidget extends WidgetGroup {
         fancyUI.attachConfigurators(configuratorPanel);
         configuratorPanel
                 .setSelfPosition(new Position(-24 - 2, getGui().getHeight() - configuratorPanel.getSize().height - 4));
+        fancyUI.attachAutoPushConfigurators(autoPushConfiguratorPanel);
+        autoPushConfiguratorPanel
+                .setSelfPosition(new Position(getGui().getWidth() + 2,
+                        getGui().getHeight() - autoPushConfiguratorPanel.getSize().height - 4));
         fancyUI.attachTooltips(tooltipsPanel);
 
         titleBar.setSize(new Size(this.getSize().width, titleBar.getSize().height));
@@ -232,6 +238,7 @@ public class FancyMachineUIWidget extends WidgetGroup {
     protected void clearUI() {
         this.pageContainer.clearAllWidgets();
         this.configuratorPanel.clear();
+        this.autoPushConfiguratorPanel.clear();
         this.tooltipsPanel.clear();
     }
 

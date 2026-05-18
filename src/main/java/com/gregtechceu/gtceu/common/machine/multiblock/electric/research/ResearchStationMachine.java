@@ -1,17 +1,12 @@
 package com.gregtechceu.gtceu.common.machine.multiblock.electric.research;
 
 import com.gregtechceu.gtceu.api.capability.IObjectHolder;
-import com.gregtechceu.gtceu.api.capability.IOpticalComputationProvider;
-import com.gregtechceu.gtceu.api.capability.IOpticalComputationReceiver;
-import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.CWURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockDisplayText;
-import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.ActionResult;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
@@ -31,11 +26,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class ResearchStationMachine extends WorkableElectricMultiblockMachine
-                                    implements IOpticalComputationReceiver, IDisplayUIMachine {
+public class ResearchStationMachine extends OpticalComputationMachine {
 
-    @Getter
-    private IOpticalComputationProvider computationProvider;
     @Getter
     private IObjectHolder objectHolder;
 
@@ -64,14 +56,10 @@ public class ResearchStationMachine extends WorkableElectricMultiblockMachine
                 }
                 this.objectHolder = iObjectHolder;
             }
-
-            part.self().holder.self()
-                    .getCapability(GTCapability.CAPABILITY_COMPUTATION_PROVIDER)
-                    .ifPresent(provider -> this.computationProvider = provider);
         }
 
         // should never happen, but would rather do this than have an obscure NPE
-        if (computationProvider == null || objectHolder == null) {
+        if (objectHolder == null) {
             onStructureInvalid();
         }
     }
@@ -87,7 +75,6 @@ public class ResearchStationMachine extends WorkableElectricMultiblockMachine
 
     @Override
     public void onStructureInvalid() {
-        computationProvider = null;
         // recheck the ability to make sure it wasn't the one broken
         for (IMultiPart part : getParts()) {
             if (part instanceof IObjectHolder holder) {
@@ -98,11 +85,6 @@ public class ResearchStationMachine extends WorkableElectricMultiblockMachine
         }
         objectHolder = null;
         super.onStructureInvalid();
-    }
-
-    @Override
-    public boolean regressWhenWaiting() {
-        return false;
     }
 
     @Override

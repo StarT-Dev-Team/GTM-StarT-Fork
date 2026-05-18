@@ -30,8 +30,8 @@
       "model": {
         "parent": "gtceu:block/casings/voltage/uv",
         "textures": {
-          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active",
-          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active_emissive"
+          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front",
+          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_emissive"
         }
       }
     },
@@ -39,8 +39,8 @@
       "model": {
         "parent": "gtceu:block/casings/voltage/uv",
         "textures": {
-          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active",
-          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active_emissive"
+          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front",
+          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_emissive"
         }
       }
     },
@@ -66,8 +66,8 @@
       "model": {
         "parent": "gtceu:block/casings/voltage/uv",
         "textures": {
-          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active",
-          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active_emissive"
+          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front",
+          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_emissive"
         }
       }
     },
@@ -75,8 +75,8 @@
       "model": {
         "parent": "gtceu:block/casings/voltage/uv",
         "textures": {
-          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active",
-          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_active_emissive"
+          "overlay_front": "gtceu:block/machines/parallel_hatch_mk4/overlay_front",
+          "overlay_front_emissive": "gtceu:block/machines/parallel_hatch_mk4/overlay_front_emissive"
         }
       }
     }

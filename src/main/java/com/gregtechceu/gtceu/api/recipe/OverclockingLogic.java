@@ -2,6 +2,7 @@ package com.gregtechceu.gtceu.api.recipe;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import com.gregtechceu.gtceu.api.machine.feature.IOverclockMachine;
 import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
@@ -74,8 +75,19 @@ public interface OverclockingLogic {
 
         int recipeTier = GTUtil.getTierByVoltage(EUt);
         int maximumTier = GTUtil.getOCTierByVoltage(maxVoltage);
+        int maximumRecipeTier = maximumTier;
+        if (machine instanceof IOverclockMachine overclockMachine) {
+            maximumRecipeTier = overclockMachine.getMaxOverclockTier();
+        }
+
         int OCs = maximumTier - recipeTier;
-        if (recipeTier == GTValues.ULV) OCs--;
+        int baseOCs = maximumRecipeTier - recipeTier;
+
+        if (recipeTier == GTValues.ULV) {
+            OCs--;
+            baseOCs--;
+        }
+
         if (OCs == 0) return ModifierFunction.IDENTITY;
 
         int maxParallels;
@@ -96,7 +108,7 @@ public interface OverclockingLogic {
             }
         }
 
-        OCParams params = new OCParams(EUt, recipe.duration, OCs, maxParallels);
+        OCParams params = new OCParams(EUt, recipe.duration, OCs, baseOCs, maxParallels);
         OCResult result = runOverclockingLogic(params, maxVoltage);
         return result.toModifier();
     }
@@ -141,7 +153,8 @@ public interface OverclockingLogic {
             eut = potentialEUt;
             ocLevel++;
         }
-        return new OCResult(Math.pow(voltageFactor, ocLevel), Math.pow(durationFactor, ocLevel), ocLevel, 1);
+        return new OCResult(Math.pow(voltageFactor, ocLevel), Math.pow(durationFactor, ocLevel), ocLevel,
+                Math.min(ocLevel, params.baseOCAmount), 1);
     }
 
     /**
@@ -191,7 +204,7 @@ public interface OverclockingLogic {
             ocLevel++;
         }
 
-        return new OCResult(eutMultiplier, durationMultiplier, ocLevel, 1);
+        return new OCResult(eutMultiplier, durationMultiplier, ocLevel, Math.min(ocLevel, params.baseOCAmount), 1);
     }
 
     /**
@@ -246,7 +259,8 @@ public interface OverclockingLogic {
             ocLevel++;
         }
 
-        return new OCResult(Math.pow(voltageFactor, ocLevel), durationMultiplier, ocLevel, (int) parallel);
+        return new OCResult(Math.pow(voltageFactor, ocLevel), durationMultiplier, ocLevel,
+                Math.min(ocLevel, params.baseOCAmount), (int) parallel);
     }
 
     /**
@@ -310,7 +324,8 @@ public interface OverclockingLogic {
             ocLevel++;
         }
 
-        return new OCResult(Math.pow(STD_VOLTAGE_FACTOR, ocLevel), durationMultiplier, ocLevel, (int) parallel);
+        return new OCResult(Math.pow(STD_VOLTAGE_FACTOR, ocLevel), durationMultiplier, ocLevel,
+                Math.min(ocLevel, params.baseOCAmount), (int) parallel);
     }
 
     /**
@@ -338,9 +353,9 @@ public interface OverclockingLogic {
         return Math.min(1, Math.pow(0.95, amountEUtDiscount));
     }
 
-    record OCParams(long eut, int duration, int ocAmount, int maxParallels) {}
+    record OCParams(long eut, int duration, int ocAmount, int baseOCAmount, int maxParallels) {}
 
-    record OCResult(double eutMultiplier, double durationMultiplier, int ocLevel, int parallels) {
+    record OCResult(double eutMultiplier, double durationMultiplier, int ocLevel, int baseOCLevel, int parallels) {
 
         public ModifierFunction toModifier() {
             return ModifierFunction.builder()
@@ -348,6 +363,7 @@ public interface OverclockingLogic {
                     .eutMultiplier(eutMultiplier)
                     .durationMultiplier(durationMultiplier)
                     .addOCs(ocLevel)
+                    .addBaseOCs(baseOCLevel)
                     .subtickParallels(parallels)
                     .build();
         }

@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfiguratorButton;
-import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 
 import net.minecraft.network.chat.Component;
 
@@ -12,7 +11,7 @@ import appeng.api.stacks.GenericStack;
 import java.util.List;
 import java.util.function.Predicate;
 
-public interface IAutoPullPart extends IMultiPart {
+public interface IAutoPullPart extends IMEPart {
 
     boolean isAutoPull();
 

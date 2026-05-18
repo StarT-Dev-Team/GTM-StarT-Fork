@@ -87,6 +87,8 @@ public class GTRecipeREICategory extends ModularUIDisplayCategory<GTRecipeDispla
 
     public static CategoryIdentifier<?> machineCategory(GTRecipeCategory category) {
         if (category == GTRecipeTypes.FURNACE_RECIPES.getCategory()) return BuiltinPlugin.SMELTING;
+        else if (category == GTRecipeTypes.BLAST_FURNACE_RECIPES.getCategory()) return BuiltinPlugin.BLASTING;
+        else if (category == GTRecipeTypes.SMOKING_FURNACE_RECIPES.getCategory()) return BuiltinPlugin.SMOKING;
         else return CATEGORIES.apply(category);
     }
 

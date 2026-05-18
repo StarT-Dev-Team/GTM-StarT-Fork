@@ -69,12 +69,6 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
     @DropSaved
     private int minStackSize = 1;
 
-    @Getter
-    @Setter
-    @Persisted
-    @DropSaved
-    private int ticksPerCycle = 40;
-
     @Setter
     private Predicate<GenericStack> autoPullTest;
 
@@ -116,15 +110,19 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
 
     @Override
     public void autoIO() {
-        super.autoIO();
-        if (ticksPerCycle == 0) ticksPerCycle = ConfigHolder.INSTANCE.compat.ae2.updateIntervals; // Emergency Check to
-                                                                                                  // Avoid Crash loops.
-        if (getOffsetTimer() % ticksPerCycle == 0) {
-            if (autoPull) {
-                refreshList();
-            }
-            syncME();
+        if (!this.isWorkingEnabled()) return;
+
+        if (ticksPerCycle < ConfigHolder.INSTANCE.compat.ae2.minUpdateIntervals)
+            ticksPerCycle = ConfigHolder.INSTANCE.compat.ae2.updateIntervals;
+
+        if (getOffsetTimer() % ticksPerCycle != 0) return;
+        if (!updateMEStatus()) return;
+
+        if (autoPull) {
+            refreshList();
         }
+        syncME();
+        updateTankSubscription();
     }
 
     @Override
@@ -203,8 +201,7 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
 
         // Use a PriorityQueue to sort the stacks on size, take the first CONFIG_SIZE
         // biggest stacks.
-        PriorityQueue<Object2LongMap.Entry<AEKey>> topFluids = new PriorityQueue<>(
-                Comparator.comparingLong(Object2LongMap.Entry<AEKey>::getLongValue));
+        PriorityQueue<GenericStack> topFluids = new PriorityQueue<>(Comparator.comparingLong(GenericStack::amount));
 
         for (Object2LongMap.Entry<AEKey> entry : counter) {
             long amount = entry.getLongValue();
@@ -213,17 +210,15 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
             if (amount <= 0) continue;
             if (!(what instanceof AEFluidKey fluidKey)) continue;
 
-            long request = networkStorage.extract(what, amount, Actionable.SIMULATE, actionSource);
-            if (request == 0) continue;
-
             // Ensure that it is valid to configure with this stack
-            if (autoPullTest != null && !autoPullTest.test(new GenericStack(fluidKey, amount))) continue;
+            var genericStack = new GenericStack(fluidKey, amount);
+            if (autoPullTest != null && !autoPullTest.test(genericStack)) continue;
             if (amount >= minStackSize) {
                 if (topFluids.size() < CONFIG_SIZE) {
-                    topFluids.offer(entry);
-                } else if (amount > topFluids.peek().getLongValue()) {
+                    topFluids.offer(genericStack);
+                } else if (amount > topFluids.peek().amount()) {
                     topFluids.poll();
-                    topFluids.offer(entry);
+                    topFluids.offer(genericStack);
                 }
             }
         }
@@ -233,12 +228,13 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
         int fluidAmount = topFluids.size();
         for (index = 0; index < CONFIG_SIZE; index++) {
             if (topFluids.isEmpty()) break;
-            Object2LongMap.Entry<AEKey> entry = topFluids.poll();
-            AEKey what = entry.getKey();
-            long amount = entry.getLongValue();
 
-            // If we get here, the fluid has already been checked by the PQ.
+            var entry = topFluids.poll();
+            AEKey what = entry.what();
+            long amount = entry.amount();
+
             long request = networkStorage.extract(what, amount, Actionable.SIMULATE, actionSource);
+            if (request == 0) continue;
 
             // Since we want our fluids to be displayed from highest to lowest, but poll() returns
             // the lowest first, we fill in the slots starting at fluidAmount-1
@@ -257,7 +253,7 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
     @Override
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         IMEStockingPart.super.attachConfigurators(configuratorPanel);
-        super.attachConfigurators(configuratorPanel);
+        attachHatchConfigurators(configuratorPanel);
         configuratorPanel.attachConfigurators(new AutoStockingFancyConfigurator(this));
     }
 
@@ -268,6 +264,8 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
     @Override
     protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide,
                                                    BlockHitResult hitResult) {
+        var superResult = super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+        if (superResult != InteractionResult.PASS) return superResult;
         if (!isRemote()) {
             setAutoPull(!autoPull);
             if (autoPull) {
@@ -313,7 +311,7 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
         super.readConfigFromTag(tag);
     }
 
-    private class ExportOnlyAEStockingFluidList extends ExportOnlyAEFluidList {
+    public class ExportOnlyAEStockingFluidList extends ExportOnlyAEFluidList {
 
         public ExportOnlyAEStockingFluidList(MetaMachine holder, int slots) {
             super(holder, slots, ExportOnlyAEStockingFluidSlot::new);
@@ -340,7 +338,7 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
         }
     }
 
-    private class ExportOnlyAEStockingFluidSlot extends ExportOnlyAEFluidSlot {
+    public class ExportOnlyAEStockingFluidSlot extends ExportOnlyAEFluidSlot {
 
         public ExportOnlyAEStockingFluidSlot() {
             super();

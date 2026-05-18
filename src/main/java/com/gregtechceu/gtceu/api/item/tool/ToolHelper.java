@@ -306,6 +306,14 @@ public class ToolHelper {
         var harvestableBlocks = getHarvestableBlocks(stack, player);
         if (!harvestableBlocks.isEmpty()) {
             for (BlockPos pos : harvestableBlocks) {
+                if (pos.equals(targeted)) {
+                    Level world = player.level();
+                    BlockState state = world.getBlockState(pos);
+                    world.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(state));
+
+                    continue;
+                }
+
                 if (!breakBlockRoutine(player, stack, pos, pos.equals(targeted))) {
                     return true;
                 }
@@ -439,14 +447,7 @@ public class ToolHelper {
                         be.getMetaMachine().recipeLogic.getChanceCaches()).isSuccess()) {
                     drops.clear();
                     TagPrefix prefix = ChemicalHelper.getPrefix(silktouchDrop.getItem());
-                    if (prefix.isEmpty()) {
-                        for (Content output : hammerRecipe.getOutputContents(ItemRecipeCapability.CAP)) {
-                            if (dropChance >= 1.0F || random.nextFloat() <= dropChance) {
-                                drops.add(SizedIngredient.copy(ItemRecipeCapability.CAP.of(output.content))
-                                        .getItems()[0]);
-                            }
-                        }
-                    } else if (TagPrefix.ORES.containsKey(prefix)) {
+                    if (TagPrefix.ORES.containsKey(prefix)) {
                         for (Content content : hammerRecipe.getOutputContents(ItemRecipeCapability.CAP)) {
                             if (dropChance >= 1.0F || random.nextFloat() <= dropChance) {
                                 ItemStack output = ItemRecipeCapability.CAP.of(content.content).getItems()[0];
@@ -456,6 +457,13 @@ public class ToolHelper {
                                     if (fortune > 0) output.grow(random.nextInt(fortune));
                                     drops.add(output);
                                 }
+                            }
+                        }
+                    } else {
+                        for (Content output : hammerRecipe.getOutputContents(ItemRecipeCapability.CAP)) {
+                            if (dropChance >= 1.0F || random.nextFloat() <= dropChance) {
+                                drops.add(SizedIngredient.copy(ItemRecipeCapability.CAP.of(output.content))
+                                        .getItems()[0]);
                             }
                         }
                     }

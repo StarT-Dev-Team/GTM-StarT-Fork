@@ -171,6 +171,10 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
         holder.notifyBlockUpdate();
     }
 
+    public void notifyAdjacentBlockUpdate() {
+        holder.notifyAdjacentBlockUpdate();
+    }
+
     @Override
     public void scheduleRenderUpdate() {
         holder.scheduleRenderUpdate();
@@ -539,8 +543,12 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
         }
 
         if (toolTypes.contains(GTToolType.WRENCH)) {
-            if (!player.isShiftKeyDown()) {
+            if (player.isShiftKeyDown()) {
                 if (isFacingValid(side) || (allowExtendedFacing() && hasFrontFacing() && side == getFrontFacing())) {
+                    return GuiTextures.TOOL_FRONT_FACING_ROTATION;
+                }
+            } else {
+                if (allowExtendedFacing() && hasFrontFacing() && side == getFrontFacing()) {
                     return GuiTextures.TOOL_FRONT_FACING_ROTATION;
                 }
             }
@@ -719,6 +727,17 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
         if (cover == null) return 0;
 
         return cover.getRedstoneSignalOutput();
+    }
+
+    @Override
+    public int getOutputDirectSignal(@Nullable Direction side) {
+        if (side == null) return 0;
+
+        // For some reason, Minecraft requests the output signal from the opposite side...
+        CoverBehavior cover = getCoverContainer().getCoverAtSide(side.getOpposite());
+        if (cover == null) return 0;
+
+        return cover.getRedstoneDirectSignalOutput();
     }
 
     @Override

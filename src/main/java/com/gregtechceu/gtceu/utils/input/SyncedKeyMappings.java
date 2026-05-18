@@ -38,6 +38,17 @@ public final class SyncedKeyMappings {
             "gtceu.key.armor_charging", KeyConflictContext.IN_GAME, InputConstants.KEY_N);
     public static final SyncedKeyMapping TOOL_AOE_CHANGE = SyncedKeyMapping.createConfigurable(
             "gtceu.key.tool_aoe_change", KeyConflictContext.IN_GAME, InputConstants.KEY_V);
+    public static final SyncedKeyMapping STEP_ASSIST_ENABLE = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.enable_step_assist", KeyConflictContext.IN_GAME,
+            InputConstants.KEY_APOSTROPHE);
+    public static final SyncedKeyMapping TOOLTIP_NEXT_PAGE = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_next_page", KeyConflictContext.IN_GAME, InputConstants.KEY_RIGHT);
+    public static final SyncedKeyMapping TOOLTIP_PREV_PAGE = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_previous_page", KeyConflictContext.IN_GAME, InputConstants.KEY_LEFT);
+    public static final SyncedKeyMapping TOOLTIP_UP_PAGE = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_up_page", KeyConflictContext.IN_GAME, InputConstants.KEY_UP);
+    public static final SyncedKeyMapping TOOLTIP_DOWN_PAGE = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_down_page", KeyConflictContext.IN_GAME, InputConstants.KEY_DOWN);
 
     public static void init() {
         if (GTCEu.isClientSide()) {

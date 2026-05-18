@@ -1043,6 +1043,11 @@ public class TagPrefix {
     @Setter
     private int maxStackSize = 64;
 
+    @Accessors(chain = true, fluent = false)
+    @Setter
+    @Getter
+    private boolean fallingBlock = false;
+
     @Getter
     private final List<MaterialStack> secondaryMaterials = new ArrayList<>();
 
@@ -1157,6 +1162,11 @@ public class TagPrefix {
 
     public TagPrefix enableRecycling() {
         this.generateRecycling = true;
+        return this;
+    }
+
+    public TagPrefix fallingBlock() {
+        this.setFallingBlock(true);
         return this;
     }
 

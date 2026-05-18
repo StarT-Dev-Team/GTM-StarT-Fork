@@ -341,6 +341,8 @@ public class ItemLang {
                 "§7Fills attached containers with §9Water§7 as §fCover§7.");
         provider.add("item.gtceu.ender_fluid_link_cover.tooltip",
                 "§7Transports §fFluids§7 with a §fWireless §dEnder§f Connection§7 as §fCover§7.");
+        provider.add("item.gtceu.machine_mode_cover.tooltip",
+                "§7Controls §fMachine Mode§7 based on Redstone as §fCover§7.");
         provider.add("item.gtceu.gelled_toluene.tooltip", "§7Raw Explosive");
         provider.add("item.gtceu.bottle.purple.drink.tooltip",
                 "§7How about Lemonade. Or some Ice Tea? I got Purple Drink!");
@@ -350,7 +352,7 @@ public class ItemLang {
         provider.add("item.gtceu.basic_tape.tooltip",
                 "§7Not strong enough for mechanical issues\nCan be used to pick up crates without dropping their items");
         provider.add("item.gtceu.terminal.tooltip",
-                "Shift + R-Click on a controller to automatically build the multi-block");
+                "Shift + R-Click on a controller to automatically build a multiblock with items from your inventory");
 
         provider.add("item.gtceu.sus_record.desc", "§7sussy!");
     }

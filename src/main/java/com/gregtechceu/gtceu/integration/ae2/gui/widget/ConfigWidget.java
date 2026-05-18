@@ -30,7 +30,7 @@ public abstract class ConfigWidget extends WidgetGroup {
     protected final boolean isStocking;
 
     public ConfigWidget(int x, int y, IConfigurableSlot[] config, boolean isStocking) {
-        super(new Position(x, y), new Size(config.length / 2 * 18, 18 * 4 + 2));
+        super(new Position(x, y), new Size(Math.min(config.length, 8) * 18, (config.length + 7) / 8 * (18 * 2 + 2)));
         this.isStocking = isStocking;
         this.config = config;
         this.init();

@@ -8,9 +8,9 @@ public class MachineLang {
 
     protected static void init(RegistrateLangProvider provider) {
         // Custom machine names
-        replace(provider, "block.gtceu.steam_large_turbine", "Large Steam Turbine");
-        replace(provider, "block.gtceu.gas_large_turbine", "Large Gas Turbine");
-        replace(provider, "block.gtceu.plasma_large_turbine", "Large Plasma Turbine");
+        // replace(provider, "block.gtceu.steam_large_turbine", "Large Steam Turbine");
+        // replace(provider, "block.gtceu.gas_large_turbine", "Large Gas Turbine");
+        // replace(provider, "block.gtceu.plasma_large_turbine", "Large Plasma Turbine");
 
         // Steam machines
         replace(provider, "block.gtceu.steam_solid_boiler.bronze", "Small Steam Solid Boiler");
@@ -449,11 +449,6 @@ public class MachineLang {
                 "Allows §fHPCA§7 to connect to §fNetwork Switches§7");
         provider.add("gtceu.machine.hpca.component_type.damaged", "Can be damaged by HPCA overheating!");
 
-        multiLang(provider, "gtceu.machine.electric_blast_furnace.tooltip",
-                "For every §f900K§7 above the recipe temperature, a multiplicative §f95%%§7 energy multiplier is applied pre-overclocking.",
-                "For every §f1800K§7 above the recipe temperature, one overclock becomes §f100%% efficient§7 (perfect overclock).",
-                "For every voltage tier above §bMV§7, temperature is increased by §f100K§7.");
-
         provider.add("gtceu.machine.coke_oven_hatch.tooltip", "§7Allows automation access for the Coke Oven.");
 
         provider.add("gtceu.machine.canner.jei_description",
@@ -618,15 +613,11 @@ public class MachineLang {
         provider.add("gtceu.machine.vacuum_freezer.tooltip", "Aluminium Ice Box");
         provider.add("gtceu.machine.implosion_compressor.tooltip", "The only Machine you want to go Boom");
         provider.add("gtceu.machine.pyrolyse_oven.tooltip", "Electric Coke Oven");
-        provider.add("gtceu.machine.pyrolyse_oven.tooltip.1",
-                "§6Cupronickel §7coils are §f25%%§7 slower. Every coil after §bKanthal§7 increases speed by §f50%%§7.");
         provider.add("gtceu.machine.distillation_tower.tooltip", "Fluid Refinery");
         provider.add("gtceu.machine.multi_furnace.tooltip", "Just like the Oven at Home");
         provider.add("gtceu.machine.large_combustion_engine.tooltip", "Fuel Ignition Chamber");
         provider.add("gtceu.machine.extreme_combustion_engine.tooltip", "Extreme Chemical Energy Releaser");
         provider.add("gtceu.machine.cracker.tooltip", "Makes Oil useful");
-        provider.add("gtceu.machine.cracker.tooltip.1",
-                "Every coil after §6Cupronickel§7 reduces energy usage by §f10%%§7.");
         provider.add("gtceu.machine.large_turbine.steam.tooltip", "Do not put your Head in it");
         provider.add("gtceu.machine.large_turbine.gas.tooltip", "Not a Jet Engine");
         provider.add("gtceu.machine.large_turbine.plasma.tooltip", "Plasma Energy Siphon");
@@ -640,6 +631,7 @@ public class MachineLang {
         provider.add("gtceu.machine.fusion_reactor.zpm.tooltip", "A SUN DOWN ON EARTH");
         provider.add("gtceu.machine.fusion_reactor.uv.tooltip", "A WHITE DWARF DOWN ON YOUR BASE");
         provider.add("gtceu.machine.large_chemical_reactor.tooltip", "Black Box Reactor");
+        provider.add("gtceu.machine.extreme_chemical_reactor.tooltip", "Bigger Black Box Reactor");
         provider.add("gtceu.machine.steam_oven.tooltip", "Not to be confused with Multi-Smelter");
         provider.add("gtceu.machine.steam_grinder.tooltip", "A multiblock Macerator without the Byproducts");
         provider.add("gtceu.machine.large_miner.ev.tooltip", "Digging Ore instead of You");
@@ -702,7 +694,8 @@ public class MachineLang {
         multiLang(provider, "gtceu.machine.high_performance_computation_array.tooltip",
                 "Just your average Supercomputer",
                 "Used to generate §fComputation§7 (and heat).",
-                "Requires HPCA components to generate §fCWU/t§7 (Compute Work Units).");
+                "Requires HPCA components to generate §fCWU/t§7 (Compute Work Units).",
+                "Energy usage is calculated by the consumption of the components scaled by how much computation is used.");
         provider.add("gtceu.multiblock.hpca.description",
                 "The High Performance Computing Array (HPCA) is a multiblock structure used for creating Compute Work Units (CWU/t) for more complex Assembly Line Research Data. The structure has a flexible 3x3 area which can be filled in any way with HPCA components. Different components can provide different amounts of Computation, Cooling, as well as Energy Cost, Coolant Cost, and Heat Production. When used with a Bridge Component, the HPCA can connect to Network Switches for combining and routing Computation from multiple sources to one or more destinations.");
 
@@ -801,6 +794,12 @@ public class MachineLang {
                 "§oME Input Bus Configuration Data");
         provider.add("gtceu.machine.me.fluid_import.data_stick.name",
                 "§oME Input Hatch Configuration Data");
+        provider.add("gtceu.machine.me.io.expose.description", "Expose all sides: %s");
+
+        provider.add("gtceu.gui.title.me_config.ticks_per_cycle", "Ticks Per Cycle");
+        provider.add("gtceu.gui.me_config.ticks_per_cycle", "Delay between item or fluid list updates");
+        provider.add("gtceu.gui.me_hatch_config.title", "Configure ME Hatch");
+        provider.add("gtceu.gui.me_bus_config.title", "Configure ME Bus");
 
         provider.add("gtceu.gui.title.adv_stocking_config.min_item_count",
                 "Min. Item Count");
@@ -930,6 +929,8 @@ public class MachineLang {
         provider.add("gtceu.multiblock.ore_rig.ore_amount", "Drilling Rate: %s");
         provider.add("gtceu.multiblock.pyrolyse_oven.speed", "Processing Speed: %s%%");
         provider.add("gtceu.multiblock.cracking_unit.energy", "Energy Usage: %s%%");
+        provider.add("gtceu.multiblock.chemical_reactor.speed", "Processing Speed: %s%%");
+        provider.add("gtceu.multiblock.chemical_reactor.energy", "Energy Usage: %s%%");
         provider.add("gtceu.multiblock.power_substation.stored", "§7Stored: %s §7EU");
         provider.add("gtceu.multiblock.power_substation.capacity", "§7Capacity: %s §7EU");
         provider.add("gtceu.multiblock.power_substation.passive_drain", "§7Passive Drain: %s §7EU/t");
@@ -991,6 +992,22 @@ public class MachineLang {
         provider.add("gtceu.creative.computation.average", "Average Requested CWUt");
         provider.add("gtceu.creative.activity.on", "Active");
         provider.add("gtceu.creative.activity.off", "Not active");
+
+        provider.add("gtceu.tooltip.paginated_info", "◀ %s Page %s/%s %s ▶");
+        provider.add("gtceu.tooltip.show_capabilities", "§6Hold §d[SHIFT]§6 to see capabilities");
+        provider.add("gtceu.tooltip.show_capabilities_shift", "§6Capabilities:");
+        provider.add("gtceu.tooltip.capabilities_info", "▲ %s | %s ▼");
+
+        // Multis with Abbreviations
+        replace(provider, "block.gtceu.bronze_large_boiler", "Large Bronze Boiler [LBB]");
+        replace(provider, "block.gtceu.steel_large_boiler", "Large Steel Boiler [LSB]");
+        replace(provider, "block.gtceu.titanium_large_boiler", "Large Titanium Boiler [LTB]");
+        replace(provider, "block.gtceu.tungstensteel_large_boiler", "Large Tungstensteel Boiler [LTsB]");
+        replace(provider, "block.gtceu.large_combustion_engine", "Large Combustion Engine [LCE]");
+        replace(provider, "block.gtceu.extreme_combustion_engine", "Extreme Combustion Engine [ECE]");
+        replace(provider, "block.gtceu.steam_large_turbine", "Large Steam Turbine [LST]");
+        replace(provider, "block.gtceu.gas_large_turbine", "Large Gas Turbine [LGT]");
+        replace(provider, "block.gtceu.plasma_large_turbine", "Large Plasma Turbine [LPT]");
     }
 
     public static void standardTooltips(RegistrateLangProvider provider, String root, String machine,

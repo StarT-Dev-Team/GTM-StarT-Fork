@@ -11,6 +11,7 @@ import com.gregtechceu.gtceu.api.machine.trait.NotifiableEnergyContainer;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.ItemBusPartMachine;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.gametest.util.TestUtils;
 
 import net.minecraft.core.BlockPos;
@@ -112,7 +113,7 @@ public class OverclockLogicTest {
         BusHolder busHolder = getBussesAndForm(helper);
         busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Items.RED_BED));
         // One tick to start, 20 for the recipe to run
-        helper.succeedOnTickWhen(21, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 27 : 21, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
                             new ItemStack(Blocks.STONE)),
@@ -127,7 +128,7 @@ public class OverclockLogicTest {
         BusHolder busHolder = getBussesAndForm(helper);
         busHolder.inputBus1.getInventory().setStackInSlot(0, new ItemStack(Items.STICK, 64));
         // One tick to start, 4 for the recipe to run (16/t from ULV recipe to HV)
-        helper.succeedOnTickWhen(5, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 17 : 5, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus1.getInventory().getStackInSlot(0),
                             new ItemStack(Blocks.STONE, 64)),

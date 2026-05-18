@@ -27,6 +27,7 @@ import com.lowdragmc.lowdraglib.gui.modular.ModularUIContainer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
@@ -101,7 +102,11 @@ public class GTEMIPlugin implements EmiPlugin {
 
         for (Potion potion : BuiltInRegistries.POTION) {
             FluidStack stack = PotionFluidHelper.getFluidFromPotion(potion, PotionFluidHelper.BOTTLE_AMOUNT);
-            registry.addEmiStack(EmiStack.of(stack.getFluid(), stack.getTag()));
+            Fluid fluid = stack.getFluid();
+
+            if (!fluid.getFluidType().toString().equals("gtceu:potion")) continue;
+
+            registry.addEmiStack(EmiStack.of(fluid, stack.getTag()));
         }
     }
 }

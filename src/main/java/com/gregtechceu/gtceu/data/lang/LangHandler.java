@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class    LangHandler {
+public class LangHandler {
 
     public static void init(RegistrateLangProvider provider) {
         AdvancementLang.init(provider);
@@ -28,6 +28,8 @@ public class    LangHandler {
         MachineLang.init(provider);
         ToolLang.init(provider);
         ConfigurationLang.init(provider);
+        RecipeLogicLang.init(provider);
+        ModifierLang.init(provider);
 
         provider.add("gtceu.gui.editor.tips.citation", "Number of citations");
         provider.add("gtceu.gui.editor.group.recipe_type", "cap");
@@ -58,7 +60,7 @@ public class    LangHandler {
         provider.add("recipe.condition.steam_vent.tooltip", "Clean steam vent");
         provider.add("recipe.condition.adjacent_fluid.tooltip", "Fluid blocks around");
         provider.add("recipe.condition.adjacent_block.tooltip", "Blocks around");
-        provider.add("recipe.condition.eu_to_start.tooltip", "EU to Start: %d%s");
+        provider.add("recipe.condition.eu_to_start.tooltip", "EU to Start: %s");
         provider.add("recipe.condition.daytime.day.tooltip", "Requires day time to work");
         provider.add("recipe.condition.daytime.night.tooltip", "Requires night time to work");
         provider.add("recipe.condition.gamestage.unlocked_stage", "Unlocked at stage: %s");
@@ -241,6 +243,7 @@ public class    LangHandler {
         replace(provider, "item.gtceu.tool.lv_chainsaw", "%s Chainsaw (LV)");
         replace(provider, "item.gtceu.tool.mv_chainsaw", "%s Chainsaw (MV)");
         replace(provider, "item.gtceu.tool.hv_chainsaw", "%s Chainsaw (HV)");
+        replace(provider, "item.gtceu.tool.iv_chainsaw", "%s Chainsaw (IV)");
         replace(provider, "item.gtceu.tool.lv_wrench", "%s Wrench (LV)");
         provider.add("item.gtceu.tool.lv_wrench.tooltip", "§8Hold left click to dismantle Machines");
         replace(provider, "item.gtceu.tool.hv_wrench", "%s Wrench (HV)");
@@ -251,6 +254,10 @@ public class    LangHandler {
         provider.add("item.gtceu.tool.buzzsaw.tooltip", "§8Not suitable for harvesting Blocks");
         replace(provider, "item.gtceu.tool.lv_screwdriver", "%s Screwdriver (LV)");
         provider.add("item.gtceu.tool.lv_screwdriver.tooltip", "§8Adjusts Covers and Machines");
+        replace(provider, "item.gtceu.tool.hv_screwdriver", "%s Screwdriver (HV)");
+        provider.add("item.gtceu.tool.hv_screwdriver.tooltip", "§8Adjusts Covers and Machines");
+        replace(provider, "item.gtceu.tool.iv_screwdriver", "%s Screwdriver (IV)");
+        provider.add("item.gtceu.tool.iv_screwdriver.tooltip", "§8Adjusts Covers and Machines");
         replace(provider, "item.gtceu.tool.plunger", "%s Plunger");
         provider.add("item.gtceu.tool.plunger.tooltip", "§8Removes Fluids from Machines");
         replace(provider, "item.gtceu.tool.shears", "%s Shears");
@@ -305,12 +312,16 @@ public class    LangHandler {
         provider.add("metaitem.liquid_fuel_jetpack.tooltip", "Uses Combustion Generator Fuels for Thrust");
         provider.add("metaarmor.nms.nightvision.enabled", "NanoMuscle™ Suite: NightVision Enabled");
         provider.add("metaarmor.nms.nightvision.disabled", "NanoMuscle™ Suite: NightVision Disabled");
-        provider.add("metaarmor.nms.boosted_jump.enabled", "NanoMuscle™ Suite: Jump Boost Enabled");
-        provider.add("metaarmor.nms.boosted_jump.disabled", "NanoMuscle™ Suite: Jump Boost Disabled");
         provider.add("metaarmor.nms.nightvision.error", "NanoMuscle™ Suite: §cNot enough power!");
         provider.add("metaarmor.qts.nightvision.enabled", "QuarkTech™ Suite: NightVision Enabled");
         provider.add("metaarmor.qts.nightvision.disabled", "QuarkTech™ Suite: NightVision Disabled");
         provider.add("metaarmor.qts.nightvision.error", "QuarkTech™ Suite: §cNot enough power!");
+        provider.add("metaarmor.nms.step_assist.disabled", "NanoMuscle™ Suite: StepAssist Disabled");
+        provider.add("metaarmor.nms.step_assist.enabled", "NanoMuscle™ Suite: StepAssist Enabled");
+        provider.add("metaarmor.qts.step_assist.disabled", "QuarkTech™ Suite: StepAssist Disabled");
+        provider.add("metaarmor.qts.step_assist.enabled", "QuarkTech™ Suite: StepAssist Enabled");
+        provider.add("metaarmor.qts.boosted_jump.enabled", "QuarkTech™ Suite: Jump Boost Enabled");
+        provider.add("metaarmor.qts.boosted_jump.disabled", "QuarkTech™ Suite: Jump Boost Disabled");
         provider.add("metaarmor.jetpack.flight.enable", "Jetpack: Flight Enabled");
         provider.add("metaarmor.jetpack.flight.disable", "Jetpack: Flight Disabled");
         provider.add("metaarmor.jetpack.hover.enable", "Jetpack: Hover Mode Enabled");
@@ -503,9 +514,35 @@ public class    LangHandler {
         multilineLang(provider, "cover.advanced_detector.latch.disabled",
                 "Behavior: Continuous\n\n" + detectorLatchDescription);
 
+        var detectorOutputSignalDescription = """
+                Change the output signal of this Cover.
+                §eWeak§7 - Default; emit a weak redstone signal
+                §eStrong§7 - emit a strong redstone signal""";
+        multilineLang(provider, "cover.advanced_detector.signal.enabled",
+                "Output Signal: Strong\n\n" + detectorOutputSignalDescription);
+        multilineLang(provider, "cover.advanced_detector.signal.disabled",
+                "Output Signal: Weak\n\n" + detectorOutputSignalDescription);
+
+        provider.add("cover.advanced_detector.ticks_per_cycle", "Ticks per Cycle");
+        provider.add("cover.advanced_detector.ticks_per_cycle.tooltip", "Delay between redstone updates");
+
+        provider.add("cover.layered_step_detector.label", "Layered Step Detector");
+        var layeredStepDetectorInvertDescription = "Toggle to invert the redstone logic\nBy default, redstone is emitted when the machine is processing a layered recipe, and stops emitting when it is not processing any layered recipes";
+        multilineLang(provider, "cover.layered_step_detector.invert.enabled",
+                "Output: Inverted\n\n" + layeredStepDetectorInvertDescription);
+        multilineLang(provider, "cover.layered_step_detector.invert.disabled",
+                "Output: Normal\n\n" + layeredStepDetectorInvertDescription);
+
         provider.add("cover.advanced_energy_detector.label", "Advanced Energy Detector");
         provider.add("cover.advanced_energy_detector.min", "Min");
         provider.add("cover.advanced_energy_detector.max", "Max");
+
+        provider.add("cover.advanced_activity_detector.label", "Advanced Activity Detector");
+        var advancedActivityDetectorInvertDescription = "Toggle to invert the redstone logic\nBy default, redstone is emitted when the machine is working, and stops emitting when it is idle";
+        multilineLang(provider, "cover.advanced_activity_detector.invert.enabled",
+                "Output: Inverted\n\n" + advancedActivityDetectorInvertDescription);
+        multilineLang(provider, "cover.advanced_activity_detector.invert.disabled",
+                "Output: Normal\n\n" + advancedActivityDetectorInvertDescription);
 
         var advancedEnergyDetectorInvertDescription = "Toggle to invert the redstone logic\nBy default, redstone is emitted when less than the minimum EU, and stops emitting when greater than the max EU";
         multilineLang(provider, "cover.advanced_energy_detector.invert.enabled",
@@ -928,6 +965,7 @@ public class    LangHandler {
         provider.add("gtceu.recipe.eu.total", "%s EU/t");
         provider.add("gtceu.recipe.eu.amp_notation", "%s A @ %s");
         provider.add("gtceu.recipe.duration", "Duration: %s secs");
+        provider.add("gtceu.recipe.total_duration", "Total Duration: %s secs");
         provider.add("gtceu.recipe.voltage", "Voltage: %s V @ %s A");
         provider.add("gtceu.recipe.total_eu", "Total Usage: %s EU/t");
         provider.add("gtceu.recipe.not_consumed", "Does not get consumed in the process");
@@ -947,6 +985,7 @@ public class    LangHandler {
         provider.add("gtceu.recipe.computation_per_tick", "Min. Computation: %s CWU/t");
         provider.add("gtceu.recipe.total_computation", "Computation: %s CWU");
         provider.add("gtceu.recipe.byproduct_tier", "Byproducts from %s§r+");
+        provider.add("gtceu.recipe.layered.step", "Step %s");
         provider.add("gtceu.fluid.click_to_fill",
                 "§7Click with a Fluid Container to §bfill §7the tank (Shift-click for a full stack).");
         provider.add("gtceu.fluid.click_combined",
@@ -1026,11 +1065,11 @@ public class    LangHandler {
                 "Chunk Mode Enabled: Click to Disable.\n§7Switching requires an idle machine.");
         multilineLang(provider, "gtceu.gui.chunkmode.disabled",
                 "Chunk Mode Disabled: Click to Enable.\n§7Switching requires an idle machine.");
-        multilineLang(provider, "gtceu.gui.multiblock_item_voiding", "Voiding Mode\n§7Voiding §6Items");
-        multilineLang(provider, "gtceu.gui.multiblock_fluid_voiding", "Voiding Mode\n§7Voiding §9Fluids");
-        multilineLang(provider, "gtceu.gui.multiblock_all_voiding",
-                "Voiding Mode\n§7Voiding All");
-        multilineLang(provider, "gtceu.gui.multiblock_no_voiding", "Voiding Mode\n§7Voiding Nothing");
+        provider.add("gtceu.gui.multiblock.voiding_mode", "Voiding Mode:");
+        provider.add("gtceu.gui.item_voiding", "§7Voiding §6Items");
+        provider.add("gtceu.gui.fluid_voiding", "§7Voiding §9Fluids");
+        provider.add("gtceu.gui.all_voiding", "§7Voiding §cAll");
+        provider.add("gtceu.gui.no_voiding", "§7Voiding Nothing");
         multilineLang(provider, "gtceu.gui.fisher_mode.tooltip",
                 "Toggle junk items\nOff costs 2 string per operation");
         provider.add("ore.spawnlocation.name", "Ore Spawn Information");
@@ -1159,6 +1198,14 @@ public class    LangHandler {
         provider.add("gtceu.multiblock.pattern.location_end", "§cVery End§r");
         provider.add("gtceu.multiblock.pattern.replaceable_air", "Replaceable by Air");
 
+        provider.add("gtceu.multiblock.layered.progress", "Total Progress: %ss / %ss (%s%%)");
+        provider.add("gtceu.multiblock.layered.step", "Current Step: %s/%s");
+        provider.add("gtceu.multiblock.layered.step_progress", "Step Progress: %ss / %ss (%s%%)");
+        provider.add("gtceu.multiblock.layered.recipe_contents_line", "%s x §e%s§r");
+        provider.add("gtceu.multiblock.layered.next_step_inputs", "Next Step Inputs:");
+        provider.add("gtceu.multiblock.layered.cancel", "Cancel");
+        provider.add("gtceu.multiblock.layered.final_step_outputs", "Final Step Outputs:");
+
         provider.add("gtceu.multiblock.computation.max", "Max CWU/t: %s");
         provider.add("gtceu.multiblock.computation.usage", "Using: %s");
         provider.add("gtceu.multiblock.computation.non_bridging", "Non-bridging connection found");
@@ -1208,14 +1255,21 @@ public class    LangHandler {
         provider.add("gtceu.key.enable_boots", "Enable Boosted Jump");
         provider.add("gtceu.key.armor_charging", "Armor Charging to Inventory Toggle");
         provider.add("gtceu.key.tool_aoe_change", "Tool AoE Mode Switch");
+        provider.add("gtceu.key.enable_step_assist", "Enable StepAssist");
+        provider.add("gtceu.key.tooltip_next_page", "Tooltip Next Page");
+        provider.add("gtceu.key.tooltip_previous_page", "Tooltip Previous Page");
+        provider.add("gtceu.key.tooltip_up_page", "Tooltip Previous Modifier");
+        provider.add("gtceu.key.tooltip_down_page", "Tooltip Next Modifier");
         provider.add("gtceu.debug.f3_h.enabled",
                 "GregTech has modified the debug info! For Developers: enable the misc:debug config option in the GregTech config file to see more");
         provider.add("config.jade.plugin_gtceu.controllable_provider", "[GTCEu] Controllable");
         provider.add("config.jade.plugin_gtceu.workable_provider", "[GTCEu] Workable");
+        provider.add("config.jade.plugin_gtceu.battery_info", "[GTCEu] Battery info");
         provider.add("config.jade.plugin_gtceu.electric_container_provider", "[GTCEu] Electric Container");
         provider.add("config.jade.plugin_gtceu.recipe_logic_provider", "[GTCEu] Recipe Logic");
         provider.add("config.jade.plugin_gtceu.hazard_cleaner_provider", "[GTCEu] Hazard Cleaner");
         provider.add("config.jade.plugin_gtceu.recipe_output_info", "[GTCEu] Recipe Output Info");
+        provider.add("config.jade.plugin_gtceu.layered_recipe_info", "[GTCEu] Layered Recipe Info");
         provider.add("config.jade.plugin_gtceu.auto_output_info", "[GTCEu] Auto Output Info");
         provider.add("config.jade.plugin_gtceu.cable_info", "[GTCEu] Cable Info");
         provider.add("config.jade.plugin_gtceu.exhaust_vent_info", "[GTCEu] Exhaust Vent Info");
@@ -1239,12 +1293,7 @@ public class    LangHandler {
         provider.add("gtceu.button.hide_depleted", "Hide Depleted Veins");
         provider.add("gtceu.button.show_depleted", "Show Depleted Veins");
         provider.add("gtceu.recipe_type.show_recipes", "Show Recipes");
-        provider.add("gtceu.recipe_logic.insufficient_fuel", "Insufficient Fuel");
-        provider.add("gtceu.recipe_logic.insufficient_in", "Insufficient Inputs");
-        provider.add("gtceu.recipe_logic.insufficient_out", "Insufficient Outputs");
-        provider.add("gtceu.recipe_logic.condition_fails", "Condition Fails");
-        provider.add("gtceu.recipe_logic.no_contents", "Recipe has no Contents");
-        provider.add("gtceu.recipe_logic.no_capabilities", "Machine has no Capabilities");
+
         provider.add("gtceu.gui.cover_setting.title", "Cover Settings");
         provider.add("gtceu.gui.output_setting.title", "Output Settings");
         provider.add("gtceu.gui.circuit.title", "Circuit Settings");
@@ -1637,6 +1686,27 @@ public class    LangHandler {
                 "  {ender redstone <channel> [player_data_item_slot] -> redstone signal level",
                 "  {ender redstone <channel> <player_data_item_slot> <signal> -> sets the redstone signal outputed to the ender redstone link, returns empty string",
                 "The player_data_item_slot argument may be left empty (not 0, empty string)");
+        multiLang(provider, "gtceu.placeholder_info.module",
+                "Renders the module in the specified slot onto the central monitor (does not work in a cover)",
+                "Usage:",
+                "  {module <slot> <x> <y>} -> empty string");
+        multiLang(provider, "gtceu.placeholder_info.setImage",
+                "Sets the image URL in an image module in the specified slot",
+                "Usage:",
+                "  {setImage <slot> <url>} -> empty string");
+        multiLang(provider, "gtceu.placeholder_info.rect",
+                "Draws a rectangle at the specified position with the specified coordinates and size",
+                "Usage:",
+                "  {rect <x> <y> <width> <height> <colorARGB>} -> empty string",
+                "  {rect 0.5 0.25 2 1 0xFFFFFFFF} -> draws a white rectangle at (0.5, 0.25) with the size (2, 1)");
+        multiLang(provider, "gtceu.placeholder_info.quad",
+                "Draws a quad (must specify parameters for all 4 vertices)",
+                "Usage:",
+                "  {quad <x1> <y1> <x2> <y2> <x3> <y3> <x4> <y4> <color1> <color2> <color3> <color4>} -> empty string");
+        multiLang(provider, "gtceu.placeholder_info.item",
+                "Returns the amount and id of the item in a specified slot",
+                "Usage:",
+                "  {item <slot>} -> \"31 minecraft:diamond\" (for example)");
         multiLang(provider, "gtceu.placeholder_info.bufferText",
                 "Returns the text from a buffer accessible by ComputerCraft",
                 "Usage:",

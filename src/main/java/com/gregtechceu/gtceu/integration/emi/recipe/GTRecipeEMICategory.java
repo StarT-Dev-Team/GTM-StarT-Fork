@@ -90,6 +90,10 @@ public class GTRecipeEMICategory extends EmiRecipeCategory {
 
     public static EmiRecipeCategory machineCategory(GTRecipeCategory category) {
         if (category == GTRecipeTypes.FURNACE_RECIPES.getCategory()) return VanillaEmiRecipeCategories.SMELTING;
+        else if (category == GTRecipeTypes.BLAST_FURNACE_RECIPES.getCategory())
+            return VanillaEmiRecipeCategories.BLASTING;
+        else if (category == GTRecipeTypes.SMOKING_FURNACE_RECIPES.getCategory())
+            return VanillaEmiRecipeCategories.SMOKING;
         else return CATEGORIES.apply(category);
     }
 

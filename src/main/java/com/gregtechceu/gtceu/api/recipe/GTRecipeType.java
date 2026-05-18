@@ -7,6 +7,8 @@ import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.lookup.GTRecipeLookup;
 import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
+import com.gregtechceu.gtceu.api.recipe.ui.LayeredRecipeUIHelper;
+import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.sound.SoundEntry;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
@@ -78,6 +80,8 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     @Getter
     private final GTRecipeCategory category;
     @Getter
+    private GTRecipeCategory syntheticCategory;
+    @Getter
     private final Map<GTRecipeCategory, Set<GTRecipe>> categoryMap = new Object2ObjectOpenHashMap<>();
     @Getter
     private final GTRecipeLookup lookup = new GTRecipeLookup(this);
@@ -92,6 +96,8 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     private final List<ICustomRecipeLogic> customRecipeLogicRunners = new ArrayList<>();
     @Getter
     private int minRecipeConditions = 0;
+    @Getter
+    private boolean layered;
 
     public GTRecipeType(ResourceLocation registryName, String group, RecipeType<?>... proxyRecipes) {
         this.registryName = registryName;
@@ -104,6 +110,30 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
             map.put(proxyRecipe, new ArrayList<>());
         }
         this.proxyRecipes = map;
+    }
+
+    public GTRecipeType enableSyntheticCategory() {
+        if (syntheticCategory == null) {
+            syntheticCategory = new GTRecipeCategory(registryName.withSuffix("_synthetic").getPath(), this);
+            syntheticCategory.setXEIVisible(false);
+            GTRegistries.RECIPE_CATEGORIES.register(syntheticCategory.registryKey, syntheticCategory);
+        }
+
+        resetSyntheticCategories();
+        return this;
+    }
+
+    public void resetSyntheticCategories() {
+        // always add both categories to the categoryMap even if they don't have recipes
+        categoryMap.computeIfAbsent(category, (k) -> new ObjectLinkedOpenHashSet<>());
+        categoryMap.computeIfAbsent(syntheticCategory, (k) -> new ObjectLinkedOpenHashSet<>());
+    }
+
+    public GTRecipeType setLayered() {
+        enableSyntheticCategory();
+        recipeUI = LayeredRecipeUIHelper.createRecipeUI(this);
+        layered = true;
+        return this;
     }
 
     public GTRecipeType setMaxIOSize(int maxInputs, int maxOutputs, int maxFluidInputs, int maxFluidOutputs) {
@@ -302,6 +332,10 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     public void buildRepresentativeRecipes() {
         for (ICustomRecipeLogic logic : customRecipeLogicRunners) {
             logic.buildRepresentativeRecipes();
+        }
+
+        if (layered) {
+            LayeredRecipeHelper.buildRepresentativeRecipes(this);
         }
     }
 

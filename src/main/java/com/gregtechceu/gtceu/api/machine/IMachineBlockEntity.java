@@ -12,6 +12,7 @@ import com.lowdragmc.lowdraglib.syncdata.blockentity.IRPCBlockEntity;
 import com.lowdragmc.lowdraglib.syncdata.managed.MultiManagedStorage;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
@@ -49,6 +50,17 @@ public interface IMachineBlockEntity extends IToolGridHighlight, IAsyncAutoSyncB
     default void notifyBlockUpdate() {
         if (level() != null) {
             level().updateNeighborsAt(pos(), level().getBlockState(pos()).getBlock());
+        }
+    }
+
+    default void notifyAdjacentBlockUpdate() {
+        if (level() != null) {
+            var block = level().getBlockState(pos()).getBlock();
+            var pos = pos();
+            level().updateNeighborsAt(pos, block);
+            for (var direction : Direction.values()) {
+                level().updateNeighborsAt(pos.relative(direction), block);
+            }
         }
     }
 

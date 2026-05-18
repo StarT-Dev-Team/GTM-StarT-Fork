@@ -1,12 +1,17 @@
 package com.gregtechceu.gtceu.utils.memoization;
 
+import com.gregtechceu.gtceu.utils.memoization.function.MemoizedBiFunction;
+
 import net.minecraft.world.level.block.Block;
 
+import lombok.Getter;
 import org.apache.commons.lang3.function.TriFunction;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -55,6 +60,27 @@ public class GTMemoizer {
 
             public String toString() {
                 return "memoize/3[function=" + memoTriFunction + ", size=" + this.cache.size() + "]";
+            }
+        };
+    }
+
+    public static <T, U,
+            R> MemoizedBiFunction<T, U, R> memoizeFunctionWeakIdent(final BiFunction<T, U, R> memoBiFunction) {
+        return new MemoizedBiFunction<>() {
+
+            @Getter
+            private final Map<Pair<T, U>, R> cache = new ConcurrentWeakIdentityHashMap<>();
+
+            @Override
+            public R apply(T key1, U key2) {
+                return this.cache.computeIfAbsent(Pair.of(key1, key2), (key) -> {
+                    return memoBiFunction.apply(key.getLeft(), key.getRight());
+                });
+            }
+
+            @Override
+            public String toString() {
+                return "memoizeFunctionWeakIdent/2[function=" + memoBiFunction + ", size=" + this.cache.size() + "]";
             }
         };
     }

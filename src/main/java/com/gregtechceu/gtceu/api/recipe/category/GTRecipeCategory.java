@@ -70,8 +70,9 @@ public class GTRecipeCategory {
     }
 
     public boolean shouldRegisterDisplays() {
-        return (isXEIVisible || GTCEu.isDev()) &&
-                this != GTRecipeTypes.FURNACE_RECIPES.getCategory();
+        return (isXEIVisible() || GTCEu.isDev()) && this != GTRecipeTypes.FURNACE_RECIPES.getCategory() &&
+                this != GTRecipeTypes.BLAST_FURNACE_RECIPES.getCategory() &&
+                this != GTRecipeTypes.SMOKING_FURNACE_RECIPES.getCategory();
     }
 
     @Override

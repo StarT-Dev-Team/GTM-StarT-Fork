@@ -19,17 +19,17 @@ public class UnknownCompositionMaterials {
     public static void register() {
         WoodGas = new Material.Builder(GTCEu.id("wood_gas"))
                 .gas()
-                .color(0xDECD87).secondaryColor(0xdeb287)
+                .colors(0xDECD87, 0xdeb287)
                 .buildAndRegister();
 
         WoodVinegar = new Material.Builder(GTCEu.id("wood_vinegar"))
                 .fluid()
-                .color(0xD45500).secondaryColor(0x905800)
+                .colors(0xD45500, 0x905800)
                 .buildAndRegister();
 
         WoodTar = new Material.Builder(GTCEu.id("wood_tar"))
                 .fluid()
-                .color(0x3a271a).secondaryColor(0x28170B)
+                .colors(0x3a271a, 0x28170B)
                 .flags(STICKY, FLAMMABLE).buildAndRegister();
 
         CharcoalByproducts = new Material.Builder(GTCEu.id("charcoal_byproducts"))
@@ -365,25 +365,25 @@ public class UnknownCompositionMaterials {
 
         Gunpowder = new Material.Builder(GTCEu.id("gunpowder"))
                 .dust(0)
-                .color(0xa4a4a4).secondaryColor(0x767676).iconSet(ROUGH)
+                .colors(0xa4a4a4, 0x767676).iconSet(ROUGH)
                 .flags(FLAMMABLE, EXPLOSIVE, NO_SMELTING, NO_SMASHING)
                 .components(Saltpeter, 2, Sulfur, 1, Carbon, 3)
                 .buildAndRegister();
 
         Oilsands = new Material.Builder(GTCEu.id("oilsands"))
                 .dust(1).ore()
-                .color(0xe3c78a).secondaryColor(0x161e22).iconSet(SAND)
+                .colors(0xe3c78a, 0x161e22).iconSet(SAND)
                 .flags(FLAMMABLE)
                 .buildAndRegister();
 
         RareEarth = new Material.Builder(GTCEu.id("rare_earth"))
                 .dust(0)
-                .color(0xffdc88).secondaryColor(0xe99673).iconSet(FINE)
+                .colors(0xffdc88, 0xe99673).iconSet(FINE)
                 .buildAndRegister();
 
         Stone = new Material.Builder(GTCEu.id("stone"))
                 .dust(2)
-                .color(0x8f8f8f).secondaryColor(0x898989).iconSet(ROUGH)
+                .colors(0x8f8f8f, 0x898989).iconSet(ROUGH)
                 .flags(MORTAR_GRINDABLE, GENERATE_GEAR, NO_SMASHING, NO_SMELTING)
                 .buildAndRegister();
 
@@ -391,7 +391,7 @@ public class UnknownCompositionMaterials {
                 .fluid().color(0xFF4000).buildAndRegister();
 
         Netherite = new Material.Builder(GTCEu.id("netherite"))
-                .ingot().color(0x4b4042).secondaryColor(0x474447)
+                .ingot().colors(0x4b4042, 0x474447)
                 .flags(FIRE_RESISTANT)
                 .toolStats(ToolProperty.Builder.of(10.0F, 4.0F, 2032, 4)
                         .enchantability(21).build())
@@ -400,27 +400,27 @@ public class UnknownCompositionMaterials {
         Glowstone = new Material.Builder(GTCEu.id("glowstone"))
                 .dust(1)
                 .liquid(new FluidBuilder().temperature(500))
-                .color(0xfcb34c).secondaryColor(0xce7533).iconSet(SHINY)
+                .colors(0xfcb34c, 0xce7533).iconSet(SHINY)
                 .flags(NO_SMASHING, GENERATE_PLATE, EXCLUDE_PLATE_COMPRESSOR_RECIPE,
                         EXCLUDE_BLOCK_CRAFTING_BY_HAND_RECIPES)
                 .buildAndRegister();
 
         NetherStar = new Material.Builder(GTCEu.id("nether_star"))
                 .gem(4)
-                .color(0xfeffc6).secondaryColor(0x7fd7e2)
+                .colors(0xfeffc6, 0x7fd7e2)
                 .iconSet(NETHERSTAR)
                 .flags(NO_SMASHING, NO_SMELTING, GENERATE_LENS)
                 .buildAndRegister();
 
         Endstone = new Material.Builder(GTCEu.id("endstone"))
                 .dust(1)
-                .color(0xf6fabd).secondaryColor(0xc5be8b).iconSet(ROUGH)
+                .colors(0xf6fabd, 0xc5be8b).iconSet(ROUGH)
                 .flags(NO_SMASHING)
                 .buildAndRegister();
 
         Netherrack = new Material.Builder(GTCEu.id("netherrack"))
                 .dust(1)
-                .color(0x7c4249).secondaryColor(0x400b0b).iconSet(ROUGH)
+                .colors(0x7c4249, 0x400b0b).iconSet(ROUGH)
                 .flags(NO_SMASHING, FLAMMABLE)
                 .buildAndRegister();
 
@@ -432,44 +432,44 @@ public class UnknownCompositionMaterials {
 
         Collagen = new Material.Builder(GTCEu.id("collagen"))
                 .dust(1)
-                .color(0xffadb7).secondaryColor(0x80471C).iconSet(ROUGH)
+                .colors(0xffadb7, 0x80471C).iconSet(ROUGH)
                 .buildAndRegister();
 
         Gelatin = new Material.Builder(GTCEu.id("gelatin"))
                 .dust(1)
-                .color(0xfaf7cb).secondaryColor(0x693d00).iconSet(ROUGH)
+                .colors(0xfaf7cb, 0x693d00).iconSet(ROUGH)
                 .buildAndRegister();
 
         Agar = new Material.Builder(GTCEu.id("agar"))
                 .dust(1)
-                .color(0xbdd168).secondaryColor(0x403218).iconSet(ROUGH)
+                .colors(0xbdd168, 0x403218).iconSet(ROUGH)
                 .buildAndRegister();
 
         Milk = new Material.Builder(GTCEu.id("milk"))
                 .liquid(new FluidBuilder()
                         .temperature(295)
                         .customStill())
-                .color(0xfffbf0).secondaryColor(0xf6eac8).iconSet(FINE)
+                .colors(0xfffbf0, 0xf6eac8).iconSet(FINE)
                 .buildAndRegister();
 
         Cocoa = new Material.Builder(GTCEu.id("cocoa"))
                 .dust(0)
-                .color(0x976746).secondaryColor(0x301a0a).iconSet(FINE)
+                .colors(0x976746, 0x301a0a).iconSet(FINE)
                 .buildAndRegister();
 
         Wheat = new Material.Builder(GTCEu.id("wheat"))
                 .dust(0)
-                .color(0xdcbb65).secondaryColor(0x565138).iconSet(FINE)
+                .colors(0xdcbb65, 0x565138).iconSet(FINE)
                 .buildAndRegister();
 
         Meat = new Material.Builder(GTCEu.id("meat"))
                 .dust(1)
-                .color(0xe85048).secondaryColor(0x470a06).iconSet(SAND)
+                .colors(0xe85048, 0x470a06).iconSet(SAND)
                 .buildAndRegister();
 
         Wood = new Material.Builder(GTCEu.id("wood"))
                 .wood()
-                .color(0xc29f6d).secondaryColor(0x643200).iconSet(WOOD)
+                .colors(0xc29f6d, 0x643200).iconSet(WOOD)
                 .fluidPipeProperties(340, 5, false)
                 .toolStats(ToolProperty.Builder.of(1.0F, 1.0F, 128, 1, GTToolType.SOFT_MALLET).build())
                 .flags(GENERATE_PLATE, GENERATE_ROD, GENERATE_BOLT_SCREW, GENERATE_LONG_ROD, FLAMMABLE, GENERATE_GEAR,
@@ -478,7 +478,7 @@ public class UnknownCompositionMaterials {
 
         Paper = new Material.Builder(GTCEu.id("paper"))
                 .dust(0)
-                .color(0xF9F9F9).secondaryColor(0xECECEC).iconSet(DULL)
+                .colors(0xF9F9F9, 0xECECEC).iconSet(DULL)
                 .flags(GENERATE_PLATE, FLAMMABLE, NO_SMELTING, NO_SMASHING,
                         MORTAR_GRINDABLE, EXCLUDE_PLATE_COMPRESSOR_RECIPE)
                 .buildAndRegister();
@@ -575,14 +575,14 @@ public class UnknownCompositionMaterials {
 
         Lapotron = new Material.Builder(GTCEu.id("lapotron"))
                 .gem()
-                .color(0x7497ea).secondaryColor(0x1c0b39).iconSet(DIAMOND)
+                .colors(0x7497ea, 0x1c0b39).iconSet(DIAMOND)
                 .flags(DISABLE_MATERIAL_RECIPES)
                 .ignoredTagPrefixes(dustTiny, dustSmall)
                 .buildAndRegister();
 
         TreatedWood = new Material.Builder(GTCEu.id("treated_wood"))
                 .wood()
-                .color(0x644218).secondaryColor(0x4e0b00).iconSet(WOOD)
+                .colors(0x644218, 0x4e0b00).iconSet(WOOD)
                 .fluidPipeProperties(340, 10, false)
                 .flags(GENERATE_PLATE, FLAMMABLE, GENERATE_ROD, GENERATE_FRAME)
                 .buildAndRegister();
@@ -602,7 +602,7 @@ public class UnknownCompositionMaterials {
 
         Sculk = new Material.Builder(GTCEu.id("sculk"))
                 .dust(1)
-                .color(0x015a5c).secondaryColor(0x001616).iconSet(ROUGH)
+                .colors(0x015a5c, 0x001616).iconSet(ROUGH)
                 .buildAndRegister();
 
         Wax = new Material.Builder(GTCEu.id("wax"))

@@ -166,7 +166,7 @@ public abstract class RecipeCapability<T> {
     }
 
     public void addXEIInfo(WidgetGroup group, int xOffset, GTRecipe recipe, List<Content> contents, boolean perTick,
-                           boolean isInput, MutableInt yOffset) {}
+                           boolean isInput, MutableInt yOffset, int minTier, int currentTier) {}
 
     @NotNull
     public List<Object> createXEIContainerContents(List<Content> contents, GTRecipe recipe, IO io) {

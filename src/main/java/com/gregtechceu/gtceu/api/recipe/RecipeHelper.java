@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.api.recipe;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.recipe.*;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroup;
-import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupColor;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
@@ -354,21 +353,8 @@ public class RecipeHelper {
             map.computeIfAbsent(RecipeHandlerGroupDistinctness.BYPASS_DISTINCT, $ -> new ArrayList<>()).add(handler);
             return;
         }
-        // Add undyed RHL's to every group that's not distinct, bypass, and also the undyed group itself.
-        if (key.equals(RecipeHandlerGroupColor.UNDYED)) {
-            for (var entry : map.entrySet()) {
-                if (entry.getKey().equals(RecipeHandlerGroupDistinctness.BUS_DISTINCT) ||
-                        entry.getKey().equals(RecipeHandlerGroupDistinctness.BYPASS_DISTINCT) ||
-                        entry.getKey().equals(RecipeHandlerGroupColor.UNDYED)) {
-                    continue;
-                }
-                entry.getValue().add(handler);
-            }
-        }
-        // Add other RHL's to their own group, or create it (using the undyed group as base) if it does not exist.
-        List<RecipeHandlerList> undyed = map.getOrDefault(RecipeHandlerGroupColor.UNDYED, Collections.emptyList());
-
-        map.computeIfAbsent(key, $ -> new ArrayList<>(undyed)).add(handler);
+        // otherwise it should be empty
+        map.computeIfAbsent(key, $ -> new ArrayList<>()).add(handler);
     }
 
     public static int getRatioForDistillery(FluidIngredient fluidInput, FluidIngredient fluidOutput,

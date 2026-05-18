@@ -459,6 +459,7 @@ public class GTRecipeLookup {
         this.lookup.getNodes().clear();
         this.lookup.getSpecialNodes().clear();
         this.recipeType.getCategoryMap().clear();
+        if (this.recipeType.isLayered()) this.recipeType.resetSyntheticCategories();
     }
 
     /**

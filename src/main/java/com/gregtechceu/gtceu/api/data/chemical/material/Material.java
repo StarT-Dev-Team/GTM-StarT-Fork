@@ -1130,6 +1130,21 @@ public class Material implements Comparable<Material> {
         }
 
         /**
+         * Set both the primary and secondary colors of this Material.<br>
+         * Both colors default to <strong>0xFFFFFF</strong> unless {@link Builder#colorAverage()} was called,
+         * where they may instead be derived from the weighted average of the components of the Material.
+         *
+         * @param color          The primary RGB-formatted color.
+         * @param secondaryColor The secondary RGB-formatted color.
+         * @return This {@link Builder} instance for chaining.
+         */
+        public Builder colors(int color, int secondaryColor) {
+            this.materialInfo.colors.set(0, color);
+            this.materialInfo.colors.set(1, secondaryColor);
+            return this;
+        }
+
+        /**
          * Set the Color of this Material to be the average of the components specified in {@link #components}.<br>
          * Will default to <strong>0xFFFFFF</strong> if a components list is not specified.
          */

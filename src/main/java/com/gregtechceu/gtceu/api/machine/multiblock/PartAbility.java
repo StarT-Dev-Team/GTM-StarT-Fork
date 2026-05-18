@@ -27,7 +27,13 @@ public class PartAbility {
     public static final PartAbility IMPORT_FLUIDS_9X = new PartAbility("import_fluids_9x");
 
     public static final PartAbility INPUT_ENERGY = new PartAbility("input_energy");
+    public static final PartAbility INPUT_ENERGY_2A = new PartAbility("input_energy_2a");
+    public static final PartAbility INPUT_ENERGY_4A = new PartAbility("input_energy_4a");
+    public static final PartAbility INPUT_ENERGY_16A = new PartAbility("input_energy_16a");
     public static final PartAbility OUTPUT_ENERGY = new PartAbility("output_energy");
+    public static final PartAbility OUTPUT_ENERGY_2A = new PartAbility("output_energy_2a");
+    public static final PartAbility OUTPUT_ENERGY_4A = new PartAbility("output_energy_4a");
+    public static final PartAbility OUTPUT_ENERGY_16A = new PartAbility("output_energy_16a");
     public static final PartAbility SUBSTATION_INPUT_ENERGY = new PartAbility("substation_input_energy");
     public static final PartAbility SUBSTATION_OUTPUT_ENERGY = new PartAbility("substation_output_energy");
     public static final PartAbility ROTOR_HOLDER = new PartAbility("rotor_holder");

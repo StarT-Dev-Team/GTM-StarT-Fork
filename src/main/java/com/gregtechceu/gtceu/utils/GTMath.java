@@ -7,6 +7,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -92,5 +93,33 @@ public class GTMath {
             return q + 1;
         }
         return q;
+    }
+
+    public static float min(float @NotNull... values) {
+        // noinspection ConstantValue
+        if (values == null || values.length == 0) throw new IllegalArgumentException();
+        if (values.length == 1) return values[0];
+        if (values.length == 2) return Math.min(values[0], values[1]);
+        float min = Float.MAX_VALUE;
+        for (float i : values) {
+            if (i < min) {
+                min = i;
+            }
+        }
+        return min;
+    }
+
+    public static float max(float @NotNull... values) {
+        // noinspection ConstantValue
+        if (values == null || values.length == 0) throw new IllegalArgumentException();
+        if (values.length == 1) return values[0];
+        if (values.length == 2) return Math.max(values[0], values[1]);
+        float max = Float.MIN_VALUE;
+        for (float i : values) {
+            if (i > max) {
+                max = i;
+            }
+        }
+        return max;
     }
 }

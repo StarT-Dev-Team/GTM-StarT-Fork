@@ -61,6 +61,12 @@ public class ConfigHolder {
         public boolean harderRods = false; // default false
         @Configurable
         @Configurable.Comment({
+                "Adds smithing table recipes for the netherite tools.",
+                "Default: true"
+        })
+        public boolean netheriteToolSmithingRecipes = true;
+        @Configurable
+        @Configurable.Comment({
                 "Whether to make crafting recipes for Bricks, Firebricks, Nether Bricks, and Coke Bricks harder.",
                 "Default: false" })
         public boolean harderBrickRecipes = false; // default false
@@ -122,6 +128,13 @@ public class ConfigHolder {
                 "Default: false" })
         public boolean harderCircuitRecipes = false;
         @Configurable
+        @Configurable.Comment({
+                "Whether ULV components should have harder recipes using bronze",
+                "Requires ULV components to be enabled",
+                "Default: true"
+        })
+        public boolean ulvComponentsHarderRecipes = true;
+        @Configurable
         @Configurable.Comment({ "Whether to nerf machine controller recipes.", "Default: false" })
         public boolean hardMultiRecipes = false; // default false
         @Configurable
@@ -154,6 +167,11 @@ public class ConfigHolder {
                 "Default: 1.0f" })
         @Configurable.DecimalRange(min = 0.0f, max = 1.0f)
         public float extractorRecyclingYield = 1.0f;
+        @Configurable
+        @Configurable.Comment({
+                "Chanced input and outputs use the recipe overclock instead of the speed overclock",
+                "Default: true" })
+        public boolean chanceUseRecipeOC = true;
     }
 
     public static class CompatibilityConfigs {
@@ -187,7 +205,7 @@ public class ConfigHolder {
 
         @Configurable
         @Configurable.Comment({
-                "Whether Gregtech should remove smelting recipes from the vanilla furnace for ingots requiring the Electric Blast Furnace.",
+                "Whether GregTech should remove smelting recipes from the vanilla furnace for ingots requiring the Electric Blast Furnace.",
                 "Default: true" })
         // todo: implement or purge
         public boolean removeSmeltingForEBFMetals = true;
@@ -227,10 +245,16 @@ public class ConfigHolder {
         public static class AE2CompatConfig {
 
             @Configurable
-            @Configurable.Comment({ "The interval between ME Hatch/Bus interact ME network.",
-                    "It may cause lag if the interval is too small.", "Default: 2 sec" })
+            @Configurable.Comment({ "The default interval between ME Hatch/Bus interact ME network.",
+                    "Can't be lower than minUpdateIntervals.", "Default: 2 sec" })
             @Configurable.Range(min = 1) // Do Not Set a Maximum, if someone wants >80 ticks let them.
             public int updateIntervals = 40;
+
+            @Configurable
+            @Configurable.Comment({ "The minimum interval between ME Hatch/Bus interact ME network.",
+                    "It may cause lag if the interval is too small.", "Default: 1 tick" })
+            @Configurable.Range(min = 1)
+            public int minUpdateIntervals = 1;
 
             @Configurable
             @Configurable.Comment({ "The energy consumption of ME Hatch/Bus.", "Default: 4.0AE/t" })
@@ -303,7 +327,7 @@ public class ConfigHolder {
                 public boolean journeyMapIntegration = true;
 
                 @Configurable
-                @Configurable.Comment({ "Xaerox's map integration enabled" })
+                @Configurable.Comment({ "Xaero's map integration enabled" })
                 public boolean xaerosMapIntegration = true;
             }
 
@@ -544,7 +568,7 @@ public class ConfigHolder {
         @Configurable.Comment({ "Minimum distance between Long Distance Item Pipe Endpoints", "Default: 50" })
         public int ldItemPipeMinDistance = 50;
         @Configurable
-        @Configurable.Comment({ "Minimum distance betweeb Long Distance Fluid Pipe Endpoints", "Default: 50" })
+        @Configurable.Comment({ "Minimum distance between Long Distance Fluid Pipe Endpoints", "Default: 50" })
         public int ldFluidPipeMinDistance = 50;
 
         @Configurable
@@ -571,6 +595,17 @@ public class ConfigHolder {
         public boolean highTierContent = false;
 
         @Configurable
+        @Configurable.Comment({
+                "Whether ULV components should be enabled",
+                "Default: false"
+        })
+        public boolean ulvComponentsEnabled = false;
+
+        public boolean registerULVComponents() {
+            return GTCEu.isDataGen() || ulvComponentsEnabled;
+        }
+
+        @Configurable
         @Configurable.Comment({ "Whether the Assembly Line should require the item inputs to be in order.",
                 "Default: true" })
         public boolean orderedAssemblyLineItems = true;
@@ -587,8 +622,49 @@ public class ConfigHolder {
         public int steamMultiParallelAmount = 8;
 
         @Configurable
+        @Configurable.Comment({
+                "Whether the Large Chemical Reactor should have coil benefits. WARNING: Setting this to true will remove perfect overclock from the LCR!",
+                "Default: true"
+        })
+        public boolean lcrCoilBenefits = true;
+
+        @Configurable
+        @Configurable.Comment({
+                "Whether to add a parallel version of the LCR.",
+                "Default: true"
+        })
+        public boolean parallelLCR = true;
+
+        public boolean registerParallelLCR() {
+            return GTCEu.isDataGen() || parallelLCR;
+        }
+
+        @Configurable
         @Configurable.Comment("Whether the Drums can input fluids from the output side (bottom).")
         public boolean allowDrumsInputFluidsFromOutputSide = false;
+
+        @Configurable
+        @Configurable.Comment({
+                "Whether the Super/Quantum Tanks should act the same as fluid cells for filling/emptying fluid slots.",
+                "Default: false" })
+        public boolean superTankFluidCellBehavior = false;
+
+        @Configurable
+        @Configurable.Comment({
+                "Whether multiblocks stall (pause) on power fail.",
+                "Default: false"
+        })
+        public boolean multiblocksStallOnPowerFail = false;
+
+        @Configurable
+        @Configurable.Comment({ "Default update rate of redstone covers in ticks", "Default: 20 ticks" })
+        @Configurable.Range(min = 1)
+        public int coverDefaultTicksPerCycle = 20;
+
+        @Configurable
+        @Configurable.Comment({ "Minimum update rate of redstone covers in ticks", "Default: 1 tick" })
+        @Configurable.Range(min = 1)
+        public int coverMinTicksPerCycle = 1;
 
         @Configurable
         @Configurable.Comment("Small Steam Boiler Options")
@@ -640,8 +716,8 @@ public class ConfigHolder {
             @Configurable.Comment({ "The heat speed of the Large Bronze Boiler.", "Default: 1" })
             public int bronzeBoilerHeatSpeed = 1;
             @Configurable
-            @Configurable.Comment({ "The max temperature of the Large Steel Boiler.", "Default: 1800" })
-            public int steelBoilerMaxTemperature = 1800;
+            @Configurable.Comment({ "The max temperature of the Large Steel Boiler.", "Default: 1600" })
+            public int steelBoilerMaxTemperature = 1600;
             @Configurable
             @Configurable.Comment({ "The heat speed of the Large Steel Boiler.", "Default: 1" })
             public int steelBoilerHeatSpeed = 1;
@@ -744,6 +820,10 @@ public class ConfigHolder {
         @Configurable.Comment({ "How much environmental hazards decay per chunk, per tick.",
                 "Default: 0.001" })
         public float environmentalHazardDecayRate = 0.001f;
+        @Configurable
+        @Configurable.Comment({ "List of domains that are allowed in the image module" })
+        public String[] allowedImageDomains = new String[] { "imgur.com", "discord.com", "github.com",
+                "raw.githubusercontent.com" };
     }
 
     public static class ClientConfigs {
@@ -832,7 +912,7 @@ public class ConfigHolder {
     public static class DeveloperConfigs {
 
         @Configurable
-        @Configurable.Comment({ "Debug general events? (will print recipe conficts etc. to server's debug.log)",
+        @Configurable.Comment({ "Debug general events? (will print recipe conflicts etc. to server's debug.log)",
                 "Default: false" })
         public boolean debug = false;
         @Configurable

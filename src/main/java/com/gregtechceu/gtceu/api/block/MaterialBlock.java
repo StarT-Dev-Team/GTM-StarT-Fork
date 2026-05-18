@@ -99,8 +99,8 @@ public class MaterialBlock extends Block {
     @SuppressWarnings("deprecation")
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
-        if (TagPrefix.ORES.containsKey(this.tagPrefix) && TagPrefix.ORES.get(tagPrefix).isSand() &&
-                ConfigHolder.INSTANCE.worldgen.sandOresFall) {
+        if ((TagPrefix.ORES.containsKey(this.tagPrefix) && TagPrefix.ORES.get(tagPrefix).isSand() &&
+                ConfigHolder.INSTANCE.worldgen.sandOresFall) || this.tagPrefix.isFallingBlock()) {
             level.scheduleTick(pos, this, this.getDelayAfterPlace());
         }
     }
@@ -109,8 +109,8 @@ public class MaterialBlock extends Block {
     @Override
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level,
                                   BlockPos currentPos, BlockPos neighborPos) {
-        if (TagPrefix.ORES.containsKey(this.tagPrefix) && TagPrefix.ORES.get(tagPrefix).isSand() &&
-                ConfigHolder.INSTANCE.worldgen.sandOresFall) {
+        if ((TagPrefix.ORES.containsKey(this.tagPrefix) && TagPrefix.ORES.get(tagPrefix).isSand() &&
+                ConfigHolder.INSTANCE.worldgen.sandOresFall) || this.tagPrefix.isFallingBlock()) {
             level.scheduleTick(currentPos, this, this.getDelayAfterPlace());
         }
         return super.updateShape(state, direction, neighborState, level, currentPos, neighborPos);

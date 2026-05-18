@@ -39,6 +39,7 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
                 GTRecipeSerializer.CODEC.encodeStart(NbtOps.INSTANCE, payload).result().orElse(new CompoundTag()));
         tag.putInt("parallels", payload.parallels);
         tag.putInt("ocLevel", payload.ocLevel);
+        tag.putInt("baseOcLevel", payload.baseOcLevel);
         return tag;
     }
 
@@ -51,6 +52,7 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
                 payload.id = new ResourceLocation(compoundTag.getString("id"));
                 payload.parallels = compoundTag.contains("parallels") ? compoundTag.getInt("parallels") : 1;
                 payload.ocLevel = compoundTag.getInt("ocLevel");
+                payload.baseOcLevel = compoundTag.getInt("baseOcLevel");
             }
         } else if (tag instanceof StringTag stringTag) { // Backwards Compatibility
             var recipe = recipeManager.byKey(new ResourceLocation(stringTag.getAsString())).orElse(null);
@@ -76,6 +78,7 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
         GTRecipeSerializer.SERIALIZER.toNetwork(buf, this.payload);
         buf.writeInt(this.payload.parallels);
         buf.writeInt(this.payload.ocLevel);
+        buf.writeInt(this.payload.baseOcLevel);
     }
 
     @Override
@@ -86,6 +89,7 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
             if (buf.isReadable()) {
                 this.payload.parallels = buf.readInt();
                 this.payload.ocLevel = buf.readInt();
+                this.payload.baseOcLevel = buf.readInt();
             }
         } else { // Backwards Compatibility
             RecipeManager recipeManager = getRecipeManager();

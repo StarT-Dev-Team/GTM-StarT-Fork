@@ -44,6 +44,7 @@ public class GTRecipeTypeBuilder extends BuilderBase<GTRecipeType> {
     private Supplier<ItemStack> iconSupplier;
     @Nullable
     protected BiConsumer<GTRecipe, WidgetGroup> uiBuilder;
+    private boolean layered;
 
     public GTRecipeTypeBuilder(ResourceLocation i) {
         super(i);
@@ -147,9 +148,15 @@ public class GTRecipeTypeBuilder extends BuilderBase<GTRecipeType> {
         return this;
     }
 
+    public GTRecipeTypeBuilder setLayered() {
+        this.layered = true;
+        return this;
+    }
+
     @Override
     public GTRecipeType register() {
         var type = GTRecipeTypes.register(name, category);
+        if (layered) type.setLayered();
         type.maxInputs.putAll(maxInputs);
         type.maxOutputs.putAll(maxOutputs);
         type.getRecipeUI().getSlotOverlays().putAll(slotOverlays);
@@ -161,7 +168,7 @@ public class GTRecipeTypeBuilder extends BuilderBase<GTRecipeType> {
         type.setMaxTooltips(maxTooltips);
         type.setSmallRecipeMap(smallRecipeMap);
         type.setIconSupplier(iconSupplier);
-        type.setUiBuilder(uiBuilder);
+        if (uiBuilder != null) type.setUiBuilder(uiBuilder);
         return value = type;
     }
 }

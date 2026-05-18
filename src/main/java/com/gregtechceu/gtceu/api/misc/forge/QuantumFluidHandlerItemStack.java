@@ -1,5 +1,6 @@
 package com.gregtechceu.gtceu.api.misc.forge;
 
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTMath;
 
 import net.minecraft.core.Direction;
@@ -149,11 +150,11 @@ public class QuantumFluidHandlerItemStack implements IFluidHandlerItem, ICapabil
     }
 
     public boolean canFillFluidType(FluidStack fluid) {
-        return false;
+        return ConfigHolder.INSTANCE.machines.superTankFluidCellBehavior;
     }
 
     public boolean canDrainFluidType(FluidStack fluid) {
-        return false;
+        return ConfigHolder.INSTANCE.machines.superTankFluidCellBehavior;
     }
 
     protected void setContainerToEmpty() {

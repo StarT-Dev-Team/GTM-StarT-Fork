@@ -46,6 +46,7 @@ public class TheOneProbePlugin {
         oneProbe.registerProvider(new RecipeLogicInfoProvider());
         oneProbe.registerProvider(new ParallelProvider());
         oneProbe.registerProvider(new RecipeOutputProvider());
+        // oneProbe.registerProvider(new LayerdRecipeProvider()); TODO: implement
         oneProbe.registerProvider(new MultiblockStructureProvider());
         oneProbe.registerProvider(new MaintenanceInfoProvider());
         oneProbe.registerProvider(new ExhaustVentInfoProvider());

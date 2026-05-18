@@ -2,6 +2,7 @@ package com.gregtechceu.gtceu.integration.rei.orevein;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.data.worldgen.bedrockfluid.BedrockFluidDefinition;
+import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.client.ClientProxy;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
@@ -21,6 +22,8 @@ import me.shedaniel.rei.api.client.registry.display.DisplayRegistry;
 import me.shedaniel.rei.api.common.category.CategoryIdentifier;
 import me.shedaniel.rei.api.common.util.EntryStacks;
 import org.jetbrains.annotations.NotNull;
+
+import static com.gregtechceu.gtceu.common.data.machines.GTMultiMachines.FLUID_DRILLING_RIG;
 
 @Getter
 public class GTBedrockFluidDisplayCategory extends ModularUIDisplayCategory<GTBedrockFluidDisplay> {
@@ -65,6 +68,13 @@ public class GTBedrockFluidDisplayCategory extends ModularUIDisplayCategory<GTBe
     }
 
     public static void registerWorkstations(CategoryRegistry registry) {
+        for (MultiblockMachineDefinition multiBlockDefinition : FLUID_DRILLING_RIG) {
+            if (multiBlockDefinition != null) {
+                registry.addWorkstations(GTBedrockFluidDisplayCategory.CATEGORY,
+                        EntryStacks.of(multiBlockDefinition.asStack()));
+            }
+        }
+
         registry.addWorkstations(GTBedrockFluidDisplayCategory.CATEGORY,
                 EntryStacks.of(GTItems.PROSPECTOR_HV.asStack()));
         registry.addWorkstations(GTBedrockFluidDisplayCategory.CATEGORY,

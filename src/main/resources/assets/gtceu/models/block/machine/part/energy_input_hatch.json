@@ -1,9 +1,9 @@
 {
     "parent": "gtceu:block/overlay/2_layer/tinted/front",
     "textures": {
-        "overlay_tint": "gtceu:block/overlay/machine/overlay_energy_1a_tinted",
-        "overlay_in": "gtceu:block/overlay/machine/overlay_energy_1a_in",
-        "overlay_in_emissive": "gtceu:block/overlay/machine/overlay_energy_1a_in_emissive"
+        "overlay_tint": "gtceu:block/overlay/machine/overlay_energy_2a_tinted",
+        "overlay_in": "gtceu:block/overlay/machine/overlay_energy_2a_in",
+        "overlay_in_emissive": "gtceu:block/overlay/machine/overlay_energy_2a_in_emissive"
     },
     "elements": [
         {

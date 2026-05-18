@@ -67,7 +67,7 @@ public class GTRecipeTypes {
             .setProgressBar(GuiTextures.PROGRESS_BAR_BOILER_FUEL.get(true), DOWN_TO_UP)
             .onRecipeBuild((builder, provider) -> {
                 // remove the * 12 if SteamBoilerMachine:240 is uncommented
-                var duration = (builder.duration / 12 / 80); // copied for large boiler
+                var duration = (builder.duration * 2 / 80); // singleblock boiles -> f / 2; LB -> f / 80
                 if (duration > 0) {
                     GTRecipeTypes.LARGE_BOILER_RECIPES.copyFrom(builder).duration(duration).save(provider);
                 }
@@ -79,6 +79,24 @@ public class GTRecipeTypes {
     // ********* Common *********//
     //////////////////////////////////////
     public final static GTRecipeType FURNACE_RECIPES = register("electric_furnace", ELECTRIC, RecipeType.SMELTING)
+            .setMaxIOSize(1, 1, 0, 0).setEUIO(IO.IN)
+            .prepareBuilder(recipeBuilder -> recipeBuilder.EUt(4))
+            .setSlotOverlay(false, false, GuiTextures.FURNACE_OVERLAY_1)
+            .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
+            .setSteamProgressBar(GuiTextures.PROGRESS_BAR_ARROW_STEAM, LEFT_TO_RIGHT)
+            .setSound(GTSoundEntries.FURNACE);
+
+    public final static GTRecipeType BLAST_FURNACE_RECIPES = register("electric_vanilla_blast_furnace", ELECTRIC,
+            RecipeType.BLASTING)
+            .setMaxIOSize(1, 1, 0, 0).setEUIO(IO.IN)
+            .prepareBuilder(recipeBuilder -> recipeBuilder.EUt(4))
+            .setSlotOverlay(false, false, GuiTextures.FURNACE_OVERLAY_1)
+            .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
+            .setSteamProgressBar(GuiTextures.PROGRESS_BAR_ARROW_STEAM, LEFT_TO_RIGHT)
+            .setSound(GTSoundEntries.FURNACE);
+
+    public final static GTRecipeType SMOKING_FURNACE_RECIPES = register("electric_smoking_furnace", ELECTRIC,
+            RecipeType.SMOKING)
             .setMaxIOSize(1, 1, 0, 0).setEUIO(IO.IN)
             .prepareBuilder(recipeBuilder -> recipeBuilder.EUt(4))
             .setSlotOverlay(false, false, GuiTextures.FURNACE_OVERLAY_1)

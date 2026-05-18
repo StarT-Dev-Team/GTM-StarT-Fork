@@ -19,6 +19,7 @@ import com.gregtechceu.gtceu.api.recipe.ActionResult;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
+import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
@@ -73,7 +74,7 @@ public class AssemblyLineMachine extends WorkableElectricMultiblockMachine {
                 .map(container -> container.getContents().stream()
                         .filter(ItemStack.class::isInstance)
                         .map(ItemStack.class::cast)
-                        .filter(s -> !s.isEmpty())
+                        .filter(s -> !s.isEmpty() && !s.is(GTItems.PROGRAMMED_CIRCUIT.get()))
                         .findFirst())
                 .limit(inputsSize)
                 .map(o -> o.orElse(ItemStack.EMPTY))

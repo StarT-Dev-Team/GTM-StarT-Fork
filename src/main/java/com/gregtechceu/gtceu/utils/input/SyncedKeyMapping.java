@@ -131,6 +131,24 @@ public final class SyncedKeyMapping {
         return new KeyMapping(nameKey, ctx, InputConstants.Type.KEYSYM, keyCode, category);
     }
 
+    @OnlyIn(Dist.CLIENT)
+    public String getDisplayName() {
+        if (keyMapping != null) {
+            return keyMapping.getTranslatedKeyMessage().getString();
+        }
+
+        return "Unbound";
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public int getKeyCode() {
+        if (keyMapping != null) {
+            return keyMapping.getKey().getValue();
+        }
+
+        return keyCode;
+    }
+
     /**
      * Check if the current client-side player is holding down this key.
      *

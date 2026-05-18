@@ -3,6 +3,7 @@ package com.gregtechceu.gtceu.integration.jei.orevein;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.client.ClientProxy;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
@@ -22,6 +23,8 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import org.jetbrains.annotations.NotNull;
+
+import static com.gregtechceu.gtceu.common.data.machines.GTMultiMachines.BEDROCK_ORE_MINER;
 
 public class GTOreVeinInfoCategory extends ModularUIRecipeCategory<GTOreVeinInfoWrapper> {
 
@@ -51,6 +54,12 @@ public class GTOreVeinInfoCategory extends ModularUIRecipeCategory<GTOreVeinInfo
     }
 
     public static void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
+        for (MultiblockMachineDefinition multiBlockDefinition : BEDROCK_ORE_MINER) {
+            if (multiBlockDefinition != null) {
+                registration.addRecipeCatalyst(multiBlockDefinition.asStack(), RECIPE_TYPE);
+            }
+        }
+
         registration.addRecipeCatalyst(GTItems.PROSPECTOR_LV.asStack(), RECIPE_TYPE);
         registration.addRecipeCatalyst(GTItems.PROSPECTOR_HV.asStack(), RECIPE_TYPE);
         registration.addRecipeCatalyst(GTItems.PROSPECTOR_LuV.asStack(), RECIPE_TYPE);

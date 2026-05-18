@@ -58,7 +58,7 @@ public class GTCovers {
                     null,
                     GTCEu.id("block/cover/conveyor_emissive"),
                     GTCEu.id("block/cover/conveyor_inverted_emissive")),
-            ALL_TIERS);
+            ALL_TIERS_WITH_ULV);
 
     public final static CoverDefinition[] ROBOT_ARMS = registerTiered("robot_arm", RobotArmCover::new,
             () -> tier -> new IOCoverRenderer(
@@ -66,13 +66,13 @@ public class GTCovers {
                     null,
                     GTCEu.id("block/cover/arm_emissive"),
                     GTCEu.id("block/cover/arm_inverted_emissive")),
-            ALL_TIERS);
+            ALL_TIERS_WITH_ULV);
 
     public final static CoverDefinition[] PUMPS = registerTiered("pump", PumpCover::new,
-            () -> tier -> IOCoverRenderer.PUMP_LIKE_COVER_RENDERER, ALL_TIERS);
+            () -> tier -> IOCoverRenderer.PUMP_LIKE_COVER_RENDERER, ALL_TIERS_WITH_ULV);
 
     public final static CoverDefinition[] FLUID_REGULATORS = registerTiered("fluid_regulator", FluidRegulatorCover::new,
-            () -> tier -> IOCoverRenderer.PUMP_LIKE_COVER_RENDERER, ALL_TIERS);
+            () -> tier -> IOCoverRenderer.PUMP_LIKE_COVER_RENDERER, ALL_TIERS_WITH_ULV);
 
     public final static CoverDefinition COMPUTER_MONITOR = register("computer_monitor", ComputerMonitorCover::new);
 
@@ -106,6 +106,10 @@ public class GTCovers {
             AdvancedEnergyDetectorCover::new);
     public final static CoverDefinition MAINTENANCE_DETECTOR = register("maintenance_detector",
             MaintenanceDetectorCover::new);
+    public final static CoverDefinition LAYERED_STEP_DETECTOR = register("layered_step_detector",
+            LayeredStepDetectorCover::new);
+    public final static CoverDefinition MACHINE_MODE = register("machine_mode",
+            MachineModeCover::new);
 
     // Solar Panels
     public final static CoverDefinition SOLAR_PANEL_BASIC = register("solar_panel", CoverSolarPanel::new);

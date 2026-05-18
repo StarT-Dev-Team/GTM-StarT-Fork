@@ -20,6 +20,8 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidType;
 
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -48,8 +50,12 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     protected final CustomFluidTank lockedFluid = new CustomFluidTank(FluidType.BUCKET_VOLUME);
     @Getter
     protected Predicate<FluidStack> filter = f -> true;
+    @Accessors(fluent = true)
+    @Getter
+    @Setter
+    private int basePriority;
 
-    public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io, IO capabilityIO) {
+    public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io, IO capabilityIO, int basePriority) {
         super(machine);
         this.handlerIO = io;
         this.storages = new CustomFluidTank[slots];
@@ -58,9 +64,11 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
             this.storages[i] = new CustomFluidTank(capacity);
             this.storages[i].setOnContentsChanged(this::onContentsChanged);
         }
+        this.basePriority = basePriority;
     }
 
-    public NotifiableFluidTank(MetaMachine machine, List<CustomFluidTank> storages, IO io, IO capabilityIO) {
+    public NotifiableFluidTank(MetaMachine machine, List<CustomFluidTank> storages, IO io, IO capabilityIO,
+                               int basePriority) {
         super(machine);
         this.handlerIO = io;
         this.storages = storages.toArray(CustomFluidTank[]::new);
@@ -71,10 +79,19 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
         if (io == IO.IN) {
             this.allowSameFluids = true;
         }
+        this.basePriority = basePriority;
+    }
+
+    public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io, IO capabilityIO) {
+        this(machine, slots, capacity, io, capabilityIO, NORMAL);
     }
 
     public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io) {
         this(machine, slots, capacity, io, io);
+    }
+
+    public NotifiableFluidTank(MetaMachine machine, List<CustomFluidTank> storages, IO io, IO capabilityIO) {
+        this(machine, storages, io, capabilityIO, NORMAL);
     }
 
     public NotifiableFluidTank(MetaMachine machine, List<CustomFluidTank> storages, IO io) {
@@ -94,6 +111,12 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     @Override
     public List<FluidIngredient> handleRecipeInner(IO io, GTRecipe recipe, List<FluidIngredient> left,
                                                    boolean simulate) {
+        return handleRecipe(io, recipe, left, simulate, handlerIO, storages, allowSameFluids);
+    }
+
+    public static List<FluidIngredient> handleRecipe(IO io, GTRecipe recipe, List<FluidIngredient> left,
+                                                     boolean simulate, IO handlerIO, CustomFluidTank[] storages,
+                                                     boolean allowSameFluids) {
         if (io != handlerIO) return left;
         if (io != IO.IN && io != IO.OUT) return left.isEmpty() ? null : left;
 
@@ -168,7 +191,7 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
             }
 
             for (int tank = 0; tank < storages.length; ++tank) {
-                FluidStack current = visited[tank] == null ? getFluidInTank(tank) : visited[tank];
+                FluidStack current = visited[tank] == null ? storages[tank].getFluid() : visited[tank];
                 int count = current.getAmount();
 
                 if (io == IO.IN) {
@@ -229,7 +252,7 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
 
     @Override
     public int getPriority() {
-        return !isLocked() || lockedFluid.getFluid().isEmpty() ? super.getPriority() : HIGH - getTanks();
+        return !isLocked() || lockedFluid.getFluid().isEmpty() ? basePriority : HIGH - getTanks();
     }
 
     public boolean isLocked() {

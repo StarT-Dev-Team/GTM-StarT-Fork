@@ -8,6 +8,7 @@ import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.EnergyHatchPartMachine;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.ItemBusPartMachine;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.gametest.util.TestUtils;
 
 import net.minecraft.core.BlockPos;
@@ -128,7 +129,7 @@ public class MultipleEnergyHatchTest {
         EnergyContainerList containerList = busHolder.controller.getEnergyContainer();
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.CYAN_BED));
         // One tick to start, 16 for the recipe to run
-        helper.succeedOnTickWhen(17, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 22 : 17, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.CYAN_BED)),
@@ -159,7 +160,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.CYAN_BED));
         // One tick to start, 16 for the recipe to run
-        helper.succeedOnTickWhen(17, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 22 : 17, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.CYAN_BED)),
@@ -191,7 +192,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.CYAN_BED));
         // One tick to start, 4 for the recipe to run
-        helper.succeedOnTickWhen(5, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 9 : 5, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.CYAN_BED)),
@@ -223,7 +224,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.CYAN_BED));
         // One tick to start, 4 for the recipe to run
-        helper.succeedOnTickWhen(5, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 11 : 5, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.CYAN_BED)),
@@ -254,7 +255,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.CYAN_BED));
         // One tick to start, 1 for the recipe to run
-        helper.succeedOnTickWhen(2, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 6 : 2, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.CYAN_BED)),
@@ -285,7 +286,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.CYAN_BED));
         // One tick to start, 1 for the recipe to run
-        helper.succeedOnTickWhen(2, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 6 : 2, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.CYAN_BED)),
@@ -316,7 +317,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.CYAN_BED));
         // One tick to start, 1 for the recipe to run
-        helper.succeedOnTickWhen(2, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 6 : 2, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.CYAN_BED)),
@@ -332,7 +333,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.BROWN_BED));
         // One tick to start, 4 for the recipe to run
-        helper.succeedOnTickWhen(5, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 11 : 5, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.BROWN_BED)),
@@ -348,7 +349,7 @@ public class MultipleEnergyHatchTest {
 
         busHolder.inputBus.getInventory().setStackInSlot(0, new ItemStack(Items.BROWN_BED));
         // One tick to start, 4 for the recipe to run
-        helper.succeedOnTickWhen(5, () -> {
+        helper.succeedOnTickWhen((ConfigHolder.INSTANCE.machines.lcrCoilBenefits) ? 11 : 5, () -> {
             helper.assertTrue(
                     TestUtils.isItemStackEqual(busHolder.outputBus.getInventory().getStackInSlot(0),
                             new ItemStack(Items.BROWN_BED)),

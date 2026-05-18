@@ -226,6 +226,7 @@ public class VanillaStandardRecipes {
                 .notConsumable(SHAPE_MOLD_BOTTLE)
                 .outputItems(new ItemStack(Items.GLASS_BOTTLE))
                 .addMaterialInfo(true)
+                .category(GTRecipeCategories.INGOT_MOLDING)
                 .save(provider);
 
         EXTRUDER_RECIPES.recipeBuilder("glass_bottle").duration(32).EUt(16)
@@ -474,7 +475,8 @@ public class VanillaStandardRecipes {
                 new MaterialEntry(gem, Coke), 'S', new ItemStack(Items.STICK));
         VanillaRecipeHelper.addShapedRecipe(provider, "torch_coke_dust", new ItemStack(Blocks.TORCH, 8), "C", "S", 'C',
                 new MaterialEntry(dust, Coke), 'S', new ItemStack(Items.STICK));
-        VanillaRecipeHelper.addShapedRecipe(provider, "torch_creosote", new ItemStack(Blocks.TORCH, 16), "WB", "S ",
+        VanillaRecipeHelper.addShapedFluidContainerRecipe(provider, "torch_creosote", new ItemStack(Blocks.TORCH, 16),
+                "WB", "S ",
                 'W', ItemTags.WOOL, 'S', new ItemStack(Items.STICK), 'B',
                 new FluidContainerIngredient(Creosote.getFluidTag(), 1000));
         VanillaRecipeHelper.addShapedRecipe(provider, "soul_torch", new ItemStack(Blocks.SOUL_TORCH, 1), "WB",

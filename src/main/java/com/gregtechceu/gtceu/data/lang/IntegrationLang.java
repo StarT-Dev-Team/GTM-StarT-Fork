@@ -78,6 +78,8 @@ public class IntegrationLang {
         provider.add("gtceu.top.unit.fluid_milibuckets", "L");
         provider.add("gtceu.top.unit.fluid_buckets", "kL");
         provider.add("gtceu.top.recipe_output", "Recipe Outputs:");
+        provider.add("gtceu.top.layered_recipe.step", "Recipe Step %s of %s");
+        provider.add("gtceu.top.layered_recipe.final", "Final Step Outputs:");
         provider.add("gtceu.top.item_auto_output", "Item Output: %s");
         provider.add("gtceu.top.fluid_auto_output", "Fluid Output: %s");
         provider.add("gtceu.top.auto_output", "Auto Output");
@@ -101,6 +103,14 @@ public class IntegrationLang {
         provider.add("gtceu.jade.voltage_use", "%s EU/t");
         provider.add("gtceu.jade.amperage_use", "%s A");
         provider.add("gtceu.jade.at", " @ ");
+        provider.add("gtceu.jade.remaining_charge_time", "Until charged: %s");
+        provider.add("gtceu.jade.remaining_discharge_time", "Until empty: %s");
+        provider.add("gtceu.jade.changes_eu_sec", "%s EU/s");
+        provider.add("gtceu.jade.seconds", "%s seconds");
+        provider.add("gtceu.jade.minutes", "%s minutes");
+        provider.add("gtceu.jade.hours", "%s hours");
+        provider.add("gtceu.jade.days", "%s days");
+        provider.add("gtceu.jade.years", "%s years");
 
         provider.add("gtceu.top.energy_stored", " / %d EU");
         provider.add("gtceu.top.progress_computation", " / %s CWU");

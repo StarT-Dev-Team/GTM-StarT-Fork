@@ -2,6 +2,7 @@ package com.gregtechceu.gtceu.integration.emi.orevein;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.data.worldgen.GTOreDefinition;
+import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.client.ClientProxy;
 import com.gregtechceu.gtceu.common.data.GTItems;
 
@@ -11,6 +12,8 @@ import net.minecraft.world.item.Items;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiStack;
+
+import static com.gregtechceu.gtceu.common.data.machines.GTMultiMachines.BEDROCK_ORE_MINER;
 
 public class GTOreVeinEmiCategory extends EmiRecipeCategory {
 
@@ -27,6 +30,12 @@ public class GTOreVeinEmiCategory extends EmiRecipeCategory {
     }
 
     public static void registerWorkStations(EmiRegistry registry) {
+        for (MultiblockMachineDefinition multiBlockDefinition : BEDROCK_ORE_MINER) {
+            if (multiBlockDefinition != null) {
+                registry.addWorkstation(CATEGORY, EmiStack.of(multiBlockDefinition.asStack()));
+            }
+        }
+
         registry.addWorkstation(CATEGORY, EmiStack.of(GTItems.PROSPECTOR_LV.asStack()));
         registry.addWorkstation(CATEGORY, EmiStack.of(GTItems.PROSPECTOR_HV.asStack()));
         registry.addWorkstation(CATEGORY, EmiStack.of(GTItems.PROSPECTOR_LuV.asStack()));
