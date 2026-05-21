@@ -60,7 +60,8 @@ public class ModifierLang {
                 "  §7Starting after §6Cupronickel§7, energy usage is also decreased by §f5%%§7.");
 
         provider.add("gtceu.modifier.consume_eu_to_start.name", "%sConsume EU to start:");
-        provider.add("gtceu.modifier.consume_eu_to_start.description", "  §7Recipes require a certain amount of EU to start.");
+        provider.add("gtceu.modifier.consume_eu_to_start.description",
+                "  §7Recipes require a certain amount of EU to start.");
 
         provider.add("gtceu.modifier.fusion_overclock.name", "%sFusion Overclock:");
         multiLang(provider, "gtceu.modifier.fusion_overclock.description",
