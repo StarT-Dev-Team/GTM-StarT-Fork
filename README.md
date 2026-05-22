@@ -145,8 +145,6 @@ In case of this mod being updated for hotfix updates, this is represented by add
 ### Fork Development Team
 
 - **trulyno** - Fork Maintainer
-- **KillLaAqua** - Developer
-- **stellaurora** - Developer
 - **UltraPuPower1** - Developer
 - **n1xx1** - Dev helper
 - **Luzifer Senpai** - Dev helper
