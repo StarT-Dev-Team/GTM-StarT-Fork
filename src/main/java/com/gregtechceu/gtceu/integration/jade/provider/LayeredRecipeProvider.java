@@ -52,7 +52,7 @@ public class LayeredRecipeProvider extends CapabilityBlockProvider<LayeredRecipe
     protected void write(CompoundTag data, LayeredRecipeLogic recipeLogic) {
         var layeredSteps = recipeLogic.getLayeredRecipe();
 
-        if (layeredSteps != null) {
+        if (!layeredSteps.isEmpty()) {
             data.putBoolean("HasRecipe", true);
 
             data.putInt("Index", recipeLogic.getLayeredRecipeLayerIndex());

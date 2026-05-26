@@ -724,7 +724,7 @@ public class MultiblockDisplayText {
         public Builder addLayeredSteps(LayeredRecipeLogic logic) {
             var layers = logic.getLayeredRecipe();
             var step = logic.getLayeredRecipeLayerIndex();
-            if (!isStructureFormed || layers == null)
+            if (!isStructureFormed || layers.isEmpty())
                 return this;
 
             textList.add(Component.literal(""));
@@ -734,7 +734,7 @@ public class MultiblockDisplayText {
 
         public Builder addLayeredTotalProgress(LayeredRecipeLogic logic) {
             var layers = logic.getLayeredRecipe();
-            if (!isStructureFormed || layers == null)
+            if (!isStructureFormed || layers.isEmpty())
                 return this;
 
             var step = logic.getLayeredRecipeLayerIndex();
@@ -800,7 +800,7 @@ public class MultiblockDisplayText {
 
         public Builder addLayeredFinalStepOutputs(LayeredRecipeLogic logic) {
             var layers = logic.getLayeredRecipe();
-            if (!isStructureFormed || layers == null)
+            if (!isStructureFormed || layers.isEmpty())
                 return this;
 
             textList.add(Component.literal(""));

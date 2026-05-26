@@ -58,7 +58,7 @@ public class LayeredWorkableElectricMultiblockMachine extends WorkableElectricMu
             batchParallels = logic.getLastRecipe().batchParallels;
             totalRuns = logic.getLastRecipe().getTotalRuns();
             exact = true;
-        } else if (logic.getLayeredRecipe() != null) {
+        } else if (!logic.getLayeredRecipe().isEmpty()) {
             numParallels = logic.getLayeredRecipe().get(0).parallels;
             subtickParallels = logic.getLayeredRecipe().get(0).subtickParallels;
             batchParallels = logic.getLayeredRecipe().get(0).batchParallels;

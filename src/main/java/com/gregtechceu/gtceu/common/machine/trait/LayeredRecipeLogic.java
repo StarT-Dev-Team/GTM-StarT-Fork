@@ -14,6 +14,7 @@ import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -28,13 +29,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 public class LayeredRecipeLogic extends RecipeLogic {
 
     @Persisted
     @DescSynced
     @Getter
-    private List<GTRecipe> layeredRecipe;
+    @NotNull
+    private List<GTRecipe> layeredRecipe = List.of();
 
     @Persisted
     @DescSynced
@@ -46,12 +49,20 @@ public class LayeredRecipeLogic extends RecipeLogic {
     @Persisted
     protected GTRecipe lastOriginLayeredRecipe;
 
+    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(LayeredRecipeLogic.class,
+            RecipeLogic.MANAGED_FIELD_HOLDER);
+
     public LayeredRecipeLogic(IRecipeLogicMachine machine) {
         super(machine);
     }
 
+    @Override
+    public ManagedFieldHolder getFieldHolder() {
+        return MANAGED_FIELD_HOLDER;
+    }
+
     public @Nullable GTRecipe getCurrentLayer() {
-        if (layeredRecipe == null || layeredRecipeLayerIndex < 0 || layeredRecipeLayerIndex >= layeredRecipe.size()) {
+        if (layeredRecipeLayerIndex < 0 || layeredRecipeLayerIndex >= layeredRecipe.size()) {
             return null;
         }
         return layeredRecipe.get(layeredRecipeLayerIndex);
@@ -59,14 +70,14 @@ public class LayeredRecipeLogic extends RecipeLogic {
 
     public int getCoverRedstoneOutput() {
         var result = layeredRecipeLayerIndex + (lastRecipe == null ? 0 : 1);
-        if (layeredRecipe != null && result == layeredRecipe.size()) {
+        if (result == layeredRecipe.size()) {
             result = 0;
         }
         return Mth.clamp(result, 0, 15);
     }
 
     public GTRecipe getNextLayeredRecipe() {
-        if (layeredRecipe == null || layeredRecipeLayerIndex < 0) {
+        if (layeredRecipeLayerIndex < 0 || layeredRecipe.isEmpty()) {
             return null;
         }
         if (lastRecipe == null) {
@@ -102,7 +113,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
         progress = 0;
         duration = 0;
         layeredRecipeLayerIndex = -1;
-        layeredRecipe = null;
+        layeredRecipe = List.of();
         lastRecipe = null;
     }
 
@@ -110,66 +121,76 @@ public class LayeredRecipeLogic extends RecipeLogic {
     public void resetRecipeLogic() {
         super.resetRecipeLogic();
         layeredRecipeLayerIndex = -1;
-        layeredRecipe = null;
+        layeredRecipe = List.of();
         lastOriginLayeredRecipe = null;
     }
 
     @Override
     public void onRecipeFinish() {
+        machine.afterWorking();
+        if (lastRecipe == null) return;
+
         var finishedLastStep = false;
-        if (layeredRecipe != null && lastRecipe != null && lastRecipe.data.getBoolean("is_layer")) {
+        if (!layeredRecipe.isEmpty() && lastRecipe.data.getBoolean("is_layer")) {
             // we were doing a recipe layer
             layeredRecipeLayerIndex++;
-            finishedLastStep = layeredRecipe.size() == layeredRecipeLayerIndex;
+            if (layeredRecipe.size() == layeredRecipeLayerIndex) {
+                layeredRecipe = List.of();
+                layeredRecipeLayerIndex = -1;
+                finishedLastStep = true;
+            }
         }
 
-        var prevConsecutiveRecipes = 0;
-        var prevSuspendAfterFinish = suspendAfterFinish;
-        suspendAfterFinish = true;
-        super.onRecipeFinish();
-        suspendAfterFinish = prevSuspendAfterFinish;
+        runAttempt = 0;
+        runDelay = 0;
+        consecutiveRecipes++;
+        handleRecipeIO(lastRecipe, IO.OUT);
 
         if (suspendAfterFinish) {
-            if (finishedLastStep) {
-                layeredRecipe = null;
-                layeredRecipeLayerIndex = -1;
-            }
             setStatus(Status.SUSPEND);
+            consecutiveRecipes = 0;
+            progress = 0;
+            duration = 0;
+            isActive = false;
+            lastRecipe = null;
             return;
         }
 
-        setStatus(Status.IDLE);
-        consecutiveRecipes = prevConsecutiveRecipes + 1;
         if (finishedLastStep) {
             // try the first step again, but attempt to modify
             GTRecipe retryRecipe = null;
             if (lastOriginLayeredRecipe != null && machine.alwaysTryModifyRecipe()) {
                 retryRecipe = machine.fullModifyRecipe(lastOriginLayeredRecipe);
-            } else if (layeredRecipe != null) {
+            } else if (!layeredRecipe.isEmpty()) {
                 retryRecipe = layeredRecipe.get(0);
             }
 
             if (retryRecipe != null && checkRecipe(retryRecipe).isSuccess()) {
                 layeredRecipeLayerIndex = 0;
                 setupRecipe(retryRecipe);
-            } else {
-                layeredRecipe = null;
-                layeredRecipeLayerIndex = -1;
+                return;
             }
-            return;
+        } else {
+            // try the subsequent step, which is already transformed
+            var nextStepRecipe = layeredRecipe.get(layeredRecipeLayerIndex);
+            var recipeMatch = checkRecipe(nextStepRecipe);
+            if (recipeMatch.isSuccess()) {
+                setupRecipe(nextStepRecipe);
+                return;
+            }
         }
 
-        // already transformed
-        var nextStepRecipe = layeredRecipe.get(layeredRecipeLayerIndex);
-        var recipeMatch = checkRecipe(nextStepRecipe);
-        if (recipeMatch.isSuccess()) {
-            setupRecipe(nextStepRecipe);
-        }
+        setStatus(Status.IDLE);
+        lastRecipe = null; // never rely on lastRecipe checks
+        consecutiveRecipes = 0;
+        progress = 0;
+        duration = 0;
+        isActive = false;
     }
 
     @Override
     public @NotNull Iterator<GTRecipe> searchRecipe() {
-        if (layeredRecipe != null) {
+        if (!layeredRecipe.isEmpty()) {
             return Collections.singleton(layeredRecipe.get(layeredRecipeLayerIndex)).iterator();
         }
         return machine.getRecipeType().searchRecipe(machine, r -> {
@@ -184,13 +205,12 @@ public class LayeredRecipeLogic extends RecipeLogic {
     public void setupRecipe(GTRecipe recipe) {
         if (LayeredRecipeHelper.hasLayeredSteps(recipe)) {
             // we are starting a layered craft
-            layeredRecipe = LayeredRecipeHelper.getLayeredSteps(recipe);
-            assert layeredRecipe != null;
+            layeredRecipe = Objects.requireNonNull(LayeredRecipeHelper.getLayeredSteps(recipe));
             layeredRecipeLayerIndex = 0;
             recipe = layeredRecipe.get(0);
         } else if (!recipe.data.getBoolean("is_layer")) {
             // non-layered recipe: should never happen
-            layeredRecipe = null;
+            layeredRecipe = List.of();
             layeredRecipeLayerIndex = -1;
         }
         // otherwise we are just doing a subsequent layer
