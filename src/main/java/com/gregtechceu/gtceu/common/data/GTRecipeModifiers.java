@@ -99,7 +99,7 @@ public class GTRecipeModifiers {
             GTRecipeModifiers::crackerOverclock);
     public static final RecipeModifier EBF_OVERCLOCK = new IdentifiedRecipeModifier("ebf_oc",
             GTRecipeModifiers::ebfOverclock);
-    public static final RecipeModifier PYROLYSE_OVEN_OVERCLOCK = new IdentifiedRecipeModifier("pyrolise_oven_oc",
+    public static final RecipeModifier PYROLYSE_OVEN_OVERCLOCK = new IdentifiedRecipeModifier("pyrolyse_oven_oc",
             GTRecipeModifiers::pyrolyseOvenOverclock);
     public static final RecipeModifier MULTI_SMELTER_PARALLEL = new IdentifiedRecipeModifier("multi_smellter_parallel",
             GTRecipeModifiers::multiSmelterParallel);

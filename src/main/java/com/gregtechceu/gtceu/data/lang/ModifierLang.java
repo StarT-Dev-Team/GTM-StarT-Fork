@@ -44,8 +44,8 @@ public class ModifierLang {
                 "  §7For every §f1800K§7 above the recipe temperature, one overclock becomes §f100%% efficient§7 (perfect overclock).",
                 "  §7For every voltage tier above §bMV§7, temperature is increased by §f100K§7.");
 
-        provider.add("gtceu.modifier.pyrolise_oven_oc.name", "%sPyrolise Oven Overclock:");
-        multiLang(provider, "gtceu.modifier.pyrolise_oven_oc.description",
+        provider.add("gtceu.modifier.pyrolyse_oven_oc.name", "%sPyrolyse Oven Overclock:");
+        multiLang(provider, "gtceu.modifier.pyrolyse_oven_oc.description",
                 "  §6Cupronickel §7coils are §f25%%§7 slower.",
                 "  §7Every coil after §bKanthal§7 increases speed by §f50%%§7.");
 
