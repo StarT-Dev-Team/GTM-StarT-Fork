@@ -19,7 +19,7 @@ public class ModifierLang {
 
         provider.add("gtceu.modifier.oc_non_perfect_subtick.name", "%sSubtick:");
         provider.add("gtceu.modifier.oc_non_perfect_subtick.description",
-                "  §7If the recipe time goes under 1 tick addtional overclocks are converted into parallels.");
+                "  §7If the recipe time goes under 1 tick additional overclocks are converted into parallels.");
 
         provider.add("gtceu.modifier.parallel_hatch.name", "%sParallel Hatch:");
         multiLang(provider, "gtceu.modifier.parallel_hatch.description",
@@ -44,15 +44,15 @@ public class ModifierLang {
                 "  §7For every §f1800K§7 above the recipe temperature, one overclock becomes §f100%% efficient§7 (perfect overclock).",
                 "  §7For every voltage tier above §bMV§7, temperature is increased by §f100K§7.");
 
-        provider.add("gtceu.modifier.pyrolize_oven_oc.name", "%sPyrolize Oven Overclock:");
-        multiLang(provider, "gtceu.modifier.pyrolize_oven_oc.description",
+        provider.add("gtceu.modifier.pyrolise_oven_oc.name", "%sPyrolise Oven Overclock:");
+        multiLang(provider, "gtceu.modifier.pyrolise_oven_oc.description",
                 "  §6Cupronickel §7coils are §f25%%§7 slower.",
                 "  §7Every coil after §bKanthal§7 increases speed by §f50%%§7.");
 
         provider.add("gtceu.modifier.multi_smellter_parallel.name", "%sMulti Smelter Parallel:");
         multiLang(provider, "gtceu.modifier.multi_smellter_parallel.description",
-                "  §7Max parallels: §f32x§7 coil tier.",
-                "  §7Higher tiers increase speed and reduce energy use.");
+                "  §7Runs recipes in parallel based on the coils used.",
+                "  §7Higher tiers of coils increase speed and reduce energy use.");
 
         provider.add("gtceu.modifier.chemical_reactor_oc.name", "%sChemical Overclock:");
         multiLang(provider, "gtceu.modifier.chemical_reactor_oc.description",
@@ -60,7 +60,8 @@ public class ModifierLang {
                 "  §7Starting after §6Cupronickel§7, energy usage is also decreased by §f5%%§7.");
 
         provider.add("gtceu.modifier.consume_eu_to_start.name", "%sConsume EU to start:");
-        provider.add("gtceu.modifier.consume_eu_to_start.description", "  §7Recipes require a certain amount of EU to start.");
+        provider.add("gtceu.modifier.consume_eu_to_start.description",
+                "  §7Recipes require a certain amount of EU to start.");
 
         provider.add("gtceu.modifier.fusion_overclock.name", "%sFusion Overclock:");
         multiLang(provider, "gtceu.modifier.fusion_overclock.description",

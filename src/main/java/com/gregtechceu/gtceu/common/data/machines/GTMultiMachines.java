@@ -354,7 +354,7 @@ public class GTMultiMachines {
             .langValue("Pyrolyse Oven [PO]")
             .rotationState(RotationState.ALL)
             .recipeTypes(GTRecipeTypes.PYROLYSE_RECIPES)
-            .recipeModifiers(PYROLYZE_OVEN_OVERCLOCK, BATCH_MODE)
+            .recipeModifiers(PYROLYSE_OVEN_OVERCLOCK, BATCH_MODE)
             .appearanceBlock(MACHINE_CASING_ULV)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("XXX", "XXX", "XXX")
@@ -1198,7 +1198,7 @@ public class GTMultiMachines {
             "wooden_tank_valve", "Wooden Tank Valve", false,
             (builder, overlay) -> builder.sidedWorkableCasingModel(GTCEu.id("block/casings/wood_wall"), overlay));
     public static final MultiblockMachineDefinition WOODEN_MULTIBLOCK_TANK = registerMultiblockTank(
-            "wooden_multiblock_tank", "Wooden Multiblock Tank", 250 * 1000,
+            "wooden_multiblock_tank", "Wooden Multiblock Tank [WMT]", 250 * 1000,
             CASING_WOOD_WALL, WOODEN_TANK_VALVE::getBlock,
             new PropertyFluidFilter(340, false, false, false, false),
             (builder, overlay) -> builder.sidedWorkableCasingModel(GTCEu.id("block/casings/wood_wall"), overlay));
@@ -1208,7 +1208,7 @@ public class GTMultiMachines {
             (builder, overlay) -> builder
                     .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"), overlay));
     public static final MultiblockMachineDefinition BRONZE_MULTIBLOCK_TANK = registerMultiblockTank(
-            "bronze_multiblock_tank", "Bronze Multiblock Tank", 500 * 1000,
+            "bronze_multiblock_tank", "Bronze Multiblock Tank [BMT]", 500 * 1000,
             CASING_BRONZE_BRICKS, BRONZE_TANK_VALVE::getBlock,
             new PropertyFluidFilter(1696, true, false, false, false),
             (builder, overlay) -> builder
@@ -1219,7 +1219,7 @@ public class GTMultiMachines {
             (builder, overlay) -> builder.workableCasingModel(
                     GTCEu.id("block/casings/solid/machine_casing_solid_steel"), overlay));
     public static final MultiblockMachineDefinition STEEL_MULTIBLOCK_TANK = registerMultiblockTank(
-            "steel_multiblock_tank", "Steel Multiblock Tank", 1000 * 1000,
+            "steel_multiblock_tank", "Steel Multiblock Tank [SMT]", 1000 * 1000,
             CASING_STEEL_SOLID, STEEL_TANK_VALVE::getBlock,
             null,
             (builder, overlay) -> builder.workableCasingModel(
@@ -1227,6 +1227,7 @@ public class GTMultiMachines {
 
     public static final MultiblockMachineDefinition CENTRAL_MONITOR = REGISTRATE
             .multiblock("central_monitor", CentralMonitorMachine::new)
+            .langValue("Central Monitor [CM]")
             .rotationState(RotationState.ALL)
             .recipeType(DUMMY_RECIPES)
             .appearanceBlock(CASING_ALUMINIUM_FROSTPROOF)
