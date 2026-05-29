@@ -786,7 +786,7 @@ public class MachineLang {
                 "Auto-Pull Disabled");
         provider.add("gtceu.machine.me.copy_paste.tooltip",
                 "Sneak right-click with Data Stick to copy settings, right-click to apply");
-        provider.add("gtuce.machine.me.expose_sides.tooltip",
+        provider.add("gtceu.machine.me.expose_sides.tooltip",
                 "Use a screwdriver to toggle channel passthrough on and off.");
         provider.add("gtceu.machine.me.import_copy_settings",
                 "Saved settings to Data Stick");
