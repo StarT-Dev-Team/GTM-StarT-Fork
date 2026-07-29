@@ -391,7 +391,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
     }
 
     @HideFromJS
-    public MachineBuilder<DEFINITION> appearanceBlock(@NotNull Block block) {
+    public MachineBuilder<DEFINITION> appearanceBlock(Block block) {
         return appearanceBlock(() -> block);
     }
 
