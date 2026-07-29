@@ -293,6 +293,22 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
     }
 
     @Override
+    public MultiblockMachineBuilder appearanceBlock(Block block) {
+        return (MultiblockMachineBuilder) super.appearanceBlock(block);
+    }
+
+    @HideFromJS
+    @Override
+    public MultiblockMachineBuilder appearanceBlock(ResourceLocation blockId) {
+        return (MultiblockMachineBuilder) super.appearanceBlock(blockId);
+    }
+
+    @Override
+    public MultiblockMachineBuilder appearanceBlock(String blockId) {
+        return (MultiblockMachineBuilder) super.appearanceBlock(blockId);
+    }
+
+    @Override
     public MultiblockMachineBuilder langValue(@Nullable String langValue) {
         return (MultiblockMachineBuilder) super.langValue(langValue);
     }
