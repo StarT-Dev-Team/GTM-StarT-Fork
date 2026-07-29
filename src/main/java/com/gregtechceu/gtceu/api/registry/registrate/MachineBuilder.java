@@ -390,17 +390,26 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return this;
     }
 
-    public MachineBuilder<DEFINITION> appearanceBlock(Block block) {
+    @HideFromJS
+    public MachineBuilder<DEFINITION> appearanceBlock(@NotNull Block block) {
         return appearanceBlock(() -> block);
     }
 
     @HideFromJS
     public MachineBuilder<DEFINITION> appearanceBlock(ResourceLocation blockId) {
-        return appearanceBlock(() -> ForgeRegistries.BLOCKS.getValue(blockId));
+        Block block = ForgeRegistries.BLOCKS.getValue(blockId);
+        if (block == null) {
+            GTCEu.LOGGER.error("Unable to find block with id {}", blockId.toString());
+        }
+        return appearanceBlock(block);
     }
 
     public MachineBuilder<DEFINITION> appearanceBlock(String blockId) {
-        return appearanceBlock(() -> ForgeRegistries.BLOCKS.getValue(new ResourceLocation(blockId)));
+        var block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(blockId));
+        if (block == null) {
+            GTCEu.LOGGER.error("Unable to find block with id {}", blockId);
+        }
+        return appearanceBlock(block);
     }
 
     @HideFromJS

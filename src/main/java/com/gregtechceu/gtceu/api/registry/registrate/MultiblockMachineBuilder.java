@@ -292,8 +292,9 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
         return (MultiblockMachineBuilder) super.appearanceBlock(block);
     }
 
+    @HideFromJS
     @Override
-    public MultiblockMachineBuilder appearanceBlock(Block block) {
+    public MultiblockMachineBuilder appearanceBlock(@NotNull Block block) {
         return (MultiblockMachineBuilder) super.appearanceBlock(block);
     }
 
