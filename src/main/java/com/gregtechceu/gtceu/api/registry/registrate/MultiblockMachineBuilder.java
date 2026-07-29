@@ -298,14 +298,8 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
         return (MultiblockMachineBuilder) super.appearanceBlock(block);
     }
 
-    @HideFromJS
     @Override
     public MultiblockMachineBuilder appearanceBlock(ResourceLocation blockId) {
-        return (MultiblockMachineBuilder) super.appearanceBlock(blockId);
-    }
-
-    @Override
-    public MultiblockMachineBuilder appearanceBlock(String blockId) {
         return (MultiblockMachineBuilder) super.appearanceBlock(blockId);
     }
 
