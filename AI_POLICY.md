@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Generative AI tools can speed up development and lower the barrier to contributing, but they can also introduce unreviewed, low-quality, or legally uncertain content if used carelessly. This policy exists to let contributors benefit from AI tools while keeping StarT's code, documentation, and community contributions up to a high level of quality.
+Generative AI tools can speed up development and lower the barrier to contributing, but they can also introduce unreviewed, low quality, or legally uncertain content if used carelessly. This policy exists to let contributors benefit from AI tools while keeping StarT's code, documentation, and community contributions up to a high level of quality.
 
 ## Scope
 
@@ -26,7 +26,7 @@ This policy applies to all contributors to GTm StarT Fork, developers, dev helpe
 ## External Contributors
 
 - Contributions that use generative AI are welcome, but are held to **higher scrutiny** during review.
-- All generative AI usage must be disclosed (e.g. in a code comment near the relevant block, in the commit message, or in the PR description.) State roughly what was AI-generated vs. hand-written.
+- All generative AI usage must be disclosed (e.g. in a code comment near the relevant block, in the commit message, or in the PR description.) State roughly what was AI-generated vs. handwritten.
 - Reviewers may ask you to explain or walk through AI-generated portions of your contribution to confirm you understand and stand behind the code.
 - Undisclosed AI usage that is later discovered may result in the code being refactored and contributor status being revoked, tighter review requirements and for repeat cases, restricted contribution privileges.
 - As with internal contributions, **substitutive use** (large, AI-generated changes without meaningful human design or review) in submissions will not be accepted.
