@@ -29,6 +29,7 @@ import com.gregtechceu.gtceu.common.data.models.GTMachineModels;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.model.builder.MachineModelBuilder;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
@@ -637,7 +638,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         definition.setRenderWorldPreview(renderMultiblockWorldPreview);
 
         var clientTooltipsHandler = getPaginatedTooltipsHandler(definition);
-        var recipeTypesComponent = TooltipsHandler.getRecipeTypesComponent(definition);
+        var recipeTypesComponent = getRecipeTypesComponent(definition);
 
         definition.setTooltipBuilder((itemStack, components) -> {
             components.addAll(tooltips);
@@ -658,6 +659,29 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
 
         GTRegistries.MACHINES.register(definition.getId(), definition);
         return value = definition;
+    }
+
+    public static @Nullable Component getRecipeTypesComponent(MachineDefinition definition) {
+        var recipeTypes = definition.getRecipeTypes();
+        if (recipeTypes.length <= 1) {
+            return null;
+        }
+
+        if (Arrays.stream(recipeTypes).anyMatch(rt -> "gtceu:dummy".equals(rt.toString()))) {
+            return null;
+        }
+
+        var combined = Arrays.stream(recipeTypes)
+                .map(type -> Component
+                        .translatable(type.registryName.getNamespace() + "." + type.registryName.getPath()))
+                .reduce((c1, c2) -> Component.empty()
+                        .append(c1)
+                        .append(", ")
+                        .append(c2))
+                .get();
+
+        return Component.translatable("gtceu.machine.available_recipe_map_1.tooltip", combined)
+                .withStyle(ChatFormatting.GREEN);
     }
 
     @FunctionalInterface
