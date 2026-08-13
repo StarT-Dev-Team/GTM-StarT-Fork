@@ -35,9 +35,7 @@ import com.gregtechceu.gtceu.integration.map.ftbchunks.FTBChunksPlugin;
 import com.gregtechceu.gtceu.integration.map.layer.Layers;
 import com.gregtechceu.gtceu.integration.map.layer.builtin.FluidRenderLayer;
 import com.gregtechceu.gtceu.integration.map.layer.builtin.OreRenderLayer;
-import com.gregtechceu.gtceu.utils.input.KeyBind;
 import com.gregtechceu.gtceu.utils.input.SyncedKeyMapping;
-import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
 import net.minecraft.client.model.BoatModel;
 import net.minecraft.client.model.ChestBoatModel;
@@ -73,9 +71,6 @@ public class ClientProxy extends CommonProxy {
             Layers.registerLayer(FluidRenderLayer::new, "bedrock_fluids");
         }
         initializeDynamicRenders();
-
-        KeyBind.init();
-        SyncedKeyMappings.init();
     }
 
     @SubscribeEvent

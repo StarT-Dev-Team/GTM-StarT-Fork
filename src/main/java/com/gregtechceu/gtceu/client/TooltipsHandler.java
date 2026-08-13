@@ -37,10 +37,7 @@ import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidType;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
