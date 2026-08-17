@@ -9,11 +9,16 @@ import com.gregtechceu.gtceu.api.data.chemical.material.properties.PropertyKey;
 import com.gregtechceu.gtceu.api.fluids.FluidConstants;
 import com.gregtechceu.gtceu.api.fluids.FluidState;
 import com.gregtechceu.gtceu.api.fluids.GTFluid;
+import com.gregtechceu.gtceu.api.machine.MachineDefinition;
+import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.common.data.GTFluids;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.fluid.potion.PotionFluidHelper;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 import com.gregtechceu.gtceu.utils.GTUtil;
+import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
+import com.gregtechceu.gtceu.utils.input.TooltipScrollHandler;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.locale.Language;
@@ -28,10 +33,16 @@ import net.minecraft.world.level.material.EmptyFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidType;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @OnlyIn(Dist.CLIENT)
@@ -130,5 +141,118 @@ public class TooltipsHandler {
         if (fluidType.getTemperature() < FluidConstants.CRYOGENIC_FLUID_THRESHOLD) {
             tooltips.accept(Component.translatable("gtceu.fluid.temperature.cryogenic"));
         }
+    }
+
+    public static BiConsumer<ItemStack, List<Component>> makePaginatedTooltipHandler(MachineDefinition machineDefinition,
+                                                                                     List<List<Component>> paginatedTooltips) {
+        List<String> shiftTooltips = new ArrayList<>();
+        List<String> shiftTooltipDescriptions = new ArrayList<>();
+
+        Component showCapabilities = Component.translatable("gtceu.tooltip.show_capabilities");
+        Component showCapabilitiesShift = Component.translatable("gtceu.tooltip.show_capabilities_shift");
+        Component breakerLine = Component.translatable("gtceu.universal.tooltip.breaker");
+
+        for (RecipeModifier modifier : machineDefinition.getRecipeModifier().modifiers()) {
+            String modifierId = modifier.getId();
+            if (!GTRecipeModifiers.ignoreModifiers.contains(modifierId) && !modifierId.contains("lambda") &&
+                    !modifierId.contains("proxy")) {
+                shiftTooltips.add("gtceu.modifier.%s.name".formatted(modifierId));
+                shiftTooltipDescriptions.add("gtceu.modifier.%s.description".formatted(modifierId));
+            }
+        }
+
+        boolean isShiftToolsEmpty = shiftTooltips.isEmpty();
+        boolean isPaginatedTooltipsEmpty = paginatedTooltips.isEmpty();
+        int maxModifierPages = shiftTooltips.size();
+        int maxPaginatedPages = paginatedTooltips.size();
+
+        return (itemStack, components) -> {
+            TooltipScrollHandler.setCurrentTooltipMachine(machineDefinition);
+            boolean isShiftDown = GTUtil.isShiftDown();
+
+            if (!isShiftToolsEmpty && isShiftDown) {
+                var currentModifierPage = Math.floorMod(TooltipScrollHandler.getCurrentTooltipModifier(),
+                        maxModifierPages);
+
+                components.add(breakerLine);
+                components.add(showCapabilitiesShift);
+                for (int i = 0; i < maxModifierPages; i++) {
+                    if (i == currentModifierPage) {
+                        components.add(Component.translatable(shiftTooltips.get(i), "[x] "));
+                        components.addAll(LangHandler.getSingleOrMultiLang(shiftTooltipDescriptions.get(i)));
+                    } else {
+                        components.add(Component.translatable(shiftTooltips.get(i), "[ ] "));
+                    }
+                }
+
+                var keyPrev = Component.literal("[")
+                        .append(SyncedKeyMappings.TOOLTIP_PREV.getCombinedDisplayName(KeyModifier.SHIFT))
+                        .append("]");
+                var keyNext = Component.literal("[")
+                        .append(SyncedKeyMappings.TOOLTIP_NEXT.getCombinedDisplayName(KeyModifier.SHIFT))
+                        .append("]");
+
+                components.add(Component.translatable("gtceu.tooltip.capabilities_info",
+                        keyPrev.withStyle(ChatFormatting.LIGHT_PURPLE),
+                        keyNext.withStyle(ChatFormatting.LIGHT_PURPLE))
+                        .withStyle(ChatFormatting.GRAY));
+                return;
+            }
+
+            if (!isPaginatedTooltipsEmpty) {
+                var currentPage = Math.floorMod(TooltipScrollHandler.getCurrentTooltipPage(), maxPaginatedPages);
+
+                components.add(breakerLine);
+
+                if (maxPaginatedPages > 1) {
+                    components.addAll(paginatedTooltips.get(currentPage));
+
+                    var keyPrev = Component.literal("[")
+                            .append(SyncedKeyMappings.TOOLTIP_PREV.getCombinedDisplayName(TooltipScrollHandler
+                                    .getRequiredModifierForPageScroll(SyncedKeyMappings.TOOLTIP_PREV)))
+                            .append("]");
+                    var keyNext = Component.literal("[")
+                            .append(SyncedKeyMappings.TOOLTIP_NEXT.getCombinedDisplayName(TooltipScrollHandler
+                                    .getRequiredModifierForPageScroll(SyncedKeyMappings.TOOLTIP_NEXT)))
+                            .append("]");
+
+                    components.add(Component.translatable("gtceu.tooltip.paginated_info",
+                            keyPrev.withStyle(ChatFormatting.LIGHT_PURPLE),
+                            currentPage + 1, maxPaginatedPages,
+                            keyNext.withStyle(ChatFormatting.LIGHT_PURPLE))
+                            .withStyle(ChatFormatting.GRAY));
+                } else {
+                    components.addAll(paginatedTooltips.get(0));
+                }
+            }
+
+            if (!isShiftToolsEmpty) {
+                components.add(breakerLine);
+                components.add(showCapabilities);
+            }
+        };
+    }
+
+    public static @Nullable Component getRecipeTypesComponent(MachineDefinition definition) {
+        var recipeTypes = definition.getRecipeTypes();
+        if (recipeTypes.length <= 1) {
+            return null;
+        }
+
+        if (Arrays.stream(recipeTypes).anyMatch(rt -> "gtceu:dummy".equals(rt.toString()))) {
+            return null;
+        }
+
+        var combined = Arrays.stream(recipeTypes)
+                .map(type -> Component
+                        .translatable(type.registryName.getNamespace() + "." + type.registryName.getPath()))
+                .reduce((c1, c2) -> Component.empty()
+                        .append(c1)
+                        .append(", ")
+                        .append(c2))
+                .get();
+
+        return Component.translatable("gtceu.machine.available_recipe_map_1.tooltip", combined)
+                .withStyle(ChatFormatting.GREEN);
     }
 }

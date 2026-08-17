@@ -17,6 +17,9 @@ import com.gregtechceu.gtceu.core.mixins.client.AbstractClientPlayerAccessor;
 import com.gregtechceu.gtceu.core.mixins.client.PlayerInfoAccessor;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 import com.gregtechceu.gtceu.integration.map.ClientCacheManager;
+import com.gregtechceu.gtceu.utils.GTUtil;
+import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
+import com.gregtechceu.gtceu.utils.input.TooltipScrollHandler;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -133,6 +136,38 @@ public class ForgeClientEventListener {
     @SubscribeEvent
     public static void onTooltipEvent(ItemTooltipEvent event) {
         TooltipsHandler.appendTooltips(event.getItemStack(), event.getFlags(), event.getToolTip());
+        TooltipScrollHandler.onTooltipEvent(event);
+    }
+
+    @SubscribeEvent
+    public static void onScreenKeyEvent(ScreenEvent.KeyPressed.Pre event) {
+        if (SyncedKeyMappings.TOOLTIP_NEXT.matches(event.getKeyCode(), event.getScanCode())) {
+            TooltipScrollHandler.onTooltipNext(event);
+        } else if (SyncedKeyMappings.TOOLTIP_PREV.matches(event.getKeyCode(), event.getScanCode())) {
+            TooltipScrollHandler.onTooltipPrev(event);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onScreenMouseEvent(ScreenEvent.MouseButtonPressed.Pre event) {
+        if (SyncedKeyMappings.TOOLTIP_NEXT.matchesMouse(event.getButton())) {
+            TooltipScrollHandler.onTooltipNext(event);
+        } else if (SyncedKeyMappings.TOOLTIP_PREV.matchesMouse(event.getButton())) {
+            TooltipScrollHandler.onTooltipPrev(event);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onScreenScrollEvent(ScreenEvent.MouseScrolled.Pre event) {
+        if (!GTUtil.isShiftDown() && !GTUtil.isCtrlDown()) return;
+
+        var dir = (int) Math.signum(event.getScrollDelta());
+        var keycode = dir + 100;
+        if (SyncedKeyMappings.TOOLTIP_NEXT.matchesMouse(keycode)) {
+            TooltipScrollHandler.onTooltipNext(event);
+        } else if (SyncedKeyMappings.TOOLTIP_PREV.matchesMouse(keycode)) {
+            TooltipScrollHandler.onTooltipPrev(event);
+        }
     }
 
     @SubscribeEvent

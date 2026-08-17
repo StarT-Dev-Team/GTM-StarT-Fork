@@ -41,14 +41,16 @@ public final class SyncedKeyMappings {
     public static final SyncedKeyMapping STEP_ASSIST_ENABLE = SyncedKeyMapping.createConfigurable(
             "gtceu.key.enable_step_assist", KeyConflictContext.IN_GAME,
             InputConstants.KEY_APOSTROPHE);
-    public static final SyncedKeyMapping TOOLTIP_NEXT_PAGE = SyncedKeyMapping.createConfigurable(
-            "gtceu.key.tooltip_next_page", KeyConflictContext.IN_GAME, InputConstants.KEY_RIGHT);
-    public static final SyncedKeyMapping TOOLTIP_PREV_PAGE = SyncedKeyMapping.createConfigurable(
-            "gtceu.key.tooltip_previous_page", KeyConflictContext.IN_GAME, InputConstants.KEY_LEFT);
-    public static final SyncedKeyMapping TOOLTIP_UP_PAGE = SyncedKeyMapping.createConfigurable(
-            "gtceu.key.tooltip_up_page", KeyConflictContext.IN_GAME, InputConstants.KEY_UP);
-    public static final SyncedKeyMapping TOOLTIP_DOWN_PAGE = SyncedKeyMapping.createConfigurable(
-            "gtceu.key.tooltip_down_page", KeyConflictContext.IN_GAME, InputConstants.KEY_DOWN);
+
+    public static final int KEY_MOUSEWHEEL_UP = 101;
+    public static final int KEY_MOUSEWHEEL_DOWN = 99;
+
+    public static final SyncedKeyMapping TOOLTIP_NEXT = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_next", KeyConflictContext.GUI, InputConstants.Type.MOUSE, KEY_MOUSEWHEEL_DOWN,
+            GTCEu.NAME);
+    public static final SyncedKeyMapping TOOLTIP_PREV = SyncedKeyMapping.createConfigurable(
+            "gtceu.key.tooltip_previous", KeyConflictContext.GUI, InputConstants.Type.MOUSE, KEY_MOUSEWHEEL_UP,
+            GTCEu.NAME);
 
     public static void init() {
         if (GTCEu.isClientSide()) {

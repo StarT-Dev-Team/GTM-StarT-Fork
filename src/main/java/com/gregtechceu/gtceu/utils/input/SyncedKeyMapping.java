@@ -6,12 +6,14 @@ import com.gregtechceu.gtceu.common.network.packets.CPacketKeyDown;
 
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.IKeyConflictContext;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -70,8 +72,13 @@ public final class SyncedKeyMapping {
     }
 
     private SyncedKeyMapping(String nameKey, IKeyConflictContext ctx, int keyCode, String category) {
+        this(nameKey, ctx, InputConstants.Type.KEYSYM, keyCode, category);
+    }
+
+    private SyncedKeyMapping(String nameKey, IKeyConflictContext ctx, InputConstants.Type type, int keyCode,
+                             String category) {
         if (GTCEu.isClientSide() && !GTCEu.isDataGen()) {
-            this.keyMapping = (KeyMapping) createKeyMapping(nameKey, ctx, keyCode, category);
+            this.keyMapping = (KeyMapping) createKeyMapping(nameKey, ctx, type, keyCode, category);
         }
         this.needsRegister = true;
         KEYMAPPINGS.put(syncIndex++, this);
@@ -107,7 +114,7 @@ public final class SyncedKeyMapping {
     public static @NotNull SyncedKeyMapping createConfigurable(@NotNull String nameKey,
                                                                @NotNull IKeyConflictContext ctx,
                                                                int keyCode) {
-        return createConfigurable(nameKey, ctx, keyCode, GTCEu.NAME);
+        return createConfigurable(nameKey, ctx, InputConstants.Type.KEYSYM, keyCode, GTCEu.NAME);
     }
 
     /**
@@ -121,14 +128,15 @@ public final class SyncedKeyMapping {
      */
     public static @NotNull SyncedKeyMapping createConfigurable(@NotNull String nameKey,
                                                                @NotNull IKeyConflictContext ctx,
-                                                               int keyCode, @NotNull String category) {
-        return new SyncedKeyMapping(nameKey, ctx, keyCode, category);
+                                                               InputConstants.Type type, int keyCode,
+                                                               @NotNull String category) {
+        return new SyncedKeyMapping(nameKey, ctx, type, keyCode, category);
     }
 
     @OnlyIn(Dist.CLIENT)
-    private @NotNull Object createKeyMapping(@NotNull String nameKey, @NotNull IKeyConflictContext ctx, int keyCode,
-                                             String category) {
-        return new KeyMapping(nameKey, ctx, InputConstants.Type.KEYSYM, keyCode, category);
+    private @NotNull Object createKeyMapping(@NotNull String nameKey, @NotNull IKeyConflictContext ctx,
+                                             InputConstants.Type type, int keyCode, String category) {
+        return new KeyMapping(nameKey, ctx, type, keyCode, category);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -141,12 +149,29 @@ public final class SyncedKeyMapping {
     }
 
     @OnlyIn(Dist.CLIENT)
+    public Component getCombinedDisplayName(KeyModifier modifier) {
+        if (keyMapping == null) {
+            return modifier.getCombinedName(InputConstants.UNKNOWN, () -> Component.literal(getDisplayName()));
+        }
+        return modifier.getCombinedName(keyMapping.getKey(), () -> Component.literal(getDisplayName()));
+    }
+
+    @OnlyIn(Dist.CLIENT)
     public int getKeyCode() {
         if (keyMapping != null) {
             return keyMapping.getKey().getValue();
         }
 
         return keyCode;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public InputConstants.Type getType() {
+        if (keyMapping != null) {
+            return keyMapping.getKey().getType();
+        }
+
+        return InputConstants.Type.KEYSYM;
     }
 
     /**
@@ -157,6 +182,34 @@ public final class SyncedKeyMapping {
     public boolean isKeyDown() {
         if (GTCEu.isClientSide()) {
             return isKeyDownClient();
+        }
+        return false;
+    }
+
+    public boolean matches(int keyCode, int scanCode) {
+        if (GTCEu.isClientSide()) {
+            return matchesClient(keyCode, scanCode);
+        }
+        return false;
+    }
+
+    private boolean matchesClient(int keyCode, int scanCode) {
+        if (keyMapping != null) {
+            return keyMapping.matches(keyCode, scanCode);
+        }
+        return false;
+    }
+
+    public boolean matchesMouse(int key) {
+        if (GTCEu.isClientSide()) {
+            return matchesMouseClient(key);
+        }
+        return false;
+    }
+
+    private boolean matchesMouseClient(int key) {
+        if (keyMapping != null) {
+            return keyMapping.matchesMouse(key);
         }
         return false;
     }

@@ -31,7 +31,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class NetworkSwitchMachine extends DataBankMachine implements IOpticalComputationProvider {
+public class NetworkSwitchMachine extends AlwaysActiveComputationMachine implements IOpticalComputationProvider {
 
     public static final int EUT_PER_HATCH = GTValues.VA[GTValues.IV];
 
@@ -142,15 +142,14 @@ public class NetworkSwitchMachine extends DataBankMachine implements IOpticalCom
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.data_bank.providing")
+                .addPatternErrorLine(getMultiblockState().error)
                 .addEnergyUsageExactLine(getEnergyUsage())
                 .addCustom((components) -> {
                     if (!isFormed()) return;
-                    // Receivers
                     components.add(Component.translatable("gtceu.multiblock.network_switch.receivers", receiversCount));
                 })
                 .addCustom((components) -> {
                     if (!isFormed()) return;
-                    // Transmitters
                     components.add(
                             Component.translatable("gtceu.multiblock.network_switch.transmitters", transmittersCount));
                 })

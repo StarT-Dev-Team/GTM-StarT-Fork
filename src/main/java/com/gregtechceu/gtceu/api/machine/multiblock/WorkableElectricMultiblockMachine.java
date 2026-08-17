@@ -16,7 +16,6 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
 import com.gregtechceu.gtceu.api.recipe.ParallelType;
-import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifierList;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
@@ -108,6 +107,7 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
 
         MultiblockDisplayText.builder(textList, isFormed())
                 .setWorkingStatus(recipeLogic.isWorkingEnabled(), recipeLogic.isActive())
+                .addPatternErrorLine(getMultiblockState().error)
                 .addEnergyUsageLine(energyContainer)
                 .addEnergyTierLine(tier)
                 .addMachineModeLine(getRecipeType(), getRecipeTypes().length > 1)
@@ -148,7 +148,7 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
     @Override
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         IVoidable.attachConfigurators(configuratorPanel, this);
-        if (getDefinition().getRecipeModifier() instanceof RecipeModifierList list && Arrays.stream(list.modifiers())
+        if (Arrays.stream(getDefinition().getRecipeModifier().modifiers())
                 .anyMatch(modifier -> modifier == GTRecipeModifiers.BATCH_MODE)) {
             configuratorPanel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
                     GuiTextures.BUTTON_BATCH.getSubTexture(0, 0, 1, 0.5),

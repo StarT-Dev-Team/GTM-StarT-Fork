@@ -957,6 +957,8 @@ public class MachineLang {
         provider.add("gtceu.multiblock.power_substation.time_forever", "Forever");
         provider.add("gtceu.multiblock.power_substation.under_one_hour_left",
                 "Less than 1 hour until fully drained!");
+        provider.add("gtceu.multiblock.power_substation.empty_battery",
+                "All capacitors are empty! At least one filled capacitor is required!");
         provider.add("gtceu.multiblock.active_transformer.average_in", "§bAvg. Input: §f%s EU/t");
         provider.add("gtceu.multiblock.active_transformer.average_out", "§bAvg. Output: §f%s EU/t");
         provider.add("gtceu.multiblock.active_transformer.max_input", "§aMax Input: §f%s EU/t");

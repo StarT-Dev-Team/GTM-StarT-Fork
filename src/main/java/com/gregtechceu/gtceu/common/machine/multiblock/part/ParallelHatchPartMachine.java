@@ -46,20 +46,25 @@ public class ParallelHatchPartMachine extends TieredPartMachine implements IFanc
         minimumParallel = MIN_PARALLEL;
     }
 
-    public void setCurrentParallel(int parallelAmount) {
-        var prevMin = minimumParallel;
-        currentParallel = Mth.clamp(parallelAmount, MIN_PARALLEL, maxParallel);
-        minimumParallel = Mth.clamp(prevMin, MIN_PARALLEL, currentParallel);
-
+    private void updateControllerRL() {
         for (IMultiController controller : getControllers()) {
             if (controller instanceof IRecipeLogicMachine rlm) {
                 rlm.getRecipeLogic().markLastRecipeDirty();
+                rlm.getRecipeLogic().updateTickSubscription();
             }
         }
     }
 
+    public void setCurrentParallel(int parallelAmount) {
+        var prevMin = minimumParallel;
+        currentParallel = Mth.clamp(parallelAmount, MIN_PARALLEL, maxParallel);
+        minimumParallel = Mth.clamp(prevMin, MIN_PARALLEL, currentParallel);
+        updateControllerRL();
+    }
+
     public void setMinimumParallel(int parallelAmount) {
         minimumParallel = Mth.clamp(parallelAmount, MIN_PARALLEL, currentParallel);
+        updateControllerRL();
     }
 
     @Override
