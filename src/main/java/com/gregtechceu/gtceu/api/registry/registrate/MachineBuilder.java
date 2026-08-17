@@ -381,6 +381,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return model(createSidedWorkableCasingMachineModel(baseCasing, workableModel));
     }
 
+    @HideFromJS
     public MachineBuilder<DEFINITION> appearanceBlock(Supplier<? extends Block> block) {
         appearance = () -> block.get().defaultBlockState();
         return this;
