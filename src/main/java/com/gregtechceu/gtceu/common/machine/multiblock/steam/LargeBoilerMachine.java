@@ -34,6 +34,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
 import lombok.Getter;
@@ -135,7 +136,7 @@ public class LargeBoilerMachine extends WorkableMultiblockMachine implements IEx
                 steamGenerated = 0;
             } else if (maxDrain > 0) { // if maxDrain is 0 because throttle is too low, skip trying to make steam
                 // drain water
-                var drainWater = List.of(FluidIngredient.of(Fluids.WATER, maxDrain));
+                var drainWater = List.of(FluidIngredient.of(getConsumedFluid(), maxDrain));
                 List<IRecipeHandler<?>> inputTanks = new ArrayList<>();
                 inputTanks.addAll(getCapabilitiesFlat(IO.IN, FluidRecipeCapability.CAP));
                 inputTanks.addAll(getCapabilitiesFlat(IO.BOTH, FluidRecipeCapability.CAP));
@@ -152,7 +153,7 @@ public class LargeBoilerMachine extends WorkableMultiblockMachine implements IEx
 
                 if (drained > 0) {
                     // fill steam
-                    var fillSteam = List.of(FluidIngredient.of(GTMaterials.Steam.getFluid(steamGenerated)));
+                    var fillSteam = List.of(FluidIngredient.of(getProducedFluid(), steamGenerated));
                     List<IRecipeHandler<?>> outputTanks = new ArrayList<>();
                     outputTanks.addAll(getCapabilitiesFlat(IO.OUT, FluidRecipeCapability.CAP));
                     outputTanks.addAll(getCapabilitiesFlat(IO.BOTH, FluidRecipeCapability.CAP));
@@ -180,6 +181,14 @@ public class LargeBoilerMachine extends WorkableMultiblockMachine implements IEx
             }
         }
         updateSteamSubscription();
+    }
+
+    public Fluid getConsumedFluid() {
+        return Fluids.WATER;
+    }
+
+    public Fluid getProducedFluid() {
+        return GTMaterials.Steam.getFluid();
     }
 
     protected int getCoolDownRate() {
@@ -220,7 +229,7 @@ public class LargeBoilerMachine extends WorkableMultiblockMachine implements IEx
                     steamGenerated / TICKS_PER_STEAM_GENERATION));
 
             var throttleText = Component.translatable("gtceu.multiblock.large_boiler.throttle",
-                            ChatFormatting.AQUA.toString() + getThrottle() + "%")
+                    ChatFormatting.AQUA.toString() + getThrottle() + "%")
                     .withStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                             Component.translatable("gtceu.multiblock.large_boiler.throttle.tooltip"))));
             textList.add(throttleText);

@@ -81,6 +81,13 @@ repositories {
             includeGroup 'com.gregtechceu.gtceu'
         }
     }
+    maven {
+        name = "githubPackages"
+        url = "https://maven.pkg.github.com/StarT-Dev-Team/GTM-StarT-Fork"
+        content {
+            includeGroup 'com.gregtechceu.gtceu'
+        }
+    }
 }
 ```
 
