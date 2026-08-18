@@ -384,6 +384,7 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
         return (MultiblockMachineBuilder) super.bottomTooltips(components);
     }
 
+    @HideFromJS
     @Tolerate
     public MultiblockMachineBuilder partSorter(Comparator<IMultiPart> sorter) {
         this.partSorter = $ -> sorter;
