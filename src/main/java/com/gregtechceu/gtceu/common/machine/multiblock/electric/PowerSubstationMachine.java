@@ -362,7 +362,7 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
         group.addWidget(new DraggableScrollableWidgetGroup(4, 4, 182, 117).setBackground(getScreenTexture())
                 .addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()))
                 .addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
-                        .setMaxWidthLimit(160)
+                        .setMaxWidthLimit(174)
                         .clickHandler(this::handleDisplayClick)));
         group.setBackground(GuiTextures.BACKGROUND_INVERSE);
         return group;
