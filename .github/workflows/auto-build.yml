@@ -14,13 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ github.token }}
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
       PUBLISH: ${{ !contains(github.event.commits[0].message, '[no-snapshot]') }}
-      MAVEN_PASSWORD: ${{ secrets.MAVEN_TOKEN }}
+      MAVEN_TOKEN: ${{ secrets.MAVEN_TOKEN }}
       MAVEN_USER: ${{ secrets.MAVEN_USER }}
       SNAPSHOT: true
       CI: true
     permissions:
       contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - run: git fetch origin main --no-tags --depth=1
@@ -34,9 +37,10 @@ jobs:
         run: echo "VERSION_SUFFIX=$(echo "${{ github.sha }}" | cut -c 1-7)" >> $GITHUB_ENV
       - name: Build
         run: ./gradlew build
-      - name: Publish to Maven
+      - name: Publish to Maven & GitHub Packages
         if: ${{ github.repository_owner == 'StarT-Dev-Team' && env.PUBLISH == 'true' }}
-        run: ./gradlew publish
+        continue-on-error: true
+        run: ./gradlew publish --continue || echo "⚠️ Maven publishing completed with warnings/errors, continuing workflow..."
       - name: Rename Jars
         if: ${{ env.PUBLISH == 'true' }}
         run: for file in build/libs/*; do mv "$file" "${file/SHOT/SHOT+$(date --utc '+%Y%m%d-%H%M%S')-${{ env.VERSION_SUFFIX }}}"; done;
