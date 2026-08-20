@@ -8,7 +8,6 @@ import com.gregtechceu.gtceu.api.machine.fancyconfigurator.AutoStockingFancyConf
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
-import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEStockingPart;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemList;
@@ -304,11 +303,10 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
             tag.putBoolean("AutoPull", false);
             return tag;
         }
-        // if in auto-pull, no need to write actual configured slots, but still need to write the ghost circuit
+        // if in auto-pull, no need to write actual configured slots, but still need to write ticks per cycle
         CompoundTag tag = new CompoundTag();
         tag.putBoolean("AutoPull", true);
-        tag.putByte("GhostCircuit",
-                (byte) IntCircuitBehaviour.getCircuitConfiguration(circuitInventory.getStackInSlot(0)));
+        tag.putInt("TicksPerCycle", getTicksPerCycle());
         return tag;
     }
 
@@ -317,7 +315,9 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
         if (tag.getBoolean("AutoPull")) {
             // if being set to auto-pull, no need to read the configured slots
             this.setAutoPull(true);
-            circuitInventory.setStackInSlot(0, IntCircuitBehaviour.stack(tag.getByte("GhostCircuit")));
+            if (tag.contains("TicksPerCycle")) {
+                setTicksPerCycle(tag.getInt("TicksPerCycle"));
+            }
             return;
         }
         // set auto pull first to avoid issues with clearing the config after reading from the data stick

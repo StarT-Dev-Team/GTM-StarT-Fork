@@ -6,7 +6,6 @@ import com.gregtechceu.gtceu.api.machine.feature.IDataStickInteractable;
 import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
-import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.AEItemConfigWidget;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemList;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemSlot;
@@ -188,9 +187,8 @@ public class MEInputBusPartMachine extends MEBusPartMachine
             CompoundTag stackTag = GenericStack.writeTag(config);
             configStacks.put(Integer.toString(i), stackTag);
         }
-        tag.putByte("GhostCircuit",
-                (byte) IntCircuitBehaviour.getCircuitConfiguration(circuitInventory.getStackInSlot(0)));
         tag.putBoolean("DistinctBuses", isDistinct());
+        tag.putInt("TicksPerCycle", getTicksPerCycle());
         return tag;
     }
 
@@ -207,11 +205,11 @@ public class MEInputBusPartMachine extends MEBusPartMachine
                 }
             }
         }
-        if (tag.contains("GhostCircuit")) {
-            circuitInventory.setStackInSlot(0, IntCircuitBehaviour.stack(tag.getByte("GhostCircuit")));
-        }
         if (tag.contains("DistinctBuses")) {
             setDistinct(tag.getBoolean("DistinctBuses"));
+        }
+        if (tag.contains("TicksPerCycle")) {
+            setTicksPerCycle(tag.getInt("TicksPerCycle"));
         }
     }
 }
