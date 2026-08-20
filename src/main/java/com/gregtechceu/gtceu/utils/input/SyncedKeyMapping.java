@@ -72,6 +72,7 @@ public final class SyncedKeyMapping {
     }
 
     private SyncedKeyMapping(String nameKey, IKeyConflictContext ctx, int keyCode, String category) {
+        // Only on client side
         this(nameKey, ctx, InputConstants.Type.KEYSYM, keyCode, category);
     }
 
@@ -114,7 +115,10 @@ public final class SyncedKeyMapping {
     public static @NotNull SyncedKeyMapping createConfigurable(@NotNull String nameKey,
                                                                @NotNull IKeyConflictContext ctx,
                                                                int keyCode) {
-        return createConfigurable(nameKey, ctx, InputConstants.Type.KEYSYM, keyCode, GTCEu.NAME);
+        if (GTCEu.isClientSide() && !GTCEu.isDataGen()) {
+            return createConfigurable(nameKey, ctx, InputConstants.Type.KEYSYM, keyCode, GTCEu.NAME);
+        }
+        return create(keyCode);
     }
 
     /**
@@ -130,7 +134,19 @@ public final class SyncedKeyMapping {
                                                                @NotNull IKeyConflictContext ctx,
                                                                InputConstants.Type type, int keyCode,
                                                                @NotNull String category) {
-        return new SyncedKeyMapping(nameKey, ctx, type, keyCode, category);
+        if (GTCEu.isClientSide() && !GTCEu.isDataGen()) {
+            return new SyncedKeyMapping(nameKey, ctx, type, keyCode, category);
+        }
+        return create(keyCode);
+    }
+
+    public static @NotNull SyncedKeyMapping createConfigurableMouse(@NotNull String nameKey,
+                                                                    @NotNull IKeyConflictContext ctx, int keyCode,
+                                                                    @NotNull String category) {
+        if (GTCEu.isClientSide() && !GTCEu.isDataGen()) {
+            return new SyncedKeyMapping(nameKey, ctx, InputConstants.Type.MOUSE, keyCode, category);
+        }
+        return create(keyCode);
     }
 
     @OnlyIn(Dist.CLIENT)

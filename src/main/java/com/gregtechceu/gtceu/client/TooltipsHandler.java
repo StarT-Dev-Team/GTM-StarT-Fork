@@ -37,10 +37,7 @@ import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidType;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -231,28 +228,5 @@ public class TooltipsHandler {
                 components.add(showCapabilities);
             }
         };
-    }
-
-    public static @Nullable Component getRecipeTypesComponent(MachineDefinition definition) {
-        var recipeTypes = definition.getRecipeTypes();
-        if (recipeTypes.length <= 1) {
-            return null;
-        }
-
-        if (Arrays.stream(recipeTypes).anyMatch(rt -> "gtceu:dummy".equals(rt.toString()))) {
-            return null;
-        }
-
-        var combined = Arrays.stream(recipeTypes)
-                .map(type -> Component
-                        .translatable(type.registryName.getNamespace() + "." + type.registryName.getPath()))
-                .reduce((c1, c2) -> Component.empty()
-                        .append(c1)
-                        .append(", ")
-                        .append(c2))
-                .get();
-
-        return Component.translatable("gtceu.machine.available_recipe_map_1.tooltip", combined)
-                .withStyle(ChatFormatting.GREEN);
     }
 }

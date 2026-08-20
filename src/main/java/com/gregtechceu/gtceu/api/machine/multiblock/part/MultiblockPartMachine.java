@@ -75,10 +75,12 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
     // Not sure if necessary, but added to match the Controller class
     @SuppressWarnings("unused")
     public void onControllersUpdated(Set<BlockPos> newPositions, Set<BlockPos> old) {
-        controllers.clear();
-        for (BlockPos blockPos : newPositions) {
-            if (MetaMachine.getMachine(getLevel(), blockPos) instanceof IMultiController controller) {
-                controllers.add(controller);
+        synchronized (controllers) {
+            controllers.clear();
+            for (BlockPos blockPos : newPositions) {
+                if (MetaMachine.getMachine(getLevel(), blockPos) instanceof IMultiController controller) {
+                    controllers.add(controller);
+                }
             }
         }
     }
@@ -86,11 +88,13 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
     @Override
     @UnmodifiableView
     public SortedSet<IMultiController> getControllers() {
-        // Necessary to rebuild the set of controllers on client-side
-        if (controllers.size() != controllerPositions.size()) {
-            onControllersUpdated(controllerPositions, Collections.emptySet());
+        synchronized (controllers) {
+            // Necessary to rebuild the set of controllers on client-side
+            if (controllers.size() != controllerPositions.size()) {
+                onControllersUpdated(controllerPositions, Collections.emptySet());
+            }
+            return Collections.unmodifiableSortedSet(new ReferenceLinkedOpenHashSet<>(controllers));
         }
-        return Collections.unmodifiableSortedSet(controllers);
     }
 
     public List<RecipeHandlerList> getRecipeHandlers() {
@@ -122,7 +126,10 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
         super.onUnload();
         if (getLevel() instanceof ServerLevel serverLevel) {
             // Need to copy if > 1 so that we can call removedFromController safely without CME
-            Set<IMultiController> toIter = controllers.size() > 1 ? new ObjectOpenHashSet<>(controllers) : controllers;
+            Set<IMultiController> toIter;
+            synchronized (controllers) {
+                toIter = new ReferenceLinkedOpenHashSet<>(controllers);
+            }
             for (IMultiController controller : toIter) {
                 if (serverLevel.isLoaded(controller.self().getPos())) {
                     removedFromController(controller);
@@ -131,7 +138,9 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
             }
         }
         controllerPositions.clear();
-        controllers.clear();
+        synchronized (controllers) {
+            controllers.clear();
+        }
     }
 
     //////////////////////////////////////
@@ -142,7 +151,9 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
     @Override
     public void removedFromController(IMultiController controller) {
         controllerPositions.remove(controller.self().getPos());
-        controllers.remove(controller);
+        synchronized (controllers) {
+            controllers.remove(controller);
+        }
 
         if (controllers.isEmpty()) {
             MachineRenderState renderState = getRenderState();
@@ -156,7 +167,9 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
     @Override
     public void addedToController(IMultiController controller) {
         controllerPositions.add(controller.self().getPos());
-        controllers.add(controller);
+        synchronized (controllers) {
+            controllers.add(controller);
+        }
 
         MachineRenderState renderState = getRenderState();
         if (renderState.hasProperty(GTMachineModelProperties.IS_FORMED)) {
