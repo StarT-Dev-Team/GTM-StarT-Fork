@@ -69,7 +69,8 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
     private Function<MultiblockMachineDefinition, BlockPattern> pattern;
     private final List<Function<MultiblockMachineDefinition, List<MultiblockShapeInfo>>> shapeInfos = new ArrayList<>();
     /**
-     * Set this to false only if your multiblock is set up such that it could have a wall-shared controller.
+     * Set this to false only if your multiblock is set up such that it could have a
+     * wall-shared controller.
      */
     @Setter
     private boolean allowFlip = true;
@@ -80,13 +81,14 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
     private TriFunction<IMultiController, IMultiPart, Direction, BlockState> partAppearance;
     @Getter
     @Setter
-    private BiConsumer<IMultiController, List<Component>> additionalDisplay = (m, l) -> {};
+    private BiConsumer<IMultiController, List<Component>> additionalDisplay = (m, l) -> {
+    };
 
     public MultiblockMachineBuilder(GTRegistrate registrate, String name,
-                                    Function<IMachineBlockEntity, ? extends MultiblockControllerMachine> metaMachine,
-                                    BiFunction<BlockBehaviour.Properties, MultiblockMachineDefinition, IMachineBlock> blockFactory,
-                                    BiFunction<IMachineBlock, Item.Properties, MetaMachineItem> itemFactory,
-                                    TriFunction<BlockEntityType<?>, BlockPos, BlockState, IMachineBlockEntity> blockEntityFactory) {
+            Function<IMachineBlockEntity, ? extends MultiblockControllerMachine> metaMachine,
+            BiFunction<BlockBehaviour.Properties, MultiblockMachineDefinition, IMachineBlock> blockFactory,
+            BiFunction<IMachineBlock, Item.Properties, MetaMachineItem> itemFactory,
+            TriFunction<BlockEntityType<?>, BlockPos, BlockState, IMachineBlockEntity> blockEntityFactory) {
         super(registrate, name, MultiblockMachineDefinition::new, metaMachine::apply, blockFactory,
                 itemFactory, blockEntityFactory);
         allowExtendedFacing(true);
@@ -100,7 +102,8 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
         return this;
     }
 
-    public MultiblockMachineBuilder shapeInfos(Function<MultiblockMachineDefinition, List<MultiblockShapeInfo>> shapes) {
+    public MultiblockMachineBuilder shapeInfos(
+            Function<MultiblockMachineDefinition, List<MultiblockShapeInfo>> shapes) {
         this.shapeInfos.add(shapes);
         return this;
     }
@@ -127,7 +130,8 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
     }
 
     @Override
-    public MultiblockMachineBuilder blockModel(@Nullable NonNullBiConsumer<DataGenContext<Block, ? extends Block>, GTBlockstateProvider> blockModel) {
+    public MultiblockMachineBuilder blockModel(
+            @Nullable NonNullBiConsumer<DataGenContext<Block, ? extends Block>, GTBlockstateProvider> blockModel) {
         return (MultiblockMachineBuilder) super.blockModel(blockModel);
     }
 
@@ -138,7 +142,7 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
 
     @Override
     public MultiblockMachineBuilder multiblockPreviewRenderer(boolean multiBlockWorldPreview,
-                                                              boolean multiBlockXEIPreview) {
+            boolean multiBlockXEIPreview) {
         return (MultiblockMachineBuilder) super.multiblockPreviewRenderer(multiBlockWorldPreview, multiBlockXEIPreview);
     }
 
@@ -233,8 +237,8 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
 
     @Override
     public MultiblockMachineBuilder colorOverlayTieredHullModel(String overlay,
-                                                                @Nullable String pipeOverlay,
-                                                                @Nullable String emissiveOverlay) {
+            @Nullable String pipeOverlay,
+            @Nullable String emissiveOverlay) {
         return (MultiblockMachineBuilder) super.colorOverlayTieredHullModel(overlay, pipeOverlay, emissiveOverlay);
     }
 
@@ -245,8 +249,8 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
 
     @Override
     public MultiblockMachineBuilder colorOverlayTieredHullModel(ResourceLocation overlay,
-                                                                @Nullable ResourceLocation pipeOverlay,
-                                                                @Nullable ResourceLocation emissiveOverlay) {
+            @Nullable ResourceLocation pipeOverlay,
+            @Nullable ResourceLocation emissiveOverlay) {
         return (MultiblockMachineBuilder) super.colorOverlayTieredHullModel(overlay, pipeOverlay, emissiveOverlay);
     }
 
@@ -267,13 +271,13 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
 
     @Override
     public MultiblockMachineBuilder sidedOverlayCasingModel(ResourceLocation baseCasing,
-                                                            ResourceLocation workableModel) {
+            ResourceLocation workableModel) {
         return (MultiblockMachineBuilder) super.sidedOverlayCasingModel(baseCasing, workableModel);
     }
 
     @Override
     public MultiblockMachineBuilder sidedWorkableCasingModel(ResourceLocation baseCasing,
-                                                             ResourceLocation workableModel) {
+            ResourceLocation workableModel) {
         return (MultiblockMachineBuilder) super.sidedWorkableCasingModel(baseCasing, workableModel);
     }
 
@@ -287,9 +291,21 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
         return (MultiblockMachineBuilder) super.appearance(state);
     }
 
+    @HideFromJS
     @Override
     public MultiblockMachineBuilder appearanceBlock(Supplier<? extends Block> block) {
         return (MultiblockMachineBuilder) super.appearanceBlock(block);
+    }
+
+    @HideFromJS
+    @Override
+    public MultiblockMachineBuilder appearanceBlock(Block block) {
+        return (MultiblockMachineBuilder) super.appearanceBlock(block);
+    }
+
+    @Override
+    public MultiblockMachineBuilder appearanceBlock(ResourceLocation blockId) {
+        return (MultiblockMachineBuilder) super.appearanceBlock(blockId);
     }
 
     @Override
@@ -314,15 +330,15 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
 
     @Override
     public MultiblockMachineBuilder colorOverlaySteamHullModel(String overlay,
-                                                               @Nullable ResourceLocation pipeOverlay,
-                                                               @Nullable String emissiveOverlay) {
+            @Nullable ResourceLocation pipeOverlay,
+            @Nullable String emissiveOverlay) {
         return (MultiblockMachineBuilder) super.colorOverlaySteamHullModel(overlay, pipeOverlay, emissiveOverlay);
     }
 
     @Override
     public MultiblockMachineBuilder colorOverlaySteamHullModel(ResourceLocation overlay,
-                                                               @Nullable ResourceLocation pipeOverlay,
-                                                               @Nullable ResourceLocation emissiveOverlay) {
+            @Nullable ResourceLocation pipeOverlay,
+            @Nullable ResourceLocation emissiveOverlay) {
         return (MultiblockMachineBuilder) super.colorOverlaySteamHullModel(overlay, pipeOverlay, emissiveOverlay);
     }
 
@@ -392,7 +408,7 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
 
     @Override
     public <T extends Comparable<T>> MultiblockMachineBuilder modelProperty(Property<T> property,
-                                                                            @Nullable T defaultValue) {
+            @Nullable T defaultValue) {
         return (MultiblockMachineBuilder) super.modelProperty(property, defaultValue);
     }
 
@@ -486,7 +502,8 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
     }
 
     @Override
-    public MultiblockMachineBuilder onBlockEntityRegister(NonNullConsumer<BlockEntityType<BlockEntity>> onBlockEntityRegister) {
+    public MultiblockMachineBuilder onBlockEntityRegister(
+            NonNullConsumer<BlockEntityType<BlockEntity>> onBlockEntityRegister) {
         return (MultiblockMachineBuilder) super.onBlockEntityRegister(onBlockEntityRegister);
     }
 

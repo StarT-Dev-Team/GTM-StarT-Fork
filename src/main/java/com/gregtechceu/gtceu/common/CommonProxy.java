@@ -26,7 +26,6 @@ import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.fluid.*;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.item.*;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.*;
-import com.gregtechceu.gtceu.common.data.GTPlaceholders;
 import com.gregtechceu.gtceu.common.data.machines.GTMachineUtils;
 import com.gregtechceu.gtceu.common.data.materials.GTFoods;
 import com.gregtechceu.gtceu.common.item.tool.rotation.CustomBlockRotations;
@@ -106,6 +105,9 @@ public class CommonProxy {
             ConfigHolder.INSTANCE.recipes.generateLowQualityGems = true;
             ConfigHolder.INSTANCE.compat.energy.enableFEConverters = true;
         }
+
+        KeyBind.init();
+        SyncedKeyMappings.init();
 
         GTValueProviderTypes.init(eventBus);
         GTRegistries.init(eventBus);
@@ -197,8 +199,6 @@ public class CommonProxy {
         GTFeatures.init();
         GTFeatures.register();
         CustomBlockRotations.init();
-        KeyBind.init();
-        SyncedKeyMappings.init();
         MachineOwner.init();
 
         FusionReactorMachine.registerFusionTier(GTValues.LuV, " (MKI)");
