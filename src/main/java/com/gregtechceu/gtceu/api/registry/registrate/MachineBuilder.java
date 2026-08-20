@@ -49,7 +49,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.generators.BlockModelBuilder;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BlockBuilder;
@@ -147,9 +146,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
     @Setter
     private int paintingColor = ConfigHolder.INSTANCE.client.getDefaultPaintingColor();
     @Setter
-    private BiFunction<ItemStack, Integer, Integer> itemColor = ((itemStack,
-                                                                  tintIndex) -> tintIndex == 2 ? GTValues.VC[tier] :
-                                                                          tintIndex == 1 ? paintingColor : -1);
+    private BiFunction<ItemStack, Integer, Integer> itemColor = ((itemStack, tintIndex) -> tintIndex == 2 ?
+            GTValues.VC[tier] : tintIndex == 1 ? paintingColor : -1);
     private PartAbility[] abilities = new PartAbility[0];
     private final List<Component> tooltips = new ArrayList<>();
     @Getter
@@ -382,23 +380,9 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return model(createSidedWorkableCasingMachineModel(baseCasing, workableModel));
     }
 
-    @HideFromJS
     public MachineBuilder<DEFINITION> appearanceBlock(Supplier<? extends Block> block) {
         appearance = () -> block.get().defaultBlockState();
         return this;
-    }
-
-    @HideFromJS
-    public MachineBuilder<DEFINITION> appearanceBlock(Block block) {
-        return appearanceBlock(() -> block);
-    }
-
-    public MachineBuilder<DEFINITION> appearanceBlock(ResourceLocation blockId) {
-        Block block = ForgeRegistries.BLOCKS.getValue(blockId);
-        if (block == null) {
-            GTCEu.LOGGER.error("Unable to find block with id {}", blockId.toString());
-        }
-        return appearanceBlock(block);
     }
 
     @HideFromJS
@@ -459,8 +443,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
     }
 
     // KJS helpers for model property defaults
-    // These don't need to be copied to the multiblock builder because KJS doesn't
-    // care about the return type downgrade
+    // These don't need to be copied to the multiblock builder because KJS doesn't care about the return type downgrade
 
     public MachineBuilder<DEFINITION> kjs$modelPropertyBool(Property<Boolean> property, boolean defaultValue) {
         return modelProperty(property, defaultValue);
@@ -570,8 +553,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
 
         MachineRenderState defaultState = definition.getStateDefinition().any();
         for (var entry : this.modelProperties.entrySet()) {
-            if (entry.getValue() == null)
-                continue;
+            if (entry.getValue() == null) continue;
             defaultState = defaultState.setValue((Property) entry.getKey(), (Comparable) entry.getValue());
         }
 
@@ -742,22 +724,20 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
     // spotless:off
     protected static class BlockBuilderWrapper {
 
-        public static <DEFINITION extends MachineDefinition> BlockBuilder<Block, ? extends AbstractRegistrate<?>> makeBlockBuilder(
-                MachineBuilder<DEFINITION> builder,
-                DEFINITION definition) {
+        public static <DEFINITION extends MachineDefinition> BlockBuilder<Block, ? extends AbstractRegistrate<?>> makeBlockBuilder(MachineBuilder<DEFINITION> builder,
+                                                                                                                                   DEFINITION definition) {
             return builder.registrate.block(properties -> makeBlock(builder, definition, properties))
-                    .color(() -> () -> IMachineBlock::colorTinted)
-                    .initialProperties(() -> Blocks.DISPENSER)
-                    .properties(BlockBehaviour.Properties::noLootTable)
-                    .addLayer(() -> RenderType::cutout)
-                    .exBlockstate(builder.blockModel != null ? builder.blockModel : createMachineModel(builder.model))
-                    .properties(builder.blockProp)
-                    .onRegister(b -> Arrays.stream(builder.abilities).forEach(a -> a.register(builder.tier, b)));
+                .color(() -> () -> IMachineBlock::colorTinted)
+                .initialProperties(() -> Blocks.DISPENSER)
+                .properties(BlockBehaviour.Properties::noLootTable)
+                .addLayer(() -> RenderType::cutout)
+                .exBlockstate(builder.blockModel != null ? builder.blockModel : createMachineModel(builder.model))
+                .properties(builder.blockProp)
+                .onRegister(b -> Arrays.stream(builder.abilities).forEach(a -> a.register(builder.tier, b)));
         }
 
-        private static <DEFINITION extends MachineDefinition> Block makeBlock(MachineBuilder<DEFINITION> builder,
-                DEFINITION definition,
-                BlockBehaviour.Properties properties) {
+        private static <DEFINITION extends MachineDefinition> Block makeBlock(MachineBuilder<DEFINITION> builder, DEFINITION definition,
+                                                                              BlockBehaviour.Properties properties) {
             MachineDefinition.setBuilt(definition);
             var b = builder.blockFactory.apply(properties, definition);
             MachineDefinition.clearBuilt();
@@ -767,9 +747,8 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
 
     protected static class ItemBuilderWrapper {
 
-        public static <DEFINITION extends MachineDefinition> ItemBuilder<MetaMachineItem, ? extends AbstractRegistrate<?>> makeItemBuilder(
-                MachineBuilder<DEFINITION> builder,
-                BlockEntry<Block> block) {
+        public static <DEFINITION extends MachineDefinition> ItemBuilder<MetaMachineItem, ? extends AbstractRegistrate<?>> makeItemBuilder(MachineBuilder<DEFINITION> builder,
+                                                                                                                                           BlockEntry<Block> block) {
             return builder.registrate
                 .item(properties -> builder.itemFactory.apply((IMachineBlock) block.get(), properties))
                 .setData(ProviderType.LANG, NonNullBiConsumer.noop()) // do not gen any lang keys
@@ -786,8 +765,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
 
         public static <D extends MachineDefinition> void generateAssetJsons(@Nullable AssetJsonGenerator generator,
                                                                             MachineBuilder<D> builder, D definition) {
-            if (builder.model() == null && builder.blockModel() == null)
-                return;
+            if (builder.model() == null && builder.blockModel() == null) return;
 
             final ResourceLocation id = definition.getId();
             // if generator is null, we're making the block models through GT
