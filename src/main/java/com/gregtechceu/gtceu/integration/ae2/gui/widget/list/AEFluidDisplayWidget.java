@@ -1,9 +1,14 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.list;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.widget.TankWidget.JEICallWrapper;
+import com.gregtechceu.gtceu.api.gui.widget.TankWidget.REICallWrapper;
 import com.gregtechceu.gtceu.client.TooltipsHandler;
+import com.gregtechceu.gtceu.integration.ae2.utils.AEUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
 
+import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
 import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
@@ -18,9 +23,13 @@ import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.GenericStack;
+import dev.emi.emi.api.forge.ForgeEmiStack;
+import me.shedaniel.rei.api.common.util.EntryStacks;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +39,7 @@ import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawText;
 /**
  * Display a certain {@link FluidStack} element.
  */
-public class AEFluidDisplayWidget extends Widget {
+public class AEFluidDisplayWidget extends Widget implements IRecipeIngredientSlot {
 
     private final AEListGridWidget gridWidget;
     private final int index;
@@ -79,5 +88,51 @@ public class AEFluidDisplayWidget extends Widget {
                 graphics.renderTooltip(Minecraft.getInstance().font, tooltips, Optional.empty(), mouseX, mouseY);
             }
         }
+    }
+
+    @Override
+    public List<Object> getXEIIngredients() {
+        GenericStack fluid = this.gridWidget.getAt(index);
+
+        if (fluid != null) {
+            FluidStack lastFluidInTank = AEUtil.toFluidStack(fluid);
+
+            if (!lastFluidInTank.isEmpty()) {
+                if (GTCEu.Mods.isJEILoaded()) {
+                    return List.of(JEICallWrapper.getJEIFluidClickable(lastFluidInTank, getPosition(), getSize()));
+                } else if (GTCEu.Mods.isREILoaded()) {
+                    return List.of(EntryStacks.of(REICallWrapper.toREIStack(lastFluidInTank)));
+                } else if (GTCEu.Mods.isEMILoaded()) {
+                    return List.of(ForgeEmiStack.of(lastFluidInTank));
+                }
+                return List.of(lastFluidInTank);
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Nullable
+    @Override
+    public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
+        if (self().isMouseOverElement(mouseX, mouseY)) {
+            GenericStack fluid = this.gridWidget.getAt(index);
+
+            if (fluid != null) {
+                FluidStack lastFluidInTank = AEUtil.toFluidStack(fluid);
+
+                if (lastFluidInTank.isEmpty()) {
+                    if (GTCEu.Mods.isJEILoaded()) {
+                        return JEICallWrapper.getJEIFluidClickable(lastFluidInTank, getPosition(), getSize());
+                    } else if (GTCEu.Mods.isREILoaded()) {
+                        return EntryStacks.of(REICallWrapper.toREIStack(lastFluidInTank));
+                    } else if (GTCEu.Mods.isEMILoaded()) {
+                        return ForgeEmiStack.of(lastFluidInTank);
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }
