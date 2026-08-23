@@ -72,54 +72,39 @@ public class AEItemDisplayWidget extends Widget implements IRecipeIngredientSlot
         }
     }
 
-    @Override
-    public List<Object> getXEIIngredients() {
-        GenericStack item = this.gridWidget.getAt(index);
-
-        if (item != null && item.what() instanceof AEItemKey key) {
-            ItemStack lastStackInSlot = key.getItem() == null ? ItemStack.EMPTY : new ItemStack(key.getItem(), (int) Math.min(item.amount(), Integer.MAX_VALUE));
+    @Nullable
+    private Object getXEIstack(@Nullable GenericStack itemStack) {
+        if (itemStack != null && itemStack.what() instanceof AEItemKey key) {
+            ItemStack lastStackInSlot = new ItemStack(key.getItem(),
+                    (int) Math.min(itemStack.amount(), Integer.MAX_VALUE));
             if (key.hasTag()) lastStackInSlot.setTag(key.getTag().copy());
-
             if (!lastStackInSlot.isEmpty()) {
-                if (GTCEu.Mods.isJEILoaded()) {
-                    return List
-                            .of(JEIPlugin.getItemIngredient(lastStackInSlot, getPosition().x, getPosition().y, 18, 18));
-                } else if (GTCEu.Mods.isREILoaded()) {
-                    return List.of(EntryStacks.of(lastStackInSlot));
-                } else if (GTCEu.Mods.isEMILoaded()) {
-                    return List.of(EmiStack.of(lastStackInSlot));
-                }
-                return List.of(lastStackInSlot);
+                return switch (GTCEu.Mods.loadedXEI()) {
+                    case JEI -> JEIPlugin.getItemIngredient(lastStackInSlot, getPosition().x, getPosition().y, 18, 18);
+                    case REI -> EntryStacks.of(lastStackInSlot);
+                    case EMI -> EmiStack.of(lastStackInSlot);
+                    default -> lastStackInSlot;
+                };
             }
         }
 
-        return Collections.emptyList();
+        return null;
+    }
+
+    @Override
+    public List<Object> getXEIIngredients() {
+        GenericStack item = this.gridWidget.getAt(this.index);
+        var xeiStack = getXEIstack(item);
+
+        return xeiStack != null ? List.of(xeiStack) : Collections.emptyList();
     }
 
     @Nullable
     @Override
     public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
-        if (isMouseOverElement(mouseX, mouseY)) {
+        if (!isMouseOverElement(mouseX, mouseY)) return null;
 
-            GenericStack item = this.gridWidget.getAt(this.index);
-
-            if (item != null && item.what() instanceof AEItemKey key) {
-                ItemStack lastStackInSlot = new ItemStack(key.getItem(),
-                        (int) Math.min(item.amount(), Integer.MAX_VALUE));
-                if (key.hasTag()) lastStackInSlot.setTag(key.getTag().copy());
-
-                if (!lastStackInSlot.isEmpty()) {
-                    if (GTCEu.Mods.isJEILoaded()) {
-                        return JEIPlugin.getItemIngredient(lastStackInSlot, getPosition().x, getPosition().y, 18, 18);
-                    } else if (GTCEu.Mods.isREILoaded()) {
-                        return EntryStacks.of(lastStackInSlot);
-                    } else if (GTCEu.Mods.isEMILoaded()) {
-                        return EmiStack.of(lastStackInSlot);
-                    }
-                    return lastStackInSlot;
-                }
-            }
-        }
-        return null;
+        GenericStack item = this.gridWidget.getAt(this.index);
+        return getXEIstack(item);
     }
 }

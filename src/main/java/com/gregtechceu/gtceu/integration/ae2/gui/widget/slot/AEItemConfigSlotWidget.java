@@ -1,12 +1,15 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.slot;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.misc.IGhostItemTarget;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.ConfigWidget;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAESlot;
 import com.gregtechceu.gtceu.integration.ae2.slot.IConfigurableSlot;
 
+import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
 import com.lowdragmc.lowdraglib.gui.util.TextFormattingUtil;
+import com.lowdragmc.lowdraglib.jei.JEIPlugin;
 import com.lowdragmc.lowdraglib.utils.Position;
 import com.lowdragmc.lowdraglib.utils.Size;
 
@@ -19,12 +22,18 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import dev.emi.emi.api.stack.EmiStack;
+import me.shedaniel.rei.api.common.util.EntryStacks;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawItemStack;
 import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawStringFixedCorner;
 
-public class AEItemConfigSlotWidget extends AEConfigSlotWidget implements IGhostItemTarget {
+public class AEItemConfigSlotWidget extends AEConfigSlotWidget implements IGhostItemTarget, IRecipeIngredientSlot {
 
     public AEItemConfigSlotWidget(int x, int y, ConfigWidget widget, int index) {
         super(new Position(x, y), new Size(18, 18 * 2), widget, index);
@@ -237,5 +246,66 @@ public class AEItemConfigSlotWidget extends AEConfigSlotWidget implements IGhost
             return true;
         }
         return false;
+    }
+
+    @Nullable
+    private Object getXEIstack(@NotNull ItemStack itemStack, @NotNull Position pos, int yOffset) {
+        if (!itemStack.isEmpty()) {
+            return switch (GTCEu.Mods.loadedXEI()) {
+                case JEI -> JEIPlugin.getItemIngredient(itemStack, pos.x, pos.y + yOffset, 18, 18);
+                case REI -> EntryStacks.of(itemStack);
+                case EMI -> EmiStack.of(itemStack);
+                default -> itemStack;
+            };
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Object> getXEIIngredients() {
+        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
+        List<Object> list = new ArrayList<>();
+        Position pos = getPosition();
+        if (slot.getConfig() != null && slot.getConfig().what() instanceof AEItemKey key) {
+            ItemStack lastStackInSlot = key.toStack((int) Math.min(slot.getConfig().amount(), Integer.MAX_VALUE));
+            var xeiStack = getXEIstack(lastStackInSlot, pos, 0);
+            if (xeiStack != null) {
+                list.add(xeiStack);
+            }
+        }
+
+        if (slot.getStock() != null && slot.getStock().what() instanceof AEItemKey key) {
+            ItemStack lastStackInSlot = key.toStack((int) Math.min(slot.getStock().amount(), Integer.MAX_VALUE));
+            var xeiStack = getXEIstack(lastStackInSlot, pos, 18);
+            if (xeiStack != null) {
+                list.add(xeiStack);
+            }
+        }
+
+        return list;
+    }
+
+    @Nullable
+    @Override
+    public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
+        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
+        GenericStack stack = null;
+        Position pos = getPosition();
+        Position targetPos = null;
+        if (mouseOverConfig(mouseX, mouseY)) {
+            stack = slot.getConfig();
+            targetPos = pos;
+        } else if (mouseOverStock(mouseX, mouseY)) {
+            stack = slot.getStock();
+            targetPos = new Position(pos.x, pos.y + 18);
+        }
+
+        if (stack != null && stack.what() instanceof AEItemKey key) {
+            ItemStack lastStackInSlot = key.toStack((int) Math.min(stack.amount(), Integer.MAX_VALUE));
+            return getXEIstack(lastStackInSlot, targetPos, 0);
+        }
+
+        return null;
     }
 }

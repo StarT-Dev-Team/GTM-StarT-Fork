@@ -2,8 +2,7 @@ package com.gregtechceu.gtceu.integration.ae2.gui.widget.list;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget.JEICallWrapper;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget.REICallWrapper;
+import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.client.TooltipsHandler;
 import com.gregtechceu.gtceu.integration.ae2.utils.AEUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
@@ -90,49 +89,37 @@ public class AEFluidDisplayWidget extends Widget implements IRecipeIngredientSlo
         }
     }
 
-    @Override
-    public List<Object> getXEIIngredients() {
-        GenericStack fluid = this.gridWidget.getAt(index);
-
-        if (fluid != null) {
-            FluidStack lastFluidInTank = AEUtil.toFluidStack(fluid);
-
+    @Nullable
+    private Object getXEIfluidStack(@Nullable GenericStack fluidStack) {
+        if (fluidStack != null) {
+            FluidStack lastFluidInTank = AEUtil.toFluidStack(fluidStack);
             if (!lastFluidInTank.isEmpty()) {
-                if (GTCEu.Mods.isJEILoaded()) {
-                    return List.of(JEICallWrapper.getJEIFluidClickable(lastFluidInTank, getPosition(), getSize()));
-                } else if (GTCEu.Mods.isREILoaded()) {
-                    return List.of(EntryStacks.of(REICallWrapper.toREIStack(lastFluidInTank)));
-                } else if (GTCEu.Mods.isEMILoaded()) {
-                    return List.of(ForgeEmiStack.of(lastFluidInTank));
-                }
-                return List.of(lastFluidInTank);
+                return switch (GTCEu.Mods.loadedXEI()) {
+                    case JEI -> TankWidget.JEICallWrapper.getJEIFluidClickable(lastFluidInTank, getPosition(),
+                            getSize());
+                    case REI -> EntryStacks.of(TankWidget.REICallWrapper.toREIStack(lastFluidInTank));
+                    case EMI -> ForgeEmiStack.of(lastFluidInTank);
+                    default -> lastFluidInTank;
+                };
             }
         }
 
-        return Collections.emptyList();
+        return null;
+    }
+
+    @Override
+    public List<Object> getXEIIngredients() {
+        GenericStack fluid = this.gridWidget.getAt(this.index);
+        var xeiStack = getXEIfluidStack(fluid);
+        return xeiStack != null ? List.of(xeiStack) : Collections.emptyList();
     }
 
     @Nullable
     @Override
     public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
-        if (self().isMouseOverElement(mouseX, mouseY)) {
-            GenericStack fluid = this.gridWidget.getAt(index);
+        if (!isMouseOverElement(mouseX, mouseY)) return null;
 
-            if (fluid != null) {
-                FluidStack lastFluidInTank = AEUtil.toFluidStack(fluid);
-
-                if (lastFluidInTank.isEmpty()) {
-                    if (GTCEu.Mods.isJEILoaded()) {
-                        return JEICallWrapper.getJEIFluidClickable(lastFluidInTank, getPosition(), getSize());
-                    } else if (GTCEu.Mods.isREILoaded()) {
-                        return EntryStacks.of(REICallWrapper.toREIStack(lastFluidInTank));
-                    } else if (GTCEu.Mods.isEMILoaded()) {
-                        return ForgeEmiStack.of(lastFluidInTank);
-                    }
-                }
-            }
-        }
-
-        return null;
+        GenericStack fluid = this.gridWidget.getAt(this.index);
+        return getXEIfluidStack(fluid);
     }
 }
