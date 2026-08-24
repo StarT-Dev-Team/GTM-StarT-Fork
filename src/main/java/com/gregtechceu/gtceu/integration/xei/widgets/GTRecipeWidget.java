@@ -393,10 +393,17 @@ public class GTRecipeWidget extends WidgetGroup {
 
     public static void setConsumedChance(Content content, ChanceLogic logic, List<Component> tooltips, int recipeTier,
                                          int chanceTier, ChanceBoostFunction function) {
+        setConsumedChance(true, content, logic, tooltips, recipeTier, chanceTier, function);
+    }
+
+    public static void setConsumedChance(boolean isInput, Content content, ChanceLogic logic, List<Component> tooltips,
+                                         int recipeTier,
+                                         int chanceTier, ChanceBoostFunction function) {
         if (content.chance < ChanceLogic.getMaxChancedValue()) {
             int boostedChance = function.getBoostedChance(content, recipeTier, chanceTier);
             if (boostedChance == 0) {
-                tooltips.add(Component.translatable("gtceu.gui.content.chance_nc"));
+                tooltips.add(Component
+                        .translatable(isInput ? "gtceu.gui.content.chance_nc" : "gtceu.gui.content.chance_np"));
             } else {
                 float baseChanceFloat = 100f * content.chance / content.maxChance;
                 if (content.tierChanceBoost != 0) {
