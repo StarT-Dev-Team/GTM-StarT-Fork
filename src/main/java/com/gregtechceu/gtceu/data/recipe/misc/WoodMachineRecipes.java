@@ -500,7 +500,7 @@ public class WoodMachineRecipes {
                     .save(provider);
         }
         ItemMaterialData.registerMaterialInfo(entry.planks,
-                new ItemMaterialInfo(new MaterialStack(GTMaterials.Wood, M)));
+                new ItemMaterialInfo(new MaterialStack(entry.material, M)));
 
         // door
         if (entry.door != null) {
