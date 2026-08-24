@@ -1,7 +1,9 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.slot;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.misc.IGhostFluidTarget;
+import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.ConfigWidget;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEFluidSlot;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAESlot;
@@ -10,6 +12,7 @@ import com.gregtechceu.gtceu.integration.ae2.utils.AEUtil;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
 
+import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
 import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
 import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
 import com.lowdragmc.lowdraglib.utils.Position;
@@ -34,11 +37,17 @@ import net.minecraftforge.fluids.FluidUtil;
 
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.GenericStack;
+import dev.emi.emi.api.forge.ForgeEmiStack;
+import me.shedaniel.rei.api.common.util.EntryStacks;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawStringFixedCorner;
 
-public class AEFluidConfigSlotWidget extends AEConfigSlotWidget implements IGhostFluidTarget {
+public class AEFluidConfigSlotWidget extends AEConfigSlotWidget implements IGhostFluidTarget, IRecipeIngredientSlot {
 
     public AEFluidConfigSlotWidget(int x, int y, ConfigWidget widget, int index) {
         super(new Position(x, y), new Size(18, 18 * 2), widget, index);
@@ -308,5 +317,59 @@ public class AEFluidConfigSlotWidget extends AEConfigSlotWidget implements IGhos
         }
 
         return -1;
+    }
+
+    @Nullable
+    private Object getXEIfluidStack(@Nullable GenericStack stack, @NotNull Position pos) {
+        FluidStack fluidStack = AEUtil.toFluidStack(stack);
+        if (!fluidStack.isEmpty()) {
+            return switch (GTCEu.Mods.loadedXEI()) {
+                case JEI -> TankWidget.JEICallWrapper.getJEIFluidClickable(fluidStack,
+                        pos, new Size(18, 18));
+                case REI -> EntryStacks.of(TankWidget.REICallWrapper.toREIStack(fluidStack));
+                case EMI -> ForgeEmiStack.of(fluidStack);
+                default -> fluidStack;
+            };
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Object> getXEIIngredients() {
+        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
+        List<Object> list = new ArrayList<>();
+        Position pos = getPosition();
+
+        if (slot.getConfig() != null) {
+            var xeiStack = getXEIfluidStack(slot.getConfig(), pos);
+            if (xeiStack != null) list.add(xeiStack);
+        }
+
+        if (slot.getStock() != null) {
+            var xeiStack = getXEIfluidStack(slot.getStock(), new Position(pos.x, pos.y + 18));
+            if (xeiStack != null) list.add(xeiStack);
+        }
+
+        return list;
+    }
+
+    @Nullable
+    @Override
+    public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
+        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
+        GenericStack stack = null;
+        Position pos = getPosition();
+        Position targetPos = null;
+
+        if (mouseOverConfig(mouseX, mouseY)) {
+            stack = slot.getConfig();
+            targetPos = pos;
+        } else if (mouseOverStock(mouseX, mouseY)) {
+            stack = slot.getStock();
+            targetPos = new Position(pos.x, pos.y + 18);
+        }
+
+        return stack != null ? getXEIfluidStack(stack, targetPos) : null;
     }
 }

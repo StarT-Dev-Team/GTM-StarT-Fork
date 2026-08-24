@@ -21,6 +21,7 @@ import dev.emi.emi.config.EmiConfig;
 import me.shedaniel.rei.api.client.REIRuntime;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 
@@ -151,6 +152,25 @@ public class GTCEu {
     }
 
     public static class Mods {
+
+        public enum LoadedXEI {
+            JEI,
+            REI,
+            EMI;
+        }
+
+        @Nullable
+        public static LoadedXEI loadedXEI() {
+            if (isJEILoaded()) {
+                return LoadedXEI.JEI;
+            } else if (isREILoaded()) {
+                return LoadedXEI.REI;
+            } else if (isEMILoaded()) {
+                return LoadedXEI.EMI;
+            } else {
+                return null;
+            }
+        }
 
         public static boolean isJEILoaded() {
             return !(isModLoaded(GTValues.MODID_EMI) || isModLoaded(GTValues.MODID_REI)) &&
