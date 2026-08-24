@@ -279,7 +279,7 @@ public class PatternPreviewWidget extends WidgetGroup {
     }
 
     private void onPosSelected(BlockPos pos, Direction facing) {
-        if (index >= patterns.length || index < 0) return;
+        if (index >= patterns.length || index < 0 || patterns[index].predicateMap == null) return;
         TraceabilityPredicate predicate = patterns[index].predicateMap.get(pos);
         if (predicate != null) {
             predicates.clear();
