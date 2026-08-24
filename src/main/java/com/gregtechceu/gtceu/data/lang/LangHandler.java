@@ -1372,6 +1372,8 @@ public class LangHandler {
 
         provider.add("gtceu.gui.content.chance_nc", "§cNot Consumed§r");
         provider.add("gtceu.gui.content.chance_nc_short", "§cNC§r");
+        provider.add("gtceu.gui.content.chance_np", "§cNot Produced§r");
+        provider.add("gtceu.gui.content.chance_np_short", "§cNP§r");
         provider.add("gtceu.gui.content.chance_base", "Base Chance: %s%%");
         provider.add("gtceu.gui.content.chance_base_logic", "Base Chance: %s%% (%s)");
         provider.add("gtceu.gui.content.chance_no_boost", "Chance: %s%%");

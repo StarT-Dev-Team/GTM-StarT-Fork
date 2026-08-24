@@ -407,7 +407,7 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
                                 countProvider.getMinValue(), countProvider.getMaxValue())
                                 .withStyle(ChatFormatting.GOLD));
                     }
-                    GTRecipeWidget.setConsumedChance(content,
+                    GTRecipeWidget.setConsumedChance(io == IO.IN, content,
                             recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
                             tooltips, recipeTier, chanceTier, recipeType.getChanceFunction());
                     if (isTickSlot(index, io, recipe)) {

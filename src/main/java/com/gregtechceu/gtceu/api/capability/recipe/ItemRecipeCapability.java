@@ -480,7 +480,7 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
 
                 slot.setXEIChance(chance);
                 slot.setOnAddedTooltips((w, tooltips) -> {
-                    GTRecipeWidget.setConsumedChance(content,
+                    GTRecipeWidget.setConsumedChance(io == IO.IN, content,
                             recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
                             tooltips, recipeTier, chanceTier,
                             hideOC ? (entry, recipeTier1, chanceTier1) -> boostedChance :
