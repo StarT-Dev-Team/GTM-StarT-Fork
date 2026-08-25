@@ -131,7 +131,7 @@ public interface GTRecipeSchema {
             }
             if (map != null) {
                 var recipeType = GTRegistries.RECIPE_TYPES.get(this.type.id);
-                if (map.get(capability) != null &&
+                if (!recipeType.isLayered() && map.get(capability) != null &&
                         map.get(capability).length + obj.length > recipeType.getMaxInputs(capability)) {
                     ConsoleJS.SERVER.warn(String.format(
                             "Trying to add more inputs than RecipeType can support, id: %s, Max %s%sInputs: %s",
@@ -156,7 +156,7 @@ public interface GTRecipeSchema {
             }
             if (map != null) {
                 var recipeType = GTRegistries.RECIPE_TYPES.get(this.type.id);
-                if (map.get(capability) != null &&
+                if (!recipeType.isLayered() && map.get(capability) != null &&
                         map.get(capability).length + obj.length > recipeType.getMaxOutputs(capability)) {
                     ConsoleJS.SERVER.warn(String.format(
                             "Trying to add more outputs than RecipeType can support, id: %s, Max %s%sOutputs: %s",

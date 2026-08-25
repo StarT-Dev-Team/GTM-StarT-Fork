@@ -1750,7 +1750,7 @@ public class GTRecipeBuilder {
                                           Map<RecipeCapability<?>, List<Content>> table,
                                           int addedEntries) {
         // Layered recipes may exceed input sizes
-        if (this.data.contains("layered_info")) return;
+        if (recipeType.isLayered() || this.data.contains("layered_info")) return;
 
         var recipeCapabilityMax = isInput ? recipeType.maxInputs : recipeType.maxOutputs;
         if (!recipeCapabilityMax.containsKey(capability)) return;
