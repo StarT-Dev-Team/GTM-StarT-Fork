@@ -32,5 +32,7 @@ public class RecipeLogicLang {
                 "Insufficient Energy to Initiate Fusion Reaction");
         provider.add("gtceu.recipe_modifier.coil_temperature_too_low", "Coil Temperature Too Low");
         provider.add("gtceu.recipe_modifier.cant_perform_at_min_parallel", "Can't Perform at Min Parallel");
+        provider.add("gtceu.recipe_modifier.no_rotor", "No Rotor in Rotor Holder");
+        provider.add("gtceu.recipe_modifier.rotor_obstructed", "Rotor is Obstructed");
     }
 }

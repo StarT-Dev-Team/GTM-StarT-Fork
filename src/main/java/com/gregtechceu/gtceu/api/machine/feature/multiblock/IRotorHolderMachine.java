@@ -5,8 +5,10 @@ import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyTooltip;
 import com.gregtechceu.gtceu.api.gui.fancy.TooltipsPanel;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
+import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.pattern.util.RelativeDirection;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.RecipeFailureReason;
 import com.gregtechceu.gtceu.common.item.TurbineRotorBehaviour;
 
 import net.minecraft.ChatFormatting;
@@ -195,7 +197,19 @@ public interface IRotorHolderMachine extends IMultiPart {
     //////////////////////////////////////
     @Override
     default GTRecipe modifyRecipe(GTRecipe recipe) {
-        if (!isFrontFaceFree() || !hasRotor()) {
+        if (!isFrontFaceFree()) {
+            for (IMultiController controller : getControllers()) {
+                RecipeLogic.putFailureReason(controller, recipe,
+                        new RecipeFailureReason(Component.translatable("gtceu.recipe_modifier.rotor_obstructed"),
+                                false));
+            }
+            return null;
+        }
+        if (!hasRotor()) {
+            for (IMultiController controller : getControllers()) {
+                RecipeLogic.putFailureReason(controller, recipe,
+                        new RecipeFailureReason(Component.translatable("gtceu.recipe_modifier.no_rotor"), false));
+            }
             return null;
         }
         return IMultiPart.super.modifyRecipe(recipe);
@@ -217,6 +231,12 @@ public interface IRotorHolderMachine extends IMultiPart {
                 () -> List.of(Component.translatable("gtceu.multiblock.universal.rotor_obstructed")
                         .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))),
                 () -> !isFrontFaceFree(),
+                () -> null));
+        tooltipsPanel.attachTooltips(new IFancyTooltip.Basic(
+                () -> GuiTextures.INDICATOR_NO_STEAM.get(false),
+                () -> List.of(Component.translatable("gtceu.multiblock.universal.no_rotor")
+                        .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))),
+                () -> !hasRotor(),
                 () -> null));
     }
 }
