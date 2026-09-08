@@ -10,6 +10,7 @@ import com.gregtechceu.gtceu.api.data.worldgen.bedrockfluid.BedrockFluidDefiniti
 import com.gregtechceu.gtceu.api.data.worldgen.bedrockore.BedrockOreDefinition;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.api.recipe.ParallelType;
 import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
@@ -73,6 +74,8 @@ public final class GTRegistries {
             .create(ForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, GTCEu.MOD_ID);
     public static final GTRegistry<String, Function<FriendlyByteBuf, FluidIngredient>> FLUID_SERIALIZERS = new GTRegistry.String<>(
             GTCEu.id("fluid_serializers"));
+    public static final GTRegistry.String<ParallelType> PARALLEL_TYPES = new GTRegistry.String<>(
+            GTCEu.id("parallel_type"));
 
     public static <V, T extends V> T register(Registry<V> registry, ResourceLocation name, T value) {
         ResourceKey<?> registryKey = registry.key();

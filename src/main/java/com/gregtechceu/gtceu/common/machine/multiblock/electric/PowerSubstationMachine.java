@@ -20,6 +20,8 @@ import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.MachineTrait;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
+import com.gregtechceu.gtceu.api.pattern.error.PatternError;
+import com.gregtechceu.gtceu.api.pattern.error.PatternStringError;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
@@ -69,6 +71,10 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
 
     private static final BigInteger BIG_INTEGER_MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
 
+    // Error for using only empty capacitors
+    public final PatternError EMPTY_BATTERY_ERROR = new PatternStringError(
+            "gtceu.multiblock.power_substation.empty_battery");
+
     private IMaintenanceMachine maintenance;
 
     private PowerStationEnergyBank energyBank;
@@ -101,13 +107,15 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
                 Long2ObjectMaps::emptyMap);
         for (IMultiPart part : getParts()) {
             IO io = ioMap.getOrDefault(part.self().getPos().asLong(), IO.BOTH);
-            if (io == IO.NONE) continue;
+            if (io == IO.NONE)
+                continue;
             if (part instanceof IMaintenanceMachine maintenanceMachine) {
                 this.maintenance = maintenanceMachine;
             }
             var handlerLists = part.getRecipeHandlers();
             for (var handlerList : handlerLists) {
-                if (!handlerList.isValid(io)) continue;
+                if (!handlerList.isValid(io))
+                    continue;
 
                 var containers = handlerList.getCapability(EURecipeCapability.CAP).stream()
                         .filter(IEnergyContainer.class::isInstance)
@@ -138,6 +146,7 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
         }
         if (batteries.isEmpty()) {
             // only empty batteries found in the structure
+            this.getMultiblockState().setError(EMPTY_BATTERY_ERROR);
             onStructureInvalid();
             return;
         }
@@ -353,7 +362,7 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
         group.addWidget(new DraggableScrollableWidgetGroup(4, 4, 182, 117).setBackground(getScreenTexture())
                 .addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()))
                 .addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
-                        .setMaxWidthLimit(150)
+                        .setMaxWidthLimit(174)
                         .clickHandler(this::handleDisplayClick)));
         group.setBackground(GuiTextures.BACKGROUND_INVERSE);
         return group;
@@ -461,7 +470,8 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
 
         /** @return Amount filled into storage */
         public long fill(long amount) {
-            if (amount < 0) throw new IllegalArgumentException("Amount cannot be negative!");
+            if (amount < 0)
+                throw new IllegalArgumentException("Amount cannot be negative!");
 
             // ensure index
             if (index != storage.length - 1 && storage[index] == maximums[index]) {
@@ -491,7 +501,8 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
 
         /** @return Amount drained from storage */
         public long drain(long amount) {
-            if (amount < 0) throw new IllegalArgumentException("Amount cannot be negative!");
+            if (amount < 0)
+                throw new IllegalArgumentException("Amount cannot be negative!");
 
             // ensure index
             if (index != 0 && storage[index] == 0) {
@@ -515,7 +526,8 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
                 return maxDrain + drain(amount);
             }
 
-            // other drain not necessary, either because the storage is now completely empty,
+            // other drain not necessary, either because the storage is now completely
+            // empty,
             // or we were able to drain all the energy from this "battery"
             return maxDrain;
         }
@@ -526,7 +538,8 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
 
         public boolean hasEnergy() {
             for (long l : storage) {
-                if (l > 0) return true;
+                if (l > 0)
+                    return true;
             }
             return false;
         }

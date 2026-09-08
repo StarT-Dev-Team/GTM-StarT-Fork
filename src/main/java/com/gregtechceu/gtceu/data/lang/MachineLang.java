@@ -598,6 +598,8 @@ public class MachineLang {
 
         // Parallel
         provider.add("gtceu.multiblock.parallelizable.tooltip", "Can parallelize with Parallel Control Hatches.");
+        provider.add("gtceu.gui.title.parallel_hatch.max_parallel", "Maximum Parallel");
+        provider.add("gtceu.gui.title.parallel_hatch.min_parallel", "Minimum Parallel");
 
         provider.add("gtceu.machine.parallel_hatch_mk5.tooltip", "Allows to run up to 4 recipes in parallel.");
         provider.add("gtceu.machine.parallel_hatch_mk6.tooltip", "Allows to run up to 16 recipes in parallel.");
@@ -690,6 +692,9 @@ public class MachineLang {
                 "Uses §f%s EU/t§7 per Computation Data Hatch.");
         provider.add("gtceu.multiblock.network_switch.description",
                 "The Network Switch is a multiblock structure used for distributing Computation from many sources to many destinations. It can accept any number of Computation Data Reception or Transmission Hatches. It is necessary for Research Data which requires much higher Computation, as the Research Station can only accept one Computation Data Reception Hatch. HPCAs must have a Bridge Component for the Network Switch to be able to access their Computation.");
+
+        provider.add("gtceu.multiblock.network_switch.receivers", "§7Receivers: §f%s");
+        provider.add("gtceu.multiblock.network_switch.transmitters", "§7Transmitters: §f%s");
 
         multiLang(provider, "gtceu.machine.high_performance_computation_array.tooltip",
                 "Just your average Supercomputer",
@@ -786,7 +791,7 @@ public class MachineLang {
                 "Auto-Pull Disabled");
         provider.add("gtceu.machine.me.copy_paste.tooltip",
                 "Sneak right-click with Data Stick to copy settings, right-click to apply");
-        provider.add("gtuce.machine.me.expose_sides.tooltip",
+        provider.add("gtceu.machine.me.expose_sides.tooltip",
                 "Use a screwdriver to toggle channel passthrough on and off.");
         provider.add("gtceu.machine.me.import_copy_settings",
                 "Saved settings to Data Stick");
@@ -952,6 +957,8 @@ public class MachineLang {
         provider.add("gtceu.multiblock.power_substation.time_forever", "Forever");
         provider.add("gtceu.multiblock.power_substation.under_one_hour_left",
                 "Less than 1 hour until fully drained!");
+        provider.add("gtceu.multiblock.power_substation.empty_battery",
+                "All capacitors are empty! At least one filled capacitor is required!");
         provider.add("gtceu.multiblock.active_transformer.average_in", "§bAvg. Input: §f%s EU/t");
         provider.add("gtceu.multiblock.active_transformer.average_out", "§bAvg. Output: §f%s EU/t");
         provider.add("gtceu.multiblock.active_transformer.max_input", "§aMax Input: §f%s EU/t");

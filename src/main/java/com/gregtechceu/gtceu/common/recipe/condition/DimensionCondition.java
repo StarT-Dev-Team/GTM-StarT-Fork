@@ -10,8 +10,11 @@ import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.data.GTRecipeConditions;
 import com.gregtechceu.gtceu.config.ConfigHolder;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
+import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.jei.IngredientIO;
 
 import net.minecraft.core.registries.Registries;
@@ -63,7 +66,16 @@ public class DimensionCondition extends RecipeCondition<DimensionCondition> {
         return Component.translatable("recipe.condition.dimension.tooltip", dimension);
     }
 
-    public SlotWidget setupDimensionMarkers(int xOffset, int yOffset) {
+    @Override
+    public boolean isXeiVisible() {
+        return false;
+    }
+
+    @Override
+    public Widget createCustomXeiWidget(@NotNull GTRecipeWidget widget, @NotNull GTRecipe recipe) {
+        var xOffset = recipe.recipeType.getRecipeUI().getJEISize().width - widget.getXOffset() - 44;
+        var yOffset = recipe.recipeType.getRecipeUI().getJEISize().height - 32;
+
         DimensionMarker dimMarker = GTRegistries.DIMENSION_MARKERS.getOrDefault(this.dimension.location(),
                 new DimensionMarker(DimensionMarker.MAX_TIER, () -> Blocks.BARRIER, this.dimension.toString()));
         ItemStack icon = dimMarker.getIcon();
@@ -76,7 +88,8 @@ public class DimensionCondition extends RecipeCondition<DimensionCondition> {
                     new TextTexture("T" + (dimMarker.tier >= DimensionMarker.MAX_TIER ? "?" : dimMarker.tier))
                             .scale(0.75f).transform(-3.0f, 5.0f));
         }
-        return dimSlot;
+
+        return dimSlot.setBackgroundTexture(IGuiTexture.EMPTY);
     }
 
     @Override

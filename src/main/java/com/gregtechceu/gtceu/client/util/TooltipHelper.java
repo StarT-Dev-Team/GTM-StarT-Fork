@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.utils.GradientUtil;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 
@@ -104,5 +105,9 @@ public class TooltipHelper {
         public String toString() {
             return codes[index].toString();
         }
+    }
+
+    public static MutableComponent rainbowify(MutableComponent component) {
+        return component.withStyle(RAINBOW_HSL_SLOW);
     }
 }

@@ -242,6 +242,8 @@ public class LayeredRecipeLogic extends RecipeLogic {
             var recipeMatch = checkRecipe(modified);
             if (recipeMatch.isSuccess()) {
                 setupRecipe(modified);
+            } else if (recipeMatch.reason() != null) {
+                putFailureReason(this, match, recipeMatch.reason());
             }
 
             if (lastRecipe != null && getStatus() == Status.WORKING) {

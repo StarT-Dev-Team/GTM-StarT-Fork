@@ -16,6 +16,7 @@ import com.gregtechceu.gtceu.api.recipe.ingredient.EnergyStack;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
+import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.ChatFormatting;
@@ -147,7 +148,12 @@ public class LargeTurbineMachine extends WorkableElectricMultiblockMachine imple
         }
 
         var rotorHolder = turbineMachine.getRotorHolder();
-        if (rotorHolder == null) return ModifierFunction.NULL;
+        if (rotorHolder == null || !rotorHolder.hasRotor()) {
+            return ModifierFunction.cancel(Component.translatable("gtceu.recipe_modifier.no_rotor"));
+        }
+        if (!rotorHolder.isFrontFaceFree()) {
+            return ModifierFunction.cancel(Component.translatable("gtceu.recipe_modifier.rotor_obstructed"));
+        }
 
         EnergyStack EUt = recipe.getOutputEUt();
         long turbineMaxVoltage = turbineMachine.getOverclockVoltage();
@@ -170,7 +176,7 @@ public class LargeTurbineMachine extends WorkableElectricMultiblockMachine imple
                 .inputModifier(ContentModifier.multiplier(actualParallel))
                 .outputModifier(ContentModifier.multiplier(actualParallel))
                 .eutMultiplier(eutMultiplier)
-                .parallels(actualParallel)
+                .parallels(actualParallel, GTParallelTypes.GENERATOR)
                 .durationMultiplier(holderEfficiency)
                 .build();
     }
@@ -195,27 +201,34 @@ public class LargeTurbineMachine extends WorkableElectricMultiblockMachine imple
         if (isFormed()) {
             var rotorHolder = getRotorHolder();
 
-            if (rotorHolder != null && rotorHolder.getRotorEfficiency() > 0) {
-                textList.add(Component.translatable("gtceu.multiblock.turbine.rotor_speed",
-                        FormattingUtil.formatNumbers(rotorHolder.getRotorSpeed()),
-                        FormattingUtil.formatNumbers(rotorHolder.getMaxRotorHolderSpeed())));
-                textList.add(Component.translatable("gtceu.multiblock.turbine.efficiency",
-                        rotorHolder.getTotalEfficiency()));
+            if (rotorHolder != null) {
+                if (rotorHolder.getRotorEfficiency() > 0) {
+                    textList.add(Component.translatable("gtceu.multiblock.turbine.rotor_speed",
+                            FormattingUtil.formatNumbers(rotorHolder.getRotorSpeed()),
+                            FormattingUtil.formatNumbers(rotorHolder.getMaxRotorHolderSpeed())));
+                    textList.add(Component.translatable("gtceu.multiblock.turbine.efficiency",
+                            rotorHolder.getTotalEfficiency()));
 
-                long maxProduction = getOverclockVoltage();
-                long currentProduction = getCurrentProduction();
+                    long maxProduction = getOverclockVoltage();
+                    long currentProduction = getCurrentProduction();
 
-                if (isActive()) {
-                    textList.add(3, Component.translatable("gtceu.multiblock.turbine.energy_per_tick",
-                            FormattingUtil.formatNumbers(currentProduction),
-                            FormattingUtil.formatNumbers(maxProduction)));
-                }
+                    if (isActive()) {
+                        textList.add(3, Component.translatable("gtceu.multiblock.turbine.energy_per_tick",
+                                FormattingUtil.formatNumbers(currentProduction),
+                                FormattingUtil.formatNumbers(maxProduction)));
+                    }
 
-                int rotorDurability = rotorHolder.getRotorDurabilityPercent();
-                if (rotorDurability > MIN_DURABILITY_TO_WARN) {
-                    textList.add(Component.translatable("gtceu.multiblock.turbine.rotor_durability", rotorDurability));
-                } else {
-                    textList.add(Component.translatable("gtceu.multiblock.turbine.rotor_durability", rotorDurability)
+                    int rotorDurability = rotorHolder.getRotorDurabilityPercent();
+                    if (rotorDurability > MIN_DURABILITY_TO_WARN) {
+                        textList.add(
+                                Component.translatable("gtceu.multiblock.turbine.rotor_durability", rotorDurability));
+                    } else {
+                        textList.add(
+                                Component.translatable("gtceu.multiblock.turbine.rotor_durability", rotorDurability)
+                                        .setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+                    }
+                } else if (!rotorHolder.hasRotor()) {
+                    textList.add(Component.translatable("gtceu.multiblock.universal.no_rotor")
                             .setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
                 }
             }

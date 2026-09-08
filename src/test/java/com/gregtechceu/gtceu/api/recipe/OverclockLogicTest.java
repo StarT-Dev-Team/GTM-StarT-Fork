@@ -9,6 +9,7 @@ import com.gregtechceu.gtceu.api.machine.SimpleTieredMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableEnergyContainer;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
+import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.ItemBusPartMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
@@ -221,7 +222,7 @@ public class OverclockLogicTest {
         GTRecipe newRecipe = OC_PERFECT_SUBTICK.applyModifier(busHolder.controller, recipeBeforeModifiers);
 
         helper.assertTrue(newRecipe != null, "Could not apply overclock to recipe");
-        helper.assertTrue(newRecipe.subtickParallels == PERFECT_DURATION_FACTOR_INV,
+        helper.assertTrue(newRecipe.parallelsByType.getInt(GTParallelTypes.SUBTICK) == PERFECT_DURATION_FACTOR_INV,
                 "Perfect subtick overclock didn't multiply parallels by 4");
         helper.assertTrue(
                 newRecipe.getInputEUt().getTotalEU() ==
@@ -249,7 +250,7 @@ public class OverclockLogicTest {
         GTRecipe newRecipe = OC_NON_PERFECT_SUBTICK.applyModifier(busHolder.controller, recipeBeforeModifiers);
 
         helper.assertTrue(newRecipe != null, "Could not apply overclock to recipe");
-        helper.assertTrue(newRecipe.subtickParallels == STD_DURATION_FACTOR_INV,
+        helper.assertTrue(newRecipe.parallelsByType.getInt(GTParallelTypes.SUBTICK) == STD_DURATION_FACTOR_INV,
                 "Non-Perfect subtick overclock didn't multiply parallels by 2");
         helper.assertTrue(
                 newRecipe.getInputEUt().getTotalEU() ==
@@ -277,7 +278,7 @@ public class OverclockLogicTest {
         GTRecipe newRecipe = OC_NON_PERFECT.applyModifier(busHolder.controller, recipeBeforeModifiers);
 
         helper.assertTrue(newRecipe != null, "Could not apply overclock to recipe");
-        helper.assertTrue(newRecipe.subtickParallels == 1,
+        helper.assertTrue(newRecipe.parallelsByType.getInt(GTParallelTypes.SUBTICK) == 1,
                 "Non-Perfect Non-subtick overclock overclocked when it shouldn't have");
         helper.assertTrue(
                 newRecipe.getInputEUt().getTotalEU() == recipeBeforeModifiers.getInputEUt().getTotalEU(),

@@ -149,7 +149,15 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
         List<FluidIngredient> ingredients = new ArrayList<>(outputContents.size());
         for (var content : outputContents) {
             var ing = this.of(content.content);
-            maxAmount = Math.max(maxAmount, ing.getAmount());
+
+            int amount;
+            if (ing instanceof IntProviderFluidIngredient provider) {
+                amount = provider.getCountProvider().getMaxValue();
+            } else {
+                amount = ing.getAmount();
+            }
+
+            maxAmount = Math.max(maxAmount, amount);
             ingredients.add(ing);
         }
         if (maxAmount == 0) return multiplier;
@@ -399,7 +407,7 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
                                 countProvider.getMinValue(), countProvider.getMaxValue())
                                 .withStyle(ChatFormatting.GOLD));
                     }
-                    GTRecipeWidget.setConsumedChance(content,
+                    GTRecipeWidget.setConsumedChance(io == IO.IN, content,
                             recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
                             tooltips, recipeTier, chanceTier, recipeType.getChanceFunction());
                     if (isTickSlot(index, io, recipe)) {

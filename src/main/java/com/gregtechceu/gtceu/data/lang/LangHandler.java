@@ -194,7 +194,7 @@ public class LangHandler {
         provider.add("item.gtceu.tool.behavior.crop_harvesting", "§aHarvester: §fHarvests Crops");
         provider.add("item.gtceu.tool.behavior.plunger", "§9Plumber: §fDrains Fluids");
         provider.add("item.gtceu.tool.behavior.block_rotation", "§2Mechanic: §fRotates Blocks");
-        provider.add("item.gtceu.tool.behavior.dowse_campfire", "§Firefighter: §fDowses Campfires");
+        provider.add("item.gtceu.tool.behavior.dowse_campfire", "§fFirefighter: §fDowses Campfires");
         provider.add("item.gtceu.tool.behavior.damage_boost", "§4Damage Boost: §fExtra damage against %s");
         provider.add("item.gtceu.tool.behavior.prospecting.ore", "Found ore: %s");
         provider.add("item.gtceu.tool.behavior.prospecting.air", "Found an air pocket");
@@ -958,14 +958,22 @@ public class LangHandler {
         provider.add("gtceu.universal.tooltip.requires_redstone", "§4Requires Redstone power");
         provider.add("gtceu.universal.tooltip.deprecated",
                 "§4§lWARNING:§r§4 DEPRECATED. WILL BE REMOVED IN A FUTURE VERSION.§r");
+        provider.add("gtceu.universal.tooltip.breaker", "§8-----------------------------------");
         provider.add("gtceu.recipe.total", "Total: %s EU");
         provider.add("gtceu.recipe.max_eu", "Max. EU: %s EU");
         provider.add("gtceu.recipe.eu", "Usage: %s EU/t");
         provider.add("gtceu.recipe.eu_inverted", "Generation: %s EU/t");
         provider.add("gtceu.recipe.eu.total", "%s EU/t");
+        provider.add("gtceu.recipe.eu.pure", "%s EU");
         provider.add("gtceu.recipe.eu.amp_notation", "%s A @ %s");
-        provider.add("gtceu.recipe.duration", "Duration: %s secs");
-        provider.add("gtceu.recipe.total_duration", "Total Duration: %s secs");
+        provider.add("gtceu.recipe.duration", "Duration: %ss");
+        provider.add("gtceu.recipe.duration.hour", "%s Hour");
+        provider.add("gtceu.recipe.duration.hours", "%s Hours");
+        provider.add("gtceu.recipe.duration.minute", "%s Minute");
+        provider.add("gtceu.recipe.duration.minutes", "%s Minutes");
+        provider.add("gtceu.recipe.duration.second", "%s Second");
+        provider.add("gtceu.recipe.duration.seconds", "%s Seconds");
+        provider.add("gtceu.recipe.total_duration", "Total Duration: %ss");
         provider.add("gtceu.recipe.voltage", "Voltage: %s V @ %s A");
         provider.add("gtceu.recipe.total_eu", "Total Usage: %s EU/t");
         provider.add("gtceu.recipe.not_consumed", "Does not get consumed in the process");
@@ -1168,13 +1176,24 @@ public class LangHandler {
         provider.add("gtceu.multiblock.universal.muffler_obstructed.tooltip",
                 "Muffler Hatch must have a block of airspace in front of it.");
         provider.add("gtceu.multiblock.universal.rotor_obstructed", "Rotor is Obstructed!");
+        provider.add("gtceu.multiblock.universal.no_rotor", "Rotor Missing!");
         provider.add("gtceu.multiblock.universal.distinct", "Distinct Buses:");
         provider.add("gtceu.multiblock.universal.distinct.no", "No");
         provider.add("gtceu.multiblock.universal.distinct.yes", "Yes");
         provider.add("gtceu.multiblock.universal.distinct.info",
                 "If enabled, each Item Input Bus will be treated as fully distinct from each other for recipe lookup. Useful for things like Programmed Circuits, Extruder Shapes, etc.");
         provider.add("gtceu.multiblock.parallel", "Performing up to %d Recipes in Parallel");
-        provider.add("gtceu.multiblock.parallel.exact", "- %dx from Parallels");
+        provider.add("gtceu.multiblock.exaxctly_parallel", "Performing exactly %d Recipes in Parallel");
+        provider.add("gtceu.multiblock.between_parallel", "Performing between %d and %d Recipes in Parallel");
+
+        provider.add("gtceu.parallel_type.unknown", "- %dx from Unknown");
+        provider.add("gtceu.parallel_type.hatch", "- %dx from Parallel Hatch");
+        provider.add("gtceu.parallel_type.batch", "- %dx from Batching");
+        provider.add("gtceu.parallel_type.subtick", "- %dx from Subtick Parallels");
+        provider.add("gtceu.parallel_type.steam", "- %dx from Steam Parallels");
+        provider.add("gtceu.parallel_type.multi_smelter", "- %dx from Multi Smelter Parallels");
+        provider.add("gtceu.parallel_type.generator", "- %dx from Generator Parallels");
+
         provider.add("gtceu.multiblock.multiple_recipemaps.header", "Machine Mode:");
         provider.add("gtceu.multiblock.multiple_recipemaps.tooltip",
                 "Screwdriver the controller to change which machine mode to use.");
@@ -1185,6 +1204,7 @@ public class LangHandler {
         provider.add("gtceu.multiblock.preview.rotate", "Click and drag to rotate");
         provider.add("gtceu.multiblock.preview.select", "Right-click to check candidates");
         provider.add("gtceu.multiblock.pattern.error", "Expected components (%s) at (%s).");
+        provider.add("gtceu.multiblock.pattern.error.limited_title", "Unexpected number of %s:");
         provider.add("gtceu.multiblock.pattern.error.limited_exact", "§cExactly: %d§r");
         provider.add("gtceu.multiblock.pattern.error.limited_within", "§cBetween %d and %d§r");
         multiLang(provider, "gtceu.multiblock.pattern.error.limited", "§cMaximum: %d§r", "§cMinimum: %d§r",
@@ -1256,10 +1276,10 @@ public class LangHandler {
         provider.add("gtceu.key.armor_charging", "Armor Charging to Inventory Toggle");
         provider.add("gtceu.key.tool_aoe_change", "Tool AoE Mode Switch");
         provider.add("gtceu.key.enable_step_assist", "Enable StepAssist");
-        provider.add("gtceu.key.tooltip_next_page", "Tooltip Next Page");
-        provider.add("gtceu.key.tooltip_previous_page", "Tooltip Previous Page");
-        provider.add("gtceu.key.tooltip_up_page", "Tooltip Previous Modifier");
-        provider.add("gtceu.key.tooltip_down_page", "Tooltip Next Modifier");
+        provider.add("gtceu.key.tooltip_next", "Tooltip Next Page");
+        provider.add("gtceu.key.tooltip_previous", "Tooltip Previous Page");
+        provider.add("key.mouse.100", "Mousewheel Up");
+        provider.add("key.mouse.102", "Mousewheel Down");
         provider.add("gtceu.debug.f3_h.enabled",
                 "GregTech has modified the debug info! For Developers: enable the misc:debug config option in the GregTech config file to see more");
         provider.add("config.jade.plugin_gtceu.controllable_provider", "[GTCEu] Controllable");
@@ -1282,10 +1302,13 @@ public class LangHandler {
         provider.add("config.jade.plugin_gtceu.data_bank", "[GTCEu] Data Bank Info");
         provider.add("config.jade.plugin_gtceu.transformer", "[GTCEu] Transformer Info");
         provider.add("config.jade.plugin_gtceu.stained_color", "[GTCEu] Stained Block Info");
+        provider.add("config.jade.plugin_gtceu.me_grid_connected", "[GTCEu] Grid Connected Machine Info");
         provider.add("config.jade.plugin_gtceu.me_pattern_buffer", "[GTCEu] Pattern Buffer Info");
         provider.add("config.jade.plugin_gtceu.me_pattern_buffer_proxy", "[GTCEu] Pattern Buffer Proxy Info");
         provider.add("config.jade.plugin_gtceu.energy_converter_provider", "[GTCEu] Energy Converter Mode");
         provider.add("config.jade.plugin_gtceu.ldp_endpoint", "[GTCEu] Long Distance Pipeline Endpoint Info");
+        provider.add("config.jade.plugin_gtceu.network_switch", "[GTCEu] Network Switch Info");
+        provider.add("config.jade.plugin_gtceu.hpca", "[GTCEu] HPCA Info");
 
         // gui
         provider.add("gtceu.button.ore_veins", "Show GT Ore Veins");
@@ -1350,6 +1373,8 @@ public class LangHandler {
 
         provider.add("gtceu.gui.content.chance_nc", "§cNot Consumed§r");
         provider.add("gtceu.gui.content.chance_nc_short", "§cNC§r");
+        provider.add("gtceu.gui.content.chance_np", "§cNot Produced§r");
+        provider.add("gtceu.gui.content.chance_np_short", "§cNP§r");
         provider.add("gtceu.gui.content.chance_base", "Base Chance: %s%%");
         provider.add("gtceu.gui.content.chance_base_logic", "Base Chance: %s%% (%s)");
         provider.add("gtceu.gui.content.chance_no_boost", "Chance: %s%%");

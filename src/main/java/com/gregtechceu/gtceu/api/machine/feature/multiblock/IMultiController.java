@@ -134,6 +134,10 @@ public interface IMultiController extends IMachineFeature, IInteractedMachine {
      */
     void onStructureInvalid();
 
+    default void onClientStructureFormed() {}
+
+    default void onClientStructureInvalid() {}
+
     /**
      * Whether it has front face.
      * false means structure of all sides are available.

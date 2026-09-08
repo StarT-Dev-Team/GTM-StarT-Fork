@@ -71,7 +71,8 @@ public class RotorHolderPartMachine extends TieredPartMachine
 
     public RotorHolderPartMachine(IMachineBlockEntity holder, int tier) {
         super(holder, tier);
-        this.inventory = new NotifiableItemStackHandler(this, 1, IO.NONE, IO.BOTH);
+        this.inventory = new NotifiableItemStackHandler(this, 1, IO.NONE, IO.BOTH)
+                .setFilter(stack -> TurbineRotorBehaviour.getBehaviour(stack) != null);
         this.maxRotorHolderSpeed = 2000 + 1000 * tier;
     }
 
@@ -155,7 +156,7 @@ public class RotorHolderPartMachine extends TieredPartMachine
 
     @Override
     public boolean hasRotor() {
-        return inventory.getStackInSlot(0) != ItemStack.EMPTY;
+        return TurbineRotorBehaviour.getBehaviour(getRotorStack()) != null;
     }
 
     protected void updateRotorSubscription() {

@@ -10,6 +10,7 @@ import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.EnergyStack;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
+import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.utils.GTUtil;
@@ -53,14 +54,16 @@ public class RecipeHelper {
     public static int getRecipeEUtTier(GTRecipe recipe) {
         EnergyStack stack = getRealEUt(recipe);
         long EUt = stack.voltage();
-        if (recipe.parallels > 1) EUt /= recipe.parallels;
+        var parallels = recipe.parallelsByType.getOrDefault(GTParallelTypes.HATCH, 0);
+        if (parallels > 1) EUt /= parallels;
         return GTUtil.getTierByVoltage(EUt);
     }
 
     public static int getPreOCRecipeEuTier(GTRecipe recipe) {
         EnergyStack stack = getRealEUt(recipe);
         long EUt = stack.getTotalEU();
-        if (recipe.parallels > 1) EUt /= recipe.parallels;
+        var parallels = recipe.parallelsByType.getOrDefault(GTParallelTypes.HATCH, 0);
+        if (parallels > 1) EUt /= parallels;
         EUt >>= (recipe.ocLevel * 2);
         return GTUtil.getTierByVoltage(EUt);
     }
@@ -248,29 +251,29 @@ public class RecipeHelper {
      */
     public static ActionResult checkConditions(GTRecipe recipe, @NotNull RecipeLogic recipeLogic) {
         if (recipe.conditions.isEmpty()) return ActionResult.SUCCESS;
-        Map<RecipeConditionType<?>, List<RecipeCondition>> or = new Reference2ObjectArrayMap<>();
-        for (RecipeCondition condition : recipe.conditions) {
+        Map<RecipeConditionType<?>, List<RecipeCondition<?>>> or = new Reference2ObjectArrayMap<>();
+        for (RecipeCondition<?> condition : recipe.conditions) {
             if (condition.isOr()) {
                 or.computeIfAbsent(condition.getType(), type -> new ArrayList<>()).add(condition);
             } else if (!condition.check(recipe, recipeLogic)) {
                 return ActionResult.fail(Component.translatable("gtceu.recipe_logic.condition_fails")
                         .append(": ")
-                        .append(condition.getTooltips()), null, null);
+                        .append(condition.getTooltips()), false, null, null);
             }
         }
 
-        for (List<RecipeCondition> conditions : or.values()) {
+        for (List<RecipeCondition<?>> conditions : or.values()) {
             boolean passed = conditions.isEmpty();
             MutableComponent component = Component.translatable("gtceu.recipe_logic.condition_fails")
                     .append(": ");
-            for (RecipeCondition condition : conditions) {
+            for (RecipeCondition<?> condition : conditions) {
                 passed = condition.check(recipe, recipeLogic);
                 if (passed) break;
                 else component.append(condition.getTooltips());
             }
 
             if (!passed) {
-                return ActionResult.fail(component, null, null);
+                return ActionResult.fail(component, false, null, null);
             }
         }
         return ActionResult.SUCCESS;

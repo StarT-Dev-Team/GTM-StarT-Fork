@@ -1,9 +1,9 @@
 package com.gregtechceu.gtceu.api.machine.multiblock;
 
-import com.gregtechceu.gtceu.api.capability.IParallelHatch;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
+import com.gregtechceu.gtceu.api.recipe.ParallelType;
 import com.gregtechceu.gtceu.common.machine.trait.LayeredRecipeLogic;
 
 import com.lowdragmc.lowdraglib.gui.util.ClickData;
@@ -11,6 +11,8 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
+
+import it.unimi.dsi.fastutil.objects.Reference2IntMaps;
 
 import java.util.List;
 
@@ -46,39 +48,30 @@ public class LayeredWorkableElectricMultiblockMachine extends WorkableElectricMu
     @Override
     public void addDisplayText(List<Component> textList) {
         var logic = getRecipeLogic();
-        var numParallels = 0;
-        var subtickParallels = 0;
-        var batchParallels = 0;
-        var totalRuns = 0;
+        var parallels = 0;
+        var parallelsByType = Reference2IntMaps.<ParallelType>emptyMap();
         var exact = false;
 
         var initialStep = logic.getFirstLayer();
-
-        if (logic.isActive() && logic.getLastRecipe() != null) {
-            numParallels = logic.getLastRecipe().parallels;
-            subtickParallels = logic.getLastRecipe().subtickParallels;
-            batchParallels = logic.getLastRecipe().batchParallels;
-            totalRuns = logic.getLastRecipe().getTotalRuns();
+        if (recipeLogic.isActive() && recipeLogic.getLastRecipe() != null) {
+            parallels = recipeLogic.getLastRecipe().parallels;
+            parallelsByType = recipeLogic.getLastRecipe().parallelsByType;
             exact = true;
         } else if (initialStep != null) {
-            numParallels = initialStep.parallels;
-            subtickParallels = initialStep.subtickParallels;
-            batchParallels = initialStep.batchParallels;
-            totalRuns = initialStep.getTotalRuns();
+            parallels = initialStep.parallels;
+            parallelsByType = initialStep.parallelsByType;
             exact = true;
-        } else {
-            numParallels = getParallelHatch().map(IParallelHatch::getCurrentParallel).orElse(0);
         }
 
         MultiblockDisplayText.builder(textList, isFormed())
                 .setWorkingStatus(logic.isWorkingEnabled(), logic.isActive())
+                .addPatternErrorLine(getMultiblockState().error)
                 .addEnergyUsageLine(energyContainer)
                 .addEnergyTierLine(tier)
                 .addMachineModeLine(getRecipeType(), getRecipeTypes().length > 1)
-                .addTotalRunsLine(totalRuns)
-                .addParallelsLine(numParallels, exact)
-                .addSubtickParallelsLine(subtickParallels)
-                .addBatchModeLine(isBatchEnabled(), batchParallels)
+                .addTotalRunsLine(parallels)
+                .addParallelHatchLine(getParallelHatch().orElse(null), exact)
+                .addParallelsLine(parallelsByType)
                 .addWorkingStatusLine()
                 .addProgressLine(logic)
                 .addRecipeFailReasonLine(logic)

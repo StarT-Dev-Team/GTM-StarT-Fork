@@ -24,13 +24,20 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.latvian.mods.kubejs.recipe.ingredientaction.IngredientAction;
+import it.unimi.dsi.fastutil.objects.Reference2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class GTRecipeSerializer implements RecipeSerializer<GTRecipe> {
 
     public static final Codec<GTRecipe> CODEC = makeCodec(GTCEu.Mods.isKubeJSLoaded());
+
+    public static final Codec<Reference2IntMap<ParallelType>> PARALLELS_BY_TYPE_CODEC = Codec
+            .unboundedMap(GTRegistries.PARALLEL_TYPES.codec(), Codec.INT)
+            .xmap(Reference2IntArrayMap::new, Function.identity());
 
     public static final GTRecipeSerializer SERIALIZER = new GTRecipeSerializer();
 

@@ -4,9 +4,11 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
 import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib.gui.widget.Widget;
 
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
@@ -83,6 +85,14 @@ public abstract class RecipeCondition<T extends RecipeCondition<T>> {
     protected abstract boolean testCondition(@NotNull GTRecipe recipe, @NotNull RecipeLogic recipeLogic);
 
     public abstract T createTemplate();
+
+    public boolean isXeiVisible() {
+        return true;
+    }
+
+    public Widget createCustomXeiWidget(@NotNull GTRecipeWidget wrapper, @NotNull GTRecipe recipe) {
+        return null;
+    }
 
     @NotNull
     public final JsonObject serialize() {

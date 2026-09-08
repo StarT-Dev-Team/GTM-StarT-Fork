@@ -131,7 +131,7 @@ public interface GTRecipeSchema {
             }
             if (map != null) {
                 var recipeType = GTRegistries.RECIPE_TYPES.get(this.type.id);
-                if (map.get(capability) != null &&
+                if (!recipeType.isLayered() && map.get(capability) != null &&
                         map.get(capability).length + obj.length > recipeType.getMaxInputs(capability)) {
                     ConsoleJS.SERVER.warn(String.format(
                             "Trying to add more inputs than RecipeType can support, id: %s, Max %s%sInputs: %s",
@@ -156,7 +156,7 @@ public interface GTRecipeSchema {
             }
             if (map != null) {
                 var recipeType = GTRegistries.RECIPE_TYPES.get(this.type.id);
-                if (map.get(capability) != null &&
+                if (!recipeType.isLayered() && map.get(capability) != null &&
                         map.get(capability).length + obj.length > recipeType.getMaxOutputs(capability)) {
                     ConsoleJS.SERVER.warn(String.format(
                             "Trying to add more outputs than RecipeType can support, id: %s, Max %s%sOutputs: %s",
@@ -213,6 +213,60 @@ public interface GTRecipeSchema {
 
         public GTRecipeJS EUt(long voltage, long amperage) {
             return EUt(EnergyStack.WithIO.fromVA(voltage, amperage));
+        }
+
+        private GTRecipeJS tieredEUtBuilderMethod(int[] values, int tier, boolean isGenerator) {
+            if (tier >= values.length) {
+                throw new RecipeExceptionJS(String.format("Invalid voltage tier %s for recipe: %s", tier, id));
+            }
+            int sign = isGenerator ? -1 : 1;
+            int voltage = sign * values[Math.abs(tier)];
+            GTCEu.LOGGER.debug("Recipe ID: {} Tier: {} Is generator: {} Sign: {}, Expected voltage: {}",
+                    id, tier, isGenerator, sign, voltage);
+            return EUt(EnergyStack.WithIO.fromVoltage(voltage));
+        }
+
+        private GTRecipeJS tieredEUtBuilderMethod(long[] values, int tier, boolean isGenerator) {
+            if (tier >= values.length) {
+                throw new RecipeExceptionJS(String.format("Invalid voltage tier %s for recipe: %s", tier, id));
+            }
+            int sign = isGenerator ? -1 : 1;
+            long voltage = sign * values[Math.abs(tier)];
+            GTCEu.LOGGER.debug("Recipe ID: {} Tier: {} Is generator: {} Sign: {}, Expected voltage: {}",
+                    id, tier, isGenerator, sign, voltage);
+            return EUt(EnergyStack.WithIO.fromVoltage(voltage));
+        }
+
+        public GTRecipeJS EUtV(int tier, boolean isGenerator) {
+            return tieredEUtBuilderMethod(GTValues.V, tier, isGenerator);
+        }
+
+        public GTRecipeJS EUtV(int tier) {
+            return EUtV(Math.abs(tier), tier < 0);
+        }
+
+        public GTRecipeJS EUtVA(int tier, boolean isGenerator) {
+            return tieredEUtBuilderMethod(GTValues.VA, tier, isGenerator);
+        }
+
+        public GTRecipeJS EUtVA(int tier) {
+            return EUtVA(Math.abs(tier), tier < 0);
+        }
+
+        public GTRecipeJS EUtVH(int tier, boolean isGenerator) {
+            return tieredEUtBuilderMethod(GTValues.VH, tier, isGenerator);
+        }
+
+        public GTRecipeJS EUtVH(int tier) {
+            return EUtVH(Math.abs(tier), tier < 0);
+        }
+
+        public GTRecipeJS EUtVHA(int tier, boolean isGenerator) {
+            return tieredEUtBuilderMethod(GTValues.VHA, tier, isGenerator);
+        }
+
+        public GTRecipeJS EUtVHA(int tier) {
+            return EUtVHA(Math.abs(tier), tier < 0);
         }
 
         public GTRecipeJS outputEU(EnergyStack eu) {

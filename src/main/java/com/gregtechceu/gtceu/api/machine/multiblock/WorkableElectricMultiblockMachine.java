@@ -2,7 +2,6 @@ package com.gregtechceu.gtceu.api.machine.multiblock;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
-import com.gregtechceu.gtceu.api.capability.IParallelHatch;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
@@ -16,7 +15,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IVoidable;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
-import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifierList;
+import com.gregtechceu.gtceu.api.recipe.ParallelType;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
@@ -29,6 +28,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
+import it.unimi.dsi.fastutil.objects.Reference2IntMaps;
 import lombok.Getter;
 
 import java.util.*;
@@ -95,35 +95,25 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
 
     @Override
     public void addDisplayText(List<Component> textList) {
-        int numParallels;
-        int subtickParallels;
-        int batchParallels;
-        int totalRuns;
-        boolean exact = false;
+        var parallels = 0;
+        var parallelsByType = Reference2IntMaps.<ParallelType>emptyMap();
+        var exact = false;
+
         if (recipeLogic.isActive() && recipeLogic.getLastRecipe() != null) {
-            numParallels = recipeLogic.getLastRecipe().parallels;
-            subtickParallels = recipeLogic.getLastRecipe().subtickParallels;
-            batchParallels = recipeLogic.getLastRecipe().batchParallels;
-            totalRuns = recipeLogic.getLastRecipe().getTotalRuns();
+            parallels = recipeLogic.getLastRecipe().parallels;
+            parallelsByType = recipeLogic.getLastRecipe().parallelsByType;
             exact = true;
-        } else {
-            numParallels = getParallelHatch()
-                    .map(IParallelHatch::getCurrentParallel)
-                    .orElse(0);
-            subtickParallels = 0;
-            batchParallels = 0;
-            totalRuns = 0;
         }
 
         MultiblockDisplayText.builder(textList, isFormed())
                 .setWorkingStatus(recipeLogic.isWorkingEnabled(), recipeLogic.isActive())
+                .addPatternErrorLine(getMultiblockState().error)
                 .addEnergyUsageLine(energyContainer)
                 .addEnergyTierLine(tier)
                 .addMachineModeLine(getRecipeType(), getRecipeTypes().length > 1)
-                .addTotalRunsLine(totalRuns)
-                .addParallelsLine(numParallels, exact)
-                .addSubtickParallelsLine(subtickParallels)
-                .addBatchModeLine(isBatchEnabled(), batchParallels)
+                .addParallelHatchLine(getParallelHatch().orElse(null), exact)
+                .addTotalRunsLine(parallels)
+                .addParallelsLine(parallelsByType)
                 .addWorkingStatusLine()
                 .addProgressLine(recipeLogic)
                 .addRecipeFailReasonLine(recipeLogic)
@@ -139,7 +129,7 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
                 .addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()))
                 .addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
                         .textSupplier(this.getLevel().isClientSide ? null : this::addDisplayText)
-                        .setMaxWidthLimit(200)
+                        .setMaxWidthLimit(174)
                         .clickHandler(this::handleDisplayClick)));
         group.setBackground(GuiTextures.BACKGROUND_INVERSE);
         return group;
@@ -158,7 +148,7 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
     @Override
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         IVoidable.attachConfigurators(configuratorPanel, this);
-        if (getDefinition().getRecipeModifier() instanceof RecipeModifierList list && Arrays.stream(list.modifiers())
+        if (Arrays.stream(getDefinition().getRecipeModifier().modifiers())
                 .anyMatch(modifier -> modifier == GTRecipeModifiers.BATCH_MODE)) {
             configuratorPanel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
                     GuiTextures.BUTTON_BATCH.getSubTexture(0, 0, 1, 0.5),

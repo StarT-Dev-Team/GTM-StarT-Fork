@@ -2,11 +2,14 @@ package com.gregtechceu.gtceu.api.machine.multiblock;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
+import com.gregtechceu.gtceu.api.capability.IParallelHatch;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
+import com.gregtechceu.gtceu.api.pattern.error.PatternError;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.api.recipe.ParallelType;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderFluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
@@ -23,6 +26,9 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+
+import it.unimi.dsi.fastutil.objects.Reference2IntMap;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -98,6 +104,12 @@ public class MultiblockDisplayText {
                 this.pausedKey = pausedKey;
             if (runningKey != null)
                 this.runningKey = runningKey;
+            return this;
+        }
+
+        public Builder addPatternErrorLine(@Nullable PatternError error) {
+            if (isStructureFormed || error == null) return this;
+            textList.add(error.getErrorInfo().copy().withStyle(ChatFormatting.RED));
             return this;
         }
 
@@ -388,34 +400,36 @@ public class MultiblockDisplayText {
             return this;
         }
 
-        public Builder addBatchModeLine(boolean batchEnabled, int batchAmount) {
-            if (batchEnabled && batchAmount > 1) {
-                Component runs = Component.literal(FormattingUtil.formatNumbers(batchAmount))
-                        .withStyle(ChatFormatting.DARK_PURPLE);
-                String key = "gtceu.multiblock.batch_enabled";
-                textList.add(Component.translatable(key, runs)
-                        .withStyle(ChatFormatting.GRAY));
-            }
-            return this;
-        }
-
-        public Builder addSubtickParallelsLine(int subtickParallels) {
-            if (subtickParallels > 1) {
-                Component runs = Component.literal(FormattingUtil.formatNumbers(subtickParallels))
-                        .withStyle(ChatFormatting.DARK_PURPLE);
-                String key = "gtceu.multiblock.subtick_parallels";
-                textList.add(Component.translatable(key, runs)
-                        .withStyle(ChatFormatting.GRAY));
-            }
-            return this;
-        }
-
         public Builder addTotalRunsLine(int totalRuns) {
             if (totalRuns > 1) {
                 Component runs = Component.literal(FormattingUtil.formatNumbers(totalRuns))
                         .withStyle(ChatFormatting.DARK_PURPLE);
                 String key = "gtceu.multiblock.total_runs";
                 textList.add(Component.translatable(key, runs)
+                        .withStyle(ChatFormatting.GRAY));
+            }
+            return this;
+        }
+
+        public Builder addParallelHatchLine(IParallelHatch hatch, boolean exact) {
+            if (!isStructureFormed || !isActive || exact || hatch == null)
+                return this;
+
+            var parallel = hatch.getCurrentParallel();
+            var minParallel = hatch.getMinimumParallel();
+
+            var comp = Component.literal(FormattingUtil.formatNumbers(parallel))
+                    .withStyle(ChatFormatting.DARK_PURPLE);
+            if (minParallel == parallel) {
+                textList.add(Component.translatable("gtceu.multiblock.exaxctly_parallel", comp)
+                        .withStyle(ChatFormatting.GRAY));
+            } else if (minParallel == 1) {
+                textList.add(
+                        Component.translatable("gtceu.multiblock.parallel", comp).withStyle(ChatFormatting.GRAY));
+            } else {
+                var compMin = Component.literal(FormattingUtil.formatNumbers(minParallel))
+                        .withStyle(ChatFormatting.DARK_PURPLE);
+                textList.add(Component.translatable("gtceu.multiblock.between_parallel", compMin, comp)
                         .withStyle(ChatFormatting.GRAY));
             }
             return this;
@@ -431,7 +445,7 @@ public class MultiblockDisplayText {
                 double maxDurationSec = (double) recipe.duration / 20.0;
                 var itemOutputs = recipe.getOutputContents(ItemRecipeCapability.CAP);
                 var fluidOutputs = recipe.getOutputContents(FluidRecipeCapability.CAP);
-                int runs = recipe.getTotalRuns();
+                int runs = recipe.parallels;
 
                 for (var item : itemOutputs) {
                     boolean rounded = false;
@@ -538,26 +552,17 @@ public class MultiblockDisplayText {
             return this;
         }
 
-        public Builder addParallelsLine(int numParallels) {
-            return addParallelsLine(numParallels, false);
-        }
-
-        /**
-         * Adds a line indicating how many parallels this multi can potentially perform.
-         * <br>
-         * Added if structure is formed and the number of parallels is greater than one.
-         */
-        public Builder addParallelsLine(int numParallels, boolean exact) {
-            if (!isStructureFormed)
+        public Builder addParallelsLine(Reference2IntMap<ParallelType> parallelsByType) {
+            if (!isStructureFormed || parallelsByType.isEmpty())
                 return this;
-            if (numParallels > 1) {
-                Component parallels = Component.literal(FormattingUtil.formatNumbers(numParallels))
-                        .withStyle(ChatFormatting.DARK_PURPLE);
-                String key = "gtceu.multiblock.parallel";
-                if (exact) key += ".exact";
-                textList.add(Component.translatable(key, parallels)
-                        .withStyle(ChatFormatting.GRAY));
+
+            for (var entry : parallelsByType.reference2IntEntrySet()) {
+                var parallelType = entry.getKey();
+                var parallel = entry.getIntValue();
+                if (parallel <= 1) continue;
+                textList.add(parallelType.format(parallel).withStyle(ChatFormatting.GRAY));
             }
+
             return this;
         }
 

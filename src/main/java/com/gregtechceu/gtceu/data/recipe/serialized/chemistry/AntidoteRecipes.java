@@ -64,7 +64,7 @@ public class AntidoteRecipes {
         CHEMICAL_RECIPES.recipeBuilder("calcium_hydroxide")
                 .inputItems(dust, Quicklime, 2)
                 .inputFluids(Water.getFluid(1000))
-                .outputItems(dust, CalciumHydroxide, 3)
+                .outputItems(dust, CalciumHydroxide, 5)
                 .duration(100).EUt(VHA[MV]).save(provider);
 
         CHEMICAL_RECIPES.recipeBuilder("formic_acid")

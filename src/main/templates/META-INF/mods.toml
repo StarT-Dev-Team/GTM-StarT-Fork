@@ -13,6 +13,9 @@ logoFile = "icon.png"
 displayURL = "${mod_url}"
 credits = "KilaBash, screret, serenibyss, Tech22, YoungOnion, Mikerooni, Ghostipedia for developing GTM, GregoriusT, Mr_Touchyou, Zerrens for making GregTech and textures, the GT5u authors and maintainers for providing the original code, and the community."
 
+[modproperties.gtceu]
+isStarTFork = true
+
 [mods."modernfix:integration"]
 client_entrypoint = "com.gregtechceu.gtceu.integration.modernfix.GTModernFixIntegration"
 

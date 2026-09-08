@@ -105,13 +105,13 @@ public class Content {
     }
 
     public IGuiTexture createOverlay(boolean perTick, int recipeTier, int chanceTier,
-                                     @Nullable ChanceBoostFunction function) {
+                                     boolean showNC, @Nullable ChanceBoostFunction function) {
         return new IGuiTexture() {
 
             @Override
             @OnlyIn(Dist.CLIENT)
             public void draw(GuiGraphics graphics, int mouseX, int mouseY, float x, float y, int width, int height) {
-                drawChance(graphics, x, y, width, height, recipeTier, chanceTier, function);
+                drawChance(graphics, x, y, width, height, recipeTier, chanceTier, showNC, function);
                 drawRangeAmount(graphics, x, y, width, height);
                 drawFluidAmount(graphics, x, y, width, height);
                 if (perTick) {
@@ -173,7 +173,7 @@ public class Content {
 
     @OnlyIn(Dist.CLIENT)
     public void drawChance(GuiGraphics graphics, float x, float y, int width, int height, int recipeTier,
-                           int chanceTier, @Nullable ChanceBoostFunction function) {
+                           int chanceTier, boolean showNC, @Nullable ChanceBoostFunction function) {
         if (chance == ChanceLogic.getMaxChancedValue()) return;
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 400);
@@ -183,7 +183,7 @@ public class Content {
         float chanceFloat = 1f * chance / this.maxChance;
         String percent = FormattingUtil.formatNumber2Places(100 * chanceFloat);
 
-        String s = chance == 0 ? LocalizationUtils.format("gtceu.gui.content.chance_nc_short") :
+        String s = chance == 0 && showNC ? LocalizationUtils.format("gtceu.gui.content.chance_nc_short") :
                 percent + "%";
 
         int color = chance == 0 ? 0xFF0000 : GradientUtil.toRGB(Mth.lerp(chanceFloat, 29f, 167f), 100f, 50f);

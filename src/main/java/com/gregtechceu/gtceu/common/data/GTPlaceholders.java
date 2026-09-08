@@ -967,13 +967,6 @@ public class GTPlaceholders {
                 return MultiLineComponent.literal(ctx.itemStackHandler().getStackInSlot(slot - 1).toString());
             }
         });
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static void initRenderers() {
-        PlaceholderHandler.addRenderer("module", new ModulePlaceholderRenderer());
-        PlaceholderHandler.addRenderer("rect", new RectPlaceholderRenderer());
-        PlaceholderHandler.addRenderer("quad", new QuadPlaceholderRenderer());
         PlaceholderHandler.addPlaceholder(new Placeholder("blockNbt") {
 
             @Override
@@ -985,7 +978,7 @@ public class GTPlaceholders {
                     CompoundTag coverTag = compoundTag.getCompound("cover");
                     if (coverTag.contains(ctx.side().getName())) {
                         CompoundTag cover = coverTag.getCompound(ctx.side().getName()).getCompound("payload")
-                                .getCompound("d");
+                            .getCompound("d");
                         cover.putString("text", "[REMOVED]");
                     }
                 }
@@ -996,5 +989,12 @@ public class GTPlaceholders {
                 return tag == null ? MultiLineComponent.empty() : MultiLineComponent.literal(tag.toString());
             }
         });
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void initRenderers() {
+        PlaceholderHandler.addRenderer("module", new ModulePlaceholderRenderer());
+        PlaceholderHandler.addRenderer("rect", new RectPlaceholderRenderer());
+        PlaceholderHandler.addRenderer("quad", new QuadPlaceholderRenderer());
     }
 }

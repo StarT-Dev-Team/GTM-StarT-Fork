@@ -63,6 +63,7 @@ public class PipeModel {
     private static boolean isRestrictorInitialized;
 
     protected static void initializeRestrictor(Function<ResourceLocation, TextureAtlasSprite> atlas) {
+        RESTRICTOR_MAP.clear();
         addRestrictor(atlas.apply(PIPE_BLOCKED_OVERLAY_UP), Border.TOP);
         addRestrictor(atlas.apply(PIPE_BLOCKED_OVERLAY_DOWN), Border.BOTTOM);
         addRestrictor(atlas.apply(PIPE_BLOCKED_OVERLAY_UD), Border.TOP, Border.BOTTOM);
@@ -110,6 +111,68 @@ public class PipeModel {
     private @Nullable TextureAtlasSprite secondarySideSprite, secondaryEndSprite;
     @OnlyIn(Dist.CLIENT)
     private @Nullable TextureAtlasSprite sideOverlaySprite, endOverlaySprite;
+
+    @OnlyIn(Dist.CLIENT)
+    public @NotNull TextureAtlasSprite getSideSprite() {
+        if (sideSprite == null) {
+            sideSprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(sideTexture.get());
+        }
+        return sideSprite;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public @NotNull TextureAtlasSprite getEndSprite() {
+        if (endSprite == null) {
+            endSprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(endTexture.get());
+        }
+        return endSprite;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public @Nullable TextureAtlasSprite getSecondarySideSprite() {
+        if (secondarySideSprite == null && secondarySideTexture != null &&
+                secondarySideTexture.get() != GTModels.BLANK_TEXTURE) {
+            secondarySideSprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+                    .apply(secondarySideTexture.get());
+        }
+        return secondarySideSprite;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public @Nullable TextureAtlasSprite getSecondaryEndSprite() {
+        if (secondaryEndSprite == null && secondaryEndTexture != null &&
+                secondaryEndTexture.get() != GTModels.BLANK_TEXTURE) {
+            secondaryEndSprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+                    .apply(secondaryEndTexture.get());
+        }
+        return secondaryEndSprite;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public @Nullable TextureAtlasSprite getSideOverlaySprite() {
+        if (sideOverlaySprite == null && sideOverlayTexture != null) {
+            sideOverlaySprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+                    .apply(sideOverlayTexture);
+        }
+        return sideOverlaySprite;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public @Nullable TextureAtlasSprite getEndOverlaySprite() {
+        if (endOverlaySprite == null && endOverlayTexture != null) {
+            endOverlaySprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+                    .apply(endOverlayTexture);
+        }
+        return endOverlaySprite;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static @Nullable TextureAtlasSprite getRestrictorSprite(int borderMask) {
+        if (RESTRICTOR_MAP.isEmpty()) {
+            initializeRestrictor(Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)::apply);
+        }
+        return RESTRICTOR_MAP.get(borderMask);
+    }
 
     public PipeModel(float thickness, Supplier<ResourceLocation> sideTexture, Supplier<ResourceLocation> endTexture,
                      @Nullable Supplier<ResourceLocation> secondarySideTexture,
@@ -175,6 +238,13 @@ public class PipeModel {
 
     @OnlyIn(Dist.CLIENT)
     public List<BakedQuad> bakeQuads(@Nullable Direction side, int connections, int blockedConnections) {
+        var sideSprite = getSideSprite();
+        var endSprite = getEndSprite();
+        var secondarySideSprite = getSecondarySideSprite();
+        var secondaryEndSprite = getSecondaryEndSprite();
+        var sideOverlaySprite = getSideOverlaySprite();
+        var endOverlaySprite = getEndOverlaySprite();
+
         if (side != null) {
             if (thickness == 1) { // full block
                 List<BakedQuad> quads = new LinkedList<>();
@@ -207,8 +277,11 @@ public class PipeModel {
                 }
                 int borderMask = computeBorderMask(blockedConnections, connections, side);
                 if (borderMask != 0) {
-                    quads.add(FaceQuad.builder(side, RESTRICTOR_MAP.get(borderMask)).cube(sideCubes.get(side)).cubeUV()
-                            .bake());
+                    var restrictorSprite = getRestrictorSprite(borderMask);
+                    if (restrictorSprite != null) {
+                        quads.add(FaceQuad.builder(side, restrictorSprite).cube(sideCubes.get(side)).cubeUV()
+                                .bake());
+                    }
                 }
                 return quads;
             }
@@ -243,10 +316,13 @@ public class PipeModel {
                             }
                             int borderMask = computeBorderMask(blockedConnections, connections, face);
                             if (borderMask != 0) {
-                                quads.add(FaceQuad.builder(face, RESTRICTOR_MAP.get(borderMask))
-                                        .cube(coreCube).cubeUV().bake());
-                                quads.add(FaceQuad.builder(face, RESTRICTOR_MAP.get(borderMask))
-                                        .cube(sideCubes.get(facing)).cubeUV().bake());
+                                var restrictorSprite = getRestrictorSprite(borderMask);
+                                if (restrictorSprite != null) {
+                                    quads.add(FaceQuad.builder(face, restrictorSprite)
+                                            .cube(coreCube).cubeUV().bake());
+                                    quads.add(FaceQuad.builder(face, restrictorSprite)
+                                            .cube(sideCubes.get(facing)).cubeUV().bake());
+                                }
                             }
                         }
                     }
@@ -259,7 +335,7 @@ public class PipeModel {
     @SuppressWarnings("DataFlowIssue")
     @OnlyIn(Dist.CLIENT)
     public @NotNull TextureAtlasSprite getParticleTexture() {
-        return sideSprite;
+        return getSideSprite();
     }
 
     private final Map<Optional<Direction>, List<BakedQuad>> itemModelCache = new ConcurrentHashMap<>();
@@ -299,7 +375,11 @@ public class PipeModel {
         if (endOverlayTexture != null) register.accept(endOverlayTexture);
         sideSprite = null;
         endSprite = null;
+        secondarySideSprite = null;
+        secondaryEndSprite = null;
+        sideOverlaySprite = null;
         endOverlaySprite = null;
+        RESTRICTOR_MAP.clear();
     }
 
     private static EnumMap<Border, Direction> borderMap(Direction topSide, Direction bottomSide, Direction leftSide,

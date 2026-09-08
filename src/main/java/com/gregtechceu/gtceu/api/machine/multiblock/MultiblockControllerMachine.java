@@ -62,6 +62,7 @@ public class MultiblockControllerMachine extends MetaMachine implements IMultiCo
     @Persisted
     @DescSynced
     @RequireRerender
+    @UpdateListener(methodName = "onClientFormedChanged")
     protected boolean isFormed;
     @Getter
     @Setter
@@ -118,6 +119,16 @@ public class MultiblockControllerMachine extends MetaMachine implements IMultiCo
             if (getMachine(getLevel(), pos) instanceof IMultiPart part) {
                 parts.add(part);
             }
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void onClientFormedChanged(boolean prevValue, boolean newValue) {
+        if (prevValue == newValue) return;
+        if (newValue) {
+            onClientStructureFormed();
+        } else {
+            onClientStructureInvalid();
         }
     }
 

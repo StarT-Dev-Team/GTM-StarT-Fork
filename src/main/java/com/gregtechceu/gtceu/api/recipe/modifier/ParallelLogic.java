@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.RecipeFailureReason;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 
@@ -64,7 +65,7 @@ public class ParallelLogic {
                     Component reason = Component.translatable("gtceu.recipe_logic.insufficient_in")
                             .append(": ")
                             .append(cap.getName());
-                    RecipeLogic.putFailureReason(holder, recipe, reason);
+                    RecipeLogic.putFailureReason(holder, recipe, new RecipeFailureReason(reason, true));
                     return 0;
                 }
                 minimum = Math.min(minimum, capParallel);
@@ -80,7 +81,7 @@ public class ParallelLogic {
                     Component reason = Component.translatable("gtceu.recipe_logic.insufficient_in")
                             .append(": ")
                             .append(cap.getName());
-                    RecipeLogic.putFailureReason(holder, recipe, reason);
+                    RecipeLogic.putFailureReason(holder, recipe, new RecipeFailureReason(reason, true));
                     return 0;
                 }
                 minimum = Math.min(minimum, capParallel);
@@ -90,7 +91,7 @@ public class ParallelLogic {
             Component reason = Component.translatable("gtceu.recipe_logic.no_capabilities")
                     .append(Component.literal(": "))
                     .append(Component.translatable(IO.IN.tooltip));
-            RecipeLogic.putFailureReason(holder, recipe, reason);
+            RecipeLogic.putFailureReason(holder, recipe, new RecipeFailureReason(reason, true));
             return 0;
         }
         return minimum;
@@ -120,7 +121,7 @@ public class ParallelLogic {
                     Component reason = Component.translatable("gtceu.recipe_logic.insufficient_out")
                             .append(": ")
                             .append(cap.getName());
-                    RecipeLogic.putFailureReason(holder, recipe, reason);
+                    RecipeLogic.putFailureReason(holder, recipe, new RecipeFailureReason(reason, true));
                     return 0;
                 }
                 max = Math.min(max, limit);
@@ -138,7 +139,7 @@ public class ParallelLogic {
                     Component reason = Component.translatable("gtceu.recipe_logic.insufficient_out")
                             .append(": ")
                             .append(cap.getName());
-                    RecipeLogic.putFailureReason(holder, recipe, reason);
+                    RecipeLogic.putFailureReason(holder, recipe, new RecipeFailureReason(reason, true));
                     return 0;
                 }
                 max = Math.min(max, limit);

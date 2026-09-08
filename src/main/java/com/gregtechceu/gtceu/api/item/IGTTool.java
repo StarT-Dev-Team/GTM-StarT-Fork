@@ -672,6 +672,8 @@ public interface IGTTool extends HeldItemUIFactory.IHeldItemUIHolder, ItemLike, 
 
         IGTToolDefinition toolStats = tool.getToolStats();
 
+        int statSectionStart = tooltip.size();
+
         // electric info
         if (this.isElectric()) {
             ElectricStats.addCurrentChargeTooltip(tooltip, getCharge(stack), getMaxCharge(stack), getElectricTier(),
@@ -716,8 +718,10 @@ public interface IGTTool extends HeldItemUIFactory.IHeldItemUIHolder, ItemLike, 
                 tooltip.add(Component.translatable("item.gtceu.tool.tooltip.harvest_level", harvestLevel));
             }
         }
-        tooltip.add(CommonComponents.EMPTY);
-
+        if (tooltip.size() != statSectionStart) {
+            tooltip.add(CommonComponents.EMPTY);
+        }
+        
         // behaviors
         AoESymmetrical aoeDefinition = getAoEDefinition(stack);
         boolean addedMagneticOrAOELine = false;

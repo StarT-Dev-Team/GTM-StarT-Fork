@@ -74,6 +74,7 @@ public interface IMultiPart extends IMachineFeature, IFancyUIMachine {
     @Nullable
     default BlockState getFormedAppearance(BlockState sourceState, BlockPos sourcePos, Direction side) {
         for (IMultiController controller : getControllers()) {
+            if (controller == null) continue;
             var appearance = controller.getPartAppearance(this, side, sourceState, sourcePos);
             if (appearance != null) return appearance;
         }

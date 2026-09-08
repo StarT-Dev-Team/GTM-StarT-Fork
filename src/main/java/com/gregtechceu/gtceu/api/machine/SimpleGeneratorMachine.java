@@ -13,6 +13,7 @@ import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
+import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.utils.Position;
@@ -106,7 +107,7 @@ public class SimpleGeneratorMachine extends WorkableTieredMachine
                 .inputModifier(ContentModifier.multiplier(parallels))
                 .outputModifier(ContentModifier.multiplier(parallels))
                 .eutMultiplier(parallels)
-                .parallels(parallels)
+                .parallels(parallels, GTParallelTypes.GENERATOR)
                 .build();
     }
 

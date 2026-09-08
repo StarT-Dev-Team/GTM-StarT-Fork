@@ -55,4 +55,9 @@ public class ResearchCondition extends RecipeCondition<ResearchCondition> {
     public ResearchCondition createTemplate() {
         return new ResearchCondition();
     }
+
+    @Override
+    public boolean isXeiVisible() {
+        return false;
+    }
 }

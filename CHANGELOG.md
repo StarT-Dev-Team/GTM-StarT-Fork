@@ -49,7 +49,6 @@
 
 ## Technical / API Improvements
 - TagPrefix blocks can now easily use falling block behavior
-- Disabled auto-generation of recycling recipes after the KubeJS recipe event, which caused recycling recipes to be non-removable through KubeJS
 - Materials now support `.colors(primary, secondary)` to set both colors at once
 - Improved error message for using an incompatible category for a recipe type
 - Assembly line recipes no longer fail if an input bus has a configured circuit set

@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IOverclockMachine;
 import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
+import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 import com.gregtechceu.gtceu.utils.GTMath;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
@@ -364,7 +365,7 @@ public interface OverclockingLogic {
                     .durationMultiplier(durationMultiplier)
                     .addOCs(ocLevel)
                     .addBaseOCs(baseOCLevel)
-                    .subtickParallels(parallels)
+                    .parallels(parallels, GTParallelTypes.SUBTICK)
                     .build();
         }
     }

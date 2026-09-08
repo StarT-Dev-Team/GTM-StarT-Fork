@@ -176,7 +176,8 @@ public class GTRecipeBuilder {
     }
 
     public GTRecipeBuilder copyFrom(GTRecipeBuilder builder) {
-        recipeType.setMinRecipeConditions(builder.conditions.size());
+        recipeType.setMinRecipeConditions(
+                (int) builder.conditions.stream().filter(RecipeCondition::isXeiVisible).count());
         return builder.copy(builder.id).onSave(null).recipeType(recipeType).category(recipeCategory);
     }
 
@@ -216,7 +217,7 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder addCondition(RecipeCondition<?> condition) {
         conditions.add(condition);
-        recipeType.setMinRecipeConditions(conditions.size());
+        recipeType.setMinRecipeConditions((int) conditions.stream().filter(RecipeCondition::isXeiVisible).count());
         return this;
     }
 
@@ -226,7 +227,7 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder addConditions(List<RecipeCondition<?>> conditions) {
         this.conditions.addAll(conditions);
-        recipeType.setMinRecipeConditions(this.conditions.size());
+        recipeType.setMinRecipeConditions((int) this.conditions.stream().filter(RecipeCondition::isXeiVisible).count());
         return this;
     }
 
@@ -268,6 +269,54 @@ public class GTRecipeBuilder {
         }
         perTick = lastPerTick;
         return this;
+    }
+
+    private GTRecipeBuilder tieredEUtBuilderMethod(int[] values, int tier, boolean isGenerator) {
+        if (tier >= values.length) {
+            GTCEu.LOGGER.error("Invalid voltage tier {} for recipe: {}", tier, id);
+        }
+        int sign = (isGenerator) ? -1 : 1;
+        return EUt(sign * values[tier]);
+    }
+
+    private GTRecipeBuilder tieredEUtBuilderMethod(long[] values, int tier, boolean isGenerator) {
+        if (tier >= values.length) {
+            GTCEu.LOGGER.error("Invalid voltage tier {} for recipe: {}", tier, id);
+        }
+        int sign = (isGenerator) ? -1 : 1;
+        return EUt(sign * values[tier]);
+    }
+
+    public GTRecipeBuilder EUtV(int tier, boolean isGenerator) {
+        return tieredEUtBuilderMethod(GTValues.V, tier, isGenerator);
+    }
+
+    public GTRecipeBuilder EUtV(int tier) {
+        return EUtV(Math.abs(tier), tier < 0);
+    }
+
+    public GTRecipeBuilder EUtVA(int tier, boolean isGenerator) {
+        return tieredEUtBuilderMethod(GTValues.VA, tier, isGenerator);
+    }
+
+    public GTRecipeBuilder EUtVA(int tier) {
+        return EUtVA(Math.abs(tier), tier < 0);
+    }
+
+    public GTRecipeBuilder EUtVH(int tier, boolean isGenerator) {
+        return tieredEUtBuilderMethod(GTValues.VH, tier, isGenerator);
+    }
+
+    public GTRecipeBuilder EUtVH(int tier) {
+        return EUtVH(Math.abs(tier), tier < 0);
+    }
+
+    public GTRecipeBuilder EUtVHA(int tier, boolean isGenerator) {
+        return tieredEUtBuilderMethod(GTValues.VHA, tier, isGenerator);
+    }
+
+    public GTRecipeBuilder EUtVHA(int tier) {
+        return EUtVHA(Math.abs(tier), tier < 0);
     }
 
     public GTRecipeBuilder outputEU(long eu) {
@@ -1701,7 +1750,7 @@ public class GTRecipeBuilder {
                                           Map<RecipeCapability<?>, List<Content>> table,
                                           int addedEntries) {
         // Layered recipes may exceed input sizes
-        if (this.data.contains("layered_info")) return;
+        if (recipeType.isLayered() || this.data.contains("layered_info")) return;
 
         var recipeCapabilityMax = isInput ? recipeType.maxInputs : recipeType.maxOutputs;
         if (!recipeCapabilityMax.containsKey(capability)) return;

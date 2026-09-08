@@ -79,6 +79,10 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     @Persisted
     @DescSynced
     private final HPCAGridHandler hpcaHandler;
+    @Getter
+    private final int componentGridSize;
+    @Getter
+    private final ResourceTexture componentOutlineTexture;
 
     private boolean hasNotEnoughEnergy;
 
@@ -90,8 +94,10 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     @Nullable
     protected TickableSubscription tickSubs;
 
-    public HPCAMachine(IMachineBlockEntity holder, Object... args) {
-        super(holder, args);
+    public HPCAMachine(IMachineBlockEntity holder, int componentGridSize, ResourceTexture componentOutlineTexture) {
+        super(holder);
+        this.componentGridSize = componentGridSize;
+        this.componentOutlineTexture = componentOutlineTexture;
         this.energyContainer = new EnergyContainerList(new ArrayList<>());
         this.progressSupplier = new TimedProgressSupplier(200, 47, false);
         this.hpcaHandler = new HPCAGridHandler(this);
@@ -135,6 +141,11 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
         if (getLevel() instanceof ServerLevel serverLevel) {
             serverLevel.getServer().tell(new TickTask(0, this::updateTickSubscription));
         }
+    }
+
+    @Override
+    public void onClientStructureInvalid() {
+        this.hpcaHandler.onStructureInvalidate();
     }
 
     @Override
@@ -253,14 +264,27 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     @Override
     public Widget createUIWidget() {
         WidgetGroup builder = (WidgetGroup) super.createUIWidget();
+
+        int centerX = builder.getSizeWidth() / 2;
+        int cellSize = 13;
+        int spacing = 1;
+        int margin = 1;
+
+        int gridSize = hpcaHandler.getGridSize();
+        int gridBoxSize = margin * 2 + gridSize * (cellSize + spacing * 2);
+
+        int outlineX = centerX - gridBoxSize / 2;
+        int outlineY = 44;
+
         // Create the hover grid
         builder.addWidget(new ExtendedProgressWidget(
                 () -> hpcaHandler.getAllocatedCWUt() > 0 ? progressSupplier.getAsDouble() : 0,
-                74, 57, 47, 47, GuiTextures.HPCA_COMPONENT_OUTLINE)
+                outlineX, outlineY, gridBoxSize, gridBoxSize, componentOutlineTexture)
                 .setServerTooltipSupplier(hpcaHandler::addInfo)
                 .setFillDirection(ProgressTexture.FillDirection.LEFT_TO_RIGHT));
-        int startX = 76;
-        int startY = 59;
+
+        int startX = outlineX + margin + spacing;
+        int startY = outlineY + margin + spacing;
 
         // we need to know what components we have on the client
         if (getLevel().isClientSide) {
@@ -271,11 +295,15 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
                 hpcaHandler.clearClientComponents();
             }
         }
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                final int index = i * 3 + j;
+
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                final int index = i * gridSize + j;
                 Supplier<IGuiTexture> textureSupplier = () -> hpcaHandler.getComponentTexture(index);
-                builder.addWidget(new ImageWidget(startX + (15 * j), startY + (15 * i), 13, 13, textureSupplier));
+                builder.addWidget(new ImageWidget(
+                        startX + (cellSize + spacing * 2) * j,
+                        startY + (cellSize + spacing * 2) * i,
+                        cellSize, cellSize, textureSupplier));
             }
         }
         return builder;
@@ -284,6 +312,7 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     @Override
     public void addDisplayText(List<Component> textList) {
         MultiblockDisplayText.builder(textList, isFormed())
+                .addPatternErrorLine(getMultiblockState().error)
                 .setWorkingStatus(true, hpcaHandler.getAllocatedCWUt() > 0) // transform into two-state system for
                                                                             // display
                 .setWorkingStatusKeys(
@@ -310,6 +339,26 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
                     }
                 })
                 .addWorkingStatusLine();
+    }
+
+    public int getMaxCoolingAmount() {
+        return hpcaHandler.getMaxCoolingAmount();
+    }
+
+    public int getMaxCoolingDemand() {
+        return hpcaHandler.getMaxCoolingDemand();
+    }
+
+    public int getMaxCoolantDemand() {
+        return hpcaHandler.getMaxCoolantDemand();
+    }
+
+    public int getNumBridges() {
+        return hpcaHandler.getNumBridges();
+    }
+
+    public long getEnergyUsage() {
+        return hpcaHandler.getCurrentEUt();
     }
 
     private ChatFormatting getDisplayTemperatureColor() {
@@ -391,6 +440,9 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
         private final List<IHPCAComponentHatch> components = new ObjectArrayList<>();
         private final Set<IHPCACoolantProvider> coolantProviders = new ObjectOpenHashSet<>();
         private final Set<IHPCAComputationProvider> computationProviders = new ObjectOpenHashSet<>();
+        @Getter
+        private final int gridSize;
+        @Getter
         private int numBridges;
 
         // transaction info
@@ -407,6 +459,7 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
 
         public HPCAGridHandler(@Nullable HPCAMachine controller) {
             this.controller = controller;
+            this.gridSize = controller != null ? controller.getComponentGridSize() : 3;
         }
 
         public void onStructureForm(Collection<IHPCAComponentHatch> components) {
@@ -643,24 +696,30 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
             return maxCoolant;
         }
 
-        public void addInfo(List<Component> textList) {
-            // Max Computation
+        public MutableComponent getCWUtProductionComponent() {
             MutableComponent data = Component.literal(Integer.toString(getMaxCWUt())).withStyle(ChatFormatting.AQUA);
-            textList.add(Component.translatable("gtceu.multiblock.hpca.info_max_computation", data)
-                    .withStyle(ChatFormatting.GRAY));
+            return Component.translatable("gtceu.multiblock.hpca.info_max_computation", data)
+                    .withStyle(ChatFormatting.GRAY);
+        }
 
-            // Cooling
+        public MutableComponent getCoolingComponent() {
             ChatFormatting coolingColor = getMaxCoolingAmount() < getMaxCoolingDemand() ? ChatFormatting.RED :
                     ChatFormatting.GREEN;
-            data = Component.literal(Integer.toString(getMaxCoolingDemand())).withStyle(coolingColor);
-            textList.add(Component.translatable("gtceu.multiblock.hpca.info_max_cooling_demand", data)
-                    .withStyle(ChatFormatting.GRAY));
+            MutableComponent data = Component.literal(Integer.toString(getMaxCoolingDemand())).withStyle(coolingColor);
+            return Component.translatable("gtceu.multiblock.hpca.info_max_cooling_demand", data)
+                    .withStyle(ChatFormatting.GRAY);
+        }
 
-            data = Component.literal(Integer.toString(getMaxCoolingAmount())).withStyle(coolingColor);
-            textList.add(Component.translatable("gtceu.multiblock.hpca.info_max_cooling_available", data)
-                    .withStyle(ChatFormatting.GRAY));
+        public MutableComponent getCoolingAvailableComponent() {
+            ChatFormatting coolingColor = getMaxCoolingAmount() < getMaxCoolingDemand() ? ChatFormatting.RED :
+                    ChatFormatting.GREEN;
+            MutableComponent data = Component.literal(Integer.toString(getMaxCoolingAmount())).withStyle(coolingColor);
+            return Component.translatable("gtceu.multiblock.hpca.info_max_cooling_available", data)
+                    .withStyle(ChatFormatting.GRAY);
+        }
 
-            // Coolant Required
+        public MutableComponent getCoolantRequiredComponent() {
+            MutableComponent data;
             if (getMaxCoolantDemand() > 0) {
                 data = Component.translatable("gtceu.universal.liters", getMaxCoolantDemand())
                         .withStyle(ChatFormatting.YELLOW).append(" ");
@@ -670,17 +729,26 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
             } else {
                 data = Component.literal("0").withStyle(ChatFormatting.GREEN);
             }
-            textList.add(Component.translatable("gtceu.multiblock.hpca.info_max_coolant_required", data)
-                    .withStyle(ChatFormatting.GRAY));
+            return Component.translatable("gtceu.multiblock.hpca.info_max_coolant_required", data)
+                    .withStyle(ChatFormatting.GRAY);
+        }
 
-            // Bridging
+        public MutableComponent getBridgingComponent() {
             if (numBridges > 0) {
-                textList.add(Component.translatable("gtceu.multiblock.hpca.info_bridging_enabled")
-                        .withStyle(ChatFormatting.GREEN));
+                return Component.translatable("gtceu.multiblock.hpca.info_bridging_enabled")
+                        .withStyle(ChatFormatting.GREEN);
             } else {
-                textList.add(Component.translatable("gtceu.multiblock.hpca.info_bridging_disabled")
-                        .withStyle(ChatFormatting.RED));
+                return Component.translatable("gtceu.multiblock.hpca.info_bridging_disabled")
+                        .withStyle(ChatFormatting.RED);
             }
+        }
+
+        public void addInfo(List<Component> textList) {
+            textList.add(this.getCWUtProductionComponent());
+            textList.add(this.getCoolingComponent());
+            textList.add(this.getCoolingAvailableComponent());
+            textList.add(this.getCoolantRequiredComponent());
+            textList.add(this.getBridgingComponent());
         }
 
         public void addWarnings(List<Component> textList) {
@@ -724,11 +792,11 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
 
             if (components.isEmpty()) {
                 BlockPos testPos = pos
-                        .relative(frontFacing.getOpposite(), 3)
-                        .relative(relativeUp, 3);
+                        .relative(frontFacing.getOpposite(), gridSize)
+                        .relative(relativeUp, gridSize);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (int i = 0; i < gridSize; i++) {
+                    for (int j = 0; j < gridSize; j++) {
                         BlockPos tempPos = testPos.relative(frontFacing, j).relative(relativeUp.getOpposite(), i);
                         BlockEntity be = world.getBlockEntity(tempPos);
                         if (be instanceof IHPCAComponentHatch hatch) {

@@ -2,6 +2,7 @@ package com.gregtechceu.gtceu.syncdata;
 
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeSerializer;
+import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 
 import com.lowdragmc.lowdraglib.syncdata.payload.ObjectTypedPayload;
@@ -17,6 +18,7 @@ import net.minecraftforge.server.ServerLifecycleHooks;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.objects.Reference2IntArrayMap;
 import org.jetbrains.annotations.Nullable;
 
 public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
@@ -38,6 +40,8 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
         tag.put("recipe",
                 GTRecipeSerializer.CODEC.encodeStart(NbtOps.INSTANCE, payload).result().orElse(new CompoundTag()));
         tag.putInt("parallels", payload.parallels);
+        tag.put("parallelsByType", GTRecipeSerializer.PARALLELS_BY_TYPE_CODEC
+                .encodeStart(NbtOps.INSTANCE, payload.parallelsByType).result().orElse(new CompoundTag()));
         tag.putInt("ocLevel", payload.ocLevel);
         tag.putInt("baseOcLevel", payload.baseOcLevel);
         return tag;
@@ -53,6 +57,11 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
                 payload.parallels = compoundTag.contains("parallels") ? compoundTag.getInt("parallels") : 1;
                 payload.ocLevel = compoundTag.getInt("ocLevel");
                 payload.baseOcLevel = compoundTag.getInt("baseOcLevel");
+                if (compoundTag.contains("parallelsByType")) {
+                    GTRecipeSerializer.PARALLELS_BY_TYPE_CODEC
+                            .parse(NbtOps.INSTANCE, compoundTag.get("parallelsByType")).result()
+                            .ifPresent(parallelsByType -> payload.parallelsByType = parallelsByType);
+                }
             }
         } else if (tag instanceof StringTag stringTag) { // Backwards Compatibility
             var recipe = recipeManager.byKey(new ResourceLocation(stringTag.getAsString())).orElse(null);
@@ -79,21 +88,29 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
         buf.writeInt(this.payload.parallels);
         buf.writeInt(this.payload.ocLevel);
         buf.writeInt(this.payload.baseOcLevel);
+        buf.writeMap(this.payload.parallelsByType,
+                (buf1, type) -> buf1.writeUtf(GTRegistries.PARALLEL_TYPES.getKey(type)),
+                FriendlyByteBuf::writeInt);
     }
 
     @Override
     public void readPayload(FriendlyByteBuf buf) {
         var id = buf.readResourceLocation();
         if (buf.isReadable()) {
-            this.payload = GTRecipeSerializer.SERIALIZER.fromNetwork(id, buf);
+            payload = GTRecipeSerializer.SERIALIZER.fromNetwork(id, buf);
             if (buf.isReadable()) {
-                this.payload.parallels = buf.readInt();
-                this.payload.ocLevel = buf.readInt();
-                this.payload.baseOcLevel = buf.readInt();
+                payload.parallels = buf.readInt();
+                payload.ocLevel = buf.readInt();
+                payload.baseOcLevel = buf.readInt();
+            }
+            if (buf.isReadable()) {
+                payload.parallelsByType = new Reference2IntArrayMap<>(buf.readMap(
+                        (buf1) -> GTRegistries.PARALLEL_TYPES.get(buf1.readUtf()),
+                        FriendlyByteBuf::readInt));
             }
         } else { // Backwards Compatibility
             RecipeManager recipeManager = getRecipeManager();
-            this.payload = (GTRecipe) recipeManager.byKey(id).orElse(null);
+            payload = (GTRecipe) recipeManager.byKey(id).orElse(null);
         }
     }
 

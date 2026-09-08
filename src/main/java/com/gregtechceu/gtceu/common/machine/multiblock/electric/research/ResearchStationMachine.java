@@ -91,6 +91,7 @@ public class ResearchStationMachine extends OpticalComputationMachine {
     public void addDisplayText(List<Component> textList) {
         MultiblockDisplayText.builder(textList, isFormed())
                 .setWorkingStatus(recipeLogic.isWorkingEnabled(), recipeLogic.isActive())
+                .addPatternErrorLine(getMultiblockState().error)
                 .setWorkingStatusKeys("gtceu.multiblock.idling", "gtceu.multiblock.work_paused",
                         "gtceu.multiblock.research_station.researching")
                 .addEnergyUsageLine(energyContainer)
@@ -134,7 +135,7 @@ public class ResearchStationMachine extends OpticalComputationMachine {
                 if (recipeMatch.isSuccess()) {
                     setupRecipe(modified);
                 } else {
-                    setWaiting(recipeMatch.reason());
+                    setWaiting(recipeMatch.reasonComponent());
                 }
                 if (lastRecipe != null && getStatus() == Status.WORKING) {
                     lastOriginRecipe = match;

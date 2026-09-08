@@ -251,15 +251,14 @@ public class LayeredRecipeHelper {
     public static final Codec<GTRecipe> RECIPE_WITH_ID_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ResourceLocation.CODEC.fieldOf("id").forGetter(recipe -> recipe.id),
             Codec.INT.fieldOf("parallels").forGetter(recipe -> recipe.parallels),
-            Codec.INT.fieldOf("subtickParallels").forGetter(recipe -> recipe.subtickParallels),
-            Codec.INT.fieldOf("batchParallels").forGetter(recipe -> recipe.batchParallels),
+            GTRecipeSerializer.PARALLELS_BY_TYPE_CODEC.fieldOf("parallelsByType")
+                    .forGetter(recipe -> recipe.parallelsByType),
             Codec.INT.fieldOf("ocLevel").forGetter(recipe -> recipe.ocLevel),
             Codec.INT.fieldOf("baseOcLevel").forGetter(recipe -> recipe.baseOcLevel),
             ((MapCodec.MapCodecCodec<GTRecipe>) GTRecipeSerializer.CODEC).codec().forGetter(recipe -> recipe))
-            .apply(instance, (id, parallels, subtickParallels, batchParallels, ocLevel, baseOcLevel, recipe) -> {
+            .apply(instance, (id, parallels, parallelsByType, ocLevel, baseOcLevel, recipe) -> {
                 recipe.parallels = parallels;
-                recipe.subtickParallels = subtickParallels;
-                recipe.batchParallels = batchParallels;
+                recipe.parallelsByType = parallelsByType;
                 recipe.ocLevel = ocLevel;
                 recipe.baseOcLevel = baseOcLevel;
                 recipe.setId(id);

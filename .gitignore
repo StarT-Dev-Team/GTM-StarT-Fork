@@ -24,3 +24,7 @@ src/generated/resources/.cache/
 *.patch
 *.DS_Store
 
+# AI docs
+!AGENTS.md
+!CLAUDE.md
+!.gemini/

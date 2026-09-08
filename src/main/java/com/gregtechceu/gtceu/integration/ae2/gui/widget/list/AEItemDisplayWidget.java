@@ -1,8 +1,11 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.list;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 
+import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib.jei.JEIPlugin;
 import com.lowdragmc.lowdraglib.utils.Position;
 import com.lowdragmc.lowdraglib.utils.Size;
 
@@ -12,7 +15,13 @@ import net.minecraft.world.item.ItemStack;
 
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import dev.emi.emi.api.stack.EmiStack;
+import me.shedaniel.rei.api.common.util.EntryStacks;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collections;
+import java.util.List;
 
 import static com.gregtechceu.gtceu.integration.ae2.gui.widget.slot.AEConfigSlotWidget.drawSelectionOverlay;
 import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawItemStack;
@@ -21,7 +30,7 @@ import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawText;
 /**
  * Display a certain {@link appeng.api.stacks.GenericStack} element.
  */
-public class AEItemDisplayWidget extends Widget {
+public class AEItemDisplayWidget extends Widget implements IRecipeIngredientSlot {
 
     private final AEListGridWidget gridWidget;
     private final int index;
@@ -61,5 +70,41 @@ public class AEItemDisplayWidget extends Widget {
                         mouseY);
             }
         }
+    }
+
+    @Nullable
+    private Object getXEIstack(@Nullable GenericStack itemStack) {
+        if (itemStack != null && itemStack.what() instanceof AEItemKey key) {
+            ItemStack lastStackInSlot = new ItemStack(key.getItem(),
+                    (int) Math.min(itemStack.amount(), Integer.MAX_VALUE));
+            if (key.hasTag()) lastStackInSlot.setTag(key.getTag().copy());
+            if (!lastStackInSlot.isEmpty()) {
+                return switch (GTCEu.Mods.loadedXEI()) {
+                    case JEI -> JEIPlugin.getItemIngredient(lastStackInSlot, getPosition().x, getPosition().y, 18, 18);
+                    case REI -> EntryStacks.of(lastStackInSlot);
+                    case EMI -> EmiStack.of(lastStackInSlot);
+                    default -> lastStackInSlot;
+                };
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Object> getXEIIngredients() {
+        GenericStack item = this.gridWidget.getAt(this.index);
+        var xeiStack = getXEIstack(item);
+
+        return xeiStack != null ? List.of(xeiStack) : Collections.emptyList();
+    }
+
+    @Nullable
+    @Override
+    public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
+        if (!isMouseOverElement(mouseX, mouseY)) return null;
+
+        GenericStack item = this.gridWidget.getAt(this.index);
+        return getXEIstack(item);
     }
 }

@@ -2,6 +2,9 @@ package com.gregtechceu.gtceu.api.pattern;
 
 import com.gregtechceu.gtceu.api.pattern.util.RelativeDirection;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
+
 import com.google.common.base.Joiner;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
@@ -13,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FactoryBlockPattern {
 
@@ -125,6 +129,27 @@ public class FactoryBlockPattern {
             this.symbolMap.put(symbol, blockMatcher);
         } else {
             this.symbolMap.put(symbol, new TraceabilityPredicate(blockMatcher).sort());
+        }
+        return this;
+    }
+
+    public FactoryBlockPattern whereDict(Map<?, ?> dict) {
+        for (Map.Entry<?, ?> entry : dict.entrySet()) {
+            String symbol = entry.getKey().toString();
+            Object value = entry.getValue();
+
+            if (value instanceof TraceabilityPredicate predicate) {
+                this.where(symbol, predicate);
+            } else if (value instanceof String blockId) {
+                this.where(symbol, Predicates.blocks(
+                        ForgeRegistries.BLOCKS.getValue(new ResourceLocation(blockId))));
+            } else {
+                var valueKind = value == null ? "null" : value.getClass().getName();
+                throw new IllegalArgumentException(
+                        "whereDict: value for key '" + symbol +
+                                "' must be a String block ID or TraceabilityPredicate, got: " +
+                            valueKind);
+            }
         }
         return this;
     }

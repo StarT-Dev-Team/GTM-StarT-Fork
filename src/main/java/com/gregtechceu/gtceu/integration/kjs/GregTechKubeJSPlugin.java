@@ -37,9 +37,7 @@ import com.gregtechceu.gtceu.api.fluids.store.FluidStorageKeys;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.item.tool.ToolHelper;
-import com.gregtechceu.gtceu.api.machine.MachineDefinition;
-import com.gregtechceu.gtceu.api.machine.SimpleGeneratorMachine;
-import com.gregtechceu.gtceu.api.machine.SimpleTieredMachine;
+import com.gregtechceu.gtceu.api.machine.*;
 import com.gregtechceu.gtceu.api.machine.multiblock.CleanroomType;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
@@ -72,6 +70,7 @@ import com.gregtechceu.gtceu.data.pack.GTDynamicResourcePack;
 import com.gregtechceu.gtceu.data.recipe.CraftingComponent;
 import com.gregtechceu.gtceu.data.recipe.GTCraftingComponents;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
+import com.gregtechceu.gtceu.data.recipe.misc.RecyclingRecipes;
 import com.gregtechceu.gtceu.integration.kjs.builders.*;
 import com.gregtechceu.gtceu.integration.kjs.builders.block.ActiveBlockBuilder;
 import com.gregtechceu.gtceu.integration.kjs.builders.block.CoilBlockBuilder;
@@ -157,25 +156,31 @@ public class GregTechKubeJSPlugin extends KubeJSPlugin {
         GTRegistryInfo.RECIPE_CATEGORY.addType("basic", GTRecipeCategoryBuilder.class, GTRecipeCategoryBuilder::new,
                 true);
 
-        GTRegistryInfo.MACHINE.addType("simple", KJSWrappingMachineBuilder.class,
-                (id) -> new KJSWrappingMachineBuilder(id,
-                        new KJSTieredMachineBuilder(id, SimpleTieredMachine::new,
-                                SimpleTieredMachine.EDITABLE_UI_CREATOR, false)),
+        GTRegistryInfo.MACHINE.addType("simple", KJSWrappingTieredMachineBuilder.class,
+                (id) -> new KJSWrappingTieredMachineBuilder(id, new KJSTieredMachineBuilder(id,
+                        SimpleTieredMachine::new, SimpleTieredMachine.EDITABLE_UI_CREATOR, false)),
                 true);
-        GTRegistryInfo.MACHINE.addType("custom", KJSWrappingMachineBuilder.class,
-                (id) -> new KJSWrappingMachineBuilder(id, new KJSTieredMachineBuilder(id)),
-                false);
+
+        GTRegistryInfo.MACHINE.addType("custom", KJSWrappingTieredMachineBuilder.class,
+                (id) -> new KJSWrappingTieredMachineBuilder(id, new KJSTieredMachineBuilder(id)), false);
+
         GTRegistryInfo.MACHINE.addType("steam", KJSSteamMachineBuilder.class,
                 KJSSteamMachineBuilder::new, false);
-        GTRegistryInfo.MACHINE.addType("generator", KJSWrappingMachineBuilder.class,
-                (id) -> new KJSWrappingMachineBuilder(id,
-                        new KJSTieredMachineBuilder(id, SimpleGeneratorMachine::new,
-                                SimpleGeneratorMachine.EDITABLE_UI_CREATOR, true)),
+
+        GTRegistryInfo.MACHINE.addType("generator", KJSWrappingTieredMachineBuilder.class,
+                (id) -> new KJSWrappingTieredMachineBuilder(id, new KJSTieredMachineBuilder(id,
+                        SimpleGeneratorMachine::new, SimpleGeneratorMachine.EDITABLE_UI_CREATOR, true)),
                 false);
+
         GTRegistryInfo.MACHINE.addType("multiblock", MultiblockMachineBuilder.class,
                 KJSWrappingMultiblockBuilder::createKJSMulti, false);
+
         GTRegistryInfo.MACHINE.addType("tiered_multiblock", KJSWrappingMultiblockBuilder.class,
                 (id) -> new KJSWrappingMultiblockBuilder(id, new KJSTieredMultiblockBuilder(id)), false);
+
+        GTRegistryInfo.MACHINE.addType("primitive_singleblock", KJSWrappingMachineBuilder.class,
+                KJSWrappingMachineBuilder::createKJSPrimitiveSingleblock, false);
+
         GTRegistryInfo.MACHINE.addType("primitive", MultiblockMachineBuilder.class,
                 (id) -> KJSWrappingMultiblockBuilder.createKJSMulti(id, PrimitiveFancyUIWorkableMachine::new),
                 false);
@@ -205,16 +210,21 @@ public class GregTechKubeJSPlugin extends KubeJSPlugin {
     }
 
     // Fake a data provider for the GT model builders so we don't need to handle this ourselves in any way :3
-    public static RuntimeBlockStateProvider RUNTIME_BLOCKSTATE_PROVIDER = new RuntimeBlockStateProvider(
-            GTRegistration.REGISTRATE, new PackOutput(KubeJSPaths.DIRECTORY),
-            (loc, json) -> {
-                if (!loc.getPath().endsWith(".json")) {
-                    loc = loc.withSuffix(".json");
-                }
-                GTDynamicResourcePack.addResource(loc, json);
-            });
+    // Lazily initialized to avoid loading client-only classes (e.g. net.minecraft.client.Minecraft)
+    // on dedicated servers, which causes ClassMetadataNotFoundException and crashes KubeJS plugin loading.
+    public static RuntimeBlockStateProvider RUNTIME_BLOCKSTATE_PROVIDER;
 
     public static void generateMachineBlockModels() {
+        if (RUNTIME_BLOCKSTATE_PROVIDER == null) {
+            RUNTIME_BLOCKSTATE_PROVIDER = new RuntimeBlockStateProvider(
+                    GTRegistration.REGISTRATE, new PackOutput(KubeJSPaths.DIRECTORY),
+                    (loc, json) -> {
+                        if (!loc.getPath().endsWith(".json")) {
+                            loc = loc.withSuffix(".json");
+                        }
+                        GTDynamicResourcePack.addResource(loc, json);
+                    });
+        }
         GTRegistryInfo.ALL_BUILDERS.forEach(builderBase -> {
             try {
                 builderBase.generateAssetJsons(null);
@@ -514,9 +524,8 @@ public class GregTechKubeJSPlugin extends KubeJSPlugin {
         PowerlessJetpack.FUELS.clear();
 
         // Must run recycling recipes very last
-        // we don't actually want to update recycling recipes after kjs, we manually manage those
-        // RecyclingRecipes.init(builtRecipe -> recipesByName.put(builtRecipe.getId(),
-        // GTRecipeSerializer.SERIALIZER.fromJson(builtRecipe.getId(), builtRecipe.serializeRecipe())));
+        RecyclingRecipes.init(builtRecipe -> recipesByName.put(builtRecipe.getId(),
+                GTRecipeSerializer.SERIALIZER.fromJson(builtRecipe.getId(), builtRecipe.serializeRecipe())));
         ItemMaterialData.resolveItemMaterialInfos(builtRecipe -> recipesByName.put(builtRecipe.getId(),
                 GTRecipeSerializer.SERIALIZER.fromJson(builtRecipe.getId(), builtRecipe.serializeRecipe())));
 
@@ -557,7 +566,8 @@ public class GregTechKubeJSPlugin extends KubeJSPlugin {
         }
         if (gtRecipe.getValue(GTRecipeSchema.CONDITIONS) != null) {
             builder.conditions.addAll(Arrays.stream(gtRecipe.getValue(GTRecipeSchema.CONDITIONS)).toList());
-            builder.recipeType.setMinRecipeConditions(builder.conditions.size());
+            builder.recipeType.setMinRecipeConditions(
+                    (int) builder.conditions.stream().filter(RecipeCondition::isXeiVisible).count());
         }
         if (gtRecipe.getValue(GTRecipeSchema.CATEGORY) != null) {
             builder.recipeCategory = GTRegistries.RECIPE_CATEGORIES.get(gtRecipe.getValue(GTRecipeSchema.CATEGORY));

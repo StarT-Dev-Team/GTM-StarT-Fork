@@ -7,6 +7,7 @@ import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlags;
 import com.gregtechceu.gtceu.api.data.chemical.material.properties.OreProperty;
 import com.gregtechceu.gtceu.api.data.chemical.material.properties.PropertyKey;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.common.data.GTMachines;
@@ -288,11 +289,13 @@ public class GTOreByProduct {
         }
     }
 
-    public void getTooltip(int slotIndex, List<Component> tooltips) {
+    public void getTooltip(int slotIndex, List<Component> tooltips, int recipeTier, int chanceTier) {
         if (chances.containsKey(slotIndex)) {
             Content entry = chances.get(slotIndex);
-            float chance = 100 * (float) entry.chance / entry.maxChance;
+            int boostedChance = ChanceBoostFunction.OVERCLOCK.getBoostedChance(entry, recipeTier, chanceTier);
+            float chance = 100 * (float) boostedChance / entry.maxChance;
             float boost = entry.tierChanceBoost / 100.0f;
+
             tooltips.add(FormattingUtil.formatPercentage2Places("gtceu.gui.content.chance_base", chance));
             tooltips.add(FormattingUtil.formatPercentage2Places("gtceu.gui.content.chance_tier_boost_plus", boost));
         }

@@ -70,15 +70,18 @@ public class AdvancedActivityDetectorCover extends ActivityDetectorCover impleme
             return;
 
         var workable = GTCapabilityHelper.getWorkable(coverHolder.getLevel(), coverHolder.getPos(), attachedSide);
-        if (workable == null || workable.getMaxProgress() == 0)
+        if (workable == null)
             return;
 
-        int output = RedstoneUtil.computeRedstoneValue(workable.getProgress(), workable.getMaxProgress(),
-                isInverted());
+        int output;
 
         // nonstandard logic for handling off state
-        if (!workable.isWorkingEnabled() || !workable.isActive())
-            output = 0;
+        if (!workable.isWorkingEnabled() || !workable.isActive() || workable.getMaxProgress() == 0) {
+            output = isInverted() ? 15 : 0;
+        } else {
+            output = RedstoneUtil.computeRedstoneValue(workable.getProgress(), workable.getMaxProgress(),
+                isInverted());
+        }
 
         if (isStrongSignal) {
             setRedstoneSignalOutput(output);

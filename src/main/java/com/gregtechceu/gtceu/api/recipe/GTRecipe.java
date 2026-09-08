@@ -17,6 +17,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
+import it.unimi.dsi.fastutil.objects.Reference2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -52,8 +54,7 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
     public CompoundTag data;
     public int duration;
     public int parallels = 1;
-    public int subtickParallels = 1;
-    public int batchParallels = 1;
+    public Reference2IntMap<ParallelType> parallelsByType = new Reference2IntArrayMap<>();
     public int ocLevel = 0;
     public int baseOcLevel = 0;
     public final GTRecipeCategory recipeCategory;
@@ -74,9 +75,9 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
                     Map<RecipeCapability<?>, ChanceLogic> tickOutputChanceLogics,
                     List<RecipeCondition<?>> conditions,
                     List<?> ingredientActions,
-                    @NotNull CompoundTag data,
+                    CompoundTag data,
                     int duration,
-                    @NotNull GTRecipeCategory recipeCategory) {
+                    GTRecipeCategory recipeCategory) {
         this(recipeType, null, inputs, outputs, tickInputs, tickOutputs,
                 inputChanceLogics, outputChanceLogics, tickInputChanceLogics, tickOutputChanceLogics,
                 conditions, ingredientActions, data, duration, recipeCategory);
@@ -94,9 +95,9 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
                     Map<RecipeCapability<?>, ChanceLogic> tickOutputChanceLogics,
                     List<RecipeCondition<?>> conditions,
                     List<?> ingredientActions,
-                    @NotNull CompoundTag data,
+                    CompoundTag data,
                     int duration,
-                    @NotNull GTRecipeCategory recipeCategory) {
+                    GTRecipeCategory recipeCategory) {
         this.recipeType = recipeType;
         this.id = id;
 
@@ -139,23 +140,22 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
         copied.ocLevel = ocLevel;
         copied.baseOcLevel = baseOcLevel;
         copied.parallels = parallels;
-        copied.batchParallels = batchParallels;
-        copied.subtickParallels = subtickParallels;
+        copied.parallelsByType = new Reference2IntArrayMap<>(parallelsByType);
         return copied;
     }
 
     @Override
-    public @NotNull RecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return GTRecipeSerializer.SERIALIZER;
     }
 
     @Override
-    public @NotNull GTRecipeType getType() {
+    public GTRecipeType getType() {
         return recipeType;
     }
 
     @Override
-    public boolean matches(@NotNull Container pContainer, @NotNull Level pLevel) {
+    public boolean matches(Container pContainer, Level pLevel) {
         return false;
     }
 
@@ -219,7 +219,7 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
     }
 
     // Technically should account for overflow but realistically not an issue.
-    protected @NotNull EnergyStack calculateEUt(Map<RecipeCapability<?>, List<Content>> contents) {
+    protected EnergyStack calculateEUt(Map<RecipeCapability<?>, List<Content>> contents) {
         var outputs = contents.get(EURecipeCapability.CAP);
         if (outputs == null) return EnergyStack.EMPTY;
         long v = 0, a = 0;
@@ -229,10 +229,6 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
             a += stack.amperage();
         }
         return new EnergyStack(v, a);
-    }
-
-    public int getTotalRuns() {
-        return parallels * subtickParallels * batchParallels;
     }
 
     public int getChanceOcLevel() {

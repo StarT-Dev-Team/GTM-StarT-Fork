@@ -14,11 +14,13 @@ import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 public interface IDisplayUIMachine extends IUIMachine, IMultiController {
 
-    default void addDisplayText(List<Component> textList) {
+    default void addDisplayText(@NotNull List<Component> textList) {
         for (var part : this.getParts()) {
             part.addMultiText(textList);
         }
@@ -36,7 +38,7 @@ public interface IDisplayUIMachine extends IUIMachine, IMultiController {
         screen.addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()));
         screen.addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
                 .textSupplier(this.self().getLevel().isClientSide ? null : this::addDisplayText)
-                .setMaxWidthLimit(150)
+                .setMaxWidthLimit(154)
                 .clickHandler(this::handleDisplayClick));
         return new ModularUI(176, 216, this, entityPlayer)
                 .background(GuiTextures.BACKGROUND)

@@ -11,17 +11,20 @@ import com.gregtechceu.gtceu.api.recipe.ui.LayeredRecipeUIHelper;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.sound.SoundEntry;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
 import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
@@ -67,7 +70,7 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     @Getter
     protected SoundEntry sound;
     @Getter
-    protected List<Function<CompoundTag, String>> dataInfos = new ArrayList<>();
+    protected List<Function<CustomDataInfoConfiguration, CustomDataInfoResult>> dataInfos = new ArrayList<>();
     @Getter
     @Setter
     protected boolean isScanner;
@@ -199,8 +202,14 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
         return this;
     }
 
-    public GTRecipeType addDataInfo(Function<CompoundTag, String> dataInfo) {
+    public GTRecipeType addDataInfoFull(Function<CustomDataInfoConfiguration, CustomDataInfoResult> dataInfo) {
         this.dataInfos.add(dataInfo);
+        return this;
+    }
+
+    public GTRecipeType addDataInfo(Function<CompoundTag, String> dataInfo) {
+        this.dataInfos
+                .add((config) -> new CustomDataInfoResult(Component.literal(dataInfo.apply(config.recipe.data)), null));
         return this;
     }
 
@@ -371,4 +380,8 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
          */
         default void buildRepresentativeRecipes() {}
     }
+
+    public record CustomDataInfoConfiguration(GTRecipe recipe) {}
+
+    public record CustomDataInfoResult(Component label, @Nullable BiConsumer<LabelWidget, GTRecipeWidget> consumer) {}
 }

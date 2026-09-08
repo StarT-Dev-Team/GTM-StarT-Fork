@@ -64,7 +64,7 @@ public class RecipeOutputProvider extends CapabilityBlockProvider<RecipeLogic> {
         var function = recipe.getType().getChanceFunction();
         var itemContents = recipe.getOutputContents(ItemRecipeCapability.CAP);
         var fluidContents = recipe.getOutputContents(FluidRecipeCapability.CAP);
-        int runs = recipe.getTotalRuns();
+        int runs = recipe.parallels;
 
         ListTag itemTags = new ListTag();
         for (var item : itemContents) {

@@ -14,6 +14,7 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
 import com.gregtechceu.gtceu.api.recipe.ActionResult;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.RecipeFailureReason;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
@@ -93,7 +94,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
     protected final List<Component> failureReasons = new ArrayList<>();
 
     @Getter
-    protected final Map<GTRecipe, Component> failureReasonMap = new HashMap<>();
+    protected final Map<GTRecipe, RecipeFailureReason> failureReasonMap = new HashMap<>();
     /**
      * unsafe, it may not be found from {@link RecipeManager}. Do not index it.
      */
@@ -214,15 +215,22 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                     onRecipeFinish();
                 }
             } else if (lastRecipe != null) {
+                // just finished a recipe, try to find a new one. if we don't
+                // find a new one, this will fill `lastFailedMatches`
                 findAndHandleRecipe();
-            } else if (!machine.keepSubscribing() || getMachine().getOffsetTimer() % 5 == 0) {
-                findAndHandleRecipe();
+            } else if ((!machine.keepSubscribing() && lastFailedMatches == null) ||
+                    getMachine().getOffsetTimer() % 5 == 0) {
+                        // every 5 ticks, or if we go to sleep after not finding anything,
+                        // attempt to find a new recipe
+                        findAndHandleRecipe();
+                    } else
                 if (lastFailedMatches != null) {
+                    // every time we aren't attempting to find a new recipe, check
+                    // `lastFailedMatches` if now we can run any of them because of condition changes
                     for (GTRecipe match : lastFailedMatches) {
                         if (checkMatchedRecipeAvailable(match)) break;
                     }
                 }
-            }
         }
         boolean unsubscribe = false;
         if (isSuspend()) {
@@ -236,7 +244,8 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
 
         if (isIdle()) {
             failureReasons.clear();
-            failureReasons.addAll(failureReasonMap.values());
+            failureReasons
+                    .addAll(failureReasonMap.values().stream().map(RecipeFailureReason::component).distinct().toList());
         }
         if (unsubscribe && subscription != null) {
             subscription.unsubscribe();
@@ -261,9 +270,10 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
             var recipeMatch = checkRecipe(modified);
             if (recipeMatch.isSuccess()) {
                 setupRecipe(modified);
-            } else {
+            } else if (recipeMatch.reason() != null) {
                 putFailureReason(this, match, recipeMatch.reason());
             }
+
             if (lastRecipe != null && getStatus() == Status.WORKING) {
                 lastOriginRecipe = match;
                 lastFailedMatches = null;
@@ -288,7 +298,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                     progress++;
                     totalContinuousRunningTime++;
                 } else {
-                    setWaiting(handleTick.reason());
+                    setWaiting(handleTick.reasonComponent());
 
                     // Machine isn't getting enough power, suspend after 5 attempts.
                     if (handleTick.io() == IO.IN && handleTick.capability() == EURecipeCapability.CAP) {
@@ -316,7 +326,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                     }
                 }
             } else {
-                setWaiting(conditionResult.reason());
+                setWaiting(conditionResult.reasonComponent());
             }
         }
         if (isWaiting() /* || isSuspend() */) {
@@ -357,11 +367,14 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
             GTRecipe match = matches.next();
             if (match == null) continue;
 
-            // If a new recipe was found, cache found recipe.
-            if (checkMatchedRecipeAvailable(match))
-                return;
+            // if it's a valid recipe, just run it
+            if (checkMatchedRecipeAvailable(match)) return;
 
-            // cache matching recipes.
+            // check the reason it failed. If it always depends on IO notifications, don't add it
+            // to the cache
+            var reason = failureReasonMap.get(match);
+            if (reason != null && reason.preventCache()) continue;
+
             if (lastFailedMatches == null) {
                 lastFailedMatches = new ArrayList<>();
             }
@@ -682,13 +695,13 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
         tag.put("chance_cache", chanceCache);
     }
 
-    public static void putFailureReason(Object machine, GTRecipe recipe, Component reason) {
+    public static void putFailureReason(Object machine, GTRecipe recipe, RecipeFailureReason reason) {
         if (machine instanceof IRecipeLogicMachine rlm) {
             putFailureReason(rlm.getRecipeLogic(), recipe, reason);
         }
     }
 
-    public static void putFailureReason(RecipeLogic logic, GTRecipe recipe, Component reason) {
+    public static void putFailureReason(RecipeLogic logic, GTRecipe recipe, RecipeFailureReason reason) {
         var map = logic.getFailureReasonMap();
         if (map.containsKey(recipe)) {
             if (reason != ModifierFunction.DEFAULT_FAILURE) {

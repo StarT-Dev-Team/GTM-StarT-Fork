@@ -258,7 +258,7 @@ public class LayeredRecipeUIHelper {
             cap.applyWidgetInfo(slot, storageIndex, true, io, recipeHolder, recipe.getType(), recipe, recipeInput,
                     storage,
                     recipeWidget.getMinTier(), recipeWidget.getTier());
-            slot.setOverlay(recipeInput.createOverlay(false, recipeWidget.getMinTier(), recipeWidget.getTier(),
+            slot.setOverlay(recipeInput.createOverlay(false, recipeWidget.getMinTier(), recipeWidget.getTier(), true,
                     recipe.getType().getChanceFunction()));
             return slot;
         }

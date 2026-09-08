@@ -227,38 +227,43 @@ public class GTMultiMachines {
                         .where('S', definition, Direction.NORTH)
                         .where('X', CASING_PTFE_INERT.getDefaultState())
                         .where('P', CASING_POLYTETRAFLUOROETHYLENE_PIPE.getDefaultState())
-                        .where('C', COIL_CUPRONICKEL.getDefaultState())
                         .where('I', ITEM_IMPORT_BUS[3], Direction.NORTH)
                         .where('E', ENERGY_INPUT_HATCH[3], Direction.NORTH)
                         .where('O', ITEM_EXPORT_BUS[3], Direction.NORTH)
                         .where('F', FLUID_IMPORT_HATCH[3], Direction.NORTH)
                         .where('M', MAINTENANCE_HATCH, Direction.NORTH)
                         .where('H', FLUID_EXPORT_HATCH[3], Direction.NORTH);
-                shapeInfo.add(baseBuilder.shallowCopy()
+
+                GTCEuAPI.HEATING_COILS.entrySet().stream()
+                        .sorted(Comparator.comparingInt(entry -> entry.getKey().getTier()))
+                        .forEach(coil -> {
+                        var coilBuilder = baseBuilder.shallowCopy().where('C', coil.getValue().get());
+                shapeInfo.add(coilBuilder.shallowCopy()
                         .aisle("IXO", "FSH", "XMX")
                         .aisle("XXX", "XPX", "XXX")
                         .aisle("XEX", "XCX", "XXX")
                         .build());
-                shapeInfo.add(baseBuilder.shallowCopy()
+                shapeInfo.add(coilBuilder.shallowCopy()
                         .aisle("IXO", "FSH", "XMX")
                         .aisle("XXX", "XPX", "XCX")
                         .aisle("XEX", "XXX", "XXX")
                         .build());
-                shapeInfo.add(baseBuilder.shallowCopy()
+                shapeInfo.add(coilBuilder.shallowCopy()
                         .aisle("IXO", "FSH", "XMX")
                         .aisle("XCX", "XPX", "XXX")
                         .aisle("XEX", "XXX", "XXX")
                         .build());
-                shapeInfo.add(baseBuilder.shallowCopy()
+                shapeInfo.add(coilBuilder.shallowCopy()
                         .aisle("IXO", "FSH", "XMX")
                         .aisle("XXX", "CPX", "XXX")
                         .aisle("XEX", "XXX", "XXX")
                         .build());
-                shapeInfo.add(baseBuilder.shallowCopy()
+                shapeInfo.add(coilBuilder.shallowCopy()
                         .aisle("IXO", "FSH", "XMX")
                         .aisle("XXX", "XPC", "XXX")
                         .aisle("XEX", "XXX", "XXX")
                         .build());
+                });
                 return shapeInfo;
             })
             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"),
@@ -311,6 +316,34 @@ public class GTMultiMachines {
                                         .where(' ', air())
                                         .where('@', controller(blocks(definition.getBlock())))
                                         .build();
+                            })
+                            .shapeInfos(definition -> {
+                                List<MultiblockShapeInfo> shapeInfo = new ArrayList<>();
+                                var builder = MultiblockShapeInfo.builder()
+                                        .aisle("ABBBA", "CEQMC", "AOSHA", "CIAFC", "ABBBA")
+                                        .aisle("BAAAB", "AP#PA", "AP#PA", "AP#PA", "BAAAB")
+                                        .aisle("BAAAB", "A#P#A", "D#P#D", "A#P#A", "BAAAB")
+                                        .aisle("BAAAB", "AP#PA", "AP#PA", "AP#PA", "BAAAB")
+                                        .aisle("ABBBA", "CAAAC", "AADAA", "CAAAC", "ABBBA")
+                                        .where('A', CASING_PTFE_INERT.getDefaultState())
+                                        .where('B', GCYMBlocks.HEAT_VENT.getDefaultState())
+                                        .where('C', ChemicalHelper.getBlock(TagPrefix.frameGt, BlackSteel).defaultBlockState())
+                                        .where('P', CASING_POLYTETRAFLUOROETHYLENE_PIPE.getDefaultState())
+                                        .where('S', definition, Direction.NORTH)
+                                        .where('I', ITEM_IMPORT_BUS[LV], Direction.NORTH)
+                                        .where('O', ITEM_EXPORT_BUS[LV], Direction.NORTH)
+                                        .where('F', FLUID_IMPORT_HATCH[LV], Direction.NORTH)
+                                        .where('H', FLUID_EXPORT_HATCH[LV], Direction.NORTH)
+                                        .where('E', ENERGY_INPUT_HATCH[LV], Direction.NORTH)
+                                        .where('Q', GCYMMachines.PARALLEL_HATCH[IV], Direction.NORTH)
+                                        .where('M', MAINTENANCE_HATCH, Direction.NORTH)
+                                        .where('#', Blocks.AIR.defaultBlockState());
+
+                                GTCEuAPI.HEATING_COILS.entrySet().stream()
+                                        .sorted(Comparator.comparingInt(entry -> entry.getKey().getTier()))
+                                        .forEach(coil -> shapeInfo.add(builder.shallowCopy().where('D', coil.getValue().get()).build()));
+
+                                return shapeInfo;
                             })
                             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"),
                                     GTCEu.id("block/multiblock/large_chemical_reactor"))

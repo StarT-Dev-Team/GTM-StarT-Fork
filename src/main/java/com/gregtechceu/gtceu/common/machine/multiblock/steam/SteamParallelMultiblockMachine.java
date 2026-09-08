@@ -20,6 +20,7 @@ import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
@@ -122,7 +123,7 @@ public class SteamParallelMultiblockMachine extends WorkableMultiblockMachine im
                 .outputModifier(ContentModifier.multiplier(parallelAmount))
                 .durationMultiplier(1.5)
                 .eutMultiplier(eutMultiplier)
-                .parallels(parallelAmount)
+                .parallels(parallelAmount, GTParallelTypes.STEAM)
                 .build();
     }
 
@@ -169,7 +170,7 @@ public class SteamParallelMultiblockMachine extends WorkableMultiblockMachine im
         var screen = new DraggableScrollableWidgetGroup(7, 4, 162, 121).setBackground(getScreenTexture());
         screen.addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()));
         screen.addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
-                .setMaxWidthLimit(150)
+                .setMaxWidthLimit(154)
                 .clickHandler(this::handleDisplayClick));
         return new ModularUI(176, 216, this, entityPlayer)
                 .background(GuiTextures.BACKGROUND_STEAM.get(ConfigHolder.INSTANCE.machines.steelSteamMultiblocks))

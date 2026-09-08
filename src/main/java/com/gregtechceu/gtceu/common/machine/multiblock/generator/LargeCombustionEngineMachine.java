@@ -21,6 +21,7 @@ import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
@@ -140,7 +141,7 @@ public class LargeCombustionEngineMachine extends WorkableElectricMultiblockMach
                     .inputModifier(ContentModifier.multiplier(actualParallel))
                     .outputModifier(ContentModifier.multiplier(actualParallel))
                     .eutMultiplier(eutMultiplier)
-                    .parallels(actualParallel)
+                    .parallels(actualParallel, GTParallelTypes.GENERATOR)
                     .build();
         }
         return ModifierFunction.NULL;
@@ -185,7 +186,8 @@ public class LargeCombustionEngineMachine extends WorkableElectricMultiblockMach
     @Override
     public void addDisplayText(List<Component> textList) {
         MultiblockDisplayText.Builder builder = MultiblockDisplayText.builder(textList, isFormed())
-                .setWorkingStatus(recipeLogic.isWorkingEnabled(), recipeLogic.isActive());
+                .setWorkingStatus(recipeLogic.isWorkingEnabled(), recipeLogic.isActive())
+                .addPatternErrorLine(getMultiblockState().error);
 
         long lastEUt = recipeLogic.getLastRecipe() != null ?
                 recipeLogic.getLastRecipe().getOutputEUt().getTotalEU() : 0;

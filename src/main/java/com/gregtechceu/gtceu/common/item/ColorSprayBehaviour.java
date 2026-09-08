@@ -362,7 +362,7 @@ public class ColorSprayBehaviour implements IDurabilityBar, IInteractionItem, IA
             BlockState state = newBlock.defaultBlockState();
             for (Property property : old.getProperties()) {
                 if (!state.hasProperty(property)) continue;
-                state.setValue(property, old.getValue(property));
+                state = state.setValue(property, old.getValue(property));
             }
             level.setBlockAndUpdate(pos, state);
             return true;

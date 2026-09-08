@@ -20,6 +20,7 @@ public class RecipeLogicLang {
         provider.add("gtceu.recipe_logic.no_contents", "Recipe has no Contents");
         provider.add("gtceu.recipe_logic.no_capabilities", "Machine has no Capabilities");
         provider.add("gtceu.recipe_logic.layered_inputs", "Layer inputs aren't the only inputs in the machine.");
+        provider.add("gtceu.recipe_logic.min_parallels", "Not enough inputs to start the parallelized recipe.");
     }
 
     private static void initModifierLang(RegistrateLangProvider provider) {
@@ -30,5 +31,8 @@ public class RecipeLogicLang {
         provider.add("gtceu.recipe_modifier.insufficient_eu_to_start_fusion",
                 "Insufficient Energy to Initiate Fusion Reaction");
         provider.add("gtceu.recipe_modifier.coil_temperature_too_low", "Coil Temperature Too Low");
+        provider.add("gtceu.recipe_modifier.cant_perform_at_min_parallel", "Can't Perform at Min Parallel");
+        provider.add("gtceu.recipe_modifier.no_rotor", "No Rotor in Rotor Holder");
+        provider.add("gtceu.recipe_modifier.rotor_obstructed", "Rotor is Obstructed");
     }
 }

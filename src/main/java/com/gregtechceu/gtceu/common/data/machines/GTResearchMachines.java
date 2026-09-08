@@ -3,6 +3,7 @@ package com.gregtechceu.gtceu.common.data.machines;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.RotationState;
+import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
@@ -196,7 +197,8 @@ public class GTResearchMachines {
             .register();
 
     public static final MachineDefinition HIGH_PERFORMANCE_COMPUTING_ARRAY = REGISTRATE
-            .multiblock("high_performance_computation_array", HPCAMachine::new)
+            .multiblock("high_performance_computation_array",
+                    (holder) -> new HPCAMachine(holder, 3, GuiTextures.HPCA_COMPONENT_OUTLINE))
             .langValue("High Performance Computation Array [HPCA]")
             .rotationState(RotationState.NON_Y_AXIS)
             // TODO : Make a controllerAppearanceBlock() so the controller CTM's to the correct casings - Also just a

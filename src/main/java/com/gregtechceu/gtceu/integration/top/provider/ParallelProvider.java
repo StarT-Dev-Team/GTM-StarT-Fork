@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.IParallelHatch;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
+import com.gregtechceu.gtceu.api.recipe.ParallelType;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.ChatFormatting;
@@ -15,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import it.unimi.dsi.fastutil.objects.Reference2IntMaps;
 import mcjty.theoneprobe.api.IProbeHitData;
 import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.IProbeInfoProvider;
@@ -28,61 +30,53 @@ public class ParallelProvider implements IProbeInfoProvider {
     }
 
     @Override
-    public void addProbeInfo(ProbeMode probeMode, IProbeInfo iProbeInfo, Player player, Level level,
+    public void addProbeInfo(ProbeMode probeMode, IProbeInfo info, Player player, Level level,
                              BlockState blockState, IProbeHitData iProbeHitData) {
         BlockEntity blockEntity = level.getBlockEntity(iProbeHitData.getPos());
         if (blockEntity instanceof MetaMachineBlockEntity machineBlockEntity) {
-            int parallel = 0;
-            int batch = 0;
-            int subtickParallel = 0;
-            int totalRuns = 0;
-            boolean exact = false;
+            var parallels = 0;
+            var parallelsByType = Reference2IntMaps.<ParallelType>emptyMap();
+            var exact = false;
+            IParallelHatch hatch = null;
+
             if (machineBlockEntity.getMetaMachine() instanceof IParallelHatch parallelHatch) {
-                parallel = parallelHatch.getCurrentParallel();
+                hatch = parallelHatch;
             } else if (machineBlockEntity.getMetaMachine() instanceof IMultiController controller) {
+                hatch = controller.getParallelHatch().orElse(null);
                 if (controller instanceof IRecipeLogicMachine rlm &&
                         rlm.getRecipeLogic().isActive() &&
                         rlm.getRecipeLogic().getLastRecipe() != null) {
-                    parallel = rlm.getRecipeLogic().getLastRecipe().parallels;
-                    batch = rlm.getRecipeLogic().getLastRecipe().batchParallels;
-                    subtickParallel = rlm.getRecipeLogic().getLastRecipe().subtickParallels;
-                    totalRuns = rlm.getRecipeLogic().getLastRecipe().getTotalRuns();
+                    parallels = rlm.getRecipeLogic().getLastRecipe().parallels;
+                    parallelsByType = rlm.getRecipeLogic().getLastRecipe().parallelsByType;
                     exact = true;
-                } else {
-                    parallel = controller.getParallelHatch()
-                            .map(IParallelHatch::getCurrentParallel)
-                            .orElse(0);
                 }
             }
 
-            if (!exact && parallel > 1) {
-                Component parallels = Component.literal(FormattingUtil.formatNumbers(parallel))
-                        .withStyle(ChatFormatting.DARK_PURPLE);
-                String key = "gtceu.multiblock.parallel";
-                iProbeInfo.text(Component.translatable(key, parallels));
-            } else if (totalRuns > 1) {
-                Component runs = Component.literal(FormattingUtil.formatNumbers(totalRuns))
-                        .withStyle(ChatFormatting.DARK_PURPLE);
-                String key = "gtceu.multiblock.total_runs";
-                iProbeInfo.text(Component.translatable(key, runs));
+            if (!exact && hatch != null) {
+                var parallel = hatch.getCurrentParallel();
+                var minParallel = hatch.getMinimumParallel();
 
-                if (parallel > 1) {
-                    Component parallels = Component.literal(FormattingUtil.formatNumbers(parallel))
+                var comp = Component.literal(FormattingUtil.formatNumbers(parallel))
+                        .withStyle(ChatFormatting.DARK_PURPLE);
+                if (minParallel == parallel) {
+                    info.text(Component.translatable("gtceu.multiblock.exaxctly_parallel", comp)
+                            .withStyle(ChatFormatting.GRAY));
+                } else if (minParallel == 1) {
+                    info.text(
+                            Component.translatable("gtceu.multiblock.parallel", comp).withStyle(ChatFormatting.GRAY));
+                } else {
+                    var compMin = Component.literal(FormattingUtil.formatNumbers(minParallel))
                             .withStyle(ChatFormatting.DARK_PURPLE);
-                    String keyParallel = "gtceu.multiblock.parallel.exact";
-                    iProbeInfo.text(Component.translatable(keyParallel, parallels));
+                    info.text(Component.translatable("gtceu.multiblock.between_parallel", compMin, comp)
+                            .withStyle(ChatFormatting.GRAY));
                 }
-                if (batch > 1) {
-                    Component batches = Component.literal(FormattingUtil.formatNumbers(batch))
-                            .withStyle(ChatFormatting.DARK_PURPLE);
-                    String keyBatch = "gtceu.multiblock.batch_enabled";
-                    iProbeInfo.text(Component.translatable(keyBatch, batches));
-                }
-                if (subtickParallel > 1) {
-                    Component subticks = Component.literal(FormattingUtil.formatNumbers(subtickParallel))
-                            .withStyle(ChatFormatting.DARK_PURPLE);
-                    String keySubtick = "gtceu.multiblock.subtick_parallels";
-                    iProbeInfo.text(Component.translatable(keySubtick, subticks));
+            } else if (exact && parallels > 1) {
+                var runs = Component.literal(FormattingUtil.formatNumbers(parallels))
+                        .withStyle(ChatFormatting.DARK_PURPLE);
+                info.text(Component.translatable("gtceu.multiblock.total_runs", runs));
+                for (var entry : parallelsByType.reference2IntEntrySet()) {
+                    if (entry.getIntValue() <= 1) continue;
+                    info.text(entry.getKey().format(entry.getIntValue()));
                 }
             }
         }

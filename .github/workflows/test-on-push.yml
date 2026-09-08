@@ -1,9 +1,6 @@
 name: Test pull request on push
 
 on:
-  push:
-    branches:
-      - develop
   pull_request:
     paths: ['**']
     types: [opened, synchronize, reopened, labeled]
