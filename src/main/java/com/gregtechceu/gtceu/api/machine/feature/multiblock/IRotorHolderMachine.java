@@ -93,7 +93,10 @@ public interface IRotorHolderMachine extends IMultiPart {
      * @return whether there is a rotor in the holder
      */
     default boolean hasRotor() {
-        return TurbineRotorBehaviour.getBehaviour(getRotorStack()) != null;
+        if (TurbineRotorBehaviour.getBehaviour(getRotorStack()) != null) {
+            return true;
+        }
+        return self().isRemote() && getRotorMaterial() != null && !getRotorMaterial().isNull();
     }
 
     /**

@@ -52,6 +52,7 @@ public class RotorHolderPartMachine extends TieredPartMachine
             RotorHolderPartMachine.class, TieredPartMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
+    @DescSynced
     public final NotifiableItemStackHandler inventory;
     @Getter
     public final int maxRotorHolderSpeed;
