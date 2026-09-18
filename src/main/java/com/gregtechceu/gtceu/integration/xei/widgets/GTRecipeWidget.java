@@ -543,9 +543,9 @@ public class GTRecipeWidget extends WidgetGroup {
                             widget -> {
                                 var index = WidgetUtils.widgetIdIndex(widget);
                                 if (index >= 0 && index < contents.size()) {
-                                    boolean hideOC = recipe.getType() == GTRecipeTypes.MACERATOR_RECIPES &&
-                                            tier < GTValues.HV;
                                     var content = contents.get(index);
+                                    boolean hideOC = recipe.getType() == GTRecipeTypes.MACERATOR_RECIPES &&
+                                            tier < GTValues.HV && io == IO.OUT && content.chance < content.maxChance;
                                     int boostedChance = hideOC ? 0 : recipe.getType().getChanceFunction()
                                             .getBoostedChance(content, minTier, tier);
 
