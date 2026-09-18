@@ -667,6 +667,7 @@ public class GregTechKubeJSPlugin extends KubeJSPlugin {
         int outCount = result.getCount();
         Reference2LongOpenHashMap<Material> materials = new Reference2LongOpenHashMap<>();
         CraftingContainer cc = new DummyCraftingContainer(new ItemStackHandler(idx + 1));
+        List<ItemStack> unresolved = new ArrayList<>();
 
         for (var entry : entries) {
             char c = entry.key();
@@ -694,24 +695,37 @@ public class GregTechKubeJSPlugin extends KubeJSPlugin {
                     materials.addTo(ms.material(), (ms.amount() * inCount) / outCount);
                 }
                 continue;
-            } else {
-                ItemMaterialData.UNRESOLVED_ITEM_MATERIAL_INFO.computeIfAbsent(outItem, i -> new ArrayList<>())
-                        .add(stacks[0].copyWithCount(inCount));
             }
 
             var matStack = ChemicalHelper.getMaterialStack(item);
+            boolean hasMat = false;
             if (!matStack.isEmpty() && !(matStack.material() instanceof MarkerMaterial)) {
                 materials.addTo(matStack.material(), (matStack.amount() * inCount) / outCount);
+                hasMat = true;
             }
 
             var prefix = ChemicalHelper.getPrefix(item);
             if (!prefix.isEmpty()) {
                 for (var ms : prefix.secondaryMaterials()) {
+                    if (ms.material() instanceof MarkerMaterial) continue;
                     materials.addTo(ms.material(), (ms.amount() * inCount) / outCount);
+                    hasMat = true;
                 }
+            }
+
+            if (!hasMat) {
+                unresolved.add(stack.copyWithCount(inCount));
             }
         }
 
-        ItemMaterialData.registerMaterialInfo(outItem.getItem(), new ItemMaterialInfo(materials));
+        if (!unresolved.isEmpty()) {
+            ItemStack keyStack = outItem.copyWithCount(outCount);
+            ItemMaterialData.UNRESOLVED_ITEM_MATERIAL_INFO.computeIfAbsent(keyStack, i -> new ArrayList<>())
+                    .addAll(unresolved);
+        }
+
+        if (!materials.isEmpty()) {
+            ItemMaterialData.registerMaterialInfo(outItem.getItem(), new ItemMaterialInfo(materials));
+        }
     }
 }

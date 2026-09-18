@@ -29,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -114,7 +113,7 @@ public class RecyclingRecipes {
 
         MaterialEntry entry = ChemicalHelper.getMaterialEntry(input.getItem());
         TagKey<Item> inputTag = null;
-        if (!entry.isEmpty() && entry.material().isNull() &&
+        if (!entry.isEmpty() && !entry.material().isNull() &&
                 entry.tagPrefix().unificationEnabled()) {
             inputTag = ChemicalHelper.getTag(entry.tagPrefix(), entry.material());
         }
@@ -247,7 +246,8 @@ public class RecyclingRecipes {
         if (prefix == TagPrefix.dust && !ms.isEmpty() && ms.material().hasProperty(PropertyKey.BLAST)) {
             return;
         } else if (prefix == TagPrefix.block) {
-            if (!ms.isEmpty() && !ms.material().hasProperty(PropertyKey.GEM)) {
+            if (!ms.isEmpty() && !ms.material().hasProperty(PropertyKey.GEM) &&
+                    ms.material().hasProperty(PropertyKey.INGOT)) {
                 ItemStack output = ChemicalHelper.get(TagPrefix.ingot,
                         ms.material().getProperty(PropertyKey.INGOT).getArcSmeltingInto(),
                         (int) (TagPrefix.block.getMaterialAmount(ms.material()) / GTValues.M));
@@ -471,9 +471,17 @@ public class RecyclingRecipes {
                         splitStacks(split, stack, entry);
                         shrinkStacks(shrink, stack, entry);
 
-                        if (split.get(0).getSecond().amount() > shrink.get(0).getSecond().amount()) {
+                        if (!split.isEmpty() && !shrink.isEmpty()) {
+                            if (split.get(0).getSecond().amount() > shrink.get(0).getSecond().amount()) {
+                                outputs.addAll(split);
+                            } else {
+                                outputs.addAll(shrink);
+                            }
+                        } else if (!split.isEmpty()) {
                             outputs.addAll(split);
-                        } else outputs.addAll(shrink);
+                        } else if (!shrink.isEmpty()) {
+                            outputs.addAll(shrink);
+                        }
                     }
                 }
             } else {
@@ -488,35 +496,33 @@ public class RecyclingRecipes {
         // For example, if there are blocks of Steel and nuggets of Steel, and the nuggets
         // are preventing some other output from occupying one of the final slots of the machine,
         // cut the nuggets out to favor the newer item instead of having 2 slots occupied by Steel.
-        //
-        // There is probably a better way to do this.
-        Map<MaterialStack, ItemStack> temp = new HashMap<>();
+        List<Pair<ItemStack, MaterialStack>> primaryOutputs = new ArrayList<>();
+        List<Pair<ItemStack, MaterialStack>> secondaryOutputs = new ArrayList<>();
+        Set<Material> seenMaterials = new HashSet<>();
+
         for (Pair<ItemStack, MaterialStack> t : outputs) {
-            boolean isInMap = false;
-            for (MaterialStack ms : temp.keySet()) {
-                if (ms.material() == t.getSecond().material()) {
-                    isInMap = true;
-                    break;
-                }
+            Material mat = t.getSecond().material();
+            if (seenMaterials.add(mat)) {
+                primaryOutputs.add(t);
+            } else {
+                secondaryOutputs.add(t);
             }
-            if (!isInMap) temp.put(t.getSecond(), t.getFirst());
         }
-        temp.putAll(outputs.stream()
-                .filter(t -> !temp.containsKey(t.getSecond()))
-                .collect(Collectors.toMap(Pair::getSecond, Pair::getFirst)));
+
+        List<Pair<ItemStack, MaterialStack>> orderedOutputs = new ArrayList<>(primaryOutputs);
+        orderedOutputs.addAll(secondaryOutputs);
 
         // Filter Ash to the very end of the list, after all others
-        List<ItemStack> ashStacks = temp.entrySet().stream()
-                .filter(e -> isAshMaterial(e.getKey()))
-                .sorted(Comparator.comparingLong(e -> -e.getKey().amount()))
-                .map(Entry::getValue)
+        List<ItemStack> ashStacks = orderedOutputs.stream()
+                .filter(e -> isAshMaterial(e.getSecond()))
+                .sorted(Comparator.comparingLong(e -> -e.getSecond().amount()))
+                .map(Pair::getFirst)
                 .toList();
 
-        List<ItemStack> returnValues = temp.entrySet().stream()
-                .sorted(Comparator.comparingLong(e -> -e.getKey().amount()))
-                .filter(e -> !isAshMaterial(e.getKey()))
+        List<ItemStack> returnValues = orderedOutputs.stream()
+                .filter(e -> !isAshMaterial(e.getSecond()))
                 .limit(maxOutputs)
-                .map(Entry::getValue)
+                .map(Pair::getFirst)
                 .collect(Collectors.toList());
 
         for (int i = 0; i < ashStacks.size() && returnValues.size() < maxOutputs; i++) {
