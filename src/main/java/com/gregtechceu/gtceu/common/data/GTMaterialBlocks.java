@@ -207,7 +207,8 @@ public class GTMaterialBlocks {
                 .block("%s_%s".formatted(material.getName(), insulation.name),
                         p -> new CableBlock(p, insulation, material))
                 .initialProperties(() -> Blocks.IRON_BLOCK)
-                .properties(p -> p.dynamicShape().noOcclusion().noLootTable().forceSolidOn())
+                .properties(p -> p.dynamicShape().noOcclusion().noLootTable().isSuffocating((s, l, p1) -> false)
+                        .isViewBlocking((s, l, p1) -> false))
                 .transform(GTBlocks.unificationBlock(insulation.tagPrefix, material))
                 .blockstate(NonNullBiConsumer.noop())
                 .setData(ProviderType.LANG, NonNullBiConsumer.noop())
@@ -254,7 +255,8 @@ public class GTMaterialBlocks {
                     if (GTBlocks.doMetalPipe(material)) {
                         p.sound(GTSoundTypes.METAL_PIPE);
                     }
-                    return p.dynamicShape().noOcclusion().noLootTable().forceSolidOn();
+                    return p.dynamicShape().noOcclusion().noLootTable().isSuffocating((s, l, p1) -> false)
+                            .isViewBlocking((s, l, p1) -> false);
                 })
                 .transform(GTBlocks.unificationBlock(fluidPipeType.tagPrefix, material))
                 .blockstate(NonNullBiConsumer.noop())
@@ -301,7 +303,8 @@ public class GTMaterialBlocks {
                     if (GTBlocks.doMetalPipe(material)) {
                         p.sound(GTSoundTypes.METAL_PIPE);
                     }
-                    return p.dynamicShape().noOcclusion().noLootTable().forceSolidOn();
+                    return p.dynamicShape().noOcclusion().noLootTable().isSuffocating((s, l, p1) -> false)
+                            .isViewBlocking((s, l, p1) -> false);
                 })
                 .transform(GTBlocks.unificationBlock(itemPipeType.getTagPrefix(), material))
                 .blockstate(NonNullBiConsumer.noop())

@@ -667,10 +667,19 @@ public class VanillaRecipeHelper {
         Reference2LongOpenHashMap<Material> materialStacksExploded = new Reference2LongOpenHashMap<>();
 
         int itr = 0;
-        while (recipe[itr] instanceof String s) {
-            for (char c : s.toCharArray()) {
-                if (ToolHelper.getToolFromSymbol(c) != null) continue; // skip tools
-                inputCountMap.addTo(c, 1);
+        while (itr < recipe.length && (recipe[itr] instanceof String || recipe[itr] instanceof String[])) {
+            if (recipe[itr] instanceof String s) {
+                for (char c : s.toCharArray()) {
+                    if (ToolHelper.getToolFromSymbol(c) != null) continue; // skip tools
+                    inputCountMap.addTo(c, 1);
+                }
+            } else if (recipe[itr] instanceof String[] arr) {
+                for (String s : arr) {
+                    for (char c : s.toCharArray()) {
+                        if (ToolHelper.getToolFromSymbol(c) != null) continue; // skip tools
+                        inputCountMap.addTo(c, 1);
+                    }
+                }
             }
             itr++;
         }
@@ -700,7 +709,11 @@ public class VanillaRecipeHelper {
             } else if (ingredient instanceof ItemStack itemStack) {
                 itemLike = itemStack.getItem();
             } else if (ingredient instanceof TagKey<?> key) {
-                continue; // todo can this be improved?
+                MaterialEntry tagEntry = ChemicalHelper.getMaterialEntry((TagKey<Item>) key);
+                if (tagEntry.isEmpty()) continue;
+                ItemStack stack = ChemicalHelper.get(tagEntry.tagPrefix(), tagEntry.material());
+                if (stack.isEmpty()) continue;
+                itemLike = stack.getItem();
             } else if (ingredient instanceof ItemLike) {
                 itemLike = (ItemLike) ingredient;
             } else if (ingredient instanceof MaterialEntry entry) {

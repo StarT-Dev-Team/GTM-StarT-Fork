@@ -473,7 +473,8 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
             }
             if (content != null) {
                 boolean isMacerator = recipeType == GTRecipeTypes.MACERATOR_RECIPES;
-                boolean hideOC = isMacerator && chanceTier < GTValues.HV;
+                boolean hideOC = isMacerator && chanceTier < GTValues.HV && io == IO.OUT &&
+                        content.chance < content.maxChance;
                 int boostedChance = hideOC ? 0 :
                         recipeType.getChanceFunction().getBoostedChance(content, recipeTier, chanceTier);
                 float chance = (float) boostedChance / content.maxChance;
