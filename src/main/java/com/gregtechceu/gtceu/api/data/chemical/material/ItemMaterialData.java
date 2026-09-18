@@ -1,5 +1,6 @@
 package com.gregtechceu.gtceu.api.data.chemical.material;
 
+import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.ItemMaterialInfo;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.MaterialEntry;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.MaterialStack;
@@ -29,6 +30,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -158,7 +160,11 @@ public class ItemMaterialData {
         MATERIAL_ENTRY_ITEM_MAP.clear();
         MATERIAL_ENTRY_BLOCK_MAP.clear();
         ITEM_MATERIAL_ENTRY.clear();
+        ITEM_MATERIAL_ENTRY_COLLECTED.clear();
+        TAG_MATERIAL_ENTRY.clear();
         FLUID_MATERIAL.clear();
+        ITEM_MATERIAL_INFO.clear();
+        UNRESOLVED_ITEM_MATERIAL_INFO.clear();
 
         // Load new data
         TagsHandler.initExtraUnificationEntries();
@@ -173,43 +179,76 @@ public class ItemMaterialData {
 
     @ApiStatus.Internal
     public static void resolveItemMaterialInfos(Consumer<FinishedRecipe> provider) {
-        for (var iter = UNRESOLVED_ITEM_MATERIAL_INFO.entrySet().iterator(); iter.hasNext();) {
-            var entry = iter.next();
-            var stack = entry.getKey();
-            var existingMaterialInfo = recurseFindMaterialInfo(ITEM_MATERIAL_INFO.get(stack.getItem()), stack);
-            if (existingMaterialInfo != null) {
+        var snapshot = new ArrayList<>(UNRESOLVED_ITEM_MATERIAL_INFO.keySet());
+        for (ItemStack stack : snapshot) {
+            ItemMaterialInfo existingMaterialInfo = resolveStackMaterialInfo(stack, new HashSet<>());
+            if (existingMaterialInfo != null && !existingMaterialInfo.getMaterials().isEmpty()) {
                 RecyclingRecipes.registerRecyclingRecipes(provider, stack.copyWithCount(1),
                         existingMaterialInfo.getMaterials(), false, null);
             }
-            iter.remove();
         }
+        UNRESOLVED_ITEM_MATERIAL_INFO.clear();
     }
 
-    private static ItemMaterialInfo recurseFindMaterialInfo(ItemMaterialInfo info, ItemStack stack) {
-        // grab material info from each input
-        for (var input : UNRESOLVED_ITEM_MATERIAL_INFO.get(stack)) {
-            // recurse if its nested inputs, not yet resolved
-            if (UNRESOLVED_ITEM_MATERIAL_INFO.containsKey(input)) {
-                info = recurseFindMaterialInfo(info, input);
-            } else {
-                // add the info from an item that is resolved (or not in the map to begin with)
-                var singularMatInfo = getMaterialInfo(input.getItem());
-                int inputCount = input.getCount();
-                int outputCount = stack.getCount();
-                if (singularMatInfo != null) { // if that material info exists
-                    List<MaterialStack> stackList = new ArrayList<>();
-                    for (var matStack : singularMatInfo.getMaterials()) {
-                        stackList.add(matStack.multiply(inputCount).divide(outputCount));
+    private static @Nullable ItemMaterialInfo resolveStackMaterialInfo(ItemStack stack, Set<Item> visited) {
+        if (stack == null || stack.isEmpty()) return null;
+        Item item = stack.getItem();
+        if (visited.contains(item)) return null;
+
+        ItemMaterialInfo preResolved = getMaterialInfo(item);
+        if (preResolved != null) {
+            return preResolved;
+        }
+
+        List<ItemStack> inputs = UNRESOLVED_ITEM_MATERIAL_INFO.get(stack);
+        if (inputs == null || inputs.isEmpty()) {
+            return null;
+        }
+
+        visited.add(item);
+        Reference2LongOpenHashMap<Material> accumulated = new Reference2LongOpenHashMap<>();
+        int outputCount = Math.max(1, stack.getCount());
+
+        for (ItemStack input : inputs) {
+            if (input.isEmpty()) continue;
+            int inputCount = Math.max(1, input.getCount());
+
+            ItemMaterialInfo childInfo = resolveStackMaterialInfo(input, visited);
+            if (childInfo != null) {
+                for (MaterialStack ms : childInfo.getMaterials()) {
+                    if (ms.material() instanceof MarkerMaterial || ms.material().isNull()) continue;
+                    long scaledAmount = (ms.amount() * inputCount) / outputCount;
+                    if (scaledAmount > 0) {
+                        accumulated.addTo(ms.material(), scaledAmount);
                     }
-                    if (info == null) { // if the info isn't set initialize it
-                        info = new ItemMaterialInfo(stackList);
-                        ITEM_MATERIAL_INFO.put(stack.getItem(), info);
-                    } else { // otherwise, add to it
-                        info.addMaterialStacks(stackList);
+                }
+            } else {
+                MaterialStack matStack = ChemicalHelper.getMaterialStack(input.getItem());
+                if (!matStack.isEmpty() && !(matStack.material() instanceof MarkerMaterial)) {
+                    long scaledAmount = (matStack.amount() * inputCount) / outputCount;
+                    if (scaledAmount > 0) {
+                        accumulated.addTo(matStack.material(), scaledAmount);
+                    }
+                }
+                TagPrefix prefix = ChemicalHelper.getPrefix(input.getItem());
+                if (!prefix.isEmpty()) {
+                    for (MaterialStack ms : prefix.secondaryMaterials()) {
+                        if (ms.material() instanceof MarkerMaterial || ms.material().isNull()) continue;
+                        long scaledAmount = (ms.amount() * inputCount) / outputCount;
+                        if (scaledAmount > 0) {
+                            accumulated.addTo(ms.material(), scaledAmount);
+                        }
                     }
                 }
             }
         }
-        return info;
+        visited.remove(item);
+
+        if (!accumulated.isEmpty()) {
+            ItemMaterialInfo resolvedInfo = new ItemMaterialInfo(accumulated);
+            ITEM_MATERIAL_INFO.put(item, resolvedInfo);
+            return resolvedInfo;
+        }
+        return null;
     }
 }
