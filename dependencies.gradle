@@ -30,7 +30,10 @@ dependencies {
     modCompileOnly(variantOf(forge.curios) { classifier("api") })
 
     // AE2
-    modCompileOnly(forge.ae2) { transitive = true }
+    modCompileOnly(forge.ae2) {
+        transitive = true
+        changing = true
+    }
     modCompileOnly(forge.ae2wtlib)
 
     // Create
