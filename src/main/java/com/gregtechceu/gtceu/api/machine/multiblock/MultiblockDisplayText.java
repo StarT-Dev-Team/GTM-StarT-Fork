@@ -440,7 +440,7 @@ public class MultiblockDisplayText {
                 return this;
             if (recipe != null) {
                 int recipeTier = RecipeHelper.getPreOCRecipeEuTier(recipe);
-                int chanceTier = recipeTier + recipe.getChanceOcLevel();
+                int chanceTier = RecipeHelper.getChanceTier(recipe, recipeTier);
                 var function = recipe.getType().getChanceFunction();
                 double maxDurationSec = (double) recipe.duration / 20.0;
                 var itemOutputs = recipe.getOutputContents(ItemRecipeCapability.CAP);
