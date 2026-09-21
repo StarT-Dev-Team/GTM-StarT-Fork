@@ -220,9 +220,15 @@ public class LayeredRecipeLogic extends RecipeLogic {
         if (LayeredRecipeHelper.hasLayeredSteps(recipe)) {
             // we are starting a layered craft
             layeredRecipe.clear();
-            layeredRecipe.addAll(Objects.requireNonNull(LayeredRecipeHelper.getLayeredSteps(recipe)));
+            var steps = LayeredRecipeHelper.getLayeredSteps(recipe);
+            if (steps != null) {
+                for (var step : steps) {
+                    var modifiedStep = machine.fullModifyRecipe(step);
+                    layeredRecipe.add(modifiedStep != null ? modifiedStep : step);
+                }
+            }
             layeredRecipeLayerIndex = 0;
-            recipe = layeredRecipe.get(0);
+            recipe = layeredRecipe.isEmpty() ? recipe : layeredRecipe.get(0);
         } else if (!recipe.data.getBoolean("is_layer")) {
             // non-layered recipe: should never happen
             layeredRecipe.clear();
