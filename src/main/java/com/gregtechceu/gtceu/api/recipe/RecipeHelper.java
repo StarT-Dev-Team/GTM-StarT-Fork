@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.api.recipe;
 
 import com.gregtechceu.gtceu.GTCEu;
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.*;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroup;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness;
@@ -66,6 +67,18 @@ public class RecipeHelper {
         if (parallels > 1) EUt /= parallels;
         EUt >>= (recipe.ocLevel * 2);
         return GTUtil.getTierByVoltage(EUt);
+    }
+
+    public static int getChanceTier(GTRecipe recipe) {
+        return getChanceTier(recipe, getPreOCRecipeEuTier(recipe));
+    }
+
+    public static int getChanceTier(GTRecipe recipe, int recipeTier) {
+        int ocLevel = recipe.getChanceOcLevel();
+        if (recipeTier == GTValues.ULV && ocLevel > 0) {
+            return GTValues.LV + ocLevel;
+        }
+        return recipeTier + ocLevel;
     }
 
     public static <T> List<T> getInputContents(GTRecipeBuilder builder, RecipeCapability<T> capability) {

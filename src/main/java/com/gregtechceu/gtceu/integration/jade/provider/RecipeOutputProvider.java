@@ -60,7 +60,7 @@ public class RecipeOutputProvider extends CapabilityBlockProvider<RecipeLogic> {
 
     public static Pair<ListTag, ListTag> gatherRecipeItemAndFluidsOutput(GTRecipe recipe) {
         int recipeTier = RecipeHelper.getPreOCRecipeEuTier(recipe);
-        int chanceTier = recipeTier + recipe.getChanceOcLevel();
+        int chanceTier = RecipeHelper.getChanceTier(recipe, recipeTier);
         var function = recipe.getType().getChanceFunction();
         var itemContents = recipe.getOutputContents(ItemRecipeCapability.CAP);
         var fluidContents = recipe.getOutputContents(FluidRecipeCapability.CAP);
