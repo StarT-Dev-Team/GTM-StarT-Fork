@@ -724,6 +724,8 @@ public class GTPlaceholders {
                                             List<MultiLineComponent> args) throws PlaceholderException {
                 PlaceholderUtils.checkArgs(args, 1);
                 long n = PlaceholderUtils.toLong(args.get(0));
+                long absN = Math.abs(n);
+
                 Map<Long, String> suffixes = Map.of(
                         1L, "",
                         1000L, "K",
@@ -732,7 +734,7 @@ public class GTPlaceholders {
                         1000000000000L, "T");
                 long max = 1;
                 for (long i : suffixes.keySet()) {
-                    if (n >= i && max < i) max = i;
+                    if (absN >= i && max < i) max = i;
                 }
                 return MultiLineComponent.literal(String.format(Locale.ROOT, "%.2f%s",
                         ((double) n) / max, suffixes.get(max)));

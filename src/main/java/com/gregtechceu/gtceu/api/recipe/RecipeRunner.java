@@ -68,7 +68,7 @@ public class RecipeRunner {
     private void fillContentMatchList(Map<RecipeCapability<?>, List<Content>> entries) {
         ChanceBoostFunction function = recipe.getType().getChanceFunction();
         int recipeTier = RecipeHelper.getPreOCRecipeEuTier(recipe);
-        int chanceTier = recipeTier + recipe.getChanceOcLevel();
+        int chanceTier = RecipeHelper.getChanceTier(recipe, recipeTier);
         for (var entry : entries.entrySet()) {
             RecipeCapability<?> cap = entry.getKey();
             if (!cap.doMatchInRecipe()) continue;
