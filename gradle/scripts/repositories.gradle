@@ -25,6 +25,10 @@ repositories {
         url = "https://maven.firstdark.dev/snapshots"
     }
 
+    maven {  // AE2UELM
+        url = "https://repo.expandium.net/snapshots/"
+    }
+
     exclusiveContent { // Create, Ponder, Flywheel
         forRepository { maven { url = "https://maven.createmod.net" } }
         filter {
