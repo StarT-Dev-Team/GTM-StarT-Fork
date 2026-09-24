@@ -45,18 +45,47 @@ public class ParallelLogic {
                 Collections.emptyList());
     }
 
-    /**
-     * @param holder        The inventories
-     * @param recipe        The recipe
-     * @param parallelLimit hard cap on the amount returned
-     * @param capsToSkip    the capabilities to skip parallel testing
-     * @return returns the amount of possible time a recipe can be made from a given input inventory
-     */
-    public static int getMaxByInput(IRecipeCapabilityHolder holder, GTRecipe recipe, int parallelLimit,
-                                    List<RecipeCapability<?>> capsToSkip) {
-        int minimum = Integer.MAX_VALUE;
+    public record ParallelAmounts(int input, int tickInput, int output) {
 
-        // non-tick inputs.
+        public ParallelAmounts(int limit) {
+            this(limit, limit, limit);
+        }
+
+        public int parallels() {
+            return Math.min(Math.min(input, tickInput), output);
+        }
+    }
+
+    public static ParallelAmounts getParallelAmounts(MetaMachine machine, GTRecipe recipe, int parallelLimit) {
+        if (parallelLimit <= 1) return new ParallelAmounts(parallelLimit);
+        if (!(machine instanceof IRecipeLogicMachine rlm)) return new ParallelAmounts(1);
+
+        var maxNormalInputMultiplier = getMaxByNormalInput(rlm, recipe, parallelLimit, Collections.emptyList());
+        var maxTickInputMultiplier = getMaxByTickInput(rlm, recipe, parallelLimit, Collections.emptyList());
+
+        var maxInputMultiplier = Math.min(maxNormalInputMultiplier, maxTickInputMultiplier);
+
+        if (maxInputMultiplier == 0) {
+            return new ParallelAmounts(0);
+        }
+
+        if (maxInputMultiplier == Integer.MAX_VALUE) {
+            Component reason = Component.translatable("gtceu.recipe_logic.no_capabilities")
+                    .append(Component.literal(": "))
+                    .append(Component.translatable(IO.IN.tooltip));
+            RecipeLogic.putFailureReason(rlm, recipe, new RecipeFailureReason(reason, true));
+            return new ParallelAmounts(0);
+        }
+
+        var maxOutputMultiplier = limitByOutputMerging(rlm, recipe, maxInputMultiplier, rlm::canVoidRecipeOutputs,
+                Collections.emptyList());
+
+        return new ParallelAmounts(maxNormalInputMultiplier, maxTickInputMultiplier, maxOutputMultiplier);
+    }
+
+    public static int getMaxByNormalInput(IRecipeCapabilityHolder holder, GTRecipe recipe, int parallelLimit,
+                                          List<RecipeCapability<?>> capsToSkip) {
+        int minimum = Integer.MAX_VALUE;
         for (RecipeCapability<?> cap : recipe.inputs.keySet()) {
             if (cap.doMatchInRecipe() && !capsToSkip.contains(cap)) {
                 // Find the maximum number of recipes that can be performed from the contents of the input inventories
@@ -71,8 +100,12 @@ public class ParallelLogic {
                 minimum = Math.min(minimum, capParallel);
             }
         }
+        return minimum;
+    }
 
-        // tick inputs.
+    public static int getMaxByTickInput(IRecipeCapabilityHolder holder, GTRecipe recipe, int parallelLimit,
+                                        List<RecipeCapability<?>> capsToSkip) {
+        int minimum = Integer.MAX_VALUE;
         for (RecipeCapability<?> cap : recipe.tickInputs.keySet()) {
             if (cap.doMatchInRecipe() && !capsToSkip.contains(cap)) {
                 // Find the maximum number of recipes that can be performed from the contents of the input inventories
@@ -87,6 +120,22 @@ public class ParallelLogic {
                 minimum = Math.min(minimum, capParallel);
             }
         }
+        return minimum;
+    }
+
+    /**
+     * @param holder        The inventories
+     * @param recipe        The recipe
+     * @param parallelLimit hard cap on the amount returned
+     * @param capsToSkip    the capabilities to skip parallel testing
+     * @return returns the amount of possible time a recipe can be made from a given input inventory
+     */
+    public static int getMaxByInput(IRecipeCapabilityHolder holder, GTRecipe recipe, int parallelLimit,
+                                    List<RecipeCapability<?>> capsToSkip) {
+        var minimum = Math.min(
+                getMaxByNormalInput(holder, recipe, parallelLimit, capsToSkip),
+                getMaxByTickInput(holder, recipe, parallelLimit, capsToSkip));
+
         if (minimum == Integer.MAX_VALUE) {
             Component reason = Component.translatable("gtceu.recipe_logic.no_capabilities")
                     .append(Component.literal(": "))

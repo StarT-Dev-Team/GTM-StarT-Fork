@@ -126,12 +126,22 @@ public class GTRecipeModifiers {
             var hatch = controller.getParallelHatch();
             if (hatch.isEmpty()) return ModifierFunction.IDENTITY;
 
-            int parallels = ParallelLogic.getParallelAmount(machine, recipe, hatch.get().getCurrentParallel());
-            if (parallels < hatch.get().getMinimumParallel()) {
+            var amounts = ParallelLogic.getParallelAmounts(machine, recipe, hatch.get().getCurrentParallel());
+            if (amounts.input() < hatch.get().getMinimumParallel()) {
                 return ModifierFunction
-                        .cancel(Component.translatable("gtceu.recipe_modifier.cant_perform_at_min_parallel"));
+                        .cancel(Component.translatable("gtceu.recipe_modifier.cant_perform_at_min_parallel_input"));
             }
-            if (parallels == 1) {
+            if (amounts.tickInput() < hatch.get().getMinimumParallel()) {
+                return ModifierFunction
+                        .cancel(Component.translatable("gtceu.recipe_modifier.cant_perform_at_min_parallel_energy"));
+            }
+            if (amounts.output() < hatch.get().getMinimumParallel()) {
+                return ModifierFunction
+                        .cancel(Component.translatable("gtceu.recipe_modifier.cant_perform_at_min_parallel_output"));
+            }
+
+            var parallels = amounts.parallels();
+            if (amounts.parallels() == 1) {
                 return ModifierFunction.IDENTITY;
             }
 

@@ -31,7 +31,12 @@ public class RecipeLogicLang {
         provider.add("gtceu.recipe_modifier.insufficient_eu_to_start_fusion",
                 "Insufficient Energy to Initiate Fusion Reaction");
         provider.add("gtceu.recipe_modifier.coil_temperature_too_low", "Coil Temperature Too Low");
-        provider.add("gtceu.recipe_modifier.cant_perform_at_min_parallel", "Can't Perform at Min Parallel");
+        provider.add("gtceu.recipe_modifier.cant_perform_at_min_parallel_input",
+                "Can't perform at min parallels, not enough inputs");
+        provider.add("gtceu.recipe_modifier.cant_perform_at_min_parallel_energy",
+                "Can't perform at min parallels, not enough input energy");
+        provider.add("gtceu.recipe_modifier.cant_perform_at_min_parallel_output",
+                "Can't perform at min parallels, not enough output space");
         provider.add("gtceu.recipe_modifier.no_rotor", "No Rotor in Rotor Holder");
         provider.add("gtceu.recipe_modifier.rotor_obstructed", "Rotor is Obstructed");
     }
