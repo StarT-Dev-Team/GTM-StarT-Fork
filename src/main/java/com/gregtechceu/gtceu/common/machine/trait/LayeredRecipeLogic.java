@@ -222,10 +222,7 @@ public class LayeredRecipeLogic extends RecipeLogic {
             layeredRecipe.clear();
             var steps = LayeredRecipeHelper.getLayeredSteps(recipe);
             if (steps != null) {
-                for (var step : steps) {
-                    var modifiedStep = machine.fullModifyRecipe(step);
-                    layeredRecipe.add(modifiedStep != null ? modifiedStep : step);
-                }
+                layeredRecipe.addAll(steps);
             }
             layeredRecipeLayerIndex = 0;
             recipe = layeredRecipe.isEmpty() ? recipe : layeredRecipe.get(0);

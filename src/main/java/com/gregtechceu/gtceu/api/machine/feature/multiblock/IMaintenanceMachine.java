@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.gui.fancy.IFancyTooltip;
 import com.gregtechceu.gtceu.api.gui.fancy.TooltipsPanel;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.LayeredRecipeHelper;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import net.minecraft.ChatFormatting;
@@ -14,6 +15,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface IMaintenanceMachine extends IMultiPart {
 
@@ -143,6 +145,18 @@ public interface IMaintenanceMachine extends IMultiPart {
             if (durationMultiplier != 1) {
                 recipe = recipe.copy();
                 recipe.duration = Math.max(1, Math.round(recipe.duration * durationMultiplier));
+                if (LayeredRecipeHelper.hasLayeredSteps(recipe)) {
+                    var steps = LayeredRecipeHelper.getLayeredSteps(recipe);
+                    if (steps != null) {
+                        List<GTRecipe> modifiedSteps = new ArrayList<>(steps.size());
+                        for (var step : steps) {
+                            step = step.copy();
+                            step.duration = Math.max(1, Math.round(step.duration * durationMultiplier));
+                            modifiedSteps.add(step);
+                        }
+                        LayeredRecipeHelper.setLayeredSteps(recipe, modifiedSteps);
+                    }
+                }
             }
         }
         return recipe;
