@@ -305,7 +305,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                     Component reason = handleTick.reasonComponent();
                     int period = lastRecipe.getTickPeriod();
 
-                    if (period > 1) reason = reason.copy().append(" ")
+                    if (period > 1 && tickCounter % period == 0) reason = reason.copy().append(" ")
                             .append(Component.translatable("gtceu.recipe_logic.every_n_ticks", period));
 
                     setWaiting(reason);
@@ -345,7 +345,9 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
     }
 
     protected void regressRecipe() {
-        if (progress > 0 && machine.regressWhenWaiting() && (lastRecipe == null || lastRecipe.getTickPeriod() == 1)) {
+        boolean waitingOnFire = lastRecipe != null && lastRecipe.getTickPeriod() > 1 &&
+                tickCounter % lastRecipe.getTickPeriod() == 0;
+        if (progress > 0 && machine.regressWhenWaiting() && !waitingOnFire) {
             this.progress = Math.max(1, progress - 2);
         }
     }
@@ -396,7 +398,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
         if (!recipe.hasTick()) return ActionResult.SUCCESS;
 
         int period = recipe.getTickPeriod();
-        if (period > 1 && tickCounter % period != 0) return ActionResult.SUCCESS;
+        if (period > 1 && tickCounter % period != 0) recipe = recipe.getEveryTickOnly();
 
         var result = RecipeHelper.matchTickRecipe(machine, recipe);
         if (!result.isSuccess()) return result;

@@ -1040,12 +1040,12 @@ public class GTRecipeBuilder {
         if (enabled) {
             if (ticks < 1) GTCEu.LOGGER.error("Tick period must be >= 1", new IllegalArgumentException());
 
-            int existing = data.getInt(GTRecipe.TickPeriodKey);
+            int existing = data.getInt(GTRecipe.tickPeriodKey);
 
             if (existing > 0 && existing != ticks)
                 GTCEu.LOGGER.error("Tick period already exists", new IllegalArgumentException());
 
-            if (ticks > 1) data.putInt(GTRecipe.TickPeriodKey, ticks);
+            if (ticks > 1) data.putInt(GTRecipe.tickPeriodKey, ticks);
         }
 
         this.perTick = enabled;

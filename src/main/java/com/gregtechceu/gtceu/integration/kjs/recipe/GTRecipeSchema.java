@@ -804,12 +804,12 @@ public interface GTRecipeSchema {
             if (enabled) {
                 if (ticks < 1) GTCEu.LOGGER.error("Tick period must be >= 1", new IllegalArgumentException());
 
-                int existing = getValue(DATA) == null ? 0 : getValue(DATA).getInt(GTRecipe.TickPeriodKey);
+                int existing = getValue(DATA) == null ? 0 : getValue(DATA).getInt(GTRecipe.tickPeriodKey);
 
                 if (existing > 0 && existing != ticks)
                     GTCEu.LOGGER.error("Tick period already exists", new IllegalArgumentException());
 
-                if (ticks > 1) addData(GTRecipe.TickPeriodKey, ticks);
+                if (ticks > 1) addData(GTRecipe.tickPeriodKey, ticks);
             }
 
             this.perTick = enabled;

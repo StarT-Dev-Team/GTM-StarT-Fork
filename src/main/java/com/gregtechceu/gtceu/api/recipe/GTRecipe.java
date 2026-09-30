@@ -64,7 +64,9 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
     @Getter(lazy = true)
     private final @NotNull EnergyStack outputEUt = calculateEUt(tickOutputs);
 
-    public static final String TickPeriodKey = "tickPeriod";
+    public static final String tickPeriodKey = "tickPeriod";
+
+    private @Nullable GTRecipe everyTickOnly;
 
     public GTRecipe(GTRecipeType recipeType,
                     Map<RecipeCapability<?>, List<Content>> inputs,
@@ -193,11 +195,22 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
     }
 
     public int getTickPeriod() {
-        return Math.max(1, data.getInt(TickPeriodKey));
+        return Math.max(1, data.getInt(tickPeriodKey));
     }
 
     public boolean hasTick() {
         return !tickInputs.isEmpty() || !tickOutputs.isEmpty();
+    }
+
+    public GTRecipe getEveryTickOnly() {
+        if (everyTickOnly == null) {
+            var copied = copy();
+            copied.tickInputs.keySet().removeIf(cap -> cap != EURecipeCapability.CAP && cap != CWURecipeCapability.CAP);
+            copied.tickOutputs.keySet()
+                    .removeIf(cap -> cap != EURecipeCapability.CAP && cap != CWURecipeCapability.CAP);
+            everyTickOnly = copied;
+        }
+        return everyTickOnly;
     }
 
     /**
