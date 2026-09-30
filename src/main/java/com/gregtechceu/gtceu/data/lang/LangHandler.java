@@ -1396,6 +1396,8 @@ public class LangHandler {
 
         provider.add("gtceu.gui.content.per_tick", "§aConsumed/Produced Per Tick§r");
         provider.add("gtceu.gui.content.tips.per_tick_short", "§a/tick§r");
+        provider.add("gtceu.gui.content.per_n_ticks", "§aConsumed/Produced Every %s Ticks§r");
+        provider.add("gtceu.gui.content.tips.per_n_ticks_short", "§a/%st§r");
         provider.add("gtceu.gui.content.tips.per_second_short", "§a/second§r");
 
         provider.add("gtceu.gui.content.units.per_tick", "/t");

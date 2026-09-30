@@ -12,6 +12,7 @@ import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.item.component.IDataItem;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.CleanroomType;
+import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
 import com.gregtechceu.gtceu.api.recipe.ResearchData;
 import com.gregtechceu.gtceu.api.recipe.ResearchRecipeBuilder;
@@ -84,7 +85,6 @@ public interface GTRecipeSchema {
     @Accessors(chain = true, fluent = true)
     class GTRecipeJS extends RecipeJS {
 
-        @Setter
         public boolean perTick;
         @Setter
         public int chance = ChanceLogic.getMaxChancedValue();
@@ -793,6 +793,27 @@ public interface GTRecipeSchema {
             if (getValue(TICK_INPUT_CHANCE_LOGICS) == null) setValue(TICK_INPUT_CHANCE_LOGICS, new HashMap<>());
             getValue(TICK_INPUT_CHANCE_LOGICS).put(cap, logic);
             save();
+            return this;
+        }
+
+        public GTRecipeJS perTick(boolean enabled) {
+            return perNTick(1, enabled);
+        }
+
+        public GTRecipeJS perNTick(int ticks, boolean enabled) {
+            if (enabled) {
+                if (ticks < 1) GTCEu.LOGGER.error("Tick period must be >= 1", new IllegalArgumentException());
+
+                int existing = getValue(DATA) == null ? 0 : getValue(DATA).getInt(GTRecipe.TickPeriodKey);
+
+                if (existing > 0 && existing != ticks)
+                    GTCEu.LOGGER.error("Tick period already exists", new IllegalArgumentException());
+
+                if (ticks > 1) addData(GTRecipe.TickPeriodKey, ticks);
+            }
+
+            this.perTick = enabled;
+
             return this;
         }
 

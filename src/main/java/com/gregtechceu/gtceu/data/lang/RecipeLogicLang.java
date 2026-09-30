@@ -21,6 +21,7 @@ public class RecipeLogicLang {
         provider.add("gtceu.recipe_logic.no_capabilities", "Machine has no Capabilities");
         provider.add("gtceu.recipe_logic.layered_inputs", "Layer inputs aren't the only inputs in the machine.");
         provider.add("gtceu.recipe_logic.min_parallels", "Not enough inputs to start the parallelized recipe.");
+        provider.add("gtceu.recipe_logic.every_n_ticks", "(needed every %s ticks)");
     }
 
     private static void initModifierLang(RegistrateLangProvider provider) {
