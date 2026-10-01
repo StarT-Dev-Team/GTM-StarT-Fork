@@ -398,7 +398,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
         if (!recipe.hasTick()) return ActionResult.SUCCESS;
 
         int period = recipe.getTickPeriod();
-        if (period > 1 && tickCounter % period != 0) recipe = recipe.getEveryTickOnly();
+        if (period > 1 && tickCounter % period != 0) recipe = recipe.getEUCWUOnlyTickRecipe();
 
         var result = RecipeHelper.matchTickRecipe(machine, recipe);
         if (!result.isSuccess()) return result;

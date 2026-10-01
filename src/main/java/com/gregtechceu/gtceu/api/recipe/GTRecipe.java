@@ -66,7 +66,7 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
 
     public static final String tickPeriodKey = "tickPeriod";
 
-    private @Nullable GTRecipe everyTickOnly;
+    private @Nullable GTRecipe euCWUOnlyTickRecipe;
 
     public GTRecipe(GTRecipeType recipeType,
                     Map<RecipeCapability<?>, List<Content>> inputs,
@@ -202,15 +202,15 @@ public class GTRecipe implements net.minecraft.world.item.crafting.Recipe<Contai
         return !tickInputs.isEmpty() || !tickOutputs.isEmpty();
     }
 
-    public GTRecipe getEveryTickOnly() {
-        if (everyTickOnly == null) {
+    public GTRecipe getEUCWUOnlyTickRecipe() {
+        if (euCWUOnlyTickRecipe == null) {
             var copied = copy();
             copied.tickInputs.keySet().removeIf(cap -> cap != EURecipeCapability.CAP && cap != CWURecipeCapability.CAP);
             copied.tickOutputs.keySet()
                     .removeIf(cap -> cap != EURecipeCapability.CAP && cap != CWURecipeCapability.CAP);
-            everyTickOnly = copied;
+            euCWUOnlyTickRecipe = copied;
         }
-        return everyTickOnly;
+        return euCWUOnlyTickRecipe;
     }
 
     /**
