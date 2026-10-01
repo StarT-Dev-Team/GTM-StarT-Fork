@@ -123,6 +123,11 @@ public class GTCapabilityHelper {
     }
 
     @Nullable
+    public static ILockableHatch getLockableHatch(Level level, BlockPos pos, @Nullable Direction side) {
+        return getBlockEntityCapability(GTCapability.CAPABILITY_LOCKABLE_HATCH, level, pos, side);
+    }
+
+    @Nullable
     private static <T> T getBlockEntityCapability(Capability<T> capability, Level level, BlockPos pos,
                                                   @Nullable Direction side) {
         if (level.getBlockState(pos).hasBlockEntity()) {

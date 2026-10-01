@@ -2,8 +2,8 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableSlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableTankWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
@@ -46,6 +46,7 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
     public DualHatchPartMachine(IMachineBlockEntity holder, int tier, IO io, Object... args) {
         super(holder, tier, io);
         this.tank = createTank(INITIAL_TANK_CAPACITY, (int) Math.sqrt(getInventorySize()), args);
+        this.tank.setIsIODisabled(this::isLocked);
     }
 
     ////////////////////////////////
@@ -96,7 +97,7 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
             this.hasFluidHandler = false;
         }
 
-        if (isWorkingEnabled() && (canOutput || io == IO.IN) && (hasItemHandler || hasFluidHandler)) {
+        if (canAutoIO() && (canOutput || io == IO.IN) && (hasItemHandler || hasFluidHandler)) {
             autoIOSubs = subscribeServerTick(autoIOSubs, this::autoIO);
         } else if (autoIOSubs != null) {
             autoIOSubs.unsubscribe();
@@ -107,7 +108,7 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
     @Override
     protected void autoIO() {
         if (getOffsetTimer() % 5 == 0) {
-            if (isWorkingEnabled()) {
+            if (canAutoIO()) {
                 if (io == IO.OUT) {
                     if (hasItemHandler) {
                         getInventory().exportToNearby(getFrontFacing());
@@ -170,8 +171,9 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
         int index = 0;
         for (int y = 0; y < tanks; y++) {
             for (int x = 0; x < tanks; x++) {
-                container.addWidget(new SlotWidget(
+                container.addWidget(new BlockableSlotWidget(
                         getInventory().storage, index++, 4 + x * 18, 4 + y * 18, true, io.support(IO.IN))
+                        .setIsBlocked(this::isLocked)
                         .setBackgroundTexture(GuiTextures.SLOT)
                         .setIngredientIO(this.io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT));
             }
@@ -179,8 +181,9 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
 
         index = 0;
         for (int y = 0; y < tanks; y++) {
-            container.addWidget(new TankWidget(
+            container.addWidget(new BlockableTankWidget(
                     tank.getStorages()[index++], 4 + tanks * 18, 4 + y * 18, true, io.support(IO.IN))
+                    .setIsBlocked(this::isLocked)
                     .setBackground(GuiTextures.FLUID_SLOT));
         }
 

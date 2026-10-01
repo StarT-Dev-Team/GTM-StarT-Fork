@@ -280,6 +280,10 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_CENTRAL_MONITOR.orEmpty(cap, LazyOptional.of(() -> list.get(0)));
             }
+        } else if (cap == GTCapability.CAPABILITY_LOCKABLE_HATCH) {
+            if (machine instanceof ILockableHatch lockableHatch) {
+                return GTCapability.CAPABILITY_LOCKABLE_HATCH.orEmpty(cap, LazyOptional.of(() -> lockableHatch));
+            }
         }
         if (GTCEu.Mods.isAE2Loaded()) {
             LazyOptional<?> opt = AE2CallWrapper.getGridNodeHostCapability(cap, machine, side);

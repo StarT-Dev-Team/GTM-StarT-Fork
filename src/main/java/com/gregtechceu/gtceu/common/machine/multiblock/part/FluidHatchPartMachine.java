@@ -1,9 +1,11 @@
 package com.gregtechceu.gtceu.common.machine.multiblock.part;
 
 import com.gregtechceu.gtceu.api.blockentity.IPaintable;
+import com.gregtechceu.gtceu.api.capability.ILockableHatch;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableTankWidget;
 import com.gregtechceu.gtceu.api.gui.widget.PhantomFluidWidget;
 import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
@@ -55,7 +57,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachineLife, IHasCircuitSlot, IPaintable {
+public class FluidHatchPartMachine extends TieredIOPartMachine
+                                   implements IMachineLife, IHasCircuitSlot, IPaintable, ILockableHatch {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(FluidHatchPartMachine.class,
             TieredIOPartMachine.MANAGED_FIELD_HOLDER);
@@ -79,6 +82,10 @@ public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachi
     @Getter
     @Persisted
     protected final NotifiableItemStackHandler circuitInventory;
+    @Getter
+    @Persisted
+    @DescSynced
+    protected boolean locked;
 
     // The `Object... args` parameter is necessary in case a superclass needs to pass any args along to createTank().
     // We can't use fields here because those won't be available while createTank() is called.
@@ -87,6 +94,7 @@ public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachi
         super(holder, tier, io);
         this.slots = slots;
         this.tank = createTank(initialCapacity, slots, args);
+        this.tank.setIsIODisabled(this::isLocked);
         this.circuitSlotEnabled = true;
         this.circuitInventory = createCircuitItemHandler(io).shouldSearchContent(false);
     }
@@ -193,12 +201,16 @@ public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachi
         updateTankSubscription(newFacing);
     }
 
+    protected boolean canAutoIO() {
+        return isWorkingEnabled() && !isLocked();
+    }
+
     protected void updateTankSubscription() {
         updateTankSubscription(getFrontFacing());
     }
 
     protected void updateTankSubscription(Direction newFacing) {
-        if (isWorkingEnabled() && ((io.support(IO.OUT) && !tank.isEmpty()) || io.support(IO.IN)) &&
+        if (canAutoIO() && ((io.support(IO.OUT) && !tank.isEmpty()) || io.support(IO.IN)) &&
                 GTTransferUtils.hasAdjacentFluidHandler(getLevel(), getPos(), newFacing)) {
             autoIOSubs = subscribeServerTick(autoIOSubs, this::autoIO);
         } else if (autoIOSubs != null) {
@@ -209,7 +221,7 @@ public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachi
 
     protected void autoIO() {
         if (getOffsetTimer() % 5 == 0) {
-            if (isWorkingEnabled()) {
+            if (canAutoIO()) {
                 if (io == IO.OUT) {
                     tank.exportToNearby(getFrontFacing());
                 } else if (io == IO.IN) {
@@ -221,6 +233,11 @@ public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachi
             }
             updateTankSubscription();
         }
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+        updateTankSubscription();
     }
 
     @Override
@@ -321,13 +338,17 @@ public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachi
             group.addWidget(new ToggleButtonWidget(7, 40, 18, 18,
                     GuiTextures.BUTTON_LOCK, this.tank::isLocked, this.tank::setLocked)
                     .setTooltipText("gtceu.gui.fluid_lock.tooltip")
-                    .setShouldUseBaseBackground())
-                    // ...and add the actual tank widget separately.
-                    .addWidget(new TankWidget(tank.getStorages()[0], 67, 22, 18, 18, true, io.support(IO.IN))
-                            .setShowAmount(true).setDrawHoverTips(true).setBackground(GuiTextures.FLUID_SLOT));
-        } else {
-            group.addWidget(tankWidget = new TankWidget(tank.getStorages()[0], 67, 22, 18, 18, true, io.support(IO.IN))
+                    .setShouldUseBaseBackground());
+
+            // ...and add the actual tank widget separately.
+            group.addWidget(new BlockableTankWidget(tank.getStorages()[0], 67, 22, 18, 18, true, io.support(IO.IN))
+                    .setIsBlocked(this::isLocked)
                     .setShowAmount(true).setDrawHoverTips(true).setBackground(GuiTextures.FLUID_SLOT));
+        } else {
+            group.addWidget(
+                    tankWidget = new BlockableTankWidget(tank.getStorages()[0], 67, 22, 18, 18, true, io.support(IO.IN))
+                            .setIsBlocked(this::isLocked)
+                            .setShowAmount(true).setDrawHoverTips(true).setBackground(GuiTextures.FLUID_SLOT));
         }
 
         group.addWidget(new LabelWidget(8, 8, "gtceu.gui.fluid_amount"))
@@ -380,7 +401,9 @@ public class FluidHatchPartMachine extends TieredIOPartMachine implements IMachi
         for (int y = 0; y < colSize; y++) {
             for (int x = 0; x < rowSize; x++) {
                 container.addWidget(
-                        new TankWidget(tank.getStorages()[index++], 4 + x * 18, 4 + y * 18, true, io.support(IO.IN))
+                        new BlockableTankWidget(tank.getStorages()[index++], 4 + x * 18, 4 + y * 18, true,
+                                io.support(IO.IN))
+                                .setIsBlocked(this::isLocked)
                                 .setBackground(GuiTextures.FLUID_SLOT));
             }
         }

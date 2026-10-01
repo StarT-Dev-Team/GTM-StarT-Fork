@@ -49,6 +49,7 @@ public class GTJadePlugin implements IWailaPlugin {
         registration.registerBlockDataProvider(new EnergyConverterModeProvider(), BlockEntity.class);
         registration.registerBlockDataProvider(new BatteryStorageInfoProvider(), BlockEntity.class);
         registration.registerBlockDataProvider(new LDPEndpointProvider(), BlockEntity.class);
+        registration.registerBlockDataProvider(new LockableHatchProvider(), BlockEntity.class);
         if (GTCEu.Mods.isAE2Loaded()) {
             registration.registerBlockDataProvider(new MEGridConnectedProvider(), BlockEntity.class);
             registration.registerBlockDataProvider(new MEPatternBufferProvider(), BlockEntity.class);
