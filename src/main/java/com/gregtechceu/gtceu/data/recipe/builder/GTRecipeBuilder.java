@@ -95,7 +95,6 @@ public class GTRecipeBuilder {
     @Setter
     public GTRecipeType recipeType;
     public int duration = 100;
-    @Setter
     public boolean perTick;
     @Setter
     public int chance = ChanceLogic.getMaxChancedValue();
@@ -1030,6 +1029,27 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder chancedTickInputLogic(RecipeCapability<?> cap, ChanceLogic logic) {
         this.tickInputChanceLogic.put(cap, logic);
+        return this;
+    }
+
+    public GTRecipeBuilder perTick(boolean enabled) {
+        return perNTick(1, enabled);
+    }
+
+    public GTRecipeBuilder perNTick(int ticks, boolean enabled) {
+        if (enabled) {
+            if (ticks < 1) GTCEu.LOGGER.error("Tick period must be >= 1", new IllegalArgumentException());
+
+            int existing = data.getInt(GTRecipe.tickPeriodKey);
+
+            if (existing > 0 && existing != ticks)
+                GTCEu.LOGGER.error("Tick period already exists", new IllegalArgumentException());
+
+            if (ticks > 1) data.putInt(GTRecipe.tickPeriodKey, ticks);
+        }
+
+        this.perTick = enabled;
+
         return this;
     }
 

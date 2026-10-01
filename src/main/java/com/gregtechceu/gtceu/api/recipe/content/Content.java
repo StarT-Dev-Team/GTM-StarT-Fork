@@ -106,6 +106,11 @@ public class Content {
 
     public IGuiTexture createOverlay(boolean perTick, int recipeTier, int chanceTier,
                                      boolean showNC, @Nullable ChanceBoostFunction function) {
+        return createOverlay(perTick, 1, recipeTier, chanceTier, showNC, function);
+    }
+
+    public IGuiTexture createOverlay(boolean perTick, int tickPeriod, int recipeTier, int chanceTier,
+                                     boolean showNC, @Nullable ChanceBoostFunction function) {
         return new IGuiTexture() {
 
             @Override
@@ -115,7 +120,7 @@ public class Content {
                 drawRangeAmount(graphics, x, y, width, height);
                 drawFluidAmount(graphics, x, y, width, height);
                 if (perTick) {
-                    drawTick(graphics, x, y, width, height);
+                    drawTick(graphics, x, y, width, height, tickPeriod);
                 }
             }
         };
@@ -195,11 +200,18 @@ public class Content {
 
     @OnlyIn(Dist.CLIENT)
     public void drawTick(GuiGraphics graphics, float x, float y, int width, int height) {
+        drawTick(graphics, x, y, width, height, 1);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public void drawTick(GuiGraphics graphics, float x, float y, int width, int height, int tickPeriod) {
         graphics.pose().pushPose();
         RenderSystem.disableDepthTest();
         graphics.pose().translate(0, 0, 400);
         graphics.pose().scale(0.5f, 0.5f, 1);
-        String s = LocalizationUtils.format("gtceu.gui.content.tips.per_tick_short");
+        String s = tickPeriod > 1 ?
+                LocalizationUtils.format("gtceu.gui.content.tips.per_n_ticks_short", tickPeriod) :
+                LocalizationUtils.format("gtceu.gui.content.tips.per_tick_short");
         int color = 0xFFFF00;
         Font fontRenderer = Minecraft.getInstance().font;
         graphics.drawString(fontRenderer, s, (int) ((x + (width / 3f)) * 2 - fontRenderer.width(s) + 23),

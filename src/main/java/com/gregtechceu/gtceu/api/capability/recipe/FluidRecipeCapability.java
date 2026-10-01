@@ -410,8 +410,13 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
                     GTRecipeWidget.setConsumedChance(io == IO.IN, content,
                             recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
                             tooltips, recipeTier, chanceTier, recipeType.getChanceFunction());
+
                     if (isTickSlot(index, io, recipe)) {
-                        tooltips.add(Component.translatable("gtceu.gui.content.per_tick"));
+                        int period = recipe.getTickPeriod();
+
+                        tooltips.add(period > 1 ?
+                                Component.translatable("gtceu.gui.content.per_n_ticks", period) :
+                                Component.translatable("gtceu.gui.content.per_tick"));
                     }
                 });
                 if (io == IO.IN && (content.chance == 0)) {
