@@ -12,6 +12,7 @@ import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.integration.emi.GTOreByProductPrefixHelper;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidEntryList;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidStackList;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidTagList;
@@ -35,14 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GTOreByProduct {
-
-    private static final List<TagPrefix> ORES = new ArrayList<>();
-
-    public static void addOreByProductPrefix(TagPrefix orePrefix) {
-        if (!ORES.contains(orePrefix)) {
-            ORES.add(orePrefix);
-        }
-    }
 
     private static ImmutableList<TagPrefix> IN_PROCESSING_STEPS;
 
@@ -94,13 +87,7 @@ public class GTOreByProduct {
         ObjectIntPair<Material> washedIn = property.getWashedIn();
         List<Material> separatedInto = property.getSeparatedInto();
 
-        ItemTagList oreStacks = new ItemTagList();
-        for (TagPrefix prefix : ORES) {
-            // get all ores with the relevant oredicts instead of just the first unified ore
-            oreStacks.add(ChemicalHelper.getTag(prefix, material), 1, null);
-        }
-        oreStacks.add(ChemicalHelper.getTag(TagPrefix.rawOre, material), 1, null);
-        itemInputs.add(oreStacks);
+        itemInputs.add(GTOreByProductPrefixHelper.getOreByProductPrefix(material));
 
         // set up machines as inputs
         List<ItemStack> simpleWashers = new ArrayList<>();

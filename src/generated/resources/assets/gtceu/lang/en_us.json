@@ -2616,6 +2616,7 @@
   "gtceu.jei.fluid.min_yield": "Minimum Yield: %d",
   "gtceu.jei.fluid.vein_weight": "Vein Weight: %d",
   "gtceu.jei.fluid.weight_hover": "The Weight of the vein. Hover over the fluid to see any possible biome modifications",
+  "gtceu.jei.material_info": "Material Info",
   "gtceu.jei.materials.average_mass": "Average mass: %d",
   "gtceu.jei.materials.average_neutrons": "Average neutrons: %d",
   "gtceu.jei.materials.average_protons": "Average protons: %d",
