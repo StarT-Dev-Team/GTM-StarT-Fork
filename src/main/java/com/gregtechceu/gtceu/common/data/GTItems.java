@@ -1310,7 +1310,7 @@ public class GTItems {
             .onRegister(attach(new CoverPlaceBehavior(GTCovers.ROBOT_ARMS[6])))
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.add(Component.translatable("item.gtceu.robot.arm.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate_stacks", 16));
+                lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate_stacks", 4));
             })))
             .tag(CustomTags.ROBOT_ARMS)
             .register();
@@ -1319,7 +1319,7 @@ public class GTItems {
             .onRegister(attach(new CoverPlaceBehavior(GTCovers.ROBOT_ARMS[7])))
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.add(Component.translatable("item.gtceu.robot.arm.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate_stacks", 4));
+                lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate_stacks", 8));
             })))
             .tag(CustomTags.ROBOT_ARMS)
             .register();
@@ -1328,7 +1328,7 @@ public class GTItems {
             .onRegister(attach(new CoverPlaceBehavior(GTCovers.ROBOT_ARMS[8])))
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.add(Component.translatable("item.gtceu.robot.arm.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate_stacks", 8));
+                lines.add(Component.translatable("gtceu.universal.tooltip.item_transfer_rate_stacks", 16));
             })))
             .tag(CustomTags.ROBOT_ARMS)
             .register();
