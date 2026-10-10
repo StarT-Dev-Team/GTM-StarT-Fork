@@ -21,8 +21,8 @@ import com.gregtechceu.gtceu.common.data.GTMaterialItems;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
+import com.gregtechceu.gtceu.integration.emi.GTOreByProductPrefixHelper;
 import com.gregtechceu.gtceu.integration.kjs.GTRegistryInfo;
-import com.gregtechceu.gtceu.integration.xei.widgets.GTOreByProduct;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.memoization.GTMemoizer;
 
@@ -1107,7 +1107,7 @@ public class TagPrefix {
         ORES.put(this,
                 new OreType(stoneType, material, properties, baseModelLocation, doubleDrops, isSand, shouldDropAsItem));
         if (shouldDropAsItem) {
-            GTOreByProduct.addOreByProductPrefix(this);
+            GTOreByProductPrefixHelper.addOreByProductPrefix(this);
         }
         return this;
     }
