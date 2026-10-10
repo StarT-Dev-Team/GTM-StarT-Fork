@@ -21,8 +21,6 @@ import com.gregtechceu.gtceu.common.data.GTMaterialBlocks;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.PowerSubstationMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
-
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -30,7 +28,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 
+import com.lowdragmc.lowdraglib.utils.BlockInfo;
 import com.tterrag.registrate.util.entry.RegistryEntry;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
@@ -44,6 +44,10 @@ public class Predicates {
 
     public static TraceabilityPredicate controller(TraceabilityPredicate predicate) {
         return predicate.setController();
+    }
+
+    public static TraceabilityPredicate controller(MachineDefinition definition) {
+        return blocks(definition.get()).setController();
     }
 
     public static TraceabilityPredicate states(BlockState... allowedStates) {
@@ -292,5 +296,40 @@ public class Predicates {
                         .map(m -> GTMaterialBlocks.MATERIAL_BLOCKS.get(TagPrefix.frameGt, m))
                         .filter(Objects::nonNull).filter(RegistryEntry::isPresent).map(RegistryEntry::get)
                         .map(BlockInfo::fromBlock).toArray(BlockInfo[]::new)));
+    }
+
+    public static TraceabilityPredicate tagged(TraceabilityPredicate predicate, String key) {
+        var copy = new TraceabilityPredicate(predicate);
+        copy.common = copy.common.stream().map(p -> tagSimplePredicateList(p, key)).toList();
+        copy.limited = copy.limited.stream().map(p -> tagSimplePredicateList(p, key)).toList();
+        return copy;
+    }
+
+    private static SimplePredicate tagSimplePredicateList(SimplePredicate predicate, String key) {
+        return new SimplePredicate(s -> {
+            if (predicate.test(s)) {
+                var positions = s.getMatchContext().getOrCreate(key, LongOpenHashSet::new);
+                positions.add(s.getPos().asLong());
+                return true;
+            }
+            return false;
+        }, predicate.candidates);
+    }
+
+    public static TraceabilityPredicate taggedOne(TraceabilityPredicate predicate, String key) {
+        var copy = new TraceabilityPredicate(predicate);
+        copy.common = copy.common.stream().map(p -> tagSimplePredicate(p, key)).toList();
+        copy.limited = copy.limited.stream().map(p -> tagSimplePredicate(p, key)).toList();
+        return copy;
+    }
+
+    private static SimplePredicate tagSimplePredicate(SimplePredicate predicate, String key) {
+        return new SimplePredicate(s -> {
+            if (predicate.test(s)) {
+                s.getMatchContext().set(key, s.getPos().asLong());
+                return true;
+            }
+            return false;
+        }, predicate.candidates);
     }
 }
