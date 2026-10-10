@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
@@ -55,6 +56,9 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
     @Getter
     @Setter
     private int basePriority;
+
+    @Setter
+    protected BooleanSupplier isIODisabled = () -> false;
 
     public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO,
                                       IntFunction<CustomItemStackHandler> storageFactory, int basePriority) {
@@ -305,10 +309,9 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
     @NotNull
     @Override
     public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-        if (canCapInput()) {
-            return storage.insertItem(slot, stack, simulate);
-        }
-        return stack;
+        if (!canCapInput()) return stack;
+        if (isIODisabled.getAsBoolean()) return stack;
+        return storage.insertItem(slot, stack, simulate);
     }
 
     public ItemStack insertItemInternal(int slot, @NotNull ItemStack stack, boolean simulate) {
@@ -318,10 +321,9 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
     @NotNull
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        if (canCapOutput()) {
-            return storage.extractItem(slot, amount, simulate);
-        }
-        return ItemStack.EMPTY;
+        if (!canCapOutput()) return ItemStack.EMPTY;
+        if (isIODisabled.getAsBoolean()) return ItemStack.EMPTY;
+        return storage.extractItem(slot, amount, simulate);
     }
 
     public ItemStack extractItemInternal(int slot, int amount, boolean simulate) {
