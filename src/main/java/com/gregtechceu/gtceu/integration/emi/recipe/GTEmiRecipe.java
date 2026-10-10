@@ -12,6 +12,7 @@ import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.jei.IngredientIO;
 import com.lowdragmc.lowdraglib.jei.ModularWrapper;
 
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fluids.capability.templates.EmptyFluidHandler;
@@ -50,6 +51,13 @@ public class GTEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
         return recipe.getId();
     }
 
+    private static void addLiveTooltips(List<ClientTooltipComponent> list,
+                                        com.lowdragmc.lowdraglib.gui.widget.Widget slot) {
+        for (Component component : slot.getTooltipTexts()) {
+            list.add(ClientTooltipComponent.create(component.getVisualOrderText()));
+        }
+    }
+
     @Override
     public void addWidgets(WidgetHolder widgets) {
         var widget = this.widget.get();
@@ -83,10 +91,26 @@ public class GTEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
                         tankW.setDrawHoverOverlay(false).setDrawHoverTips(false);
                         long capacity = Math.max(1, ingredients.getAmount());
                         slotWidget = new TankWidget(ingredients, w.getPosition().x, w.getPosition().y,
-                                w.getSize().width, w.getSize().height, capacity);
+                                w.getSize().width, w.getSize().height, capacity) {
+
+                            @Override
+                            protected void addSlotTooltip(List<ClientTooltipComponent> list) {
+                                addLiveTooltips(list, w);
+
+                                super.addSlotTooltip(list);
+                            }
+                        };
                     }
                     if (slotWidget == null) {
-                        slotWidget = new SlotWidget(ingredients, w.getPosition().x, w.getPosition().y);
+                        slotWidget = new SlotWidget(ingredients, w.getPosition().x, w.getPosition().y) {
+
+                            @Override
+                            protected void addSlotTooltip(List<ClientTooltipComponent> list) {
+                                addLiveTooltips(list, w);
+
+                                super.addSlotTooltip(list);
+                            }
+                        };
                     }
 
                     slotWidget
@@ -97,9 +121,6 @@ public class GTEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
                         slotWidget.catalyst(true);
                     } else if (io == IngredientIO.OUTPUT) {
                         slotWidget.recipeContext(this);
-                    }
-                    for (Component component : w.getTooltipTexts()) {
-                        slotWidget.appendTooltip(component);
                     }
                     slots.add(slotWidget);
                 }
