@@ -88,6 +88,15 @@ public abstract class RecipeCapability<T> {
         return copyWithModifier((T) content, modifier);
     }
 
+    public T copyWithTierDiff(T content, int tierDiff) {
+        return content;
+    }
+
+    @SuppressWarnings("unchecked")
+    public final T copyContentWithTierDiff(Object content, int tierDiff) {
+        return copyWithTierDiff((T) content, tierDiff);
+    }
+
     /**
      * used for recipe builder via KubeJs.
      */

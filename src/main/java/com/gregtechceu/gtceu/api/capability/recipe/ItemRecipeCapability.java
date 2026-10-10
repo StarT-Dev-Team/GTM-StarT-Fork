@@ -8,11 +8,13 @@ import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.ResearchData;
+import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.content.SerializerIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntCircuitIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
+import com.gregtechceu.gtceu.api.recipe.ingredient.RangedDisplay;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.AbstractMapIngredient;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.item.*;
@@ -21,6 +23,7 @@ import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.recipe.condition.ResearchCondition;
 import com.gregtechceu.gtceu.common.valueprovider.*;
+import com.gregtechceu.gtceu.common.valueprovider.StatisticalInt;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.core.mixins.IngredientAccessor;
 import com.gregtechceu.gtceu.core.mixins.TagValueAccessor;
@@ -80,6 +83,16 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
                     ModifiedIntProvider.of(provider.getCountProvider(), modifier));
         }
         return SizedIngredient.create(content, modifier.apply(1));
+    }
+
+    @Override
+    public Ingredient copyWithTierDiff(Ingredient content, int tierDiff) {
+        if (tierDiff != 0 && content instanceof IntProviderIngredient provider &&
+                provider.getCountProvider() instanceof StatisticalInt statistical && statistical.hasTierWeightBoost()) {
+            return IntProviderIngredient.of(provider.getInner(), statistical.withTierDiff(tierDiff));
+        }
+
+        return content;
     }
 
     @Override
@@ -478,26 +491,31 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
                 int boostedChance = hideOC ? 0 :
                         recipeType.getChanceFunction().getBoostedChance(content, recipeTier, chanceTier);
                 float chance = (float) boostedChance / content.maxChance;
+                int tooltipTierDiff = hideOC ? 0 : recipeType.getChanceFunction().getTierDiff(recipeTier, chanceTier);
 
                 slot.setXEIChance(chance);
                 slot.setOnAddedTooltips((w, tooltips) -> {
                     GTRecipeWidget.setConsumedChance(io == IO.IN, content,
                             recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
                             tooltips, recipeTier, chanceTier,
-                            hideOC ? (entry, recipeTier1, chanceTier1) -> boostedChance :
-                                    recipeType.getChanceFunction());
+                            hideOC ? ChanceBoostFunction.fixed(boostedChance) : recipeType.getChanceFunction());
+
                     // spotless:off
                     if (this.of(content.content) instanceof IntProviderIngredient ingredient) {
                         IntProvider countProvider = ingredient.getCountProvider();
+
                         tooltips.add(Component.translatable("gtceu.gui.content.count_range",
                                 countProvider.getMinValue(), countProvider.getMaxValue())
                                 .withStyle(ChatFormatting.GOLD));
+                        tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
                     } else if (this.of(content.content) instanceof SizedIngredient sizedIngredient &&
                             sizedIngredient.getInner() instanceof IntProviderIngredient ingredient) {
                         IntProvider countProvider = ingredient.getCountProvider();
+
                         tooltips.add(Component.translatable("gtceu.gui.content.count_range",
                                 countProvider.getMinValue(), countProvider.getMaxValue())
                                 .withStyle(ChatFormatting.GOLD));
+                        tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
                     }
                     // spotless:on
                     if (isTickSlot(index, io, recipe)) {

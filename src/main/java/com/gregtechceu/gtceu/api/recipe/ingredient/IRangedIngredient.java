@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.api.recipe.ingredient;
 
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.common.valueprovider.StatisticalInt;
 
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.IntProvider;
@@ -32,7 +33,23 @@ public interface IRangedIngredient {
      * @return the average roll of this ranged amount
      */
     default double getMidRoll() {
+        if (getCountProvider() instanceof StatisticalInt statistical) {
+            return statistical.mean();
+        }
+
         return ((getCountProvider().getMaxValue() + getCountProvider().getMinValue()) / 2.0);
+    }
+
+    /**
+     * @param tierDiff the number of tiers above the recipe tier, see {@code ChanceBoostFunction#getTierDiff}
+     * @return the average roll of this ranged amount when run at that tier
+     */
+    default double getMidRoll(int tierDiff) {
+        if (getCountProvider() instanceof StatisticalInt statistical) {
+            return statistical.withTierDiff(tierDiff).mean();
+        }
+
+        return getMidRoll();
     }
 
     default boolean isRolled() {

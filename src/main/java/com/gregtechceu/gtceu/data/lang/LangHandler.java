@@ -1386,6 +1386,14 @@ public class LangHandler {
         provider.add("gtceu.gui.content.count_range", "%s-%sx");
         provider.add("gtceu.gui.content.fluid_range", "%s-%smB");
         provider.add("gtceu.gui.content.range", "%s-%s");
+        provider.add("gtceu.gui.content.average", "Average: %s");
+        provider.add("gtceu.gui.content.average_base", "Base Average: %s");
+        provider.add("gtceu.gui.content.average_tier_boost_plus", "Bonus Weight: +%s%%/tier");
+        provider.add("gtceu.gui.content.average_tier_boost_minus", "Bonus Weight: -%s%%/tier");
+        provider.add("gtceu.gui.content.average_boosted", "Average at Tier: %s");
+        provider.add("gtceu.gui.content.odds_most_likely", "Most Likely: %sx (%s%%)");
+        provider.add("gtceu.gui.content.odds_line", "%sx: %s%%");
+        provider.add("gtceu.gui.content.odds_hold_shift", "§7Hold §d[SHIFT]§7 to show Odds Info");
         provider.add("gtceu.gui.content.times_item", "x %s");
 
         provider.add("gtceu.chance_logic.or", "OR");
