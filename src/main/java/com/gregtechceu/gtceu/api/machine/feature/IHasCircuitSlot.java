@@ -9,4 +9,10 @@ public interface IHasCircuitSlot {
     }
 
     NotifiableItemStackHandler getCircuitInventory();
+
+    default boolean isCircuitPastingBlocked() {
+        return false;
+    }
+
+    default void setCircuitPastingBlocked(boolean blocked) {}
 }

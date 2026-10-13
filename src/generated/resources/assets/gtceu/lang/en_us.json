@@ -2433,6 +2433,8 @@
   "gtceu.gui.chunkmode.enabled.0": "Chunk Mode Enabled: Click to Disable.",
   "gtceu.gui.chunkmode.enabled.1": "§7Switching requires an idle machine.",
   "gtceu.gui.circuit.title": "Circuit Settings",
+  "gtceu.gui.circuit_pasting.tooltip.disabled": "Programmed Circuit Pasting: Allowed",
+  "gtceu.gui.circuit_pasting.tooltip.enabled": "Programmed Circuit Pasting: Blocked",
   "gtceu.gui.computer_monitor_cover.edit_blank_placeholders": "Edit blank placeholders",
   "gtceu.gui.computer_monitor_cover.edit_displayed_text": "Edit displayed text",
   "gtceu.gui.computer_monitor_cover.main_textbox_tooltip.0": "Input string to display on line %d here.",

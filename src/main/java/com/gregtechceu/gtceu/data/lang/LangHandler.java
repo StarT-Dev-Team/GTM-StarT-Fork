@@ -1059,6 +1059,8 @@ public class LangHandler {
                 "§fConfigurator Slot§r\n§7Place a §6Programmed Circuit§7 in this slot to\n§7change its configured value.\n§7Hold §6Shift§7 when clicking buttons to change by §65.\n§aA Programmed Circuit in this slot is also valid for recipe inputs.§r");
         provider.add("gtceu.gui.fluid_lock.tooltip.enabled", "Fluid Locking Enabled");
         provider.add("gtceu.gui.fluid_lock.tooltip.disabled", "Fluid Locking Disabled");
+        provider.add("gtceu.gui.circuit_pasting.tooltip.enabled", "Programmed Circuit Pasting: Blocked");
+        provider.add("gtceu.gui.circuit_pasting.tooltip.disabled", "Programmed Circuit Pasting: Allowed");
         provider.add("gtceu.gui.fluid_voiding_partial.tooltip.enabled", "Fluid Voiding Enabled");
         provider.add("gtceu.gui.fluid_voiding_partial.tooltip.disabled", "Fluid Voiding Disabled");
         provider.add("gtceu.gui.item_lock.tooltip.enabled", "Item Locking Enabled");

@@ -86,6 +86,11 @@ public class SimpleMachine extends WorkableMachine implements IAutoOutputBoth, I
     @Getter
     @Persisted
     protected final NotifiableItemStackHandler circuitInventory;
+    @Getter
+    @Setter
+    @Persisted
+    @DescSynced
+    protected boolean circuitPastingBlocked;
 
     @Nullable
     protected TickableSubscription autoOutputSubs, batterySubs;
@@ -269,7 +274,7 @@ public class SimpleMachine extends WorkableMachine implements IAutoOutputBoth, I
         IFancyUIMachine.super.attachConfigurators(configuratorPanel);
 
         if (isCircuitSlotEnabled()) {
-            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
+            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(this));
         }
     }
 

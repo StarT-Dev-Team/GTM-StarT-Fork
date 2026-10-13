@@ -24,6 +24,7 @@ import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.AETextInputButtonWidget;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.slot.AEPatternViewSlotWidget;
 import com.gregtechceu.gtceu.integration.ae2.machine.trait.InternalSlotRecipeHandler;
+import com.gregtechceu.gtceu.integration.ae2.utils.AE2PatternCircuitHandler;
 import com.gregtechceu.gtceu.utils.GTMath;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 
@@ -275,7 +276,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                 new GuiTextureGroup(GuiTextures.BUTTON, GuiTextures.REFUND_OVERLAY), this::refundAll)
                 .setTooltips(List.of(Component.translatable("gui.gtceu.refund_all.desc"))));
         if (isHasCircuitSlot() && isCircuitSlotEnabled()) {
-            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
+            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(this));
         }
         configuratorPanel.attachConfigurators(new FancyInvConfigurator(
                 shareInventory.storage, Component.translatable("gui.gtceu.share_inventory.title"))
@@ -338,6 +339,14 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
         if (!isFormed() || !getMainNode().isActive() || !detailsSlotMap.containsKey(patternDetails) ||
                 !checkInput(inputHolder)) {
             return false;
+        }
+
+        int circuitConfig = AE2PatternCircuitHandler.getCircuitConfig(patternDetails, inputHolder);
+        if (circuitConfig >= 0) {
+            AE2PatternCircuitHandler.stripCircuitFromInputHolder(inputHolder);
+            if (isHasCircuitSlot() && isCircuitSlotEnabled() && !isCircuitPastingBlocked()) {
+                getCircuitInventory().setStackInSlot(0, IntCircuitBehaviour.stack(circuitConfig));
+            }
         }
 
         var slot = detailsSlotMap.get(patternDetails);
