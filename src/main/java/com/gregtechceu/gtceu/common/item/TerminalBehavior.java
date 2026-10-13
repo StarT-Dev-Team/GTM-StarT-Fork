@@ -20,21 +20,21 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public class TerminalBehavior implements IInteractionItem, IAddInformation {
 
-    private static final String FLIPPED_KEY = "flipped";
+    private static TerminalMode getMode(ItemStack stack) {
+        var modes = TerminalMode.values();
 
-    private static boolean isFlippedMode(ItemStack stack) {
-        return stack.hasTag() && stack.getTag().getBoolean(FLIPPED_KEY);
+        return stack.hasTag() ? modes[stack.getTag().getByte("Mode") % modes.length] : TerminalMode.NORMAL;
     }
 
     private static Component modeLine(ItemStack stack) {
-        return Component.translatable("metaitem.terminal.mode", Component.translatable(
-                isFlippedMode(stack) ? "metaitem.terminal.mode.flipped" : "metaitem.terminal.mode.normal"));
+        return Component.translatable("metaitem.terminal.mode", getMode(stack).getName());
     }
 
     @Override
@@ -57,7 +57,7 @@ public class TerminalBehavior implements IInteractionItem, IAddInformation {
             if (level.isClientSide) {
                 MultiblockInWorldPreviewRenderer.showPreview(blockPos, controller.self(),
                         ConfigHolder.INSTANCE.client.inWorldPreviewDuration * 20,
-                        isFlippedMode(stack) && controller.self().allowFlip());
+                        getMode(stack).isFlipped() && controller.self().allowFlip());
             }
 
             return InteractionResult.sidedSuccess(level.isClientSide);
@@ -71,18 +71,23 @@ public class TerminalBehavior implements IInteractionItem, IAddInformation {
         if (context.getPlayer() != null && context.getPlayer().isShiftKeyDown()) {
             Level level = context.getLevel();
             BlockPos blockPos = context.getClickedPos();
+
             if (context.getPlayer() != null &&
                     MetaMachine.getMachine(level, blockPos) instanceof IMultiController controller) {
                 if (!controller.isFormed()) {
                     if (!level.isClientSide) {
-                        controller.self().setFlipped(
-                                isFlippedMode(context.getItemInHand()) && controller.self().allowFlip());
-                        controller.getPattern().autoBuild(context.getPlayer(), controller.getMultiblockState());
+                        var mode = getMode(context.getItemInHand());
+
+                        controller.self().setFlipped(mode.isFlipped() && controller.self().allowFlip());
+                        controller.getPattern().autoBuild(context.getPlayer(), controller.getMultiblockState(),
+                                mode.isNoHatches());
                     }
+
                     return InteractionResult.sidedSuccess(level.isClientSide);
                 }
             }
         }
+
         return InteractionResult.PASS;
     }
 
@@ -92,9 +97,33 @@ public class TerminalBehavior implements IInteractionItem, IAddInformation {
 
         if (!(level instanceof ServerLevel) || !player.isShiftKeyDown()) return InteractionResultHolder.pass(heldItem);
 
-        heldItem.getOrCreateTag().putBoolean(FLIPPED_KEY, !isFlippedMode(heldItem));
+        heldItem.getOrCreateTag().putByte("Mode",
+                (byte) ((getMode(heldItem).ordinal() + 1) % TerminalMode.values().length));
         player.displayClientMessage(modeLine(heldItem), true);
 
         return InteractionResultHolder.success(heldItem);
+    }
+
+    @Getter
+    public enum TerminalMode {
+
+        NORMAL(Component.translatable("metaitem.terminal.mode.normal")),
+        FLIPPED(Component.translatable("metaitem.terminal.mode.flipped")),
+        NO_HATCHES(Component.translatable("metaitem.terminal.mode.no_hatches")),
+        FLIPPED_NO_HATCHES(Component.translatable("metaitem.terminal.mode.flipped_no_hatches"));
+
+        private final Component name;
+
+        TerminalMode(Component name) {
+            this.name = name;
+        }
+
+        public boolean isFlipped() {
+            return this == FLIPPED || this == FLIPPED_NO_HATCHES;
+        }
+
+        public boolean isNoHatches() {
+            return this == NO_HATCHES || this == FLIPPED_NO_HATCHES;
+        }
     }
 }

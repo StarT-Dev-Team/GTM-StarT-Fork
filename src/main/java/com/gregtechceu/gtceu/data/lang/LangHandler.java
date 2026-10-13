@@ -861,7 +861,9 @@ public class LangHandler {
         provider.add("metaitem.terminal.tooltip.hardware", "§aHardware: %d");
         provider.add("metaitem.terminal.mode", "§aBuild Mode:§r %s");
         provider.add("metaitem.terminal.mode.normal", "§6Normal§r");
-        provider.add("metaitem.terminal.mode.flipped", "§dFlipped§r");
+        provider.add("metaitem.terminal.mode.flipped", "§dMirrored§r");
+        provider.add("metaitem.terminal.mode.no_hatches", "§bNo Hatches§r");
+        provider.add("metaitem.terminal.mode.flipped_no_hatches", "§dMirrored§r + §bNo Hatches§r");
         provider.add("metaitem.plugin.tooltips.1",
                 "Plugins can be added to the screen for more functionality.");
         provider.add("metaitem.plugin.proxy.tooltips.1", "(Please adjust to proxy mode in the screen)");

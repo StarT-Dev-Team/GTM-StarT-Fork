@@ -4,6 +4,7 @@ import com.gregtechceu.gtceu.api.block.ActiveBlock;
 import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.pattern.error.PatternError;
@@ -25,6 +26,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -220,7 +222,14 @@ public class BlockPattern {
     }
 
     public void autoBuild(Player player, MultiblockState worldState) {
+        autoBuild(player, worldState, false);
+    }
+
+    public void autoBuild(Player player, MultiblockState worldState, boolean skipHatches) {
         Level world = player.level();
+        Map<SimplePredicate, Boolean> hatchCache = new HashMap<>();
+        java.util.function.Predicate<SimplePredicate> isHatch = p -> skipHatches &&
+                hatchCache.computeIfAbsent(p, BlockPattern::isHatchPredicate);
         int minZ = -centerOffset[4];
         worldState.clean();
         IMultiController controller = worldState.getController();
@@ -251,6 +260,7 @@ public class BlockPattern {
                             boolean find = false;
                             BlockInfo[] infos = new BlockInfo[0];
                             for (SimplePredicate limit : predicate.limited) {
+                                if (isHatch.test(limit)) continue;
                                 if (limit.minLayerCount > 0) {
                                     int curr = cacheLayer.getInt(limit);
                                     if (curr < limit.minLayerCount &&
@@ -268,6 +278,7 @@ public class BlockPattern {
                             }
                             if (!find) {
                                 for (SimplePredicate limit : predicate.limited) {
+                                    if (isHatch.test(limit)) continue;
                                     if (limit.minCount > 0) {
                                         int curr = cacheGlobal.getInt(limit);
                                         if (curr < limit.minCount && (limit.maxCount == -1 || curr < limit.maxCount)) {
@@ -285,6 +296,7 @@ public class BlockPattern {
                             }
                             if (!find) { // no limited
                                 for (SimplePredicate limit : predicate.limited) {
+                                    if (isHatch.test(limit)) continue;
                                     if (limit.maxLayerCount != -1 &&
                                             cacheLayer.getOrDefault(limit, Integer.MAX_VALUE) == limit.maxLayerCount) {
                                         continue;
@@ -299,6 +311,7 @@ public class BlockPattern {
                                             limit.candidates == null ? null : limit.candidates.get());
                                 }
                                 for (SimplePredicate common : predicate.common) {
+                                    if (isHatch.test(common)) continue;
                                     infos = ArrayUtils.addAll(infos,
                                             common.candidates == null ? null : common.candidates.get());
                                 }
@@ -307,7 +320,10 @@ public class BlockPattern {
                             List<ItemStack> candidates = new ArrayList<>();
                             if (infos != null) {
                                 for (BlockInfo info : infos) {
-                                    if (info.getBlockState().getBlock() != Blocks.AIR) {
+                                    Block candidateBlock = info.getBlockState().getBlock();
+
+                                    if (candidateBlock != Blocks.AIR &&
+                                            !(skipHatches && isHatchBlock(candidateBlock))) {
                                         candidates.add(info.getItemStackForm());
                                     }
                                 }
@@ -376,6 +392,20 @@ public class BlockPattern {
                 }
             }
         });
+    }
+
+    private static boolean isHatchBlock(Block block) {
+        return block instanceof MetaMachineBlock machineBlock &&
+                !(machineBlock.getDefinition() instanceof MultiblockMachineDefinition);
+    }
+
+    private static boolean isHatchPredicate(SimplePredicate predicate) {
+        if (predicate.candidates == null) return false;
+
+        BlockInfo[] infos = predicate.candidates.get();
+
+        return infos.length > 0 &&
+                Arrays.stream(infos).allMatch(info -> isHatchBlock(info.getBlockState().getBlock()));
     }
 
     public BlockInfo[][][] getPreview(int[] repetition) {
