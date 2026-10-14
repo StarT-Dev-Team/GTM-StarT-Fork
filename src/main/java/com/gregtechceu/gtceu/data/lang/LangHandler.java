@@ -49,7 +49,7 @@ public class LangHandler {
         provider.add("recipe.capability.item.name", "Item");
         multiLang(provider, "gtceu.oc.tooltip", "Min: %s", "Left click to increase the OC",
                 "Right click to decrease the OC", "Middle click to reset the OC",
-                "Hold Shift to change by Perfect OC");
+                "Hold Shift to change by Perfect OC", "Hold Alt to use Perfect OC at the current tier");
 
         provider.add("recipe.condition.thunder.tooltip", "Thunder Level: %d");
         provider.add("recipe.condition.rain.tooltip", "Rain Level: %d");
@@ -979,7 +979,18 @@ public class LangHandler {
         provider.add("gtceu.recipe.not_consumed", "Does not get consumed in the process");
         provider.add("gtceu.recipe.chance", "Chance: %s +%s/tier");
         provider.add("gtceu.recipe.temperature", "Temp: %sK");
+        provider.add("gtceu.recipe.temperature.value", "Temp: %s");
         provider.add("gtceu.recipe.coil.tier", "Coil: %s");
+        multiLang(provider, "gtceu.recipe.coil.tooltip", "Min: %1$s", "Coil Temp: %2$sK",
+                "Left click to select the next coil", "Right click to select the previous coil",
+                "Middle click to reset the coil");
+        provider.add("gtceu.recipe.oc.duration.base", "Base Duration: %ss");
+        provider.add("gtceu.recipe.oc.duration.normal", "Overclocks: %1$s (time ÷%2$s each)");
+        provider.add("gtceu.recipe.oc.duration.perfect", "Perfect Overclocks: %1$s (time ÷%2$s each)");
+        provider.add("gtceu.recipe.oc.usage.base", "Base Usage: %s EU/t");
+        provider.add("gtceu.recipe.oc.usage.overclocks", "Overclocks: %1$s (x%2$s EU/t each)");
+        provider.add("gtceu.recipe.oc.usage.discount", "Coil Discount: %s");
+        multiLang(provider, "gtceu.recipe.temp.tooltip", "Coil Temp: %1$sK", "Voltage Bonus (%2$s): %3$s");
         provider.add("gtceu.recipe.explosive", "Explosive: %s");
         provider.add("gtceu.recipe.eu_to_start", "EU To Start: %sEU%s");
         provider.add("gtceu.recipe.dimensions", "Dimensions: %s");

@@ -3,12 +3,10 @@ package com.gregtechceu.gtceu.common.data;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
 import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.recipe.*;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
@@ -23,15 +21,15 @@ import com.gregtechceu.gtceu.integration.kjs.GTRegistryInfo;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidEntryList;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidHolderSetList;
 import com.gregtechceu.gtceu.integration.xei.handlers.fluid.CycleFluidEntryHandler;
-import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemStackHandler;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
 import com.gregtechceu.gtceu.utils.ResearchManager;
 
 import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
 
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -522,29 +520,12 @@ public class GTRecipeTypes {
 
     public final static GTRecipeType BLAST_RECIPES = register("electric_blast_furnace", MULTIBLOCK)
             .setMaxIOSize(3, 3, 1, 1).setEUIO(IO.IN)
-            .addDataInfo(data -> {
-                int temp = data.getInt("ebf_temp");
-                return LocalizationUtils.format("gtceu.recipe.temperature", temp);
-            })
-            .addDataInfo(data -> {
-                int temp = data.getInt("ebf_temp");
-                ICoilType requiredCoil = ICoilType.getMinRequiredType(temp);
-
-                if (requiredCoil != null && !requiredCoil.getMaterial().isNull()) {
-                    return LocalizationUtils.format("gtceu.recipe.coil.tier",
-                            I18n.get(requiredCoil.getMaterial().getUnlocalizedName()));
-                }
-                return "";
-            })
-            .setUiBuilder((recipe, widgetGroup) -> {
-                int temp = recipe.data.getInt("ebf_temp");
-                List<List<ItemStack>> items = new ArrayList<>();
-                items.add(GTCEuAPI.HEATING_COILS.entrySet().stream()
-                        .filter(coil -> coil.getKey().getCoilTemperature() >= temp)
-                        .map(coil -> new ItemStack(coil.getValue().get())).toList());
-                widgetGroup.addWidget(new SlotWidget(new CycleItemStackHandler(items), 0,
-                        widgetGroup.getSize().width - 25, widgetGroup.getSize().height - 32, false, false));
-            })
+            .addDataInfoFull(config -> new GTRecipeType.CustomDataInfoResult(
+                    Component.literal(LocalizationUtils.format("gtceu.recipe.temperature",
+                            FormattingUtil.formatNumbers(config.recipe().data.getInt("ebf_temp")))),
+                    (label, widget) -> widget.setTemperatureLabel(label)))
+            .addDataInfoFull(config -> new GTRecipeType.CustomDataInfoResult(Component.empty(),
+                    (label, widget) -> widget.setCoilLabel(label)))
             .setSound(GTSoundEntries.FURNACE);
 
     public final static GTRecipeType DISTILLATION_RECIPES = register("distillation_tower", MULTIBLOCK)
