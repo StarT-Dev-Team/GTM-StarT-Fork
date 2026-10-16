@@ -89,7 +89,7 @@ public class GTRecipeJEICategory extends ModularUIRecipeCategory<GTRecipe> {
     public static void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         for (MachineDefinition machine : GTRegistries.MACHINES) {
             for (GTRecipeType type : machine.getRecipeTypes()) {
-                for (GTRecipeCategory category : type.getCategories()) {
+                for (GTRecipeCategory category : type.getCategoriesWithMain()) {
                     if (!category.isXEIVisible() && !GTCEu.isDev()) continue;
                     registration.addRecipeCatalyst(machine.asStack(), machineType(category));
                 }

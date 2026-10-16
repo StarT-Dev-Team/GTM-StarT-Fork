@@ -360,6 +360,16 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
         return Collections.unmodifiableSet(categoryMap.keySet());
     }
 
+    /**
+     * Like {@link #getCategories()} but always includes the main category. Proxy-only types (furnace, blast furnace,
+     * smoker) have no GT recipes in the map on a remote client, so they would otherwise get no workstations.
+     */
+    public Set<GTRecipeCategory> getCategoriesWithMain() {
+        Set<GTRecipeCategory> categories = new ObjectLinkedOpenHashSet<>(categoryMap.keySet());
+        categories.add(category);
+        return categories;
+    }
+
     public Set<GTRecipe> getRecipesInCategory(GTRecipeCategory category) {
         return Collections.unmodifiableSet(categoryMap.getOrDefault(category, Set.of()));
     }
