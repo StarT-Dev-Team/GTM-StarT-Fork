@@ -11,6 +11,7 @@ import com.gregtechceu.gtceu.api.recipe.ui.LayeredRecipeUIHelper;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.sound.SoundEntry;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTCoilRecipeWidget;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
@@ -211,6 +212,12 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     public GTRecipeType addDataInfoFull(Function<CustomDataInfoConfiguration, CustomDataInfoResult> dataInfo) {
         this.dataInfos.add(dataInfo);
         return this;
+    }
+
+    public GTRecipeType addCoilDataInfo() {
+        return addDataInfoFull(config -> new CustomDataInfoResult(Component.empty(), (label, widget) -> {
+            if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeCoilText(label);
+        }));
     }
 
     public GTRecipeType addDataInfo(Function<CompoundTag, String> dataInfo) {

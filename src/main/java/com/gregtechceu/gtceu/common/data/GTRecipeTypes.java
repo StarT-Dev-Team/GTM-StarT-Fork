@@ -16,12 +16,16 @@ import com.gregtechceu.gtceu.api.sound.ExistingSoundEntry;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.FusionReactorMachine;
 import com.gregtechceu.gtceu.common.machine.trait.customlogic.*;
 import com.gregtechceu.gtceu.common.recipe.condition.AdjacentFluidCondition;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.integration.kjs.GTRegistryInfo;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidEntryList;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidHolderSetList;
 import com.gregtechceu.gtceu.integration.xei.handlers.fluid.CycleFluidEntryHandler;
-import com.gregtechceu.gtceu.integration.xei.widgets.GTCoilRecipeWidget;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTBlastRecipeWidget;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTChemicalRecipeWidget;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTCrackingRecipeWidget;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTPyrolyseRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
 import com.gregtechceu.gtceu.utils.ResearchManager;
@@ -525,13 +529,12 @@ public class GTRecipeTypes {
                     Component.literal(LocalizationUtils.format("gtceu.recipe.temperature",
                             FormattingUtil.formatNumbers(config.recipe().data.getInt("ebf_temp")))),
                     (label, widget) -> {
-                        if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeTemperatureText(label);
+                        if (widget instanceof GTBlastRecipeWidget blastWidget) {
+                            blastWidget.setRecipeTemperatureText(label);
+                        }
                     }))
-            .addDataInfoFull(config -> new GTRecipeType.CustomDataInfoResult(Component.empty(),
-                    (label, widget) -> {
-                        if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeCoilText(label);
-                    }))
-            .setWidgetFactory(GTCoilRecipeWidget::new)
+            .addCoilDataInfo()
+            .setWidgetFactory(GTBlastRecipeWidget::new)
             .setSound(GTSoundEntries.FURNACE);
 
     public final static GTRecipeType DISTILLATION_RECIPES = register("distillation_tower", MULTIBLOCK)
@@ -614,6 +617,8 @@ public class GTRecipeTypes {
 
     public final static GTRecipeType PYROLYSE_RECIPES = register("pyrolyse_oven", MULTIBLOCK).setMaxIOSize(2, 1, 1, 1)
             .setEUIO(IO.IN)
+            .addCoilDataInfo()
+            .setWidgetFactory(GTPyrolyseRecipeWidget::new)
             .setSound(GTSoundEntries.FIRE);
 
     public final static GTRecipeType CRACKING_RECIPES = register("cracker", MULTIBLOCK).setMaxIOSize(1, 0, 2, 2)
@@ -622,6 +627,8 @@ public class GTRecipeTypes {
             .setSlotOverlay(true, true, GuiTextures.CRACKING_OVERLAY_2)
             .setSlotOverlay(false, false, GuiTextures.CIRCUIT_OVERLAY)
             .setProgressBar(GuiTextures.PROGRESS_BAR_CRACKING, LEFT_TO_RIGHT)
+            .addCoilDataInfo()
+            .setWidgetFactory(GTCrackingRecipeWidget::new)
             .setSound(GTSoundEntries.FIRE);
 
     public final static GTRecipeType IMPLOSION_RECIPES = register("implosion_compressor", MULTIBLOCK)
@@ -656,6 +663,12 @@ public class GTRecipeTypes {
             .setSound(GTValues.FOOLS.getAsBoolean() ? GTSoundEntries.SCIENCE : GTSoundEntries.CHEMICAL)
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, LEFT_TO_RIGHT)
             .setSmallRecipeMap(CHEMICAL_RECIPES);
+
+    static {
+        if (ConfigHolder.INSTANCE.machines.lcrCoilBenefits) {
+            LARGE_CHEMICAL_RECIPES.addCoilDataInfo().setWidgetFactory(GTChemicalRecipeWidget::new);
+        }
+    }
 
     public static final GTRecipeType FUSION_RECIPES = register("fusion_reactor", MULTIBLOCK).setMaxIOSize(0, 0, 2, 1)
             .setEUIO(IO.IN)
