@@ -554,7 +554,7 @@ public class GTRecipeWidget extends WidgetGroup {
                                             null, minTier, tier);
                                     widget.setOverlay(content.createOverlay(index >= nonTickCount,
                                             recipe.getTickPeriod(), minTier, tier,
-                                            !hideOC, hideOC ? (entry, recipeTier, chanceTier) -> boostedChance :
+                                            !hideOC, hideOC ? ChanceBoostFunction.fixed(boostedChance) :
                                                     recipe.getType().getChanceFunction()));
                                 }
                             });
