@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.common.data;
 
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.data.medicalcondition.MedicalCondition;
@@ -220,6 +221,13 @@ public class GTRecipeModifiers {
     }
 
     /**
+     * @return the temperature a blast furnace reaches with the given coil at the given voltage tier
+     */
+    public static int ebfMachineTemp(ICoilType coil, int tier) {
+        return coil.getCoilTemperature() + (100 * Math.max(0, tier - GTValues.MV));
+    }
+
+    /**
      * Recipe Modifier for <b>Blast Furnace Multiblocks</b> - can be used as a valid {@link RecipeModifier}
      * <p>
      * Recipe is rejected if the required temperature is higher than the blast furnace's working temperature.
@@ -239,8 +247,7 @@ public class GTRecipeModifiers {
             return RecipeModifier.nullWrongType(CoilWorkableElectricMultiblockMachine.class, machine);
         }
 
-        int blastFurnaceTemperature = coilMachine.getCoilType().getCoilTemperature() +
-                (100 * Math.max(0, coilMachine.getTier() - GTValues.MV));
+        int blastFurnaceTemperature = ebfMachineTemp(coilMachine.getCoilType(), coilMachine.getTier());
         int recipeTemp = recipe.data.getInt("ebf_temp");
         if (!recipe.data.contains("ebf_temp") || recipeTemp > blastFurnaceTemperature) {
             return ModifierFunction.cancel(Component.translatable("gtceu.recipe_modifier.coil_temperature_too_low"));

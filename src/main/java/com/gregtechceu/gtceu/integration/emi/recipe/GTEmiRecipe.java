@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.integration.emi.recipe;
 
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
-import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
 import com.lowdragmc.lowdraglib.emi.ModularEmiRecipe;
 import com.lowdragmc.lowdraglib.emi.ModularForegroundRenderWidget;
@@ -35,7 +34,7 @@ public class GTEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
     final GTRecipe recipe;
 
     public GTEmiRecipe(GTRecipe recipe, EmiRecipeCategory category) {
-        super(() -> new GTRecipeWidget(recipe));
+        super(() -> recipe.recipeType.getRecipeUI().createWidget(recipe));
         this.category = category;
         this.recipe = recipe;
     }
