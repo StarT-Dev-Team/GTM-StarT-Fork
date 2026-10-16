@@ -21,6 +21,7 @@ import com.gregtechceu.gtceu.integration.kjs.GTRegistryInfo;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidEntryList;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidHolderSetList;
 import com.gregtechceu.gtceu.integration.xei.handlers.fluid.CycleFluidEntryHandler;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTCoilRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
 import com.gregtechceu.gtceu.utils.ResearchManager;
@@ -523,9 +524,14 @@ public class GTRecipeTypes {
             .addDataInfoFull(config -> new GTRecipeType.CustomDataInfoResult(
                     Component.literal(LocalizationUtils.format("gtceu.recipe.temperature",
                             FormattingUtil.formatNumbers(config.recipe().data.getInt("ebf_temp")))),
-                    (label, widget) -> widget.setTemperatureLabel(label)))
+                    (label, widget) -> {
+                        if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeTemperatureText(label);
+                    }))
             .addDataInfoFull(config -> new GTRecipeType.CustomDataInfoResult(Component.empty(),
-                    (label, widget) -> widget.setCoilLabel(label)))
+                    (label, widget) -> {
+                        if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeCoilText(label);
+                    }))
+            .setWidgetFactory(GTCoilRecipeWidget::new)
             .setSound(GTSoundEntries.FURNACE);
 
     public final static GTRecipeType DISTILLATION_RECIPES = register("distillation_tower", MULTIBLOCK)

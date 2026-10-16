@@ -192,6 +192,12 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
         return this;
     }
 
+    public GTRecipeType setWidgetFactory(Function<GTRecipe, GTRecipeWidget> widgetFactory) {
+        this.recipeUI.setWidgetFactory(widgetFactory);
+
+        return this;
+    }
+
     public GTRecipeType setMaxTooltips(int maxTooltips) {
         this.recipeUI.setMaxTooltips(maxTooltips);
         return this;

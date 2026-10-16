@@ -3,6 +3,7 @@ package com.gregtechceu.gtceu.common.data;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTCoilRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
@@ -31,9 +32,14 @@ public class GCYMRecipeTypes {
             .addDataInfoFull(config -> new GTRecipeType.CustomDataInfoResult(
                     Component.literal(LocalizationUtils.format("gtceu.recipe.temperature",
                             FormattingUtil.formatNumbers(config.recipe().data.getInt("ebf_temp")))),
-                    (label, widget) -> widget.setTemperatureLabel(label)))
+                    (label, widget) -> {
+                        if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeTemperatureText(label);
+                    }))
             .addDataInfoFull(config -> new GTRecipeType.CustomDataInfoResult(Component.empty(),
-                    (label, widget) -> widget.setCoilLabel(label)))
+                    (label, widget) -> {
+                        if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeCoilText(label);
+                    }))
+            .setWidgetFactory(GTCoilRecipeWidget::new)
             .setSound(GTSoundEntries.ARC);
 
     public static void init() {}

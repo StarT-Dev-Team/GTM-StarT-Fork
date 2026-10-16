@@ -19,6 +19,7 @@ import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.integration.emi.recipe.GTRecipeEMICategory;
 import com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeJEICategory;
 import com.gregtechceu.gtceu.integration.rei.recipe.GTRecipeREICategory;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
 import com.lowdragmc.lowdraglib.gui.editor.configurator.IConfigurableWidget;
 import com.lowdragmc.lowdraglib.gui.editor.data.Resources;
@@ -59,6 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.DoubleSupplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("UnusedReturnValue")
@@ -82,6 +84,9 @@ public class GTRecipeTypeUI {
     @Setter
     @Nullable
     protected BiConsumer<GTRecipe, WidgetGroup> uiBuilder;
+    @Setter
+    @Nullable
+    protected Function<GTRecipe, GTRecipeWidget> widgetFactory;
     @Setter
     @Getter
     protected int maxTooltips = 3;
@@ -406,6 +411,10 @@ public class GTRecipeTypeUI {
     public int getPropertyHeightShift() {
         int maxPropertyCount = maxTooltips + recipeType.getDataInfos().size() + recipeType.getMinRecipeConditions();
         return maxPropertyCount * 10; // GTRecipeWidget#LINE_HEIGHT
+    }
+
+    public GTRecipeWidget createWidget(GTRecipe recipe) {
+        return widgetFactory == null ? new GTRecipeWidget(recipe) : widgetFactory.apply(recipe);
     }
 
     public void appendJEIUI(GTRecipe recipe, WidgetGroup widgetGroup) {

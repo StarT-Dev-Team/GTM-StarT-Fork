@@ -990,7 +990,7 @@ public class LangHandler {
         provider.add("gtceu.recipe.oc.usage.base", "Base Usage: %s EU/t");
         provider.add("gtceu.recipe.oc.usage.overclocks", "Overclocks: %1$s (x%2$s EU/t each)");
         provider.add("gtceu.recipe.oc.usage.discount", "Coil Discount: %s");
-        multiLang(provider, "gtceu.recipe.temp.tooltip", "Coil Temp: %1$sK", "Voltage Bonus (%2$s): %3$s");
+        multiLang(provider, "gtceu.recipe.temperature.tooltip", "Coil Temp: %1$sK", "Voltage Bonus (%2$s): %3$s");
         provider.add("gtceu.recipe.explosive", "Explosive: %s");
         provider.add("gtceu.recipe.eu_to_start", "EU To Start: %sEU%s");
         provider.add("gtceu.recipe.dimensions", "Dimensions: %s");
