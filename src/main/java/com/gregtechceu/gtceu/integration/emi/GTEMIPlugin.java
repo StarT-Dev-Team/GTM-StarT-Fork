@@ -13,6 +13,7 @@ import com.gregtechceu.gtceu.common.fluid.potion.PotionFluidHelper;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.emi.circuit.GTProgrammedCircuitCategory;
+import com.gregtechceu.gtceu.integration.emi.materialinfo.GTMaterialInfoEmiCategory;
 import com.gregtechceu.gtceu.integration.emi.multipage.MultiblockInfoEmiCategory;
 import com.gregtechceu.gtceu.integration.emi.oreprocessing.GTOreProcessingEmiCategory;
 import com.gregtechceu.gtceu.integration.emi.orevein.GTBedrockFluidEmiCategory;
@@ -47,6 +48,7 @@ public class GTEMIPlugin implements EmiPlugin {
         registry.addCategory(MultiblockInfoEmiCategory.CATEGORY);
         if (!ConfigHolder.INSTANCE.compat.hideOreProcessingDiagrams)
             registry.addCategory(GTOreProcessingEmiCategory.CATEGORY);
+        registry.addCategory(GTMaterialInfoEmiCategory.CATEGORY);
         registry.addCategory(GTOreVeinEmiCategory.CATEGORY);
         registry.addCategory(GTBedrockFluidEmiCategory.CATEGORY);
         if (ConfigHolder.INSTANCE.machines.doBedrockOres)
@@ -70,6 +72,7 @@ public class GTEMIPlugin implements EmiPlugin {
         GTRecipeEMICategory.registerDisplays(registry);
         if (!ConfigHolder.INSTANCE.compat.hideOreProcessingDiagrams)
             GTOreProcessingEmiCategory.registerDisplays(registry);
+        GTMaterialInfoEmiCategory.registerDisplays(registry);
         GTOreVeinEmiCategory.registerDisplays(registry);
         GTBedrockFluidEmiCategory.registerDisplays(registry);
         if (ConfigHolder.INSTANCE.machines.doBedrockOres)

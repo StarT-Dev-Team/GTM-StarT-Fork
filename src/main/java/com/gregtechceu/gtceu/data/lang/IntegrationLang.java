@@ -29,6 +29,8 @@ public class IntegrationLang {
         provider.add("gtceu.jei.ore_vein_diagram.spawn_range", "Spawn Range:");
         provider.add("gtceu.jei.ore_vein_diagram.weight", "Weight: %s");
         provider.add("gtceu.jei.ore_vein_diagram.dimensions", "Dimensions:");
+        provider.add("gtceu.jei.material_info", "Material Info");
+
         GTRegistries.ORE_VEINS.unfreeze();
         GTOres.init();
         for (GTOreDefinition oreDefinition : GTRegistries.ORE_VEINS) {
