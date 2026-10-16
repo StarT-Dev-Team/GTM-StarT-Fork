@@ -42,6 +42,8 @@ public class GTCapability {
             .get(new CapabilityToken<>() {});
     public static final Capability<ICentralMonitor> CAPABILITY_CENTRAL_MONITOR = CapabilityManager
             .get(new CapabilityToken<>() {});
+    public static final Capability<ILockableHatch> CAPABILITY_LOCKABLE_HATCH = CapabilityManager
+            .get(new CapabilityToken<>() {});
 
     public static final Capability<IMedicalConditionTracker> CAPABILITY_MEDICAL_CONDITION_TRACKER = CapabilityManager
             .get(new CapabilityToken<>() {});
@@ -65,5 +67,6 @@ public class GTCapability {
         event.register(IHazardParticleContainer.class);
         event.register(IMonitorComponent.class);
         event.register(ICentralMonitor.class);
+        event.register(ILockableHatch.class);
     }
 }
