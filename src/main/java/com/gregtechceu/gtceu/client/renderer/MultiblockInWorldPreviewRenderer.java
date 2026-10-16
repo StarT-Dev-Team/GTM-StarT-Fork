@@ -83,8 +83,10 @@ public class MultiblockInWorldPreviewRenderer {
     @Nullable
     private static BlockPos LAST_POS = null;
     private static int LAST_LAYER = -1;
+    private static boolean LAST_FLIPPED = false;
 
     public static void cleanPreview() {
+        LAST_FLIPPED = false;
         CACHE_STATE.set(CacheState.UNUSED);
         LEVEL = null;
         BLOCK_ENTITIES = null;
@@ -105,9 +107,10 @@ public class MultiblockInWorldPreviewRenderer {
      * @param pos        the pos of the controller
      * @param controller the controller
      * @param duration   the duration of the preview. in ticks.
+     * @param flipped    show the mirrored (flipped) layout instead of the normal one.
      */
     public static void showPreview(BlockPos pos, MultiblockControllerMachine controller,
-                                   int duration) {
+                                   int duration, boolean flipped) {
         if (!controller.getDefinition().isRenderWorldPreview()) return;
         Direction front = controller.getFrontFacing();
         Direction up = controller.getUpwardsFacing();
@@ -141,7 +144,7 @@ public class MultiblockInWorldPreviewRenderer {
             return;
         }
 
-        if (LAST_POS != null && LAST_POS.equals(pos)) {
+        if (LAST_POS != null && LAST_POS.equals(pos) && LAST_FLIPPED == flipped) {
             LAST_LAYER++;
             if (LAST_LAYER >= maxY) {
                 LAST_LAYER = -1;
@@ -150,6 +153,9 @@ public class MultiblockInWorldPreviewRenderer {
             LAST_LAYER = -1;
         }
         LAST_POS = pos;
+        LAST_FLIPPED = flipped;
+
+        Direction.Axis mirrorAxis = flipped ? getMirrorAxis(front, up) : null;
 
         for (int x = 0; x < blocks.length; x++) {
             BlockInfo[][] aisle = blocks[x];
@@ -176,6 +182,10 @@ public class MultiblockInWorldPreviewRenderer {
 
                     offset = rotateByFrontAxis(offset, front, r);
 
+                    if (mirrorAxis != null) {
+                        offset = mirror(offset, mirrorAxis);
+                    }
+
                     if (blockState.getBlock() instanceof MetaMachineBlock machineBlock) {
                         var rotationState = machineBlock.getRotationState();
                         if (rotationState != RotationState.NONE) {
@@ -187,6 +197,9 @@ public class MultiblockInWorldPreviewRenderer {
                                     case WEST -> face.getCounterClockWise();
                                     case EAST -> face.getClockWise();
                                 };
+                            }
+                            if (mirrorAxis != null && face.getAxis() == mirrorAxis) {
+                                face = face.getOpposite();
                             }
                             if (rotationState.test(face)) {
                                 blockState = blockState.setValue(rotationState.property, face);
@@ -213,6 +226,23 @@ public class MultiblockInWorldPreviewRenderer {
         }
 
         prepareBuffers(LEVEL, blockMap.keySet(), duration);
+    }
+
+    private static Direction.Axis getMirrorAxis(Direction front, Direction up) {
+        boolean upIsNS = up == Direction.NORTH || up == Direction.SOUTH;
+
+        if (front.getAxis() == Direction.Axis.Y) return upIsNS ? Direction.Axis.X : Direction.Axis.Z;
+        if (!upIsNS) return Direction.Axis.Y;
+
+        return front.getAxis() == Direction.Axis.Z ? Direction.Axis.X : Direction.Axis.Z;
+    }
+
+    private static BlockPos mirror(BlockPos pos, Direction.Axis axis) {
+        return switch (axis) {
+            case X -> new BlockPos(-pos.getX(), pos.getY(), pos.getZ());
+            case Y -> new BlockPos(pos.getX(), -pos.getY(), pos.getZ());
+            case Z -> new BlockPos(pos.getX(), pos.getY(), -pos.getZ());
+        };
     }
 
     private static BlockPos rotateByFrontAxis(BlockPos pos, Direction front, Rotation rotation) {
