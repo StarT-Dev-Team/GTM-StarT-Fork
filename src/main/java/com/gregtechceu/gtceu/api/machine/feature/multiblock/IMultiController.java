@@ -209,7 +209,7 @@ public interface IMultiController extends IMachineFeature, IInteractedMachine {
         if (!self().isFormed() && player.isShiftKeyDown() && player.getItemInHand(hand).isEmpty()) {
             if (world.isClientSide()) {
                 MultiblockInWorldPreviewRenderer.showPreview(pos, self(),
-                        ConfigHolder.INSTANCE.client.inWorldPreviewDuration * 20);
+                        ConfigHolder.INSTANCE.client.inWorldPreviewDuration * 20, false);
             }
             return InteractionResult.SUCCESS;
         }
