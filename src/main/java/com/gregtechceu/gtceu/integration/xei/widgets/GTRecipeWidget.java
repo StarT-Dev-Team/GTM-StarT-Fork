@@ -51,7 +51,7 @@ public class GTRecipeWidget extends WidgetGroup {
 
     @Getter
     private final int xOffset;
-    private final GTRecipe recipe;
+    protected final GTRecipe recipe;
     private LabelWidget recipeDurationText = null;
     private LabelWidget recipeTotalEUText = null;
     private LabelWidget recipeVoltageText = null;
@@ -62,7 +62,9 @@ public class GTRecipeWidget extends WidgetGroup {
     private int yOffset;
     @Getter
     private OverclockingLogic ocLogic = OverclockingLogic.NON_PERFECT_OVERCLOCK;
-    private LabelWidget voltageTextWidget;
+    protected LabelWidget voltageTextWidget;
+    private boolean perfectOC = false;
+    private final List<Widget> dataInfoWidgets = new ArrayList<>();
 
     public GTRecipeWidget(GTRecipe recipe) {
         super(getXOffset(recipe), 0, recipe.recipeType.getRecipeUI().getJEISize().width,
@@ -81,6 +83,7 @@ public class GTRecipeWidget extends WidgetGroup {
             return (recipe.recipeType.getRecipeUI().getJEISize().width -
                     recipe.recipeType.getRecipeUI().getOriginalWidth()) / 2;
         }
+
         return 0;
     }
 
@@ -142,12 +145,19 @@ public class GTRecipeWidget extends WidgetGroup {
             if (widget != null) addWidget(widget);
         }
 
+        dataInfoWidgets.forEach(this::removeWidget);
+        dataInfoWidgets.clear();
+
         var dataInfoConfiguration = new GTRecipeType.CustomDataInfoConfiguration(recipe);
+
         for (var dataInfoBuilder : recipe.recipeType.getDataInfos()) {
             var dataInfo = dataInfoBuilder.apply(dataInfoConfiguration);
             var widget = new LabelWidget(3 - xOffset, yOffset += LINE_HEIGHT, dataInfo.label());
+
             if (dataInfo.consumer() != null) dataInfo.consumer().accept(widget, this);
+
             addWidget(widget);
+            dataInfoWidgets.add(widget);
         }
 
         recipe.recipeType.getRecipeUI().appendJEIUI(recipe, this);
@@ -255,6 +265,63 @@ public class GTRecipeWidget extends WidgetGroup {
         }
     }
 
+    private List<Component> getOverclockDurationTexts(int ocs, int perfectOCs) {
+        if (ocs == 0) return List.of();
+
+        var texts = new ArrayList<Component>();
+
+        texts.add(Component.translatable("gtceu.recipe.oc.duration.base",
+                FormattingUtil.formatNumbers(recipe.duration / 20f)));
+
+        if (ocs > perfectOCs) {
+            texts.add(Component.translatable("gtceu.recipe.oc.duration.normal", ocs - perfectOCs,
+                    (int) OverclockingLogic.STD_DURATION_FACTOR_INV));
+        }
+        if (perfectOCs > 0) {
+            texts.add(Component.translatable("gtceu.recipe.oc.duration.perfect",
+                    Component.literal(Integer.toString(perfectOCs)).withStyle(ChatFormatting.GREEN),
+                    (int) OverclockingLogic.PERFECT_DURATION_FACTOR_INV));
+        }
+
+        return texts;
+    }
+
+    private List<Component> getOverclockUsageTexts(long baseEUt, OverclockingLogic.OCResult result) {
+        var texts = new ArrayList<Component>();
+        var multiplierTexts = getEUtMultiplierTexts();
+
+        if (result.ocLevel() == 0 && multiplierTexts.isEmpty()) return texts;
+
+        texts.add(Component.translatable("gtceu.recipe.oc.usage.base", FormattingUtil.formatNumbers(baseEUt)));
+
+        if (result.ocLevel() > 0) {
+            texts.add(Component.translatable("gtceu.recipe.oc.usage.overclocks", result.ocLevel(),
+                    (int) OverclockingLogic.STD_VOLTAGE_FACTOR));
+        }
+
+        texts.addAll(multiplierTexts);
+
+        return texts;
+    }
+
+    protected OverclockingLogic createOCLogic(boolean perfect) {
+        return perfect ? OverclockingLogic.PERFECT_OVERCLOCK : OverclockingLogic.NON_PERFECT_OVERCLOCK;
+    }
+
+    protected double getEUtMultiplier() {
+        return 1;
+    }
+
+    protected List<Component> getEUtMultiplierTexts() {
+        return List.of();
+    }
+
+    protected int getPerfectOCs(OverclockingLogic.OCResult result) {
+        return perfectOC ? result.ocLevel() : 0;
+    }
+
+    protected void onRecipeOverclockWidgetUpdated() {}
+
     @NotNull
     private static List<Component> getRecipeDurationTexts(int duration) {
         int hours = duration / 72000;
@@ -299,42 +366,62 @@ public class GTRecipeWidget extends WidgetGroup {
         return x;
     }
 
+    protected void updateOC(boolean perfect) {
+        perfectOC = perfect && recipe.recipeType != GTRecipeTypes.FUSION_RECIPES;
+
+        ocLogic = createOCLogic(perfect);
+
+        if (recipe.recipeType == GTRecipeTypes.FUSION_RECIPES) {
+            ocLogic = FusionReactorMachine.FUSION_OC;
+        }
+
+        setRecipeOverclockWidget(ocLogic);
+        setRecipeWidget();
+    }
+
     public void setRecipeOC(int button, boolean isShiftClick) {
-        ocLogic = OverclockingLogic.NON_PERFECT_OVERCLOCK;
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (GTUtil.isAltDown()) {
+            isShiftClick = true;
+        } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             setTier(tier + 1);
         } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             setTier(tier - 1);
         } else if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
             setTierToMin();
         }
-        if (isShiftClick) {
-            ocLogic = OverclockingLogic.PERFECT_OVERCLOCK;
-        }
-        if (recipe.recipeType == GTRecipeTypes.FUSION_RECIPES) {
-            ocLogic = FusionReactorMachine.FUSION_OC;
-        }
-        setRecipeOverclockWidget(ocLogic);
-        setRecipeWidget();
+
+        updateOC(isShiftClick);
     }
 
     private void setRecipeOverclockWidget(OverclockingLogic logic) {
         EnergyStack inputEUt = recipe.getInputEUt();
         String tierText = GTValues.VNF[tier];
         int duration = recipe.duration;
+        List<Component> ocDurationTexts = List.of();
+        List<Component> ocUsageTexts = List.of();
 
-        if (tier > minTier && !inputEUt.isEmpty()) {
-            int ocs = tier - minTier;
-            if (minTier == ULV) ocs--;
+        double eutMultiplier = getEUtMultiplier();
+
+        if ((tier > minTier || eutMultiplier != 1) && !inputEUt.isEmpty()) {
+            int ocs = Math.max(0, tier - minTier - (minTier == ULV ? 1 : 0));
             var params = new OverclockingLogic.OCParams(inputEUt.voltage(), recipe.duration, ocs, ocs, 1);
             var result = logic.runOverclockingLogic(params, V[tier]);
+
+            if (recipe.recipeType != GTRecipeTypes.FUSION_RECIPES) {
+                ocDurationTexts = getOverclockDurationTexts(result.ocLevel(), getPerfectOCs(result));
+                ocUsageTexts = getOverclockUsageTexts(inputEUt.getTotalEU(), result);
+            }
+
             duration = (int) (duration * result.durationMultiplier());
-            inputEUt = inputEUt.multiplyVoltage(result.eutMultiplier());
-            tierText = tierText.formatted(ChatFormatting.ITALIC);
+            inputEUt = inputEUt.multiplyVoltage(result.eutMultiplier() * eutMultiplier);
+
+            if (tier > minTier) tierText = tierText.formatted(ChatFormatting.ITALIC);
         }
 
         voltageTextWidget.setText(tierText);
         voltageTextWidget.setSelfPositionX(getVoltageXOffset(tier, getSize().width) - xOffset);
+
+        onRecipeOverclockWidgetUpdated();
 
         var minVoltageTier = GTUtil.getTierByVoltage(inputEUt.voltage());
         long euTotal = inputEUt.getTotalEU();
@@ -346,7 +433,11 @@ public class GTRecipeWidget extends WidgetGroup {
                             LayeredRecipeHelper.hasLayeredSteps(recipe) ?
                                     "gtceu.recipe.total_duration" : "gtceu.recipe.duration",
                             FormattingUtil.formatNumbers(duration / 20f)).withStyle(ChatFormatting.UNDERLINE));
-            recipeDurationText.setHoverTooltips(getRecipeDurationTexts(duration));
+
+            var durationTexts = new ArrayList<>(getRecipeDurationTexts(duration));
+
+            durationTexts.addAll(ocDurationTexts);
+            recipeDurationText.setHoverTooltips(durationTexts);
         }
 
         if (recipeTotalEUText != null) {
@@ -381,7 +472,7 @@ public class GTRecipeWidget extends WidgetGroup {
 
             texts.add(Component.translatable("gtceu.recipe.eu.amp_notation",
                     FormattingUtil.formatNumber2Places(minAmperage), GTValues.VNF[minVoltageTier]));
-
+            texts.addAll(ocUsageTexts);
             recipeVoltageText.setComponent(
                     Component.translatable("gtceu.recipe.eu", FormattingUtil.formatNumberReadable(euTotal))
                             .withStyle(ChatFormatting.UNDERLINE));
