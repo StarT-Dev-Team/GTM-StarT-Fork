@@ -25,6 +25,7 @@ import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
 public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngredient>
@@ -54,6 +55,9 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     @Getter
     @Setter
     private int basePriority;
+
+    @Setter
+    protected BooleanSupplier isIODisabled = () -> false;
 
     public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io, IO capabilityIO, int basePriority) {
         super(machine);
@@ -382,6 +386,7 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     @Override
     public int fill(FluidStack resource, FluidAction action) {
         if (!canCapInput()) return 0;
+        if (isIODisabled.getAsBoolean()) return 0;
         return fillInternal(resource, action);
     }
 
@@ -417,10 +422,9 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     @NotNull
     @Override
     public FluidStack drain(FluidStack resource, FluidAction action) {
-        if (canCapOutput()) {
-            return drainInternal(resource, action);
-        }
-        return FluidStack.EMPTY;
+        if (!canCapOutput()) return FluidStack.EMPTY;
+        if (isIODisabled.getAsBoolean()) return FluidStack.EMPTY;
+        return drainInternal(resource, action);
     }
 
     public FluidStack drainInternal(FluidStack resource, FluidAction action) {
@@ -439,10 +443,9 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     @NotNull
     @Override
     public FluidStack drain(int maxDrain, FluidAction action) {
-        if (canCapOutput()) {
-            return drainInternal(maxDrain, action);
-        }
-        return FluidStack.EMPTY;
+        if (!canCapOutput()) return FluidStack.EMPTY;
+        if (isIODisabled.getAsBoolean()) return FluidStack.EMPTY;
+        return drainInternal(maxDrain, action);
     }
 
     public FluidStack drainInternal(int maxDrain, FluidAction action) {

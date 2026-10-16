@@ -1309,6 +1309,7 @@ public class LangHandler {
         provider.add("config.jade.plugin_gtceu.ldp_endpoint", "[GTCEu] Long Distance Pipeline Endpoint Info");
         provider.add("config.jade.plugin_gtceu.network_switch", "[GTCEu] Network Switch Info");
         provider.add("config.jade.plugin_gtceu.hpca", "[GTCEu] HPCA Info");
+        provider.add("config.jade.plugin_gtceu.lockable_hatch_provider", "[GTCEu] Lockable Hatch");
 
         // gui
         provider.add("gtceu.button.ore_veins", "Show GT Ore Veins");

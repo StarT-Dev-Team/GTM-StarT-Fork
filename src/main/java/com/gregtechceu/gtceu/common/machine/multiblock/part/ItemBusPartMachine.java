@@ -1,13 +1,14 @@
 package com.gregtechceu.gtceu.common.machine.multiblock.part;
 
 import com.gregtechceu.gtceu.api.blockentity.IPaintable;
+import com.gregtechceu.gtceu.api.capability.ILockableHatch;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.cover.filter.FilterHandler;
 import com.gregtechceu.gtceu.api.cover.filter.FilterHandlers;
 import com.gregtechceu.gtceu.api.cover.filter.ItemFilter;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableSlotWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
@@ -56,7 +57,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ItemBusPartMachine extends TieredIOPartMachine
-                                implements IDistinctPart, IMachineLife, IHasCircuitSlot, IPaintable {
+                                implements IDistinctPart, IMachineLife, IHasCircuitSlot, IPaintable, ILockableHatch {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(ItemBusPartMachine.class,
             TieredIOPartMachine.MANAGED_FIELD_HOLDER);
@@ -85,10 +86,15 @@ public class ItemBusPartMachine extends TieredIOPartMachine
     @DescSynced
     @Getter
     protected final FilterHandler<ItemStack, ItemFilter> filterHandler;
+    @Getter
+    @Persisted
+    @DescSynced
+    protected boolean locked;
 
     public ItemBusPartMachine(IMachineBlockEntity holder, int tier, IO io, Object... args) {
         super(holder, tier, io);
         this.inventory = createInventory(args);
+        this.inventory.setIsIODisabled(this::isLocked);
         this.circuitSlotEnabled = true;
         this.circuitInventory = createCircuitItemHandler(io).shouldSearchContent(false);
         filterHandler = FilterHandlers.item(this);
@@ -232,8 +238,12 @@ public class ItemBusPartMachine extends TieredIOPartMachine
         updateInventorySubscription(getFrontFacing());
     }
 
+    protected boolean canAutoIO() {
+        return isWorkingEnabled() && !isLocked();
+    }
+
     protected void updateInventorySubscription(Direction newFacing) {
-        if (isWorkingEnabled() && ((io.support(IO.OUT) && !getInventory().isEmpty()) || io.support(IO.IN)) &&
+        if (canAutoIO() && ((io.support(IO.OUT) && !getInventory().isEmpty()) || io.support(IO.IN)) &&
                 GTTransferUtils.hasAdjacentItemHandler(getLevel(), getPos(), newFacing)) {
             autoIOSubs = subscribeServerTick(autoIOSubs, this::autoIO);
         } else if (autoIOSubs != null) {
@@ -244,7 +254,7 @@ public class ItemBusPartMachine extends TieredIOPartMachine
 
     protected void autoIO() {
         if (getOffsetTimer() % 5 == 0) {
-            if (isWorkingEnabled()) {
+            if (canAutoIO()) {
                 if (io == IO.OUT) {
                     getInventory().exportToNearby(getFrontFacing());
                 } else if (io == IO.IN) {
@@ -256,6 +266,11 @@ public class ItemBusPartMachine extends TieredIOPartMachine
             }
             updateInventorySubscription();
         }
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+        updateInventorySubscription();
     }
 
     @Override
@@ -341,7 +356,9 @@ public class ItemBusPartMachine extends TieredIOPartMachine
         for (int y = 0; y < colSize; y++) {
             for (int x = 0; x < rowSize; x++) {
                 container.addWidget(
-                        new SlotWidget(getInventory().storage, index++, 4 + x * 18, 4 + y * 18, true, io.support(IO.IN))
+                        new BlockableSlotWidget(getInventory().storage, index++, 4 + x * 18, 4 + y * 18, true,
+                                io.support(IO.IN))
+                                .setIsBlocked(this::isLocked)
                                 .setBackgroundTexture(GuiTextures.SLOT)
                                 .setIngredientIO(this.io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT));
             }
