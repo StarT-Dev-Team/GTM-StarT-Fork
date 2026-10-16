@@ -76,6 +76,11 @@ public class ItemBusPartMachine extends TieredIOPartMachine
     @DescSynced
     protected boolean circuitSlotEnabled;
     @Getter
+    @Setter
+    @Persisted
+    @DescSynced
+    protected boolean circuitPastingBlocked;
+    @Getter
     @Persisted
     protected final NotifiableItemStackHandler circuitInventory;
     @Getter
@@ -329,7 +334,7 @@ public class ItemBusPartMachine extends TieredIOPartMachine
         if (this.io == IO.IN) {
             IDistinctPart.super.attachConfigurators(configuratorPanel);
             if (hasCircuitSlot && isCircuitSlotEnabled()) {
-                configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
+                configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(this));
             }
         } else {
             super.attachConfigurators(configuratorPanel);

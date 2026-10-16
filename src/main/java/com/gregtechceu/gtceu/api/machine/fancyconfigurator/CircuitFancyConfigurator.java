@@ -5,6 +5,8 @@ import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfigurator;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyCustomMiddleClickAction;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyCustomMouseWheelAction;
 import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
@@ -24,6 +26,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.items.ItemStackHandler;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,9 +43,20 @@ public class CircuitFancyConfigurator implements IFancyConfigurator, IFancyCusto
 
     private static final int NO_CONFIG = -1;
 
+    @Nullable
+    final IHasCircuitSlot circuitMachine;
     final ItemStackHandler circuitSlot;
 
+    public CircuitFancyConfigurator(IHasCircuitSlot circuitMachine) {
+        this(circuitMachine, circuitMachine.getCircuitInventory().storage);
+    }
+
     public CircuitFancyConfigurator(ItemStackHandler circuitSlot) {
+        this(null, circuitSlot);
+    }
+
+    public CircuitFancyConfigurator(@Nullable IHasCircuitSlot circuitMachine, ItemStackHandler circuitSlot) {
+        this.circuitMachine = circuitMachine;
         this.circuitSlot = circuitSlot;
     }
 
@@ -113,6 +128,13 @@ public class CircuitFancyConfigurator implements IFancyConfigurator, IFancyCusto
         group.addWidget(new SlotWidget(circuitSlot, 0, (group.getSize().width - 18) / 2, 20,
                 !ConfigHolder.INSTANCE.machines.ghostCircuit, !ConfigHolder.INSTANCE.machines.ghostCircuit)
                 .setBackground(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY)));
+        if (circuitMachine != null) {
+            group.addWidget(new ToggleButtonWidget(149, 20, 18, 18,
+                    GuiTextures.BUTTON_LOCK, circuitMachine::isCircuitPastingBlocked,
+                    circuitMachine::setCircuitPastingBlocked)
+                    .setTooltipText("gtceu.gui.circuit_pasting.tooltip")
+                    .setShouldUseBaseBackground());
+        }
         if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
             group.addWidget(new ButtonWidget((group.getSize().width - 18) / 2, 20, 18, 18, IGuiTexture.EMPTY,
                     clickData -> {
