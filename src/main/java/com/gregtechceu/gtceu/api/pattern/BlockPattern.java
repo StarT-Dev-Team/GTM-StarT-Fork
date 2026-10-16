@@ -50,6 +50,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class BlockPattern {
 
@@ -228,7 +229,7 @@ public class BlockPattern {
     public void autoBuild(Player player, MultiblockState worldState, boolean skipHatches) {
         Level world = player.level();
         Map<SimplePredicate, Boolean> hatchCache = new HashMap<>();
-        java.util.function.Predicate<SimplePredicate> isHatch = p -> skipHatches &&
+        Predicate<SimplePredicate> isHatch = p -> skipHatches &&
                 hatchCache.computeIfAbsent(p, BlockPattern::isHatchPredicate);
         int minZ = -centerOffset[4];
         worldState.clean();
