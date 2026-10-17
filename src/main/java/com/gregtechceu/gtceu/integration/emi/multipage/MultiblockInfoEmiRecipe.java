@@ -30,7 +30,8 @@ public class MultiblockInfoEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
     public void addWidgets(WidgetHolder widgets) {
         super.addWidgets(widgets);
         // numbers gotten from the size of the widget
-        slotWidget = new SlotWidget(EmiStack.of(definition.getItem().asItem()), 138, 12)
+        slotWidget = new SlotWidget(EmiStack.of(definition.getItem().asItem()),
+                PatternPreviewWidget.WIDGET_WIDTH - 22, 10)
                 .recipeContext(this)
                 .drawBack(false);
 

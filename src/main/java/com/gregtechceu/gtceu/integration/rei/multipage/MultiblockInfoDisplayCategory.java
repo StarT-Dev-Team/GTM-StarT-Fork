@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.integration.rei.multipage;
 
 import com.gregtechceu.gtceu.GTCEu;
+import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.machines.GTMultiMachines;
@@ -36,12 +37,12 @@ public class MultiblockInfoDisplayCategory extends ModularUIDisplayCategory<Mult
 
     @Override
     public int getDisplayHeight() {
-        return 160 + 8;
+        return PatternPreviewWidget.WIDGET_HEIGHT + 8;
     }
 
     @Override
     public int getDisplayWidth(MultiblockInfoDisplay display) {
-        return 160 + 8;
+        return PatternPreviewWidget.WIDGET_WIDTH + 8;
     }
 
     @Override

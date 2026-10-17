@@ -76,14 +76,17 @@ public class PatternPreviewWidget extends WidgetGroup {
     private SlotWidget[] slotWidgets;
     private SlotWidget[] candidates;
 
+    public static final int WIDGET_WIDTH = 214;
+    public static final int WIDGET_HEIGHT = 206;
+
     protected PatternPreviewWidget(MultiblockMachineDefinition controllerDefinition) {
-        super(0, 0, 160, 160);
+        super(0, 0, WIDGET_WIDTH, WIDGET_HEIGHT);
         setClientSideWidget();
         this.controllerDefinition = controllerDefinition;
         predicates = new ArrayList<>();
         layer = -1;
 
-        addWidget(sceneWidget = new SceneWidget(3, 3, 150, 150, LEVEL) {
+        addWidget(sceneWidget = new SceneWidget(3, 3, WIDGET_WIDTH - 6, WIDGET_HEIGHT - 32, LEVEL) {
 
             @Override
             public void renderBlockOverLay(WorldSceneRenderer renderer) {
@@ -146,7 +149,7 @@ public class PatternPreviewWidget extends WidgetGroup {
                 .setRenderFacing(false)
                 .setRenderFacing(false));
 
-        scrollableWidgetGroup = new DraggableScrollableWidgetGroup(3, 132, 154, 22)
+        scrollableWidgetGroup = new DraggableScrollableWidgetGroup(3, WIDGET_HEIGHT - 28, WIDGET_WIDTH - 6, 25)
                 .setXScrollBarHeight(4)
                 .setXBarStyle(GuiTextures.SLIDER_BACKGROUND, GuiTextures.BUTTON)
                 .setScrollable(true)
@@ -163,10 +166,10 @@ public class PatternPreviewWidget extends WidgetGroup {
             }
         }
 
-        addWidget(new ImageWidget(3, 3, 160, 10,
+        addWidget(new ImageWidget(3, 3, WIDGET_WIDTH - 26, 10,
                 new TextTexture(controllerDefinition.getDescriptionId(), -1)
                         .setType(TextTexture.TextType.ROLL)
-                        .setWidth(170)
+                        .setWidth(WIDGET_WIDTH - 26)
                         .setDropShadow(true)));
 
         this.patterns = CACHE.computeIfAbsent(controllerDefinition, definition -> {
@@ -178,13 +181,13 @@ public class PatternPreviewWidget extends WidgetGroup {
                     .toArray(MBPattern[]::new);
         });
 
-        addWidget(new ButtonWidget(138, 30, 18, 18, new GuiTextureGroup(
+        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 30, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
                 new TextTexture("1").setSupplier(() -> "P:" + index)),
                 (x) -> setPage((index + 1 >= patterns.length) ? 0 : index + 1))
                 .setHoverBorderTexture(1, -1));
 
-        addWidget(new ButtonWidget(138, 50, 18, 18, new GuiTextureGroup(
+        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 50, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
                 new TextTexture("1").setSupplier(() -> layer >= 0 ? "L:" + layer : "ALL")),
                 cd -> updateLayer())
@@ -302,10 +305,10 @@ public class PatternPreviewWidget extends WidgetGroup {
             }
             candidates = new SlotWidget[candidateStacks.size()];
             CycleItemStackHandler itemHandler = new CycleItemStackHandler(candidateStacks);
-            int maxCol = (160 - (((slotWidgets.length - 1) / 9 + 1) * 18) - 35) % 18;
+            int maxCol = Math.max(1, (WIDGET_HEIGHT - 60) / 18);
             for (int i = 0; i < candidateStacks.size(); i++) {
                 int finalI = i;
-                candidates[i] = new SlotWidget(itemHandler, i, 3 + (i / maxCol) * 18, 3 + (i % maxCol) * 18, false,
+                candidates[i] = new SlotWidget(itemHandler, i, 3 + (i / maxCol) * 18, 14 + (i % maxCol) * 18, false,
                         false)
                         .setIngredientIO(IngredientIO.INPUT)
                         .setBackgroundTexture(new ColorRectTexture(0x4fffffff))

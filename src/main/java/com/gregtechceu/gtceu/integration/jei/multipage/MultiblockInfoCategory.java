@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.integration.jei.multipage;
 
 import com.gregtechceu.gtceu.GTCEu;
+import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.machines.GTMultiMachines;
@@ -43,7 +44,8 @@ public class MultiblockInfoCategory extends ModularUIRecipeCategory<MultiblockIn
 
     public MultiblockInfoCategory(IJeiHelpers helpers) {
         IGuiHelper guiHelper = helpers.getGuiHelper();
-        this.background = guiHelper.createBlankDrawable(160, 160);
+        this.background = guiHelper.createBlankDrawable(PatternPreviewWidget.WIDGET_WIDTH,
+                PatternPreviewWidget.WIDGET_HEIGHT);
         this.icon = helpers.getGuiHelper().createDrawableItemStack(GTMultiMachines.ELECTRIC_BLAST_FURNACE.asStack());
     }
 
