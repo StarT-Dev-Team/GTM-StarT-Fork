@@ -90,6 +90,9 @@ public class GTRecipeTypeUI {
     @Setter
     @Getter
     protected int maxTooltips = 3;
+    @Setter
+    @Getter
+    protected int minWidth = 150;
 
     private CompoundTag customUICache;
     private Size xeiSize;
@@ -148,7 +151,7 @@ public class GTRecipeTypeUI {
         if (size == null) {
             var originalSize = createEditableUITemplate(false, false).createDefault().getSize();
             this.originalWidth = originalSize.width;
-            this.xeiSize = size = new Size(Math.max(originalWidth, 150),
+            this.xeiSize = size = new Size(Math.max(originalWidth, minWidth),
                     getPropertyHeightShift() + 5 + originalSize.height);
         }
         return size;

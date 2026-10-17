@@ -363,9 +363,16 @@ public class GTRecipeWidget extends WidgetGroup {
         int y = getSize().height - 30;
         addWidget(
                 new PredicatedButtonWidget(x, y, 15, 15, new GuiTextureGroup(GuiTextures.BUTTON, new TextTexture("ID")),
-                        cd -> Minecraft.getInstance().keyboardHandler.setClipboard(recipe.id.toString()),
+                        cd -> Minecraft.getInstance().keyboardHandler
+                                .setClipboard(cd.isShiftClick ? getSizeInfo() : recipe.id.toString()),
                         () -> !FMLLoader.isProduction(), !FMLLoader.isProduction())
-                        .setHoverTooltips("click to copy: " + recipe.id));
+                        .setHoverTooltips("click to copy: " + recipe.id, "shift click to copy: " + getSizeInfo()));
+    }
+
+    private String getSizeInfo() {
+        return recipe.recipeType.registryName + " width: " + getSize().width + " (template " +
+                recipe.recipeType.getRecipeUI().getOriginalWidth() + ", min " +
+                recipe.recipeType.getRecipeUI().getMinWidth() + "), height: " + getSize().height;
     }
 
     public static int getVoltageXOffset(int tier, int width) {

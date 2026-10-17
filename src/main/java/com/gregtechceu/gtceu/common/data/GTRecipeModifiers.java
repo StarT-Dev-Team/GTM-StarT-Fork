@@ -224,18 +224,6 @@ public class GTRecipeModifiers {
         return Math.max(0.0001, 1.0 - discount);
     }
 
-    public static double pyrolyseDurationMultiplier(int coilTier) {
-        return (coilTier == 0) ? (4.0 / 3.0) : (2.0 / (coilTier + 1));
-    }
-
-    public static double chemicalReactorDurationMultiplier(int coilTier) {
-        return 1.0 / (0.75 + coilTier * 0.25);
-    }
-
-    public static double chemicalReactorEUtMultiplier(int coilTier) {
-        return Math.max(0.0001, 1.0 - coilTier * 0.05);
-    }
-
     /**
      * @return the temperature a blast furnace reaches with the given coil at the given voltage tier
      */
@@ -312,6 +300,10 @@ public class GTRecipeModifiers {
         return oc.andThen(durationModifier);
     }
 
+    public static double pyrolyseDurationMultiplier(int coilTier) {
+        return (coilTier == 0) ? (4.0 / 3.0) : (2.0 / (coilTier + 1));
+    }
+
     /**
      * Recipe Modifier for <b>Multi Smelters</b> - can be used as a valid {@link RecipeModifier}
      * <p>
@@ -386,6 +378,14 @@ public class GTRecipeModifiers {
                 .andThen(NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, durationModifier.apply(recipe),
                         coilMachine.getOverclockVoltage()))
                 .andThen(ModifierFunction.builder().eutMultiplier(chemicalReactorEUtMultiplier(coilTier)).build());
+    }
+
+    public static double chemicalReactorDurationMultiplier(int coilTier) {
+        return 1.0 / (0.75 + coilTier * 0.25);
+    }
+
+    public static double chemicalReactorEUtMultiplier(int coilTier) {
+        return Math.max(0.0001, 1.0 - coilTier * 0.05);
     }
 
     public static @NotNull ModifierFunction consumeEuToStart(@NotNull MetaMachine machine, @NotNull GTRecipe recipe) {

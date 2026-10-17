@@ -199,6 +199,12 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
         return this;
     }
 
+    public GTRecipeType setMinWidth(int minWidth) {
+        this.recipeUI.setMinWidth(minWidth);
+
+        return this;
+    }
+
     public GTRecipeType setMaxTooltips(int maxTooltips) {
         this.recipeUI.setMaxTooltips(maxTooltips);
         return this;

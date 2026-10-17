@@ -534,6 +534,7 @@ public class GTRecipeTypes {
                         }
                     }))
             .addCoilDataInfo()
+            .setMinWidth(180)
             .setWidgetFactory(GTBlastRecipeWidget::new)
             .setSound(GTSoundEntries.FURNACE);
 
@@ -618,6 +619,7 @@ public class GTRecipeTypes {
     public final static GTRecipeType PYROLYSE_RECIPES = register("pyrolyse_oven", MULTIBLOCK).setMaxIOSize(2, 1, 1, 1)
             .setEUIO(IO.IN)
             .addCoilDataInfo()
+            .setMinWidth(180)
             .setWidgetFactory(GTPyrolyseRecipeWidget::new)
             .setSound(GTSoundEntries.FIRE);
 
@@ -628,6 +630,7 @@ public class GTRecipeTypes {
             .setSlotOverlay(false, false, GuiTextures.CIRCUIT_OVERLAY)
             .setProgressBar(GuiTextures.PROGRESS_BAR_CRACKING, LEFT_TO_RIGHT)
             .addCoilDataInfo()
+            .setMinWidth(180)
             .setWidgetFactory(GTCrackingRecipeWidget::new)
             .setSound(GTSoundEntries.FIRE);
 
@@ -666,7 +669,11 @@ public class GTRecipeTypes {
 
     static {
         if (ConfigHolder.INSTANCE.machines.lcrCoilBenefits) {
-            LARGE_CHEMICAL_RECIPES.addCoilDataInfo().setWidgetFactory(GTChemicalRecipeWidget::new);
+            LARGE_CHEMICAL_RECIPES
+                    .addCoilDataInfo()
+                    .setMinWidth(180)
+                    .setWidgetFactory(GTChemicalRecipeWidget::new);
+
         }
     }
 
