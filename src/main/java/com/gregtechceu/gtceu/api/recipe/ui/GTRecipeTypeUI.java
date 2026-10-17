@@ -66,6 +66,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("UnusedReturnValue")
 public class GTRecipeTypeUI {
 
+    public static final int DEFAULT_MIN_WIDTH = 150;
+
     @Getter
     @Setter
     private Byte2ObjectMap<IGuiTexture> slotOverlays = new Byte2ObjectArrayMap<>();
@@ -92,7 +94,7 @@ public class GTRecipeTypeUI {
     protected int maxTooltips = 3;
     @Setter
     @Getter
-    protected int minWidth = 150;
+    protected int minWidth = DEFAULT_MIN_WIDTH;
 
     private CompoundTag customUICache;
     private Size xeiSize;
