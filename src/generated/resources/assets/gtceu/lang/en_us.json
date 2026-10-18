@@ -3580,6 +3580,8 @@
   "gtceu.multiblock.power_substation.time_to_fill": "§7Time to fill: %s",
   "gtceu.multiblock.power_substation.time_years": "%s Years",
   "gtceu.multiblock.power_substation.under_one_hour_left": "Less than 1 hour until fully drained!",
+  "gtceu.multiblock.preview.measurement_grid": "Toggle Measurement Grid",
+  "gtceu.multiblock.preview.measurement_grid_graduation": "Grid Graduation",
   "gtceu.multiblock.preview.rotate": "Click and drag to rotate",
   "gtceu.multiblock.preview.select": "Right-click to check candidates",
   "gtceu.multiblock.preview.zoom": "Use mousewheel or right-click + drag to zoom",

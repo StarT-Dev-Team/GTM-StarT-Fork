@@ -28,6 +28,7 @@ import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -66,7 +67,7 @@ public class PatternPreviewWidget extends WidgetGroup {
     private static final int REGION_SIZE = 512;
     private static int LAST_OFFSET_INDEX = 0;
     private static final Map<MultiblockMachineDefinition, MBPattern[]> CACHE = new HashMap<>();
-    private final SceneWidget sceneWidget;
+    private final PatternSceneWidget sceneWidget;
     private final DraggableScrollableWidgetGroup scrollableWidgetGroup;
     public final MultiblockMachineDefinition controllerDefinition;
     public final MBPattern[] patterns;
@@ -75,6 +76,36 @@ public class PatternPreviewWidget extends WidgetGroup {
     public int layer;
     private SlotWidget[] slotWidgets;
     private SlotWidget[] candidates;
+
+    private static boolean defaultShowMeasurementGrid = true;
+    public boolean showMeasurementGrid = defaultShowMeasurementGrid;
+
+    private static int defaultGraduationStep = 0;
+    public int graduationStep = defaultGraduationStep;
+
+    public void toggleGrid() {
+        this.showMeasurementGrid = !this.showMeasurementGrid;
+        defaultShowMeasurementGrid = this.showMeasurementGrid;
+    }
+
+    public void cycleGraduation() {
+        if (this.graduationStep == 0) {
+            this.graduationStep = 3;
+        } else if (this.graduationStep == 3) {
+            this.graduationStep = 5;
+        } else if (this.graduationStep == 5) {
+            this.graduationStep = 10;
+        } else {
+            this.graduationStep = 0;
+        }
+        defaultGraduationStep = this.graduationStep;
+    }
+
+    private void renderGrid(MultiBufferSource bufferSource, float partialTicks) {
+        if (!this.showMeasurementGrid) return;
+        if (this.index < 0 || this.index >= this.patterns.length) return;
+        GridRenderer.render(this.patterns[this.index], bufferSource, this.graduationStep);
+    }
 
     public static final int WIDGET_WIDTH = 214;
     public static final int WIDGET_HEIGHT = 206;
@@ -86,7 +117,7 @@ public class PatternPreviewWidget extends WidgetGroup {
         predicates = new ArrayList<>();
         layer = -1;
 
-        addWidget(sceneWidget = new SceneWidget(3, 3, WIDGET_WIDTH - 6, WIDGET_HEIGHT - 32, LEVEL) {
+        addWidget(sceneWidget = new PatternSceneWidget(3, 3, WIDGET_WIDTH - 6, WIDGET_HEIGHT - 32, LEVEL) {
 
             @Override
             public void renderBlockOverLay(WorldSceneRenderer renderer) {
@@ -144,10 +175,10 @@ public class PatternPreviewWidget extends WidgetGroup {
                     this.afterWorldRender.accept(this);
                 }
             }
-        }
-                .setOnSelected(this::onPosSelected)
-                .setRenderFacing(false)
-                .setRenderFacing(false));
+        });
+        sceneWidget.setOnSelected(this::onPosSelected);
+        sceneWidget.setRenderFacing(false);
+        sceneWidget.setBeforeBatchEnd(this::renderGrid);
 
         scrollableWidgetGroup = new DraggableScrollableWidgetGroup(3, WIDGET_HEIGHT - 28, WIDGET_WIDTH - 6, 25)
                 .setXScrollBarHeight(4)
@@ -192,6 +223,20 @@ public class PatternPreviewWidget extends WidgetGroup {
                 new TextTexture("1").setSupplier(() -> layer >= 0 ? "L:" + layer : "ALL")),
                 cd -> updateLayer())
                 .setHoverBorderTexture(1, -1));
+
+        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 70, 18, 18, new GuiTextureGroup(
+                ColorPattern.T_GRAY.rectTexture(),
+                new TextTexture("1").setSupplier(() -> showMeasurementGrid ? "ON" : "OFF")),
+                cd -> toggleGrid())
+                .setHoverBorderTexture(1, -1)
+                .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.measurement_grid")));
+
+        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 90, 18, 18, new GuiTextureGroup(
+                ColorPattern.T_GRAY.rectTexture(),
+                new TextTexture("1").setSupplier(() -> graduationStep == 0 ? "OFF" : String.valueOf(graduationStep))),
+                cd -> cycleGraduation())
+                .setHoverBorderTexture(1, -1)
+                .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.measurement_grid_graduation")));
 
         setPage(0);
     }
@@ -497,7 +542,9 @@ public class PatternPreviewWidget extends WidgetGroup {
         final Map<BlockPos, BlockInfo> blockMap;
         @NotNull
         final IMultiController controllerBase;
-        final int maxY, minY;
+
+        public final int maxY, minY;
+        public final int xMin, xMax, yMin, yMax, zMin, zMax;
 
         public MBPattern(@NotNull Map<BlockPos, BlockInfo> blockMap, @NotNull List<List<ItemStack>> parts,
                          @NotNull Map<BlockPos, TraceabilityPredicate> predicateMap,
@@ -506,13 +553,25 @@ public class PatternPreviewWidget extends WidgetGroup {
             this.blockMap = blockMap;
             this.predicateMap = predicateMap;
             this.controllerBase = controllerBase;
-            int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
+            int minXVal = Integer.MAX_VALUE, maxXVal = Integer.MIN_VALUE;
+            int minYVal = Integer.MAX_VALUE, maxYVal = Integer.MIN_VALUE;
+            int minZVal = Integer.MAX_VALUE, maxZVal = Integer.MIN_VALUE;
             for (BlockPos pos : blockMap.keySet()) {
-                min = Math.min(min, pos.getY());
-                max = Math.max(max, pos.getY());
+                minXVal = Math.min(minXVal, pos.getX());
+                maxXVal = Math.max(maxXVal, pos.getX());
+                minYVal = Math.min(minYVal, pos.getY());
+                maxYVal = Math.max(maxYVal, pos.getY());
+                minZVal = Math.min(minZVal, pos.getZ());
+                maxZVal = Math.max(maxZVal, pos.getZ());
             }
-            minY = min;
-            maxY = max;
+            minY = minYVal;
+            maxY = maxYVal;
+            xMin = minXVal;
+            xMax = maxXVal + 1;
+            yMin = minYVal;
+            yMax = maxYVal + 1;
+            zMin = minZVal;
+            zMax = maxZVal + 1;
         }
     }
 }
