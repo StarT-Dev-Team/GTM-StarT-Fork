@@ -88,6 +88,7 @@ public class CleanroomMachine extends WorkableElectricMultiblockMachine
 
     public static final int MIN_RADIUS = 2;
     public static final int MIN_DEPTH = 4;
+    public static final int MAX_LAYERS = 6;
 
     @Persisted
     private int lDist = 0, rDist = 0, bDist = 0, fDist = 0, hDist = 0;
@@ -319,6 +320,30 @@ public class CleanroomMachine extends WorkableElectricMultiblockMachine
             rDist = tmp;
         }
 
+        return createPattern(lDist, rDist, bDist, fDist, hDist);
+    }
+
+    /**
+     * Each layer adds 2 blocks to the width, depth and height.
+     */
+    @NotNull
+    @Override
+    public BlockPattern getPattern(int layers) {
+        if (layers <= 0) return getPattern();
+
+        int step = Math.min(layers, MAX_LAYERS) - 1;
+
+        return createPattern(MIN_RADIUS + step, MIN_RADIUS + step, MIN_RADIUS + step, MIN_RADIUS + step,
+                MIN_DEPTH + step * 2);
+    }
+
+    @Override
+    public int[] getLayerRange() {
+        return new int[] { 1, MAX_LAYERS };
+    }
+
+    @NotNull
+    private BlockPattern createPattern(int lDist, int rDist, int bDist, int fDist, int hDist) {
         StringBuilder[] floorLayer = new StringBuilder[fDist + bDist + 1];
         List<StringBuilder[]> wallLayers = new ArrayList<>();
         StringBuilder[] ceilingLayer = new StringBuilder[fDist + bDist + 1];
