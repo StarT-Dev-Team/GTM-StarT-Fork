@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.integration.ae2.slot;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
 
@@ -24,12 +23,12 @@ public class ExportOnlyAEFluidList extends NotifiableFluidTank implements IConfi
     @Persisted
     protected ExportOnlyAEFluidSlot[] inventory;
 
-    public ExportOnlyAEFluidList(MetaMachine machine, int slots) {
-        this(machine, slots, ExportOnlyAEFluidSlot::new);
+    public ExportOnlyAEFluidList(int slots) {
+        this(slots, ExportOnlyAEFluidSlot::new);
     }
 
-    public ExportOnlyAEFluidList(MetaMachine machine, int slots, Supplier<ExportOnlyAEFluidSlot> slotFactory) {
-        super(machine, slots, 0, IO.IN);
+    public ExportOnlyAEFluidList(int slots, Supplier<ExportOnlyAEFluidSlot> slotFactory) {
+        super(slots, 0, IO.IN);
         this.inventory = new ExportOnlyAEFluidSlot[slots];
         for (int i = 0; i < slots; i++) {
             this.inventory[i] = slotFactory.get();

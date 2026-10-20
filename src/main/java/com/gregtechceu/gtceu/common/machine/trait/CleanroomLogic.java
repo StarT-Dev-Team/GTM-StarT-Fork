@@ -9,7 +9,6 @@ import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.common.capability.EnvironmentalHazardSavedData;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.CleanroomMachine;
 
-import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
@@ -20,6 +19,8 @@ import net.minecraft.util.Mth;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nonnull;
 
 public class CleanroomLogic extends RecipeLogic implements IWorkable {
 
@@ -40,12 +41,12 @@ public class CleanroomLogic extends RecipeLogic implements IWorkable {
     @Persisted
     private boolean isActiveAndNeedsUpdate;
 
-    public CleanroomLogic(CleanroomMachine machine) {
-        super(machine);
+    public CleanroomLogic() {
+        super();
     }
 
     @Override
-    public CleanroomMachine getMachine() {
+    public @Nonnull CleanroomMachine getMachine() {
         return (CleanroomMachine) machine;
     }
 

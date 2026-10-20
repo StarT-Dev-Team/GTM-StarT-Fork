@@ -124,13 +124,13 @@ public class MinerMachine extends WorkableTieredMachine
 
     @Override
     protected NotifiableItemStackHandler createImportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, 0, IO.IN);
+        return new NotifiableItemStackHandler(0, IO.IN);
     }
 
     @Override
     protected NotifiableItemStackHandler createExportItemHandler(Object... args) {
         if (args.length > 3 && args[args.length - 4] instanceof Integer invSize) {
-            return new NotifiableItemStackHandler(this, invSize, IO.OUT);
+            return new NotifiableItemStackHandler(invSize, IO.OUT);
         }
         throw new IllegalArgumentException(
                 "MinerMachine need args [inventorySize, fortune, speed, maximumRadius] for initialization");
@@ -140,7 +140,7 @@ public class MinerMachine extends WorkableTieredMachine
     protected RecipeLogic createRecipeLogic(Object... args) {
         if (args.length > 2 && args[args.length - 3] instanceof Integer fortune &&
                 args[args.length - 2] instanceof Integer speed && args[args.length - 1] instanceof Integer maxRadius) {
-            return new MinerLogic(this, fortune, speed, maxRadius);
+            return new MinerLogic(fortune, speed, maxRadius);
         }
         throw new IllegalArgumentException(
                 "MinerMachine need args [inventorySize, fortune, speed, maximumRadius] for initialization");

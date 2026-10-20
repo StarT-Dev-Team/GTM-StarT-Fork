@@ -2,7 +2,6 @@ package com.gregtechceu.gtceu.integration.ae2.machine;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
@@ -53,7 +52,7 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
     @Override
     protected NotifiableItemStackHandler createInventory(Object... args) {
         this.internalBuffer = new KeyStorage();
-        return new InaccessibleInfiniteHandler(this);
+        return new InaccessibleInfiniteHandler();
     }
 
     @Override
@@ -113,8 +112,8 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
 
     private class InaccessibleInfiniteHandler extends NotifiableItemStackHandler {
 
-        public InaccessibleInfiniteHandler(MetaMachine holder) {
-            super(holder, 1, IO.OUT, IO.NONE, ItemStackHandlerDelegate::new);
+        public InaccessibleInfiniteHandler() {
+            super(1, IO.OUT, IO.NONE, ItemStackHandlerDelegate::new);
             internalBuffer.setOnContentsChanged(this::onContentsChanged);
         }
 

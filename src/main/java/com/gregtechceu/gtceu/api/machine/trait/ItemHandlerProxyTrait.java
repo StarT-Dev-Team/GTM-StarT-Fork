@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.api.machine.trait;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -27,8 +26,8 @@ public class ItemHandlerProxyTrait extends MachineTrait implements IItemHandlerM
     @Nullable
     public IItemHandlerModifiable proxy;
 
-    public ItemHandlerProxyTrait(MetaMachine machine, IO capabilityIO) {
-        super(machine);
+    public ItemHandlerProxyTrait(IO capabilityIO) {
+        super();
         this.capabilityIO = capabilityIO;
     }
 

@@ -62,7 +62,7 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
 
     public MEHatchPartMachine(IMachineBlockEntity holder, IO io, Object... args) {
         super(holder, GTValues.UHV, io, FluidHatchPartMachine.INITIAL_TANK_CAPACITY_1X, CONFIG_SIZE, args);
-        this.nodeHolder = createNodeHolder();
+        this.nodeHolder = attachTrait(createNodeHolder());
         this.actionSource = IActionSource.ofMachine(nodeHolder.getMainNode()::getNode);
     }
 
@@ -74,7 +74,7 @@ public abstract class MEHatchPartMachine extends FluidHatchPartMachine implement
     }
 
     protected GridNodeHolder createNodeHolder() {
-        return new GridNodeHolder(this);
+        return new GridNodeHolder();
     }
 
     @Override

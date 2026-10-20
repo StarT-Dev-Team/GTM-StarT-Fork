@@ -108,7 +108,7 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
         super(holder, tier);
         this.outputFacingFluids = getFrontFacing().getOpposite();
         this.maxAmount = maxAmount;
-        this.cache = createCacheFluidHandler(args);
+        this.cache = attachTrait(createCacheFluidHandler(args));
         this.lockedFluid = new CustomFluidTank(1000);
     }
 
@@ -122,7 +122,7 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
     }
 
     protected FluidCache createCacheFluidHandler(Object... args) {
-        return new FluidCache(this);
+        return new FluidCache();
     }
 
     @Override
@@ -388,8 +388,8 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
 
         private final Predicate<FluidStack> filter = f -> !isLocked() || getLockedFluid().isFluidEqual(f);
 
-        public FluidCache(MetaMachine holder) {
-            super(holder);
+        public FluidCache() {
+            super();
         }
 
         @Override

@@ -25,6 +25,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 public class BedrockOreMinerLogic extends RecipeLogic {
 
     public static final int MAX_PROGRESS = 20;
@@ -33,12 +35,12 @@ public class BedrockOreMinerLogic extends RecipeLogic {
     @Nullable
     private List<WeightedMaterial> veinMaterials;
 
-    public BedrockOreMinerLogic(BedrockOreMinerMachine machine) {
-        super(machine);
+    public BedrockOreMinerLogic() {
+        super();
     }
 
     @Override
-    public BedrockOreMinerMachine getMachine() {
+    public @Nonnull BedrockOreMinerMachine getMachine() {
         return (BedrockOreMinerMachine) super.getMachine();
     }
 

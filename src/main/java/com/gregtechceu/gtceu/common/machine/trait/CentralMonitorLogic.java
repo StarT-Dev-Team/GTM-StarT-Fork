@@ -2,7 +2,6 @@ package com.gregtechceu.gtceu.common.machine.trait;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.IWorkable;
-import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.CentralMonitorMachine;
@@ -13,8 +12,8 @@ public class CentralMonitorLogic extends RecipeLogic implements IWorkable {
 
     private static final int BASE_UPDATE_INTERVAL = 8 * 20;
 
-    public CentralMonitorLogic(IRecipeLogicMachine machine) {
-        super(machine);
+    public CentralMonitorLogic() {
+        super();
     }
 
     public CentralMonitorMachine getMachine() {

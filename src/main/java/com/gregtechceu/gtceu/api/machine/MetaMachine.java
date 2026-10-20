@@ -19,7 +19,10 @@ import com.gregtechceu.gtceu.api.item.tool.IToolGridHighlight;
 import com.gregtechceu.gtceu.api.machine.feature.*;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
+import com.gregtechceu.gtceu.api.machine.trait.IFrontFacingTrait;
+import com.gregtechceu.gtceu.api.machine.trait.IMachineTrait;
 import com.gregtechceu.gtceu.api.machine.trait.MachineTrait;
+import com.gregtechceu.gtceu.api.machine.trait.MachineTraitContainer;
 import com.gregtechceu.gtceu.api.misc.IOFilteredInvWrapper;
 import com.gregtechceu.gtceu.api.misc.IOFluidHandlerList;
 import com.gregtechceu.gtceu.api.pattern.util.RelativeDirection;
@@ -77,6 +80,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -117,15 +121,19 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
     @DescSynced
     @RequireRerender
     private int paintingColor = -1;
-    @Getter
-    protected final List<MachineTrait> traits;
     private final List<TickableSubscription> serverTicks;
     private final List<TickableSubscription> waitingToAdd;
+    @Getter
+    private boolean loaded;
+    @Getter
+    @Persisted(key = "traits")
+    @DescSynced
+    private final MachineTraitContainer traitContainer;
 
     public MetaMachine(IMachineBlockEntity holder) {
         this.holder = holder;
         this.coverContainer = new MachineCoverContainer(this);
-        this.traits = new ArrayList<>();
+        this.traitContainer = new MachineTraitContainer(this);
         this.serverTicks = new ArrayList<>();
         this.waitingToAdd = new ArrayList<>();
         // bind sync storage
@@ -217,7 +225,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
     }
 
     public void onUnload() {
-        traits.forEach(MachineTrait::onMachineUnLoad);
+        traitContainer.onMachineUnLoad();
         coverContainer.onUnload();
         for (TickableSubscription serverTick : serverTicks) {
             serverTick.unsubscribe();
@@ -226,7 +234,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
     }
 
     public void onLoad() {
-        traits.forEach(MachineTrait::onMachineLoad);
+        traitContainer.onMachineLoad();
         coverContainer.onLoad();
 
         // update the painted model property if the machine is painted
@@ -235,6 +243,48 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
                 this.isPainted() != renderState.getValue(GTMachineModelProperties.IS_PAINTED)) {
             setRenderState(renderState.setValue(GTMachineModelProperties.IS_PAINTED, this.isPainted()));
         }
+
+        loaded = true;
+    }
+
+    // Traits
+
+    public List<MachineTrait> getAllTraits() {
+        return traitContainer.getAllTraits();
+    }
+
+    public <T extends MachineTrait> T attachTrait(T trait) {
+        return traitContainer.attachTrait(trait);
+    }
+
+    public <T extends MachineTrait> T attachTrait(T trait, int priority) {
+        return traitContainer.attachTrait(trait, priority);
+    }
+
+    public MetaMachine attachNamedTrait(String traitName, MachineTrait trait) {
+        traitContainer.attachNamedTrait(traitName, trait);
+        return this;
+    }
+
+    public MetaMachine attachNamedTrait(String traitName, MachineTrait trait, int callbackPriority) {
+        traitContainer.attachNamedTrait(traitName, trait, callbackPriority);
+        return this;
+    }
+
+    public <T extends IMachineTrait> @Unmodifiable List<T> getTraitsByType(Class<T> cls) {
+        return traitContainer.getTraitsByType(cls);
+    }
+
+    public <T extends IMachineTrait> @Nullable T getTrait(Class<T> cls) {
+        return traitContainer.getTrait(cls);
+    }
+
+    public <T extends MachineTrait> @Nullable T getNamedTrait(String name) {
+        return traitContainer.getNamedTrait(name);
+    }
+
+    public <T extends IMachineTrait> Optional<T> getTraitOptional(Class<T> cls) {
+        return traitContainer.getTraitOptional(cls);
     }
 
     /**
@@ -243,17 +293,9 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
      * @param tag     the CompoundTag to load data from
      * @param forDrop if the save is done for dropping the machine as an item.
      */
-    public void saveCustomPersistedData(@NotNull CompoundTag tag, boolean forDrop) {
-        for (MachineTrait trait : this.getTraits()) {
-            trait.saveCustomPersistedData(tag, forDrop);
-        }
-    }
+    public void saveCustomPersistedData(@NotNull CompoundTag tag, boolean forDrop) {}
 
-    public void loadCustomPersistedData(@NotNull CompoundTag tag) {
-        for (MachineTrait trait : this.getTraits()) {
-            trait.loadCustomPersistedData(tag);
-        }
-    }
+    public void loadCustomPersistedData(@NotNull CompoundTag tag) {}
 
     //////////////////////////////////////
     // ***** Tickable Manager ****//
@@ -503,13 +545,6 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
         return null;
     }
 
-    /**
-     * All traits should be initialized while MetaMachine is creating. you cannot add them on the fly.
-     */
-    public void attachTraits(MachineTrait trait) {
-        traits.add(trait);
-    }
-
     public void clearInventory(IItemHandlerModifiable inventory) {
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack stackInSlot = inventory.getStackInSlot(i);
@@ -610,6 +645,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
 
     public boolean isFacingValid(Direction facing) {
         if (hasFrontFacing() && facing == getFrontFacing()) return false;
+
         var coverContainer = getCoverContainer();
         if (coverContainer.hasCover(facing)) {
             // noinspection DataFlowIssue
@@ -619,6 +655,11 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
                 return false;
             }
         }
+
+        for (var trait : getTraitContainer().getTraitsByType(IFrontFacingTrait.class)) {
+            if (!trait.isValidFrontFace(facing)) return false;
+        }
+
         return getRotationState().test(facing);
     }
 
@@ -705,7 +746,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
 
     @MustBeInvokedByOverriders
     public void updateModelData(ModelData.Builder builder) {
-        for (MachineTrait trait : this.getTraits()) {
+        for (MachineTrait trait : this.getAllTraits()) {
             trait.updateModelData(builder);
         }
     }
@@ -805,7 +846,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
 
     @Nullable
     public IItemHandlerModifiable getItemHandlerCap(@Nullable Direction side, boolean useCoverCapability) {
-        var list = getTraits().stream()
+        var list = getAllTraits().stream()
                 .filter(IItemHandlerModifiable.class::isInstance)
                 .filter(t -> t.hasCapability(side))
                 .map(IItemHandlerModifiable.class::cast)
@@ -829,7 +870,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
 
     @Nullable
     public IFluidHandlerModifiable getFluidHandlerCap(@Nullable Direction side, boolean useCoverCapability) {
-        var list = getTraits().stream()
+        var list = getAllTraits().stream()
                 .filter(IFluidHandler.class::isInstance)
                 .filter(t -> t.hasCapability(side))
                 .map(IFluidHandler.class::cast)
