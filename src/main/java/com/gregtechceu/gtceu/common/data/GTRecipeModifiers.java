@@ -378,7 +378,7 @@ public class GTRecipeModifiers {
 
         if (euToStartConditions.isEmpty()) return ModifierFunction.IDENTITY;
 
-        var recipeLogic = machine.getTraits().stream().filter(RecipeLogic.class::isInstance)
+        var recipeLogic = machine.getAllTraits().stream().filter(RecipeLogic.class::isInstance)
                 .map(RecipeLogic.class::cast).findFirst();
         if (recipeLogic.isEmpty()) return ModifierFunction.IDENTITY; // should never happen
 
@@ -393,7 +393,7 @@ public class GTRecipeModifiers {
         if (machine instanceof WorkableElectricMultiblockMachine multiblockMachine) {
             multiblockMachine.getEnergyContainer().removeEnergy(energyToConsume);
         } else {
-            var toConsume = machine.getTraits().stream().filter(IEnergyContainer.class::isInstance)
+            var toConsume = machine.getAllTraits().stream().filter(IEnergyContainer.class::isInstance)
                     .map(IEnergyContainer.class::cast)
                     .filter(energyContainer -> energyContainer.getEnergyCapacity() > energyToConsume)
                     .findFirst();

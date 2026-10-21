@@ -431,13 +431,13 @@ public class ToolHelper {
                         GTRecipeTypes.FORGE_HAMMER_RECIPES, GTMachineUtils.defaultTankSizeFunction,
                         Collections.emptyList());
                 RecipeHandlerList dummyInputs = RecipeHandlerList.of(IO.IN,
-                        new InfiniteEnergyContainer(be.getMetaMachine(), GTValues.V[GTValues.LV],
+                        new InfiniteEnergyContainer(GTValues.V[GTValues.LV],
                                 GTValues.V[GTValues.LV], 1, GTValues.V[GTValues.LV], 1),
-                        new NotifiableItemStackHandler(be.getMetaMachine(), 1, IO.IN, IO.IN,
+                        new NotifiableItemStackHandler(1, IO.IN, IO.IN,
                                 (slots) -> new CustomItemStackHandler(silktouchDrop)));
 
                 RecipeHandlerList dummyOutputs = RecipeHandlerList.of(IO.OUT,
-                        new NotifiableItemStackHandler(be.getMetaMachine(), 2, IO.OUT));
+                        new NotifiableItemStackHandler(2, IO.OUT));
                 be.getMetaMachine().reinitializeHandlers(List.of(dummyInputs, dummyOutputs));
 
                 Iterator<GTRecipe> hammerRecipes = GTRecipeTypes.FORGE_HAMMER_RECIPES.searchRecipe(be.metaMachine,

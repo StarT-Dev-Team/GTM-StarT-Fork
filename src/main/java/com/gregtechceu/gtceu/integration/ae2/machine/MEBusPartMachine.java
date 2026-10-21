@@ -61,7 +61,7 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
 
     public MEBusPartMachine(IMachineBlockEntity holder, IO io, Object... args) {
         super(holder, GTValues.LuV, io, args);
-        this.nodeHolder = createNodeHolder();
+        this.nodeHolder = attachTrait(createNodeHolder());
         this.actionSource = IActionSource.ofMachine(nodeHolder.getMainNode()::getNode);
     }
 
@@ -73,7 +73,7 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
     }
 
     protected GridNodeHolder createNodeHolder() {
-        return new GridNodeHolder(this);
+        return new GridNodeHolder();
     }
 
     @Override

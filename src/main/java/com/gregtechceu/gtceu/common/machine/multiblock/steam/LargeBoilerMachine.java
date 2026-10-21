@@ -7,7 +7,6 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IExplosionMachine;
-import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
@@ -76,7 +75,7 @@ public class LargeBoilerMachine extends WorkableMultiblockMachine implements IEx
 
     @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new LargeBoilerMachine.LargeBoilerRecipeLogic(this);
+        return new LargeBoilerMachine.LargeBoilerRecipeLogic();
     }
 
     @Override
@@ -263,8 +262,8 @@ public class LargeBoilerMachine extends WorkableMultiblockMachine implements IEx
         @Getter
         int currentThrottle;
 
-        public LargeBoilerRecipeLogic(IRecipeLogicMachine machine) {
-            super(machine);
+        public LargeBoilerRecipeLogic() {
+            super();
             currentThrottle = 100;
         }
 

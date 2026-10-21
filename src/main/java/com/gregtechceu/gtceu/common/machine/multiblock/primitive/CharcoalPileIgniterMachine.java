@@ -97,7 +97,7 @@ public class CharcoalPileIgniterMachine extends WorkableMultiblockMachine implem
 
     @Override
     protected @NotNull CharcoalRecipeLogic createRecipeLogic(Object @NotNull... args) {
-        return new CharcoalRecipeLogic(this);
+        return new CharcoalRecipeLogic();
     }
 
     @Override
@@ -363,11 +363,13 @@ public class CharcoalPileIgniterMachine extends WorkableMultiblockMachine implem
 
     public static class CharcoalRecipeLogic extends RecipeLogic {
 
-        private final CharcoalPileIgniterMachine machine;
+        public CharcoalRecipeLogic() {
+            super();
+        }
 
-        public CharcoalRecipeLogic(CharcoalPileIgniterMachine machine) {
-            super(machine);
-            this.machine = machine;
+        @Override
+        public CharcoalPileIgniterMachine getMachine() {
+            return (CharcoalPileIgniterMachine) machine;
         }
 
         @Override
@@ -377,7 +379,7 @@ public class CharcoalPileIgniterMachine extends WorkableMultiblockMachine implem
                 if (++progress >= duration) {
                     progress = 0;
                     duration = 0;
-                    this.machine.convertLogBlocks();
+                    getMachine().convertLogBlocks();
                     setStatus(Status.IDLE);
                 }
             }

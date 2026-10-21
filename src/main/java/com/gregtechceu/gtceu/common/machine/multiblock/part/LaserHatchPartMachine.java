@@ -36,12 +36,12 @@ public class LaserHatchPartMachine extends TieredIOPartMachine implements IDataI
     public LaserHatchPartMachine(IMachineBlockEntity holder, IO io, int tier, int amperage) {
         super(holder, tier, io);
         if (io == IO.OUT) {
-            this.buffer = NotifiableLaserContainer.emitterContainer(this, GTValues.V[tier] * 64L * amperage,
-                    GTValues.V[tier], amperage);
+            this.buffer = attachTrait(NotifiableLaserContainer.emitterContainer(GTValues.V[tier] * 64L * amperage,
+                    GTValues.V[tier], amperage));
             this.buffer.setSideOutputCondition(s -> s == getFrontFacing());
         } else {
-            this.buffer = NotifiableLaserContainer.receiverContainer(this, GTValues.V[tier] * 64L * amperage,
-                    GTValues.V[tier], amperage);
+            this.buffer = attachTrait(NotifiableLaserContainer.receiverContainer(GTValues.V[tier] * 64L * amperage,
+                    GTValues.V[tier], amperage));
             this.buffer.setSideInputCondition(s -> s == getFrontFacing());
         }
     }
