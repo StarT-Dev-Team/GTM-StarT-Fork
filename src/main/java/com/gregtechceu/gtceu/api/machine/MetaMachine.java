@@ -275,7 +275,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
         return traitContainer.getTraitsByType(cls);
     }
 
-    public <T extends IMachineTrait> @Nullable T getTrait(Class<T> cls) {
+    public <T extends MachineTrait> @Nullable T getTrait(Class<T> cls) {
         return traitContainer.getTrait(cls);
     }
 
@@ -283,7 +283,7 @@ public class MetaMachine implements IEnhancedManaged, IToolable, ITickSubscripti
         return traitContainer.getNamedTrait(name);
     }
 
-    public <T extends IMachineTrait> Optional<T> getTraitOptional(Class<T> cls) {
+    public <T extends MachineTrait> Optional<T> getTraitOptional(Class<T> cls) {
         return traitContainer.getTraitOptional(cls);
     }
 

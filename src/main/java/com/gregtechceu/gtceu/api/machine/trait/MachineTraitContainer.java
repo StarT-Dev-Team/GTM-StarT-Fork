@@ -89,22 +89,24 @@ public class MachineTraitContainer implements IContentChangeAware {
     public <T extends IMachineTrait> @Unmodifiable List<T> getTraitsByType(Class<T> cls) {
         if (!machine.isLoaded())
             throw new IllegalStateException("Cannot access traits of machine before it has been loaded.");
-        return (List<T>) traitsByClass;
+        var traits = traitsByClass.get(cls);
+        if (traits == null) return List.of();
+        return (List<T>) traits;
     }
 
-    public <T extends IMachineTrait> @Nullable T getTrait(Class<T> cls) {
+    public <T extends MachineTrait> @Nullable T getTrait(Class<T> cls) {
         var list = getTraitsByType(cls);
         if (list.isEmpty()) return null;
-        return getTraitsByType(cls).get(0);
+        return list.get(0);
     }
 
     @SuppressWarnings("unchecked")
     public <T extends MachineTrait> @Nullable T getNamedTrait(String name) {
-        MachineTrait trait = namedTraits.get(name);
+        var trait = namedTraits.get(name);
         return trait == null ? null : (T) trait;
     }
 
-    public <T extends IMachineTrait> Optional<T> getTraitOptional(Class<T> cls) {
+    public <T extends MachineTrait> Optional<T> getTraitOptional(Class<T> cls) {
         return Optional.ofNullable(getTrait(cls));
     }
 
@@ -135,7 +137,8 @@ public class MachineTraitContainer implements IContentChangeAware {
 
         Arrays.stream(trait.getFieldHolder().getFields())
                 .filter(ManagedKey::isDestSync)
-                .forEach(field -> trait.getSyncStorage().addSyncUpdateListener(field, (_f, _v, _p) -> onTraitChange(name)));
+                .forEach(field -> trait.getSyncStorage().addSyncUpdateListener(field,
+                        (_f, _v, _p) -> onTraitChange(name)));
 
         namedTraits.put(name, trait);
     }

@@ -7,5 +7,4 @@ public interface IMultiblockMachineTrait extends IMachineTrait {
     default void onMultiblockStructureFormed() {}
 
     default void onMultiblockStructureInvalid() {}
-
 }

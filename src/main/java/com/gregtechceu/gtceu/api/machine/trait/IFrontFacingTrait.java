@@ -7,5 +7,4 @@ public interface IFrontFacingTrait extends IMachineTrait {
     default boolean isValidFrontFace(Direction direction) {
         return true;
     }
-
 }
