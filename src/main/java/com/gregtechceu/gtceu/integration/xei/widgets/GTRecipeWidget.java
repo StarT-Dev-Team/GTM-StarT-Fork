@@ -266,9 +266,11 @@ public class GTRecipeWidget extends WidgetGroup {
     }
 
     private List<Component> getOverclockDurationTexts(int ocs, int perfectOCs) {
-        if (ocs == 0) return List.of();
+        List<Component> multiplierTexts = getDurationMultiplierTexts();
 
-        var texts = new ArrayList<Component>();
+        if (ocs == 0 && multiplierTexts.isEmpty()) return List.of();
+
+        List<Component> texts = new ArrayList<>();
 
         texts.add(Component.translatable("gtceu.recipe.oc.duration.base",
                 FormattingUtil.formatNumbers(recipe.duration / 20f)));
@@ -283,12 +285,14 @@ public class GTRecipeWidget extends WidgetGroup {
                     (int) OverclockingLogic.PERFECT_DURATION_FACTOR_INV));
         }
 
+        texts.addAll(multiplierTexts);
+
         return texts;
     }
 
     private List<Component> getOverclockUsageTexts(long baseEUt, OverclockingLogic.OCResult result) {
-        var texts = new ArrayList<Component>();
-        var multiplierTexts = getEUtMultiplierTexts();
+        List<Component> texts = new ArrayList<>();
+        List<Component> multiplierTexts = getEUtMultiplierTexts();
 
         if (result.ocLevel() == 0 && multiplierTexts.isEmpty()) return texts;
 
@@ -306,6 +310,18 @@ public class GTRecipeWidget extends WidgetGroup {
 
     protected OverclockingLogic createOCLogic(boolean perfect) {
         return perfect ? OverclockingLogic.PERFECT_OVERCLOCK : OverclockingLogic.NON_PERFECT_OVERCLOCK;
+    }
+
+    protected int getBaseDuration() {
+        return recipe.duration;
+    }
+
+    protected double getDurationMultiplier() {
+        return 1;
+    }
+
+    protected List<Component> getDurationMultiplierTexts() {
+        return List.of();
     }
 
     protected double getEUtMultiplier() {
@@ -347,9 +363,16 @@ public class GTRecipeWidget extends WidgetGroup {
         int y = getSize().height - 30;
         addWidget(
                 new PredicatedButtonWidget(x, y, 15, 15, new GuiTextureGroup(GuiTextures.BUTTON, new TextTexture("ID")),
-                        cd -> Minecraft.getInstance().keyboardHandler.setClipboard(recipe.id.toString()),
+                        cd -> Minecraft.getInstance().keyboardHandler
+                                .setClipboard(cd.isShiftClick ? getSizeInfo() : recipe.id.toString()),
                         () -> !FMLLoader.isProduction(), !FMLLoader.isProduction())
-                        .setHoverTooltips("click to copy: " + recipe.id));
+                        .setHoverTooltips("click to copy: " + recipe.id, "shift click to copy: " + getSizeInfo()));
+    }
+
+    private String getSizeInfo() {
+        return recipe.recipeType.registryName + " width: " + getSize().width + " (template " +
+                recipe.recipeType.getRecipeUI().getOriginalWidth() + ", min " +
+                recipe.recipeType.getRecipeUI().getMinWidth() + "), height: " + getSize().height;
     }
 
     public static int getVoltageXOffset(int tier, int width) {
@@ -400,11 +423,14 @@ public class GTRecipeWidget extends WidgetGroup {
         List<Component> ocDurationTexts = List.of();
         List<Component> ocUsageTexts = List.of();
 
+        int baseDuration = getBaseDuration();
+        double durationMultiplier = getDurationMultiplier();
         double eutMultiplier = getEUtMultiplier();
 
-        if ((tier > minTier || eutMultiplier != 1) && !inputEUt.isEmpty()) {
+        if ((tier > minTier || baseDuration != recipe.duration || durationMultiplier != 1 || eutMultiplier != 1) &&
+                !inputEUt.isEmpty()) {
             int ocs = Math.max(0, tier - minTier - (minTier == ULV ? 1 : 0));
-            var params = new OverclockingLogic.OCParams(inputEUt.voltage(), recipe.duration, ocs, ocs, 1);
+            var params = new OverclockingLogic.OCParams(inputEUt.voltage(), baseDuration, ocs, ocs, 1);
             var result = logic.runOverclockingLogic(params, V[tier]);
 
             if (recipe.recipeType != GTRecipeTypes.FUSION_RECIPES) {
@@ -412,7 +438,8 @@ public class GTRecipeWidget extends WidgetGroup {
                 ocUsageTexts = getOverclockUsageTexts(inputEUt.getTotalEU(), result);
             }
 
-            duration = (int) (duration * result.durationMultiplier());
+            duration = Math.max(1, (int) (baseDuration * result.durationMultiplier()));
+            duration = Math.max(1, (int) (duration * durationMultiplier));
             inputEUt = inputEUt.multiplyVoltage(result.eutMultiplier() * eutMultiplier);
 
             if (tier > minTier) tierText = tierText.formatted(ChatFormatting.ITALIC);
@@ -434,7 +461,7 @@ public class GTRecipeWidget extends WidgetGroup {
                                     "gtceu.recipe.total_duration" : "gtceu.recipe.duration",
                             FormattingUtil.formatNumbers(duration / 20f)).withStyle(ChatFormatting.UNDERLINE));
 
-            var durationTexts = new ArrayList<>(getRecipeDurationTexts(duration));
+            List<Component> durationTexts = new ArrayList<>(getRecipeDurationTexts(duration));
 
             durationTexts.addAll(ocDurationTexts);
             recipeDurationText.setHoverTooltips(durationTexts);
