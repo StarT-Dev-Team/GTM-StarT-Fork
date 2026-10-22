@@ -278,6 +278,35 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
     }
 
     @Override
+    public MultiblockMachineBuilder overlayCasingModel(ResourceLocation baseCasing, ResourceLocation overlayModel) {
+        return (MultiblockMachineBuilder) super.overlayCasingModel(baseCasing, overlayModel);
+    }
+
+    @Override
+    public MultiblockMachineBuilder colorOverlayCasingModel(ResourceLocation casing, String overlay) {
+        return (MultiblockMachineBuilder) super.colorOverlayCasingModel(casing, overlay);
+    }
+
+    @Override
+    public MultiblockMachineBuilder colorOverlayCasingModel(ResourceLocation casing, String overlay,
+                                                            @Nullable String pipeOverlay,
+                                                            @Nullable String emissiveOverlay) {
+        return (MultiblockMachineBuilder) super.colorOverlayCasingModel(casing, overlay, pipeOverlay, emissiveOverlay);
+    }
+
+    @Override
+    public MultiblockMachineBuilder colorOverlayCasingModel(ResourceLocation casing, ResourceLocation overlay) {
+        return (MultiblockMachineBuilder) super.colorOverlayCasingModel(casing, overlay);
+    }
+
+    @Override
+    public MultiblockMachineBuilder colorOverlayCasingModel(ResourceLocation casing, ResourceLocation overlay,
+                                                            @Nullable ResourceLocation pipeOverlay,
+                                                            @Nullable ResourceLocation emissiveOverlay) {
+        return (MultiblockMachineBuilder) super.colorOverlayCasingModel(casing, overlay, pipeOverlay, emissiveOverlay);
+    }
+
+    @Override
     public MultiblockMachineBuilder tooltipBuilder(@Nullable BiConsumer<ItemStack, List<Component>> tooltipBuilder) {
         return (MultiblockMachineBuilder) super.tooltipBuilder(tooltipBuilder);
     }
