@@ -83,8 +83,23 @@ public class PatternPreviewWidget extends WidgetGroup {
     private static boolean defaultShowMeasurementGrid = true;
     public boolean showMeasurementGrid = defaultShowMeasurementGrid;
 
+    private static boolean defaultTurntableActive = false;
+    public boolean isTurntableActive = defaultTurntableActive;
+
     private static int defaultGraduationStep = 0;
     public int graduationStep = defaultGraduationStep;
+
+    public void toggleTurntable() {
+        setTurntableActive(!this.isTurntableActive);
+    }
+
+    public void setTurntableActive(boolean active) {
+        this.isTurntableActive = active;
+        defaultTurntableActive = this.isTurntableActive;
+        if (this.sceneWidget != null) {
+            this.sceneWidget.setTurntableActive(active);
+        }
+    }
 
     public void toggleGrid() {
         this.showMeasurementGrid = !this.showMeasurementGrid;
@@ -194,6 +209,7 @@ public class PatternPreviewWidget extends WidgetGroup {
         sceneWidget.setOnSelected(this::onPosSelected);
         sceneWidget.setRenderFacing(false);
         sceneWidget.setBeforeBatchEnd(this::renderGrid);
+        sceneWidget.setTurntableActive(this.isTurntableActive);
 
         scrollableWidgetGroup = new DraggableScrollableWidgetGroup(3, WIDGET_HEIGHT - 28, WIDGET_WIDTH - 6, 25)
                 .setXScrollBarHeight(4)
@@ -292,6 +308,13 @@ public class PatternPreviewWidget extends WidgetGroup {
                 cd -> cycleGraduation())
                 .setHoverBorderTexture(1, -1)
                 .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.measurement_grid_graduation")));
+
+        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 110, 18, 18, new GuiTextureGroup(
+                ColorPattern.T_GRAY.rectTexture(),
+                new TextTexture("1").setSupplier(() -> isTurntableActive ? "ON" : "OFF")),
+                cd -> toggleTurntable())
+                .setHoverBorderTexture(1, -1)
+                .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.turntable")));
 
         setPage(0);
     }
@@ -491,6 +514,9 @@ public class PatternPreviewWidget extends WidgetGroup {
     @Override
     public void updateScreen() {
         super.updateScreen();
+        if (sceneWidget != null && sceneWidget.isTurntableActive() != this.isTurntableActive) {
+            sceneWidget.setTurntableActive(this.isTurntableActive);
+        }
         // I can only think of this way
         if (!isLoaded && GTCEu.Mods.isEMILoaded() && Minecraft.getInstance().screen instanceof RecipeScreen) {
             setPage(0);

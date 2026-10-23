@@ -1223,6 +1223,7 @@ public class LangHandler {
         provider.add("gtceu.multiblock.preview.select", "Right-click to check candidates");
         provider.add("gtceu.multiblock.preview.measurement_grid", "Toggle Measurement Grid");
         provider.add("gtceu.multiblock.preview.measurement_grid_graduation", "Grid Graduation");
+        provider.add("gtceu.multiblock.preview.turntable", "Turntable Mode");
         provider.add("gtceu.multiblock.pattern.error", "Expected components (%s) at (%s).");
         provider.add("gtceu.multiblock.pattern.error.limited_title", "Unexpected number of %s:");
         provider.add("gtceu.multiblock.pattern.error.limited_exact", "§cExactly: %d§r");
