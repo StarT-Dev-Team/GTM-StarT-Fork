@@ -28,6 +28,7 @@ import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -74,6 +75,8 @@ public class PatternPreviewWidget extends WidgetGroup {
     private final List<SimplePredicate> predicates;
     private int index;
     public int layer;
+    public ButtonWidget pageButton;
+    public ButtonWidget layerButton;
     private SlotWidget[] slotWidgets;
     private SlotWidget[] candidates;
 
@@ -118,6 +121,18 @@ public class PatternPreviewWidget extends WidgetGroup {
         layer = -1;
 
         addWidget(sceneWidget = new PatternSceneWidget(3, 3, WIDGET_WIDTH - 6, WIDGET_HEIGHT - 32, LEVEL) {
+
+            @Override
+            public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
+                if (isMouseOverElement(mouseX, mouseY)) {
+                    if (Screen.hasShiftDown() || Screen.hasControlDown()) {
+                        int delta = wheelDelta > 0 ? 1 : -1;
+                        stepLayer(delta);
+                        return true;
+                    }
+                }
+                return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
+            }
 
             @Override
             public void renderBlockOverLay(WorldSceneRenderer renderer) {
@@ -212,17 +227,57 @@ public class PatternPreviewWidget extends WidgetGroup {
                     .toArray(MBPattern[]::new);
         });
 
-        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 30, 18, 18, new GuiTextureGroup(
+        addWidget(pageButton = new ButtonWidget(WIDGET_WIDTH - 22, 30, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
                 new TextTexture("1").setSupplier(() -> "P:" + index)),
-                (x) -> setPage((index + 1 >= patterns.length) ? 0 : index + 1))
-                .setHoverBorderTexture(1, -1));
+                cd -> updatePage(cd.button == 1)) {
 
-        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 50, 18, 18, new GuiTextureGroup(
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                if (button == 1 && isMouseOverElement(mouseX, mouseY)) {
+                    updatePage(true);
+                    playButtonClickSound();
+                    return true;
+                }
+                return super.mouseClicked(mouseX, mouseY, button);
+            }
+
+            @Override
+            public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
+                if (isMouseOverElement(mouseX, mouseY)) {
+                    int delta = wheelDelta > 0 ? 1 : -1;
+                    stepPage(delta);
+                    return true;
+                }
+                return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
+            }
+        }.setHoverBorderTexture(1, -1));
+
+        addWidget(layerButton = new ButtonWidget(WIDGET_WIDTH - 22, 50, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
                 new TextTexture("1").setSupplier(() -> layer >= 0 ? "L:" + layer : "ALL")),
-                cd -> updateLayer())
-                .setHoverBorderTexture(1, -1));
+                cd -> updateLayer(cd.button == 1)) {
+
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                if (button == 1 && isMouseOverElement(mouseX, mouseY)) {
+                    updateLayer(true);
+                    playButtonClickSound();
+                    return true;
+                }
+                return super.mouseClicked(mouseX, mouseY, button);
+            }
+
+            @Override
+            public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
+                if (isMouseOverElement(mouseX, mouseY)) {
+                    int delta = wheelDelta > 0 ? 1 : -1;
+                    stepLayer(delta);
+                    return true;
+                }
+                return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
+            }
+        }.setHoverBorderTexture(1, -1));
 
         addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 70, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
@@ -241,18 +296,49 @@ public class PatternPreviewWidget extends WidgetGroup {
         setPage(0);
     }
 
-    private void updateLayer() {
-        MBPattern pattern = patterns[index];
-        if (layer + 1 >= -1 && layer + 1 <= pattern.maxY - pattern.minY) {
-            layer += 1;
-            if (pattern.controllerBase.isFormed()) {
-                onFormedSwitch(false);
-            }
+    private void updatePage(boolean reverse) {
+        if (patterns == null || patterns.length == 0) return;
+        if (reverse) {
+            setPage(index - 1 < 0 ? patterns.length - 1 : index - 1);
         } else {
-            layer = -1;
-            if (!pattern.controllerBase.isFormed()) {
-                onFormedSwitch(true);
-            }
+            setPage(index + 1 >= patterns.length ? 0 : index + 1);
+        }
+    }
+
+    public void stepPage(int delta) {
+        if (patterns == null || patterns.length == 0) return;
+        int target = Mth.clamp(this.index + delta, 0, patterns.length - 1);
+        if (target != this.index) {
+            setPage(target);
+        }
+    }
+
+    private void updateLayer(boolean reverse) {
+        if (patterns == null || index < 0 || index >= patterns.length) return;
+        MBPattern pattern = patterns[index];
+        int maxLayer = Math.max(-1, pattern.maxY - pattern.minY);
+        if (reverse) {
+            setLayer((layer > -1) ? layer - 1 : maxLayer);
+        } else {
+            setLayer((layer < maxLayer) ? layer + 1 : -1);
+        }
+    }
+
+    public void stepLayer(int delta) {
+        setLayer(this.layer + delta);
+    }
+
+    public void setLayer(int targetLayer) {
+        if (patterns == null || index < 0 || index >= patterns.length) return;
+        MBPattern pattern = patterns[index];
+        int newLayer = Mth.clamp(targetLayer, -1, Math.max(-1, pattern.maxY - pattern.minY));
+        if (this.layer == newLayer) return;
+
+        this.layer = newLayer;
+        if (this.layer == -1 && !pattern.controllerBase.isFormed()) {
+            onFormedSwitch(true);
+        } else if (pattern.controllerBase.isFormed()) {
+            onFormedSwitch(false);
         }
         setupScene(pattern);
     }
@@ -414,6 +500,21 @@ public class PatternPreviewWidget extends WidgetGroup {
                     setPage(0);
                     isLoaded = true;
                 }
+    }
+
+    @Override
+    public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
+        if (pageButton != null && pageButton.isMouseOverElement(mouseX, mouseY)) {
+            int delta = wheelDelta > 0 ? 1 : -1;
+            stepPage(delta);
+            return true;
+        }
+        if (layerButton != null && layerButton.isMouseOverElement(mouseX, mouseY)) {
+            int delta = wheelDelta > 0 ? 1 : -1;
+            stepLayer(delta);
+            return true;
+        }
+        return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
     }
 
     @Override
