@@ -466,7 +466,8 @@ public class MultiblockDisplayText {
                             countD = countD * runs * function.getBoostedChance(item, recipeTier, chanceTier) /
                                     item.maxChance;
                         }
-                        countD = countD * provider.getMidRoll();
+
+                        countD = countD * provider.getMidRoll(function.getTierDiff(recipeTier, chanceTier));
                     } else {
                         var stacks = ItemRecipeCapability.CAP.of(item.content).getItems();
                         if (stacks.length == 0) continue;
@@ -510,7 +511,8 @@ public class MultiblockDisplayText {
                             amountD = amountD * runs * function.getBoostedChance(fluid, recipeTier, chanceTier) /
                                     fluid.maxChance;
                         }
-                        amountD = amountD * provider.getMidRoll();
+
+                        amountD = amountD * provider.getMidRoll(function.getTierDiff(recipeTier, chanceTier));
                     } else {
                         var stacks = FluidRecipeCapability.CAP.of(fluid.content).getStacks();
                         if (stacks.length == 0) continue;

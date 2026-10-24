@@ -22,6 +22,18 @@ public class ModifiedIntProvider {
         if (source instanceof BiasedToBottomInt biased) {
             return BiasedToBottomInt.of(modifier.apply(biased.getMinValue()), modifier.apply(biased.getMaxValue()));
         }
+        if (source instanceof StatisticalInt statistical) {
+            double multiplier = modifier.multiplier();
+            int rolls = (int) Math.round(multiplier);
+
+            if (rolls >= 1 && Math.abs(multiplier - rolls) < 1e-9) {
+                int addition = (int) modifier.addition();
+                if (rolls == 1 && addition == 0) return source;
+
+                return new SummedInt(statistical, rolls, addition);
+            }
+        }
+
         return new FlooredInt(
                 new AddedFloat(
                         new MultipliedFloat(

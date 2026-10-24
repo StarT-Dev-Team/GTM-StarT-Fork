@@ -4,8 +4,10 @@ import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
+import com.gregtechceu.gtceu.api.recipe.ingredient.IRangedIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderFluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
+import com.gregtechceu.gtceu.api.recipe.ingredient.RangedDisplay;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GradientUtil;
 
@@ -27,6 +29,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public class Content {
 
@@ -111,14 +115,23 @@ public class Content {
 
     public IGuiTexture createOverlay(boolean perTick, int tickPeriod, int recipeTier, int chanceTier,
                                      boolean showNC, @Nullable ChanceBoostFunction function) {
+        int tierDiff = (function == null ? ChanceBoostFunction.OVERCLOCK : function)
+                .getTierDiff(recipeTier, chanceTier);
+        Optional<RangedDisplay.SlotAmount> weightedAmount = content instanceof IRangedIngredient ranged ?
+                RangedDisplay.slotAmount(ranged.getCountProvider(), tierDiff) : Optional.empty();
+
         return new IGuiTexture() {
 
             @Override
             @OnlyIn(Dist.CLIENT)
             public void draw(GuiGraphics graphics, int mouseX, int mouseY, float x, float y, int width, int height) {
                 drawChance(graphics, x, y, width, height, recipeTier, chanceTier, showNC, function);
-                drawRangeAmount(graphics, x, y, width, height);
-                drawFluidAmount(graphics, x, y, width, height);
+                if (weightedAmount.isPresent()) {
+                    drawWeightedAmount(graphics, x, y, width, height, weightedAmount.get());
+                } else {
+                    drawRangeAmount(graphics, x, y, width, height);
+                    drawFluidAmount(graphics, x, y, width, height);
+                }
                 if (perTick) {
                     drawTick(graphics, x, y, width, height, tickPeriod);
                 }
@@ -174,6 +187,46 @@ public class Content {
                     (int) ((y + (height / 3f) + 6) * 2), color, true);
             graphics.pose().popPose();
         }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public void drawWeightedAmount(GuiGraphics graphics, float x, float y, int width, int height,
+                                   RangedDisplay.SlotAmount amount) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 400);
+        graphics.pose().scale(0.5f, 0.5f, 1);
+
+        Font fontRenderer = Minecraft.getInstance().font;
+        String s;
+        int offset;
+
+        if (content instanceof FluidIngredient) {
+            int mB = (int) Math.round(amount.mean());
+            s = "~" + FormattingUtil.formatBuckets(mB);
+
+            if (fontRenderer.width(s) > 32)
+                s = "~" + FormattingUtil.formatNumberReadable(mB, true, FormattingUtil.DECIMAL_FORMAT_1F, "B");
+            if (fontRenderer.width(s) > 32)
+                s = "~" + FormattingUtil.formatNumberReadable(mB, true, FormattingUtil.DECIMAL_FORMAT_0F, "B");
+
+            offset = 22;
+        } else {
+            s = "~" + RangedDisplay.formatMean(amount.mean());
+
+            if (s.length() > 5) s = "~X";
+
+            offset = 21;
+        }
+
+        int color = switch (amount.shift()) {
+            case UP -> ChatFormatting.GREEN.getColor();
+            case DOWN -> ChatFormatting.RED.getColor();
+            case NONE -> ChatFormatting.AQUA.getColor();
+        };
+
+        graphics.drawString(fontRenderer, s, (int) ((x + (width / 3f)) * 2 - fontRenderer.width(s) + offset),
+                (int) ((y + (height / 3f) + 6) * 2), color, true);
+        graphics.pose().popPose();
     }
 
     @OnlyIn(Dist.CLIENT)
