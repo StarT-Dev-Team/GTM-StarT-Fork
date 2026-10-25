@@ -333,7 +333,7 @@ public class PipeModel {
         quads.add(FaceQuad.builder(face, getSideSprite()).cube(coreCube).cubeUV().tintIndex(0).bake());
 
         var secondarySideSprite = getSecondarySideSprite();
-        
+
         if (secondarySideSprite != null) {
             quads.add(FaceQuad.builder(face, secondarySideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
         }
