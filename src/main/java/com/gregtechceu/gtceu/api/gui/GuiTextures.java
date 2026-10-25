@@ -47,6 +47,10 @@ public class GuiTextures {
     public static final ResourceTexture TOOL_SWITCH_CONVERTER_EU = new ResourceTexture(
             "gtceu:textures/gui/overlay/tool_wire_connect.png"); // todo switch to tool_switch_converter_eu once that
                                                                  // gets made
+    public static final ResourceTexture TOOL_BATCH_ON = new ResourceTexture(
+            "gtceu:textures/gui/overlay/tool_batch_on.png");
+    public static final ResourceTexture TOOL_BATCH_OFF = new ResourceTexture(
+            "gtceu:textures/gui/overlay/tool_batch_off.png");
 
     // BASE TEXTURES
     public static final ResourceBorderTexture BACKGROUND = new ResourceBorderTexture(

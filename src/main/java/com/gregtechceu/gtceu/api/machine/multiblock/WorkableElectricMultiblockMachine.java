@@ -7,6 +7,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.*;
+import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IOverclockMachine;
@@ -20,16 +21,25 @@ import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
 import com.lowdragmc.lowdraglib.gui.widget.*;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntMaps;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,6 +58,7 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
     @Getter
     protected int tier;
     @Persisted
+    @DescSynced
     @Getter
     protected boolean batchEnabled;
 
@@ -148,8 +159,7 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
     @Override
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         IVoidable.attachConfigurators(configuratorPanel, this);
-        if (Arrays.stream(getDefinition().getRecipeModifier().modifiers())
-                .anyMatch(modifier -> modifier == GTRecipeModifiers.BATCH_MODE)) {
+        if (isBatchCapable()) {
             configuratorPanel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
                     GuiTextures.BUTTON_BATCH.getSubTexture(0, 0, 1, 0.5),
                     GuiTextures.BUTTON_BATCH.getSubTexture(0, 0.5, 1, 0.5),
@@ -161,6 +171,42 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
         }
 
         IFancyUIMachine.super.attachConfigurators(configuratorPanel);
+    }
+
+    @Override
+    protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide,
+                                                   BlockHitResult hitResult) {
+        InteractionResult result = super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+
+        if (result != InteractionResult.PASS) return result;
+
+        if (isBatchCapable()) {
+            if (!isRemote()) {
+                setBatchEnabled(!isBatchEnabled());
+
+                playerIn.displayClientMessage(
+                        Component.translatable("gtceu.machine.batch_" + (isBatchEnabled() ? "enabled" : "disabled")),
+                        false);
+            }
+
+            return InteractionResult.sidedSuccess(isRemote());
+        }
+
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                              Direction side) {
+        ResourceTexture tips = super.sideTips(player, pos, state, toolTypes, side);
+
+        if (tips != null) return tips;
+
+        if (toolTypes.contains(GTToolType.SCREWDRIVER) && isBatchCapable()) {
+            return isBatchEnabled() ? GuiTextures.TOOL_BATCH_ON : GuiTextures.TOOL_BATCH_OFF;
+        }
+
+        return null;
     }
 
     @Override
@@ -291,5 +337,10 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
      */
     public boolean isGenerator() {
         return getDefinition().isGenerator();
+    }
+
+    public boolean isBatchCapable() {
+        return Arrays.stream(getDefinition().getRecipeModifier().modifiers())
+                .anyMatch(modifier -> modifier == GTRecipeModifiers.BATCH_MODE);
     }
 }
