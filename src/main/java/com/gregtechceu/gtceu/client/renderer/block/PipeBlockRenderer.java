@@ -80,7 +80,7 @@ public class PipeBlockRenderer implements IRenderer, ICoverableRenderer {
     public List<BakedQuad> renderModel(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction side,
                                        RandomSource rand) {
         if (level == null) {
-            return pipeModel.bakeQuads(side, PipeModel.ITEM_CONNECTIONS, 0);
+            return pipeModel.bakeQuads(side, pipeModel.getItemConnections(), 0);
         }
         if (!(level.getBlockEntity(pos) instanceof IPipeNode<?, ?> pipeNode)) {
             return pipeModel.bakeQuads(side, 0, 0);

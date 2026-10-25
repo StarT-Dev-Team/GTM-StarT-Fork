@@ -10,7 +10,8 @@ import java.util.Locale;
 
 public enum LaserPipeType implements IPipeType<LaserPipeProperties>, StringRepresentable {
 
-    NORMAL;
+    NORMAL,
+    MIRROR;
 
     public static final ResourceLocation TYPE_ID = GTCEu.id("laser");
 

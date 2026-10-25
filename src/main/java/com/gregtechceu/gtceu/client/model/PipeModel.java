@@ -294,11 +294,7 @@ public class PipeModel {
             // render core cube
             for (Direction face : GTUtil.DIRECTIONS) {
                 if (!PipeBlockEntity.isConnected(connections, face)) {
-                    quads.add(FaceQuad.builder(face, sideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
-                    if (secondarySideSprite != null) {
-                        quads.add(FaceQuad.builder(face, secondarySideSprite).cube(coreCube).cubeUV().tintIndex(0)
-                                .bake());
-                    }
+                    bakeCoreFace(quads, face, connections);
                 }
                 // render each connected side
                 for (Direction facing : GTUtil.DIRECTIONS) {
@@ -332,6 +328,21 @@ public class PipeModel {
         return quads;
     }
 
+    @OnlyIn(Dist.CLIENT)
+    protected void bakeCoreFace(List<BakedQuad> quads, Direction face, int connections) {
+        quads.add(FaceQuad.builder(face, getSideSprite()).cube(coreCube).cubeUV().tintIndex(0).bake());
+
+        var secondarySideSprite = getSecondarySideSprite();
+        
+        if (secondarySideSprite != null) {
+            quads.add(FaceQuad.builder(face, secondarySideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
+        }
+    }
+
+    public int getItemConnections() {
+        return ITEM_CONNECTIONS;
+    }
+
     @SuppressWarnings("DataFlowIssue")
     @OnlyIn(Dist.CLIENT)
     public @NotNull TextureAtlasSprite getParticleTexture() {
@@ -348,7 +359,7 @@ public class PipeModel {
                 combinedLight, combinedOverlay,
                 (ItemBakedModel) (state, direction, random) -> itemModelCache.computeIfAbsent(
                         Optional.ofNullable(direction),
-                        direction1 -> bakeQuads(direction1.orElse(null), ITEM_CONNECTIONS, 0)));
+                        direction1 -> bakeQuads(direction1.orElse(null), getItemConnections(), 0)));
         IItemRendererProvider.disabled.set(false);
     }
 
