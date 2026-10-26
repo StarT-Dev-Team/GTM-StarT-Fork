@@ -19,6 +19,7 @@ import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.integration.emi.recipe.GTRecipeEMICategory;
 import com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeJEICategory;
 import com.gregtechceu.gtceu.integration.rei.recipe.GTRecipeREICategory;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
 import com.lowdragmc.lowdraglib.gui.editor.configurator.IConfigurableWidget;
 import com.lowdragmc.lowdraglib.gui.editor.data.Resources;
@@ -59,10 +60,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.DoubleSupplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("UnusedReturnValue")
 public class GTRecipeTypeUI {
+
+    public static final int DEFAULT_MIN_WIDTH = 150;
 
     @Getter
     @Setter
@@ -83,8 +87,13 @@ public class GTRecipeTypeUI {
     @Nullable
     protected BiConsumer<GTRecipe, WidgetGroup> uiBuilder;
     @Setter
+    @Nullable
+    protected Function<GTRecipe, GTRecipeWidget> widgetFactory;
+    @Setter
     @Getter
     protected int maxTooltips = 3;
+    @Getter
+    protected int minWidth = DEFAULT_MIN_WIDTH;
 
     private CompoundTag customUICache;
     private Size xeiSize;
@@ -143,7 +152,7 @@ public class GTRecipeTypeUI {
         if (size == null) {
             var originalSize = createEditableUITemplate(false, false).createDefault().getSize();
             this.originalWidth = originalSize.width;
-            this.xeiSize = size = new Size(Math.max(originalWidth, 150),
+            this.xeiSize = size = new Size(Math.max(originalWidth, minWidth),
                     getPropertyHeightShift() + 5 + originalSize.height);
         }
         return size;
@@ -408,6 +417,10 @@ public class GTRecipeTypeUI {
         return maxPropertyCount * 10; // GTRecipeWidget#LINE_HEIGHT
     }
 
+    public GTRecipeWidget createWidget(GTRecipe recipe) {
+        return widgetFactory == null ? new GTRecipeWidget(recipe) : widgetFactory.apply(recipe);
+    }
+
     public void appendJEIUI(GTRecipe recipe, WidgetGroup widgetGroup) {
         if (uiBuilder != null) {
             uiBuilder.accept(recipe, widgetGroup);
@@ -427,6 +440,17 @@ public class GTRecipeTypeUI {
     public GTRecipeTypeUI setProgressBar(ResourceTexture progressBar, ProgressTexture.FillDirection moveType) {
         this.progressBarTexture = new ProgressTexture(progressBar.getSubTexture(0, 0, 1, 0.5),
                 progressBar.getSubTexture(0, 0.5, 1, 0.5)).setFillDirection(moveType);
+        return this;
+    }
+
+    public GTRecipeTypeUI setMinWidth(int minWidth) {
+        if (minWidth < DEFAULT_MIN_WIDTH) {
+            GTCEu.LOGGER.debug("Min width {} of {} is below the default of {}, using the default", minWidth,
+                    recipeType.registryName, DEFAULT_MIN_WIDTH);
+        }
+
+        this.minWidth = Math.max(DEFAULT_MIN_WIDTH, minWidth);
+
         return this;
     }
 }

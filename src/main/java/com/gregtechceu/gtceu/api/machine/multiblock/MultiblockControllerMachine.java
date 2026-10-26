@@ -10,6 +10,7 @@ import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
+import com.gregtechceu.gtceu.api.machine.trait.MultiblockMachineTrait;
 import com.gregtechceu.gtceu.api.pattern.MultiblockState;
 import com.gregtechceu.gtceu.api.pattern.MultiblockWorldSavedData;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
@@ -70,6 +71,8 @@ public class MultiblockControllerMachine extends MetaMachine implements IMultiCo
     @DescSynced
     protected boolean isFlipped;
 
+    protected List<MultiblockMachineTrait> multiblockTraits = List.of();
+
     public MultiblockControllerMachine(IMachineBlockEntity holder) {
         super(holder);
     }
@@ -93,6 +96,8 @@ public class MultiblockControllerMachine extends MetaMachine implements IMultiCo
         if (getLevel() instanceof ServerLevel serverLevel) {
             MultiblockWorldSavedData.getOrCreate(serverLevel).addAsyncLogic(this);
         }
+        multiblockTraits = traits.stream().filter(MultiblockMachineTrait.class::isInstance)
+                .map(MultiblockMachineTrait.class::cast).toList();
     }
 
     @Override
@@ -205,6 +210,7 @@ public class MultiblockControllerMachine extends MetaMachine implements IMultiCo
             part.addedToController(this);
         }
         updatePartPositions();
+        multiblockTraits.forEach(MultiblockMachineTrait::onMultiblockStructureFormed);
     }
 
     @Override
@@ -221,6 +227,7 @@ public class MultiblockControllerMachine extends MetaMachine implements IMultiCo
         parallelHatch = null;
         parts.clear();
         updatePartPositions();
+        multiblockTraits.forEach(MultiblockMachineTrait::onMultiblockStructureInvalid);
     }
 
     /**

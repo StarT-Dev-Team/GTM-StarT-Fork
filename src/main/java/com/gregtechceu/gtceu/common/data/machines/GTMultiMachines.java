@@ -32,10 +32,8 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -179,17 +177,7 @@ public class GTMultiMachines {
                             GTMaterialItems.MATERIAL_ITEMS.get(TagPrefix.dustTiny, Ash).get() })
             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_heatproof"),
                     GTCEu.id("block/multiblock/electric_blast_furnace"))
-            .additionalDisplay((controller, components) -> {
-                // spotless:off
-                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
-                    components.add(Component.translatable("gtceu.multiblock.blast_furnace.max_temperature",
-                            Component.translatable(
-                                            FormattingUtil.formatNumbers(coilMachine.getCoilType().getCoilTemperature() +
-                                                    100L * Math.max(0, coilMachine.getTier() - MV)) + "K")
-                                    .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
-                }
-                // spotless:on
-            })
+            .additionalDisplay(CoilWorkableElectricMultiblockMachine.BLAST_DISPLAY)
             .register();
 
     public static final MultiblockMachineDefinition LARGE_CHEMICAL_REACTOR = REGISTRATE
@@ -237,47 +225,38 @@ public class GTMultiMachines {
                 GTCEuAPI.HEATING_COILS.entrySet().stream()
                         .sorted(Comparator.comparingInt(entry -> entry.getKey().getTier()))
                         .forEach(coil -> {
-                        var coilBuilder = baseBuilder.shallowCopy().where('C', coil.getValue().get());
-                shapeInfo.add(coilBuilder.shallowCopy()
-                        .aisle("IXO", "FSH", "XMX")
-                        .aisle("XXX", "XPX", "XXX")
-                        .aisle("XEX", "XCX", "XXX")
-                        .build());
-                shapeInfo.add(coilBuilder.shallowCopy()
-                        .aisle("IXO", "FSH", "XMX")
-                        .aisle("XXX", "XPX", "XCX")
-                        .aisle("XEX", "XXX", "XXX")
-                        .build());
-                shapeInfo.add(coilBuilder.shallowCopy()
-                        .aisle("IXO", "FSH", "XMX")
-                        .aisle("XCX", "XPX", "XXX")
-                        .aisle("XEX", "XXX", "XXX")
-                        .build());
-                shapeInfo.add(coilBuilder.shallowCopy()
-                        .aisle("IXO", "FSH", "XMX")
-                        .aisle("XXX", "CPX", "XXX")
-                        .aisle("XEX", "XXX", "XXX")
-                        .build());
-                shapeInfo.add(coilBuilder.shallowCopy()
-                        .aisle("IXO", "FSH", "XMX")
-                        .aisle("XXX", "XPC", "XXX")
-                        .aisle("XEX", "XXX", "XXX")
-                        .build());
-                });
+                            var coilBuilder = baseBuilder.shallowCopy().where('C', coil.getValue().get());
+                            shapeInfo.add(coilBuilder.shallowCopy()
+                                    .aisle("IXO", "FSH", "XMX")
+                                    .aisle("XXX", "XPX", "XXX")
+                                    .aisle("XEX", "XCX", "XXX")
+                                    .build());
+                            shapeInfo.add(coilBuilder.shallowCopy()
+                                    .aisle("IXO", "FSH", "XMX")
+                                    .aisle("XXX", "XPX", "XCX")
+                                    .aisle("XEX", "XXX", "XXX")
+                                    .build());
+                            shapeInfo.add(coilBuilder.shallowCopy()
+                                    .aisle("IXO", "FSH", "XMX")
+                                    .aisle("XCX", "XPX", "XXX")
+                                    .aisle("XEX", "XXX", "XXX")
+                                    .build());
+                            shapeInfo.add(coilBuilder.shallowCopy()
+                                    .aisle("IXO", "FSH", "XMX")
+                                    .aisle("XXX", "CPX", "XXX")
+                                    .aisle("XEX", "XXX", "XXX")
+                                    .build());
+                            shapeInfo.add(coilBuilder.shallowCopy()
+                                    .aisle("IXO", "FSH", "XMX")
+                                    .aisle("XXX", "XPC", "XXX")
+                                    .aisle("XEX", "XXX", "XXX")
+                                    .build());
+                        });
                 return shapeInfo;
             })
             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"),
                     GTCEu.id("block/multiblock/large_chemical_reactor"))
-            .additionalDisplay((controller, components) -> {
-                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
-                    var coilTier = coilMachine.getCoilTier();
-
-                    components.add(Component.translatable("gtceu.multiblock.chemical_reactor.speed",
-                            75 + coilTier * 25));
-                    components.add(Component.translatable("gtceu.multiblock.chemical_reactor.energy",
-                            100 - 5 * coilTier));
-                }
-            })
+            .additionalDisplay(CoilWorkableElectricMultiblockMachine.CHEMICAL_DISPLAY)
             .register();
 
     public static MultiblockMachineDefinition EXTREME_CHEMICAL_REACTOR = ConfigHolder.INSTANCE.machines
@@ -327,7 +306,9 @@ public class GTMultiMachines {
                                         .aisle("ABBBA", "CAAAC", "AADAA", "CAAAC", "ABBBA")
                                         .where('A', CASING_PTFE_INERT.getDefaultState())
                                         .where('B', GCYMBlocks.HEAT_VENT.getDefaultState())
-                                        .where('C', ChemicalHelper.getBlock(TagPrefix.frameGt, BlackSteel).defaultBlockState())
+                                        .where('C',
+                                                ChemicalHelper.getBlock(TagPrefix.frameGt, BlackSteel)
+                                                        .defaultBlockState())
                                         .where('P', CASING_POLYTETRAFLUOROETHYLENE_PIPE.getDefaultState())
                                         .where('S', definition, Direction.NORTH)
                                         .where('I', ITEM_IMPORT_BUS[LV], Direction.NORTH)
@@ -341,23 +322,14 @@ public class GTMultiMachines {
 
                                 GTCEuAPI.HEATING_COILS.entrySet().stream()
                                         .sorted(Comparator.comparingInt(entry -> entry.getKey().getTier()))
-                                        .forEach(coil -> shapeInfo.add(builder.shallowCopy().where('D', coil.getValue().get()).build()));
+                                        .forEach(coil -> shapeInfo
+                                                .add(builder.shallowCopy().where('D', coil.getValue().get()).build()));
 
                                 return shapeInfo;
                             })
                             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"),
                                     GTCEu.id("block/multiblock/large_chemical_reactor"))
-                            .additionalDisplay((controller, components) -> {
-                                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine &&
-                                        controller.isFormed()) {
-                                    var coilTier = coilMachine.getCoilTier();
-
-                                    components.add(Component.translatable("gtceu.multiblock.chemical_reactor.speed",
-                                            75 + coilTier * 25));
-                                    components.add(Component.translatable("gtceu.multiblock.chemical_reactor.energy",
-                                            100 - 5 * coilTier));
-                                }
-                            })
+                            .additionalDisplay(CoilWorkableElectricMultiblockMachine.CHEMICAL_DISPLAY)
                             .register() :
                     null;
 
@@ -427,12 +399,7 @@ public class GTMultiMachines {
             })
             .workableCasingModel(GTCEu.id("block/casings/voltage/ulv/side"),
                     GTCEu.id("block/multiblock/pyrolyse_oven"))
-            .additionalDisplay((controller, components) -> {
-                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
-                    components.add(Component.translatable("gtceu.multiblock.pyrolyse_oven.speed",
-                            coilMachine.getCoilTier() == 0 ? 75 : 50 * (coilMachine.getCoilTier() + 1)));
-                }
-            })
+            .additionalDisplay(CoilWorkableElectricMultiblockMachine.PYROLYSE_DISPLAY)
             .register();
 
     public static final MultiblockMachineDefinition MULTI_SMELTER = REGISTRATE
@@ -479,14 +446,7 @@ public class GTMultiMachines {
                             GTMaterialItems.MATERIAL_ITEMS.get(TagPrefix.dustTiny, Ash).get() })
             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_heatproof"),
                     GTCEu.id("block/multiblock/multi_furnace"))
-            .additionalDisplay((controller, components) -> {
-                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
-                    components.add(Component.translatable("gtceu.multiblock.multi_furnace.heating_coil_level",
-                            coilMachine.getCoilType().getLevel()));
-                    components.add(Component.translatable("gtceu.multiblock.multi_furnace.heating_coil_discount",
-                            coilMachine.getCoilType().getEnergyDiscount()));
-                }
-            })
+            .additionalDisplay(CoilWorkableElectricMultiblockMachine.SMELTER_DISPLAY)
             .register();
 
     public static final MultiblockMachineDefinition CRACKER = REGISTRATE
@@ -529,15 +489,7 @@ public class GTMultiMachines {
             })
             .workableCasingModel(GTCEu.id("block/casings/solid/machine_casing_clean_stainless_steel"),
                     GTCEu.id("block/multiblock/cracking_unit"))
-            .additionalDisplay((controller, components) -> {
-                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
-                    var coilTier = coilMachine.getCoilTier();
-                    var discount = coilTier > 9 ? (0.9 + (coilTier - 9) * 0.025) : coilTier * 0.1;
-
-                    components.add(Component.translatable("gtceu.multiblock.cracking_unit.energy",
-                            FormattingUtil.DECIMAL_FORMAT_0F.format((1.0 - discount) * 100.0)));
-                }
-            })
+            .additionalDisplay(CoilWorkableElectricMultiblockMachine.CRACKER_DISPLAY)
             .register();
 
     public static final MultiblockMachineDefinition DISTILLATION_TOWER = REGISTRATE

@@ -80,7 +80,7 @@ public class GTRecipeEMICategory extends EmiRecipeCategory {
                 .sorted(sortDefinition)
                 .toList()) {
             for (GTRecipeType type : machine.getRecipeTypes()) {
-                for (GTRecipeCategory category : type.getCategories()) {
+                for (GTRecipeCategory category : type.getCategoriesWithMain()) {
                     if (!category.isXEIVisible() && !GTCEu.isDev()) continue;
                     registry.addWorkstation(machineCategory(category), EmiStack.of(machine.asStack()));
                 }

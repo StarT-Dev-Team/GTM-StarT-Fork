@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.common.data;
 
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.data.medicalcondition.MedicalCondition;
@@ -209,14 +210,25 @@ public class GTRecipeModifiers {
         var oc = OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, recipe,
                 coilMachine.getOverclockVoltage());
         if (coilMachine.getCoilTier() > 0) {
-            var tier = coilMachine.getCoilTier();
-            var discount = tier > 9 ? (0.9 + (tier - 9) * 0.025) : tier * 0.1;
             var coilModifier = ModifierFunction.builder()
-                    .eutMultiplier(Math.max(0.0001, 1.0 - discount))
+                    .eutMultiplier(crackerEUtMultiplier(coilMachine.getCoilTier()))
                     .build();
             oc = oc.andThen(coilModifier);
         }
         return oc;
+    }
+
+    public static double crackerEUtMultiplier(int coilTier) {
+        double discount = coilTier > 9 ? (0.9 + (coilTier - 9) * 0.025) : coilTier * 0.1;
+
+        return Math.max(0.0001, 1.0 - discount);
+    }
+
+    /**
+     * @return the temperature a blast furnace reaches with the given coil at the given voltage tier
+     */
+    public static int ebfMachineTemp(ICoilType coil, int tier) {
+        return coil.getCoilTemperature() + (100 * Math.max(0, tier - GTValues.MV));
     }
 
     /**
@@ -239,8 +251,7 @@ public class GTRecipeModifiers {
             return RecipeModifier.nullWrongType(CoilWorkableElectricMultiblockMachine.class, machine);
         }
 
-        int blastFurnaceTemperature = coilMachine.getCoilType().getCoilTemperature() +
-                (100 * Math.max(0, coilMachine.getTier() - GTValues.MV));
+        int blastFurnaceTemperature = ebfMachineTemp(coilMachine.getCoilType(), coilMachine.getTier());
         int recipeTemp = recipe.data.getInt("ebf_temp");
         if (!recipe.data.contains("ebf_temp") || recipeTemp > blastFurnaceTemperature) {
             return ModifierFunction.cancel(Component.translatable("gtceu.recipe_modifier.coil_temperature_too_low"));
@@ -280,13 +291,17 @@ public class GTRecipeModifiers {
         if (RecipeHelper.getRecipeEUtTier(recipe) > coilMachine.getTier()) return ModifierFunction.NULL;
 
         int tier = coilMachine.getCoilTier();
-        double durationMultiplier = (tier == 0) ? (4.0 / 3.0) : (2.0 / (tier + 1)); // 75% speed with cupro coils
+        double durationMultiplier = pyrolyseDurationMultiplier(tier); // 75% speed with cupro coils
         var durationModifier = ModifierFunction.builder()
                 .durationMultiplier(durationMultiplier)
                 .build();
 
         var oc = NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, recipe, coilMachine.getOverclockVoltage());
         return oc.andThen(durationModifier);
+    }
+
+    public static double pyrolyseDurationMultiplier(int coilTier) {
+        return (coilTier == 0) ? (4.0 / 3.0) : (2.0 / (coilTier + 1));
     }
 
     /**
@@ -355,12 +370,22 @@ public class GTRecipeModifiers {
 
         int coilTier = coilMachine.getCoilTier();
 
-        var durationModifier = ModifierFunction.builder().durationMultiplier(1.0 / (0.75 + coilTier * 0.25)).build();
+        var durationModifier = ModifierFunction.builder()
+                .durationMultiplier(chemicalReactorDurationMultiplier(coilTier))
+                .build();
 
         return durationModifier
                 .andThen(NON_PERFECT_OVERCLOCK_SUBTICK.getModifier(machine, durationModifier.apply(recipe),
                         coilMachine.getOverclockVoltage()))
-                .andThen(ModifierFunction.builder().eutMultiplier(1.0 - coilTier * 0.05).build());
+                .andThen(ModifierFunction.builder().eutMultiplier(chemicalReactorEUtMultiplier(coilTier)).build());
+    }
+
+    public static double chemicalReactorDurationMultiplier(int coilTier) {
+        return 1.0 / (0.75 + coilTier * 0.25);
+    }
+
+    public static double chemicalReactorEUtMultiplier(int coilTier) {
+        return Math.max(0.0001, 1.0 - coilTier * 0.05);
     }
 
     public static @NotNull ModifierFunction consumeEuToStart(@NotNull MetaMachine machine, @NotNull GTRecipe recipe) {

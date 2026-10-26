@@ -4,9 +4,11 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.common.network.GTNetwork;
 import com.gregtechceu.gtceu.common.network.packets.CPacketKeyDown;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -170,6 +172,12 @@ public final class SyncedKeyMapping {
             return modifier.getCombinedName(InputConstants.UNKNOWN, () -> Component.literal(getDisplayName()));
         }
         return modifier.getCombinedName(keyMapping.getKey(), () -> Component.literal(getDisplayName()));
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public MutableComponent getBracketedDisplayName(KeyModifier modifier) {
+        return Component.literal("[").append(getCombinedDisplayName(modifier)).append("]")
+                .withStyle(ChatFormatting.LIGHT_PURPLE);
     }
 
     @OnlyIn(Dist.CLIENT)

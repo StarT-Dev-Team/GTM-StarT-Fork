@@ -11,6 +11,7 @@ import com.gregtechceu.gtceu.api.recipe.ui.LayeredRecipeUIHelper;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.sound.SoundEntry;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTCoilRecipeWidget;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
@@ -192,6 +193,18 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
         return this;
     }
 
+    public GTRecipeType setWidgetFactory(Function<GTRecipe, GTRecipeWidget> widgetFactory) {
+        this.recipeUI.setWidgetFactory(widgetFactory);
+
+        return this;
+    }
+
+    public GTRecipeType setMinWidth(int minWidth) {
+        this.recipeUI.setMinWidth(minWidth);
+
+        return this;
+    }
+
     public GTRecipeType setMaxTooltips(int maxTooltips) {
         this.recipeUI.setMaxTooltips(maxTooltips);
         return this;
@@ -205,6 +218,12 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
     public GTRecipeType addDataInfoFull(Function<CustomDataInfoConfiguration, CustomDataInfoResult> dataInfo) {
         this.dataInfos.add(dataInfo);
         return this;
+    }
+
+    public GTRecipeType addCoilDataInfo() {
+        return addDataInfoFull(config -> new CustomDataInfoResult(Component.empty(), (label, widget) -> {
+            if (widget instanceof GTCoilRecipeWidget coilWidget) coilWidget.setRecipeCoilText(label);
+        }));
     }
 
     public GTRecipeType addDataInfo(Function<CompoundTag, String> dataInfo) {
@@ -358,6 +377,16 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
 
     public Set<GTRecipeCategory> getCategories() {
         return Collections.unmodifiableSet(categoryMap.keySet());
+    }
+
+    /**
+     * Like {@link #getCategories()} but always includes the main category. Proxy-only types (furnace, blast furnace,
+     * smoker) have no GT recipes in the map on a remote client, so they would otherwise get no workstations.
+     */
+    public Set<GTRecipeCategory> getCategoriesWithMain() {
+        Set<GTRecipeCategory> categories = new ObjectLinkedOpenHashSet<>(categoryMap.keySet());
+        categories.add(category);
+        return categories;
     }
 
     public Set<GTRecipe> getRecipesInCategory(GTRecipeCategory category) {

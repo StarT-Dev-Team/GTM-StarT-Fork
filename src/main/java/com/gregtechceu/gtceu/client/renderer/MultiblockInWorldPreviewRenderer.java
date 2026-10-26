@@ -8,6 +8,7 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockControllerMachine;
+import com.gregtechceu.gtceu.api.pattern.BlockPattern;
 import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
 
 import com.lowdragmc.lowdraglib.client.scene.WorldSceneRenderer;
@@ -83,8 +84,14 @@ public class MultiblockInWorldPreviewRenderer {
     @Nullable
     private static BlockPos LAST_POS = null;
     private static int LAST_LAYER = -1;
+    private static boolean LAST_FLIPPED = false;
+    private static int LAST_LAYERS = 0;
+    private static int LAST_VARIANT = 0;
 
     public static void cleanPreview() {
+        LAST_FLIPPED = false;
+        LAST_LAYERS = 0;
+        LAST_VARIANT = 0;
         CACHE_STATE.set(CacheState.UNUSED);
         LEVEL = null;
         BLOCK_ENTITIES = null;
@@ -105,13 +112,27 @@ public class MultiblockInWorldPreviewRenderer {
      * @param pos        the pos of the controller
      * @param controller the controller
      * @param duration   the duration of the preview. in ticks.
+     * @param flipped    show the mirrored (flipped) layout instead of the normal one.
+     * @param layers     how often the repeatable aisles are shown, see {@link BlockPattern#getRepetitions(int)}.
+     *                   Only used if the multiblock has a layer range, see {@link IMultiController#getLayerRange()}.
+     * @param variant    which custom shape to show, see {@link MultiblockMachineDefinition#getVariant(int)}.
+     *                   Layers take priority over it.
      */
     public static void showPreview(BlockPos pos, MultiblockControllerMachine controller,
-                                   int duration) {
+                                   int duration, boolean flipped, int layers, int variant) {
         if (!controller.getDefinition().isRenderWorldPreview()) return;
+
         Direction front = controller.getFrontFacing();
         Direction up = controller.getUpwardsFacing();
-        MultiblockShapeInfo shapeInfo = controller.getDefinition().getMatchingShapes().get(0);
+        MultiblockShapeInfo shapeInfo;
+
+        if (layers > 0 && controller.getLayerRange() != null) {
+            BlockPattern pattern = controller.getPattern(layers);
+
+            shapeInfo = new MultiblockShapeInfo(pattern.getPreview(pattern.getRepetitions(layers)));
+        } else {
+            shapeInfo = controller.getDefinition().getVariant(variant);
+        }
 
         Map<BlockPos, BlockInfo> blockMap = new HashMap<>();
         IMultiController controllerBase = null;
@@ -120,6 +141,7 @@ public class MultiblockInWorldPreviewRenderer {
         var blocks = shapeInfo.getBlocks();
         BlockPos controllerPatternPos = null;
         var maxY = 0;
+
         // find the pos of controller
         for (int x = 0; x < blocks.length; x++) {
             BlockInfo[][] aisle = blocks[x];
@@ -141,7 +163,8 @@ public class MultiblockInWorldPreviewRenderer {
             return;
         }
 
-        if (LAST_POS != null && LAST_POS.equals(pos)) {
+        if (LAST_POS != null && LAST_POS.equals(pos) && LAST_FLIPPED == flipped && LAST_LAYERS == layers &&
+                LAST_VARIANT == variant) {
             LAST_LAYER++;
             if (LAST_LAYER >= maxY) {
                 LAST_LAYER = -1;
@@ -149,7 +172,13 @@ public class MultiblockInWorldPreviewRenderer {
         } else {
             LAST_LAYER = -1;
         }
+
         LAST_POS = pos;
+        LAST_FLIPPED = flipped;
+        LAST_LAYERS = layers;
+        LAST_VARIANT = variant;
+
+        Direction.Axis mirrorAxis = flipped ? getMirrorAxis(front, up) : null;
 
         for (int x = 0; x < blocks.length; x++) {
             BlockInfo[][] aisle = blocks[x];
@@ -176,6 +205,10 @@ public class MultiblockInWorldPreviewRenderer {
 
                     offset = rotateByFrontAxis(offset, front, r);
 
+                    if (mirrorAxis != null) {
+                        offset = mirror(offset, mirrorAxis);
+                    }
+
                     if (blockState.getBlock() instanceof MetaMachineBlock machineBlock) {
                         var rotationState = machineBlock.getRotationState();
                         if (rotationState != RotationState.NONE) {
@@ -187,6 +220,9 @@ public class MultiblockInWorldPreviewRenderer {
                                     case WEST -> face.getCounterClockWise();
                                     case EAST -> face.getClockWise();
                                 };
+                            }
+                            if (mirrorAxis != null && face.getAxis() == mirrorAxis) {
+                                face = face.getOpposite();
                             }
                             if (rotationState.test(face)) {
                                 blockState = blockState.setValue(rotationState.property, face);
@@ -213,6 +249,23 @@ public class MultiblockInWorldPreviewRenderer {
         }
 
         prepareBuffers(LEVEL, blockMap.keySet(), duration);
+    }
+
+    private static Direction.Axis getMirrorAxis(Direction front, Direction up) {
+        boolean upIsNS = up == Direction.NORTH || up == Direction.SOUTH;
+
+        if (front.getAxis() == Direction.Axis.Y) return upIsNS ? Direction.Axis.X : Direction.Axis.Z;
+        if (!upIsNS) return Direction.Axis.Y;
+
+        return front.getAxis() == Direction.Axis.Z ? Direction.Axis.X : Direction.Axis.Z;
+    }
+
+    private static BlockPos mirror(BlockPos pos, Direction.Axis axis) {
+        return switch (axis) {
+            case X -> new BlockPos(-pos.getX(), pos.getY(), pos.getZ());
+            case Y -> new BlockPos(pos.getX(), -pos.getY(), pos.getZ());
+            case Z -> new BlockPos(pos.getX(), pos.getY(), -pos.getZ());
+        };
     }
 
     private static BlockPos rotateByFrontAxis(BlockPos pos, Direction front, Rotation rotation) {

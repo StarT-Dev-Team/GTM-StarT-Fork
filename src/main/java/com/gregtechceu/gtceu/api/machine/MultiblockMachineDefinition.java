@@ -9,6 +9,7 @@ import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -59,6 +60,26 @@ public class MultiblockMachineDefinition extends MachineDefinition {
 
     public MultiblockMachineDefinition(ResourceLocation id) {
         super(id);
+    }
+
+    /**
+     * Get the amount of variants of this multiblock. Only multiblocks with custom shapes have more than one.
+     */
+    public int getVariantCount() {
+        return Math.max(1, shapes.get().size());
+    }
+
+    /**
+     * Get the shape of a variant, the first custom shape is variant 0.
+     *
+     * @param variant the wanted variant, clamped to the existing ones.
+     */
+    public MultiblockShapeInfo getVariant(int variant) {
+        var designs = shapes.get();
+
+        if (designs.isEmpty()) return getMatchingShapes().get(0);
+
+        return designs.get(Mth.clamp(variant, 0, designs.size() - 1));
     }
 
     public List<MultiblockShapeInfo> getMatchingShapes() {
