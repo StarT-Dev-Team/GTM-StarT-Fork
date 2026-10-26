@@ -86,13 +86,13 @@ public abstract class WorkableTieredMachine extends TieredEnergyMachine implemen
         this.capabilitiesProxy = new EnumMap<>(IO.class);
         this.capabilitiesFlat = new EnumMap<>(IO.class);
         this.traitSubscriptions = new ArrayList<>();
-        this.recipeLogic = createRecipeLogic(args);
-        this.importItems = createImportItemHandler(args);
-        this.exportItems = createExportItemHandler(args);
-        this.importFluids = createImportFluidHandler(args);
-        this.exportFluids = createExportFluidHandler(args);
-        this.importComputation = createImportComputationContainer(args);
-        this.exportComputation = createExportComputationContainer(args);
+        this.recipeLogic = attachTrait(createRecipeLogic(args));
+        this.importItems = attachTrait(createImportItemHandler(args));
+        this.exportItems = attachTrait(createExportItemHandler(args));
+        this.importFluids = attachTrait(createImportFluidHandler(args));
+        this.exportFluids = attachTrait(createExportFluidHandler(args));
+        this.importComputation = attachTrait(createImportComputationContainer(args));
+        this.exportComputation = attachTrait(createExportComputationContainer(args));
     }
 
     //////////////////////////////////////
@@ -107,29 +107,29 @@ public abstract class WorkableTieredMachine extends TieredEnergyMachine implemen
     protected NotifiableEnergyContainer createEnergyContainer(Object... args) {
         long tierVoltage = GTValues.V[getTier()];
         if (isEnergyEmitter()) {
-            return RecipeAmperageEnergyContainer.makeEmitterContainer(this, tierVoltage * 64L,
+            return RecipeAmperageEnergyContainer.makeEmitterContainer(tierVoltage * 64L,
                     tierVoltage, getMaxInputOutputAmperage());
         } else {
-            return RecipeAmperageEnergyContainer.makeReceiverContainer(this, tierVoltage * 64L,
+            return RecipeAmperageEnergyContainer.makeReceiverContainer(tierVoltage * 64L,
                     tierVoltage, getMaxInputOutputAmperage());
         }
     }
 
     protected NotifiableItemStackHandler createImportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN);
+        return new NotifiableItemStackHandler(getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN);
     }
 
     protected NotifiableItemStackHandler createExportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT);
+        return new NotifiableItemStackHandler(getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT);
     }
 
     protected NotifiableFluidTank createImportFluidHandler(Object... args) {
-        return new NotifiableFluidTank(this, getRecipeType().getMaxInputs(FluidRecipeCapability.CAP),
+        return new NotifiableFluidTank(getRecipeType().getMaxInputs(FluidRecipeCapability.CAP),
                 this.tankScalingFunction.applyAsInt(this.getTier()), IO.IN);
     }
 
     protected NotifiableFluidTank createExportFluidHandler(Object... args) {
-        return new NotifiableFluidTank(this, getRecipeType().getMaxOutputs(FluidRecipeCapability.CAP),
+        return new NotifiableFluidTank(getRecipeType().getMaxOutputs(FluidRecipeCapability.CAP),
                 this.tankScalingFunction.applyAsInt(this.getTier()), IO.OUT);
     }
 
@@ -138,15 +138,15 @@ public abstract class WorkableTieredMachine extends TieredEnergyMachine implemen
         if (args.length > 0 && args[args.length - 1] instanceof Boolean isTransmitter) {
             transmitter = isTransmitter;
         }
-        return new NotifiableComputationContainer(this, IO.IN, transmitter);
+        return new NotifiableComputationContainer(IO.IN, transmitter);
     }
 
     protected NotifiableComputationContainer createExportComputationContainer(Object... args) {
-        return new NotifiableComputationContainer(this, IO.OUT, false);
+        return new NotifiableComputationContainer(IO.OUT, false);
     }
 
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new RecipeLogic(this);
+        return new RecipeLogic();
     }
 
     @Override
@@ -155,7 +155,7 @@ public abstract class WorkableTieredMachine extends TieredEnergyMachine implemen
         // attach self traits
         Map<IO, List<IRecipeHandler<?>>> ioTraits = new EnumMap<>(IO.class);
 
-        for (MachineTrait trait : getTraits()) {
+        for (MachineTrait trait : getAllTraits()) {
             if (trait instanceof IRecipeHandlerTrait<?> handlerTrait) {
                 ioTraits.computeIfAbsent(handlerTrait.getHandlerIO(), i -> new ArrayList<>()).add(handlerTrait);
             }

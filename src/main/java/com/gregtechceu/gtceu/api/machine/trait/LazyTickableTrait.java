@@ -1,8 +1,6 @@
 package com.gregtechceu.gtceu.api.machine.trait;
 
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
-import com.gregtechceu.gtceu.api.machine.feature.ILazyTickableMachine;
 
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
@@ -21,12 +19,8 @@ public class LazyTickableTrait extends MachineTrait {
     private final int tickRate;
     private int tickCounter;
 
-    public LazyTickableTrait(ILazyTickableMachine machine, int rate) {
-        this(machine.self(), machine::lazyTick, rate);
-    }
-
-    public LazyTickableTrait(MetaMachine machine, Runnable callback, int rate) {
-        super(machine);
+    public LazyTickableTrait(Runnable callback, int rate) {
+        super();
         this.callback = callback;
         this.tickRate = rate;
         this.tickCounter = tickRate;
@@ -34,6 +28,7 @@ public class LazyTickableTrait extends MachineTrait {
 
     @Override
     public void onMachineLoad() {
+        assert machine != null;
         subscription = machine.subscribeServerTick(subscription, this::lazyTick);
     }
 

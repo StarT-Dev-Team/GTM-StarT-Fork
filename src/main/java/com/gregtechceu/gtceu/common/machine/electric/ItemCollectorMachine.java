@@ -133,7 +133,7 @@ public class ItemCollectorMachine extends TieredEnergyMachine
         super(holder, tier);
         this.inventorySize = INVENTORY_SIZES[Mth.clamp(getTier(), 0, INVENTORY_SIZES.length - 1)];
         this.energyPerTick = (long) BASE_EU_CONSUMPTION * (1L << (tier - 1));
-        this.output = createOutputItemHandler();
+        this.output = attachTrait(createOutputItemHandler());
         this.chargerInventory = createChargerItemHandler();
         this.filterInventory = createFilterItemHandler();
 
@@ -167,7 +167,7 @@ public class ItemCollectorMachine extends TieredEnergyMachine
     }
 
     protected NotifiableItemStackHandler createOutputItemHandler() {
-        return new NotifiableItemStackHandler(this, inventorySize, IO.BOTH, IO.OUT);
+        return new NotifiableItemStackHandler(inventorySize, IO.BOTH, IO.OUT);
     }
 
     @Override

@@ -26,8 +26,8 @@ public class FluidDrillLogic extends RecipeLogic {
     @Nullable
     private Fluid veinFluid;
 
-    public FluidDrillLogic(FluidDrillMachine machine) {
-        super(machine);
+    public FluidDrillLogic() {
+        super();
     }
 
     @Override

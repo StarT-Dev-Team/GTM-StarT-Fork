@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.common.machine.trait;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.capability.compat.FeCompat;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
 import com.gregtechceu.gtceu.api.machine.trait.MachineTrait;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableEnergyContainer;
@@ -40,13 +39,13 @@ public class ConverterTrait extends NotifiableEnergyContainer {
     private final FEContainer feContainer;
 
     public ConverterTrait(ConverterMachine machine, int amps) {
-        super(machine, GTValues.V[machine.getTier()] * 16 * amps, GTValues.V[machine.getTier()], amps,
+        super(GTValues.V[machine.getTier()] * 16 * amps, GTValues.V[machine.getTier()], amps,
                 GTValues.V[machine.getTier()], amps);
         this.amps = amps;
         this.voltage = GTValues.V[machine.getTier()];
         setSideInputCondition(side -> !this.feToEu && side != this.getMachine().getFrontFacing());
         setSideOutputCondition(side -> this.feToEu && side == this.getMachine().getFrontFacing());
-        this.feContainer = new FEContainer(machine);
+        this.feContainer = machine.attachTrait(new FEContainer());
     }
 
     ////////////////////////////////
@@ -96,8 +95,8 @@ public class ConverterTrait extends NotifiableEnergyContainer {
 
         protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(FEContainer.class);
 
-        public FEContainer(MetaMachine machine) {
-            super(machine);
+        public FEContainer() {
+            super();
         }
 
         @Override

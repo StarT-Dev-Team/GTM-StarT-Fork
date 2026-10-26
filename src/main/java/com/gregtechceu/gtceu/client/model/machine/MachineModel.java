@@ -8,6 +8,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputFluid;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputItem;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
+import com.gregtechceu.gtceu.api.machine.trait.IRenderOverlayTrait;
 import com.gregtechceu.gtceu.client.model.BaseBakedModel;
 import com.gregtechceu.gtceu.client.model.IBlockEntityRendererBakedModel;
 import com.gregtechceu.gtceu.client.model.TextureOverrideModel;
@@ -227,6 +228,11 @@ public final class MachineModel extends BaseBakedModel implements ICoverableRend
         List<BakedQuad> quads = renderMachine(machine, level, pos, blockState, side, rand, modelData, renderType);
         if (machine == null) {
             return quads;
+        }
+
+        var overlayTraits = machine.getTraitsByType(IRenderOverlayTrait.class);
+        for (var trait : overlayTraits) {
+            trait.getMachineOverlayQuads(quads, side, rand, modelData, renderType);
         }
 
         // render output overlays

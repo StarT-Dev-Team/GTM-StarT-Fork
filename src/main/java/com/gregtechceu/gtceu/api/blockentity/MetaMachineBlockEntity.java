@@ -165,7 +165,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof IWorkable workable) {
                 return GTCapability.CAPABILITY_WORKABLE.orEmpty(cap, LazyOptional.of(() -> workable));
             }
-            for (MachineTrait trait : machine.getTraits()) {
+            for (MachineTrait trait : machine.getAllTraits()) {
                 if (trait instanceof IWorkable workable) {
                     return GTCapability.CAPABILITY_WORKABLE.orEmpty(cap, LazyOptional.of(() -> workable));
                 }
@@ -174,13 +174,13 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof IControllable controllable) {
                 return GTCapability.CAPABILITY_CONTROLLABLE.orEmpty(cap, LazyOptional.of(() -> controllable));
             }
-            for (MachineTrait trait : machine.getTraits()) {
+            for (MachineTrait trait : machine.getAllTraits()) {
                 if (trait instanceof IControllable controllable) {
                     return GTCapability.CAPABILITY_CONTROLLABLE.orEmpty(cap, LazyOptional.of(() -> controllable));
                 }
             }
         } else if (cap == GTCapability.CAPABILITY_RECIPE_LOGIC) {
-            for (MachineTrait trait : machine.getTraits()) {
+            for (MachineTrait trait : machine.getAllTraits()) {
                 if (trait instanceof RecipeLogic recipeLogic) {
                     return GTCapability.CAPABILITY_RECIPE_LOGIC.orEmpty(cap, LazyOptional.of(() -> recipeLogic));
                 }
@@ -189,7 +189,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof IEnergyContainer energyContainer) {
                 return GTCapability.CAPABILITY_ENERGY_CONTAINER.orEmpty(cap, LazyOptional.of(() -> energyContainer));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, IEnergyContainer.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, IEnergyContainer.class);
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_ENERGY_CONTAINER.orEmpty(cap,
                         LazyOptional.of(() -> list.size() == 1 ? list.get(0) : new EnergyContainerList(list)));
@@ -199,7 +199,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
                 return GTCapability.CAPABILITY_ENERGY_INFO_PROVIDER.orEmpty(cap,
                         LazyOptional.of(() -> energyInfoProvider));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, IEnergyInfoProvider.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, IEnergyInfoProvider.class);
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_ENERGY_INFO_PROVIDER.orEmpty(cap,
                         LazyOptional.of(() -> list.size() == 1 ? list.get(0) : new EnergyInfoProviderList(list)));
@@ -233,7 +233,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof IEnergyStorage energyStorage) {
                 return ForgeCapabilities.ENERGY.orEmpty(cap, LazyOptional.of(() -> energyStorage));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, IEnergyStorage.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, IEnergyStorage.class);
             if (!list.isEmpty()) {
                 // TODO wrap list in the future
                 return ForgeCapabilities.ENERGY.orEmpty(cap, LazyOptional.of(() -> list.get(0)));
@@ -242,7 +242,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof ILaserContainer energyContainer) {
                 return GTCapability.CAPABILITY_LASER.orEmpty(cap, LazyOptional.of(() -> energyContainer));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, ILaserContainer.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, ILaserContainer.class);
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_LASER.orEmpty(cap,
                         LazyOptional.of(() -> list.size() == 1 ? list.get(0) : new LaserContainerList(list)));
@@ -252,7 +252,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
                 return GTCapability.CAPABILITY_COMPUTATION_PROVIDER.orEmpty(cap,
                         LazyOptional.of(() -> computationProvider));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, IOpticalComputationProvider.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, IOpticalComputationProvider.class);
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_COMPUTATION_PROVIDER.orEmpty(cap, LazyOptional.of(() -> list.get(0)));
             }
@@ -260,7 +260,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof IDataAccessHatch computationProvider) {
                 return GTCapability.CAPABILITY_DATA_ACCESS.orEmpty(cap, LazyOptional.of(() -> computationProvider));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, IDataAccessHatch.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, IDataAccessHatch.class);
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_DATA_ACCESS.orEmpty(cap, LazyOptional.of(() -> list.get(0)));
             }
@@ -268,7 +268,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof IMonitorComponent monitorComponent) {
                 return GTCapability.CAPABILITY_MONITOR_COMPONENT.orEmpty(cap, LazyOptional.of(() -> monitorComponent));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, IMonitorComponent.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, IMonitorComponent.class);
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_MONITOR_COMPONENT.orEmpty(cap, LazyOptional.of(() -> list.get(0)));
             }
@@ -276,7 +276,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             if (machine instanceof ICentralMonitor centralMonitor) {
                 return GTCapability.CAPABILITY_CENTRAL_MONITOR.orEmpty(cap, LazyOptional.of(() -> centralMonitor));
             }
-            var list = getCapabilitiesFromTraits(machine.getTraits(), side, ICentralMonitor.class);
+            var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, ICentralMonitor.class);
             if (!list.isEmpty()) {
                 return GTCapability.CAPABILITY_CENTRAL_MONITOR.orEmpty(cap, LazyOptional.of(() -> list.get(0)));
             }
@@ -341,7 +341,7 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
                 if (machine instanceof IInWorldGridNodeHost nodeHost) {
                     return Capabilities.IN_WORLD_GRID_NODE_HOST.orEmpty(cap, LazyOptional.of(() -> nodeHost));
                 }
-                var list = getCapabilitiesFromTraits(machine.getTraits(), side, IInWorldGridNodeHost.class);
+                var list = getCapabilitiesFromTraits(machine.getAllTraits(), side, IInWorldGridNodeHost.class);
                 if (!list.isEmpty()) {
                     // TODO wrap list in the future (or not.)
                     return Capabilities.IN_WORLD_GRID_NODE_HOST.orEmpty(cap, LazyOptional.of(() -> list.get(0)));

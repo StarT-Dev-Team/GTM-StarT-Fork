@@ -36,4 +36,8 @@ public class TagFixer {
             }
         }
     }
+
+    public static void migrateTraitHolder(CompoundTag tag) {
+        if (tag.contains("traits", Tag.TAG_COMPOUND)) return;
+    }
 }

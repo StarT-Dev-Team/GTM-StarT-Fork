@@ -118,7 +118,7 @@ public class CleanroomMachine extends WorkableElectricMultiblockMachine
     }
 
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new CleanroomLogic(this);
+        return new CleanroomLogic();
     }
 
     @Override

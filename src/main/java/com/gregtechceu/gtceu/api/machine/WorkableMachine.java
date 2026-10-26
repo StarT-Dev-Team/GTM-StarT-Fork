@@ -89,11 +89,11 @@ public class WorkableMachine extends MetaMachine implements IRecipeLogicMachine,
         capabilitiesProxy = new EnumMap<>(IO.class);
         capabilitiesFlat = new EnumMap<>(IO.class);
         traitSubscriptions = new ArrayList<>();
-        recipeLogic = createRecipeLogic(args);
-        importItems = createImportItemHandler(args);
-        exportItems = createExportItemHandler(args);
-        importFluids = createImportFluidHandler(args);
-        exportFluids = createExportFluidHandler(args);
+        recipeLogic = attachTrait(createRecipeLogic(args));
+        importItems = attachTrait(createImportItemHandler(args));
+        exportItems = attachTrait(createExportItemHandler(args));
+        importFluids = attachTrait(createImportFluidHandler(args));
+        exportFluids = attachTrait(createExportFluidHandler(args));
     }
 
     //////////////////////////////////////
@@ -105,25 +105,25 @@ public class WorkableMachine extends MetaMachine implements IRecipeLogicMachine,
     }
 
     protected NotifiableItemStackHandler createImportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN);
+        return new NotifiableItemStackHandler(getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN);
     }
 
     protected NotifiableItemStackHandler createExportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT);
+        return new NotifiableItemStackHandler(getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT);
     }
 
     protected NotifiableFluidTank createImportFluidHandler(Object... args) {
-        return new NotifiableFluidTank(this, getRecipeType().getMaxInputs(FluidRecipeCapability.CAP),
+        return new NotifiableFluidTank(getRecipeType().getMaxInputs(FluidRecipeCapability.CAP),
                 32 * FluidType.BUCKET_VOLUME, IO.IN);
     }
 
     protected NotifiableFluidTank createExportFluidHandler(Object... args) {
-        return new NotifiableFluidTank(this, getRecipeType().getMaxOutputs(FluidRecipeCapability.CAP),
+        return new NotifiableFluidTank(getRecipeType().getMaxOutputs(FluidRecipeCapability.CAP),
                 32 * FluidType.BUCKET_VOLUME, IO.OUT);
     }
 
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new RecipeLogic(this);
+        return new RecipeLogic();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class WorkableMachine extends MetaMachine implements IRecipeLogicMachine,
         // attach self traits
         Map<IO, List<IRecipeHandler<?>>> ioTraits = new EnumMap<>(IO.class);
 
-        for (MachineTrait trait : getTraits()) {
+        for (MachineTrait trait : getAllTraits()) {
             if (trait instanceof IRecipeHandlerTrait<?> handlerTrait) {
                 ioTraits.computeIfAbsent(handlerTrait.getHandlerIO(), i -> new ArrayList<>()).add(handlerTrait);
             }

@@ -42,7 +42,7 @@ public class LayeredWorkableElectricMultiblockMachine extends WorkableElectricMu
 
     @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new LayeredRecipeLogic(this);
+        return new LayeredRecipeLogic();
     }
 
     @Override

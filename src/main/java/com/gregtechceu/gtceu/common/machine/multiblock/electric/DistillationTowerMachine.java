@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.common.machine.multiblock.electric;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.recipe.*;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
@@ -29,7 +28,6 @@ import net.minecraftforge.fluids.capability.templates.VoidFluidHandler;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -65,7 +63,7 @@ public class DistillationTowerMachine extends WorkableElectricMultiblockMachine
 
     @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new DistillationTowerLogic(this);
+        return new DistillationTowerLogic();
     }
 
     @Override
@@ -176,11 +174,10 @@ public class DistillationTowerMachine extends WorkableElectricMultiblockMachine
         @DescSynced
         GTRecipe workingRecipe = null;
 
-        public DistillationTowerLogic(IRecipeLogicMachine machine) {
-            super(machine);
+        public DistillationTowerLogic() {
+            super();
         }
 
-        @NotNull
         @Override
         public DistillationTowerMachine getMachine() {
             return (DistillationTowerMachine) super.getMachine();

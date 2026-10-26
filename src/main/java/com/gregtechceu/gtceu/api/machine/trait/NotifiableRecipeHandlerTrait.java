@@ -1,7 +1,5 @@
 package com.gregtechceu.gtceu.api.machine.trait;
 
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
-
 import com.lowdragmc.lowdraglib.syncdata.ISubscription;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
@@ -25,8 +23,8 @@ public abstract class NotifiableRecipeHandlerTrait<T> extends MachineTrait imple
     @Setter
     protected boolean isDistinct;
 
-    public NotifiableRecipeHandlerTrait(MetaMachine machine) {
-        super(machine);
+    public NotifiableRecipeHandlerTrait() {
+        super();
     }
 
     @Override

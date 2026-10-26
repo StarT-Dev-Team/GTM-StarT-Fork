@@ -41,8 +41,8 @@ public class CokeOvenHatch extends MultiblockPartMachine {
 
     public CokeOvenHatch(IMachineBlockEntity holder, Object... args) {
         super(holder);
-        this.inputInventory = new ItemHandlerProxyTrait(this, IO.IN);
-        this.outputInventory = new ItemHandlerProxyTrait(this, IO.OUT);
+        this.inputInventory = attachTrait(new ItemHandlerProxyTrait(IO.IN));
+        this.outputInventory = attachTrait(new ItemHandlerProxyTrait(IO.OUT));
         this.tank = new FluidTankProxyTrait(this, IO.BOTH);
     }
 

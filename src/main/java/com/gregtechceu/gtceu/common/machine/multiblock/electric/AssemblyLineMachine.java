@@ -7,7 +7,6 @@ import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockControllerMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
@@ -52,8 +51,8 @@ public class AssemblyLineMachine extends WorkableElectricMultiblockMachine {
     }
 
     @Override
-    protected RecipeLogic createRecipeLogic(Object... args) {
-        return new AsslineRecipeLogic(this);
+    protected @NotNull RecipeLogic createRecipeLogic(Object @NotNull... args) {
+        return new AsslineRecipeLogic();
     }
 
     public static Comparator<IMultiPart> partSorter(MultiblockControllerMachine mc) {
@@ -261,8 +260,8 @@ public class AssemblyLineMachine extends WorkableElectricMultiblockMachine {
 
     class AsslineRecipeLogic extends RecipeLogic {
 
-        public AsslineRecipeLogic(IRecipeLogicMachine machine) {
-            super(machine);
+        public AsslineRecipeLogic() {
+            super();
         }
 
         @Override

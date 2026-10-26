@@ -49,17 +49,20 @@ public class SteamLiquidBoilerMachine extends SteamBoilerMachine {
 
     public SteamLiquidBoilerMachine(IMachineBlockEntity holder, boolean isHighPressure, Object... args) {
         super(holder, isHighPressure, args);
-        this.fuelTank = createFuelTank(args).setFilter(fluid -> FUEL_CACHE.computeIfAbsent(fluid.getFluid(), f -> {
-            if (isRemote()) return true;
-            return recipeLogic.getRecipeManager().getAllRecipesFor(getRecipeType()).stream().anyMatch(recipe -> {
-                var list = recipe.inputs.getOrDefault(FluidRecipeCapability.CAP, Collections.emptyList());
-                if (!list.isEmpty()) {
-                    return Arrays.stream(FluidRecipeCapability.CAP.of(list.get(0).content).getStacks())
-                            .anyMatch(stack -> stack.getFluid() == f);
-                }
-                return false;
-            });
-        }));
+        this.fuelTank = attachTrait(createFuelTank(args))
+                .setFilter(fluid -> FUEL_CACHE.computeIfAbsent(fluid.getFluid(), f -> {
+                    if (isRemote()) return true;
+                    return recipeLogic.getRecipeManager().getAllRecipesFor(getRecipeType()).stream()
+                            .anyMatch(recipe -> {
+                                var list = recipe.inputs.getOrDefault(FluidRecipeCapability.CAP,
+                                        Collections.emptyList());
+                                if (!list.isEmpty()) {
+                                    return Arrays.stream(FluidRecipeCapability.CAP.of(list.get(0).content).getStacks())
+                                            .anyMatch(stack -> stack.getFluid() == f);
+                                }
+                                return false;
+                            });
+                }));
     }
 
     //////////////////////////////////////
@@ -71,7 +74,7 @@ public class SteamLiquidBoilerMachine extends SteamBoilerMachine {
     }
 
     protected NotifiableFluidTank createFuelTank(Object... args) {
-        return new NotifiableFluidTank(this, 1, 16 * FluidType.BUCKET_VOLUME, IO.IN);
+        return new NotifiableFluidTank(1, 16 * FluidType.BUCKET_VOLUME, IO.IN);
     }
 
     @Override

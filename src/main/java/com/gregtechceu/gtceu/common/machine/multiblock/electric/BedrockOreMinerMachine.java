@@ -47,7 +47,7 @@ public class BedrockOreMinerMachine extends WorkableElectricMultiblockMachine im
 
     @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new BedrockOreMinerLogic(this);
+        return new BedrockOreMinerLogic();
     }
 
     @Override
