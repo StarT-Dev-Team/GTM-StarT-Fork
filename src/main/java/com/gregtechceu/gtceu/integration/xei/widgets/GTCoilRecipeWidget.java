@@ -1,13 +1,9 @@
 package com.gregtechceu.gtceu.integration.xei.widgets;
 
 import com.gregtechceu.gtceu.api.GTCEuAPI;
-import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
-import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
-import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
-import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
@@ -18,23 +14,26 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
-public class GTCoilRecipeWidget extends GTRecipeWidget {
+public abstract class GTCoilRecipeWidget extends GTRecipeWidget {
 
+    @Getter(AccessLevel.PROTECTED)
     private List<ICoilType> validCoils;
+    @Getter(AccessLevel.PROTECTED)
     private ICoilType selectedCoil;
     private ButtonWidget coilButton;
-    private LabelWidget recipeTemperatureText;
     private LabelWidget recipeCoilText;
 
-    public GTCoilRecipeWidget(GTRecipe recipe) {
+    protected GTCoilRecipeWidget(GTRecipe recipe) {
         super(recipe);
 
-        if (voltageTextWidget != null && recipe.data.contains("ebf_temp")) {
+        if (voltageTextWidget != null) {
             validCoils = calculateValidCoils();
 
             if (!validCoils.isEmpty()) {
@@ -48,11 +47,23 @@ public class GTCoilRecipeWidget extends GTRecipeWidget {
         }
     }
 
-    private List<ICoilType> calculateValidCoils() {
-        int recipeTemp = recipe.data.getInt("ebf_temp");
+    protected List<ICoilType> calculateValidCoils() {
+        return List.of(ICoilType.ALL_COILS_TEMPERATURE_SORTED.get());
+    }
 
-        return Arrays.stream(ICoilType.ALL_COILS_TEMPERATURE_SORTED.get())
-                .filter(coil -> GTRecipeModifiers.ebfMachineTemp(coil, getTier()) >= recipeTemp).toList();
+    protected List<Component> getCoilTooltips() {
+        return new ArrayList<>(LangHandler.getMultiLang("gtceu.recipe.coil.tooltip"));
+    }
+
+    protected List<Component> getCoilSpeedTexts(double durationMultiplier) {
+        long speed = Math.round(100 / durationMultiplier);
+
+        return List.of(Component.translatable("gtceu.recipe.oc.duration.coil",
+                Component.literal(speed + "%").withStyle(speed >= 100 ? ChatFormatting.GREEN : ChatFormatting.RED)));
+    }
+
+    protected ItemStack getCoilStack(ICoilType coil) {
+        return new ItemStack(GTCEuAPI.HEATING_COILS.get(coil).get());
     }
 
     private int getCoilXOffset() {
@@ -76,27 +87,16 @@ public class GTCoilRecipeWidget extends GTRecipeWidget {
     }
 
     @Override
-    protected OverclockingLogic createOCLogic(boolean perfect) {
-        if (selectedCoil == null) return super.createOCLogic(perfect);
+    protected void updateOC(boolean perfect) {
+        if (selectedCoil != null) {
+            validCoils = calculateValidCoils();
 
-        validCoils = calculateValidCoils();
-
-        if (!validCoils.contains(selectedCoil)) {
-            selectedCoil = validCoils.get(0);
+            if (!validCoils.contains(selectedCoil)) {
+                selectedCoil = validCoils.get(0);
+            }
         }
 
-        int recipeTemp = recipe.data.getInt("ebf_temp");
-        int machineTemp = GTRecipeModifiers.ebfMachineTemp(selectedCoil, getTier());
-
-        return (params, maxVoltage) -> OverclockingLogic.heatingCoilOC(params, maxVoltage, recipeTemp, machineTemp);
-    }
-
-    @Override
-    protected double getEUtMultiplier() {
-        if (selectedCoil == null) return 1;
-
-        return OverclockingLogic.getCoilEUtDiscount(recipe.data.getInt("ebf_temp"),
-                GTRecipeModifiers.ebfMachineTemp(selectedCoil, getTier()));
+        super.updateOC(perfect);
     }
 
     @Override
@@ -110,54 +110,14 @@ public class GTCoilRecipeWidget extends GTRecipeWidget {
     }
 
     @Override
-    protected int getPerfectOCs(OverclockingLogic.OCResult result) {
-        if (selectedCoil == null) return super.getPerfectOCs(result);
-
-        int temperatureGap = GTRecipeModifiers.ebfMachineTemp(selectedCoil, getTier()) - recipe.data.getInt("ebf_temp");
-
-        return Math.min(result.ocLevel(),
-                Math.max(0, temperatureGap / OverclockingLogic.COIL_EUT_DISCOUNT_TEMPERATURE) / 2);
-    }
-
-    @Override
     protected void onRecipeOverclockWidgetUpdated() {
         if (coilButton == null) return;
 
-        var coilStack = new ItemStack(GTCEuAPI.HEATING_COILS.get(selectedCoil).get());
-
         coilButton.setSelfPositionX(getCoilXOffset());
-        coilButton.setButtonTexture(new ItemStackTexture(coilStack));
-        coilButton.setHoverTooltips(LangHandler.getMultiLang("gtceu.recipe.coil.tooltip",
-                new ItemStack(GTCEuAPI.HEATING_COILS.get(validCoils.get(0)).get()).getHoverName(),
-                selectedCoil.getCoilTemperature())
-                .toArray(Component[]::new));
+        coilButton.setButtonTexture(new ItemStackTexture(getCoilStack(selectedCoil)));
+        coilButton.setHoverTooltips(getCoilTooltips().toArray(Component[]::new));
 
-        updateRecipeTemperatureText();
         updateRecipeCoilText();
-    }
-
-    public void setRecipeTemperatureText(LabelWidget text) {
-        recipeTemperatureText = text;
-
-        updateRecipeTemperatureText();
-    }
-
-    private void updateRecipeTemperatureText() {
-        if (recipeTemperatureText == null || selectedCoil == null) return;
-
-        int machineTemp = GTRecipeModifiers.ebfMachineTemp(selectedCoil, getTier());
-
-        recipeTemperatureText.setComponent(Component.translatable("gtceu.recipe.temperature.value",
-                Component.literal(FormattingUtil.formatNumbers(machineTemp) + "K")
-                        .withStyle(ChatFormatting.AQUA))
-                .append(Component.literal("/" + FormattingUtil.formatNumbers(recipe.data.getInt("ebf_temp")) + "K")));
-        recipeTemperatureText.setHoverTooltips(LangHandler.getMultiLang("gtceu.recipe.temperature.tooltip",
-                FormattingUtil.formatNumbers(selectedCoil.getCoilTemperature()), GTValues.VNF[getTier()],
-                Component
-                        .literal("+" + FormattingUtil.formatNumbers(machineTemp - selectedCoil.getCoilTemperature()) +
-                                "K")
-                        .withStyle(ChatFormatting.GREEN))
-                .toArray(Component[]::new));
     }
 
     public void setRecipeCoilText(LabelWidget text) {
@@ -170,6 +130,6 @@ public class GTCoilRecipeWidget extends GTRecipeWidget {
         if (recipeCoilText == null || selectedCoil == null) return;
 
         recipeCoilText.setComponent(Component.translatable("gtceu.recipe.coil.tier",
-                new ItemStack(GTCEuAPI.HEATING_COILS.get(selectedCoil).get()).getHoverName()));
+                getCoilStack(selectedCoil).getHoverName()));
     }
 }

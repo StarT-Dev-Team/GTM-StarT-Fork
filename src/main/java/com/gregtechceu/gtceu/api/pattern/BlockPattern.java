@@ -19,6 +19,7 @@ import com.lowdragmc.lowdraglib.utils.BlockInfo;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -222,16 +223,61 @@ public class BlockPattern {
         return true;
     }
 
-    public void autoBuild(Player player, MultiblockState worldState) {
-        autoBuild(player, worldState, false);
+    /**
+     * The result of an auto build.
+     *
+     * @param placed   the amount of blocks that got placed.
+     * @param existing the amount of spots that already had a block.
+     * @param failed   the amount of blocks that couldn't be placed, because something was in the way.
+     * @param missing  the display name of every block that wasn't in the inventory, with the amount.
+     */
+    public record BuildResult(int placed, int existing, int failed, Map<String, Integer> missing) {}
+
+    /**
+     * Get how often each aisle is repeated for the given layers. Only repeatable aisles are affected, the layers are
+     * clamped to their range.
+     *
+     * @param layers the wanted amount of repeats. 0 or less uses the minimum.
+     */
+    public int[] getRepetitions(int layers) {
+        int[] repetitions = new int[aisleRepetitions.length];
+
+        for (int i = 0; i < repetitions.length; i++) {
+            int[] range = aisleRepetitions[i];
+
+            repetitions[i] = layers <= 0 ? range[0] : Mth.clamp(layers, range[0], range[1]);
+        }
+
+        return repetitions;
     }
 
-    public void autoBuild(Player player, MultiblockState worldState, boolean skipHatches) {
+    public BuildResult autoBuild(Player player, MultiblockState worldState) {
+        return autoBuild(player, worldState, false, 0);
+    }
+
+    public BuildResult autoBuild(Player player, MultiblockState worldState, boolean skipHatches) {
+        return autoBuild(player, worldState, skipHatches, 0);
+    }
+
+    /**
+     * @param skipHatches ignore the hatch predicates, so no hatches get placed.
+     * @param layers      how often the repeatable aisles are built, see {@link #getRepetitions(int)}.
+     */
+    public BuildResult autoBuild(Player player, MultiblockState worldState, boolean skipHatches, int layers) {
         Level world = player.level();
         Map<SimplePredicate, Boolean> hatchCache = new HashMap<>();
         Predicate<SimplePredicate> isHatch = p -> skipHatches &&
                 hatchCache.computeIfAbsent(p, BlockPattern::isHatchPredicate);
-        int minZ = -centerOffset[4];
+        int[] repetitions = getRepetitions(layers);
+        int minZ = 0;
+
+        for (int c = 0; c < centerOffset[2]; c++) {
+            minZ -= repetitions[c];
+        }
+
+        int placedCount = 0, existingCount = 0, failedCount = 0;
+        Map<String, Integer> missing = new LinkedHashMap<>();
+
         worldState.clean();
         IMultiController controller = worldState.getController();
         BlockPos centerPos = controller.self().getPos();
@@ -243,16 +289,21 @@ public class BlockPattern {
         Map<BlockPos, Object> blocks = new HashMap<>();
         Set<BlockPos> placeBlockPos = new HashSet<>();
         blocks.put(centerPos, controller);
+
         for (int c = 0, z = minZ++, r; c < this.fingerLength; c++) {
-            for (r = 0; r < aisleRepetitions[c][0]; r++) {
+            for (r = 0; r < repetitions[c]; r++) {
                 cacheLayer.clear();
+
                 for (int b = 0, y = -centerOffset[1]; b < this.thumbLength; b++, y++) {
                     for (int a = 0, x = -centerOffset[0]; a < this.palmLength; a++, x++) {
                         TraceabilityPredicate predicate = this.blockMatches[c][b][a];
                         BlockPos pos = setActualRelativeOffset(x, y, z, facing, upwardsFacing, isFlipped)
                                 .offset(centerPos.getX(), centerPos.getY(), centerPos.getZ());
                         worldState.update(pos, predicate);
+
                         if (!world.isEmptyBlock(pos)) {
+                            existingCount++;
+
                             blocks.put(pos, world.getBlockState(pos));
                             for (SimplePredicate limit : predicate.limited) {
                                 limit.testLimited(worldState);
@@ -330,6 +381,9 @@ public class BlockPattern {
                                 }
                             }
 
+                            // nothing to place, like a hatch spot while skipping hatches
+                            if (candidates.isEmpty()) continue;
+
                             // check inventory
                             ItemStack found = null;
                             int foundSlot = -1;
@@ -351,16 +405,26 @@ public class BlockPattern {
                                     found = null;
                                 }
                             }
-                            if (found == null) continue;
+                            if (found == null) {
+                                missing.merge(candidates.get(0).getHoverName().getString(), 1, Integer::sum);
+
+                                continue;
+                            }
+
                             BlockItem itemBlock = (BlockItem) found.getItem();
                             BlockPlaceContext context = new BlockPlaceContext(world, player, InteractionHand.MAIN_HAND,
                                     found, BlockHitResult.miss(player.getEyePosition(0), Direction.UP, pos));
                             InteractionResult interactionResult = itemBlock.place(context);
+
                             if (interactionResult != InteractionResult.FAIL) {
+                                placedCount++;
+
                                 placeBlockPos.add(pos);
                                 if (handler != null) {
                                     handler.extractItem(foundSlot, 1, false);
                                 }
+                            } else {
+                                failedCount++;
                             }
                             if (world.getBlockEntity(pos) instanceof IMachineBlockEntity machineBlockEntity) {
                                 blocks.put(pos, machineBlockEntity.getMetaMachine());
@@ -393,6 +457,8 @@ public class BlockPattern {
                 }
             }
         });
+
+        return new BuildResult(placedCount, existingCount, failedCount, missing);
     }
 
     private static boolean isHatchBlock(Block block) {

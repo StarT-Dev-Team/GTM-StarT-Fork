@@ -240,7 +240,7 @@ public class MaterialBlock extends Block {
     @Override
     public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
         if (this.tagPrefix == TagPrefix.frameGt && useContext.getItemInHand().getItem() instanceof PipeBlockItem &&
-                !useContext.getPlayer().isCrouching())
+                !useContext.getPlayer().isSecondaryUseActive())
             return true;
         return super.canBeReplaced(state, useContext);
     }

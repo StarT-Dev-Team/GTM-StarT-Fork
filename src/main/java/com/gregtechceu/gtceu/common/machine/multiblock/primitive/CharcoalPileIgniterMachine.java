@@ -58,6 +58,7 @@ public class CharcoalPileIgniterMachine extends WorkableMultiblockMachine implem
     private static final int MIN_RADIUS = 1;
     private static final int MIN_DEPTH = 2;
     private static final int MAX_HEIGHT = 5;
+    private static final int MAX_LAYERS = MAX_HEIGHT - MIN_RADIUS + 1;
 
     private final Collection<BlockPos> logPos = new ObjectOpenHashSet<>();
 
@@ -139,6 +140,28 @@ public class CharcoalPileIgniterMachine extends WorkableMultiblockMachine implem
             rDist = tmp;
         }
 
+        return createPattern(lDist, rDist, bDist, fDist, hDist);
+    }
+
+    /**
+     * Each layer adds 2 blocks to the width and depth, and up to 2 to the height.
+     */
+    @Override
+    public BlockPattern getPattern(int layers) {
+        if (layers <= 0) return getPattern();
+
+        int step = Math.min(layers, MAX_LAYERS) - 1;
+
+        return createPattern(MIN_RADIUS + step, MIN_RADIUS + step, MIN_RADIUS + step, MIN_RADIUS + step,
+                Math.min(MIN_DEPTH + step * 2, MAX_HEIGHT));
+    }
+
+    @Override
+    public int[] getLayerRange() {
+        return new int[] { 1, MAX_LAYERS };
+    }
+
+    private BlockPattern createPattern(int lDist, int rDist, int bDist, int fDist, int hDist) {
         StringBuilder[] floorLayer = new StringBuilder[fDist + bDist + 1];
         List<StringBuilder[]> wallLayers = new ArrayList<>();
         StringBuilder[] ceilingLayer = new StringBuilder[fDist + bDist + 1];

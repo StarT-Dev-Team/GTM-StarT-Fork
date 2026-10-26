@@ -25,12 +25,9 @@ import com.gregtechceu.gtceu.common.machine.multiblock.electric.DistillationTowe
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.gcym.*;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.ParallelHatchPartMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
-import com.gregtechceu.gtceu.utils.FormattingUtil;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
@@ -447,18 +444,7 @@ public class GCYMMachines {
             })
             .workableCasingModel(GTCEu.id("block/casings/gcym/high_temperature_smelting_casing"),
                     GTCEu.id("block/multiblock/gcym/blast_alloy_smelter"))
-            .additionalDisplay((controller, components) -> {
-                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
-                    components.add(Component.translatable("gtceu.multiblock.blast_furnace.max_temperature",
-                            Component
-                                    .translatable(
-                                            FormattingUtil
-                                                    .formatNumbers(coilMachine.getCoilType().getCoilTemperature() +
-                                                            100L * Math.max(0, coilMachine.getTier() - GTValues.MV)) +
-                                                    "K")
-                                    .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
-                }
-            })
+            .additionalDisplay(CoilWorkableElectricMultiblockMachine.BLAST_DISPLAY)
             .register();
 
     public final static MultiblockMachineDefinition LARGE_AUTOCLAVE = REGISTRATE
@@ -822,15 +808,7 @@ public class GCYMMachines {
             })
             .workableCasingModel(GTCEu.id("block/casings/gcym/high_temperature_smelting_casing"),
                     GTCEu.id("block/multiblock/gcym/mega_blast_furnace"))
-            .additionalDisplay((controller, components) -> {
-                if (controller instanceof CoilWorkableElectricMultiblockMachine coilMachine && controller.isFormed()) {
-                    components.add(Component.translatable("gtceu.multiblock.blast_furnace.max_temperature",
-                            Component.translatable(
-                                    FormattingUtil.formatNumbers(coilMachine.getCoilType().getCoilTemperature() +
-                                            100L * Math.max(0, coilMachine.getTier() - GTValues.MV)) + "K")
-                                    .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
-                }
-            })
+            .additionalDisplay(CoilWorkableElectricMultiblockMachine.BLAST_DISPLAY)
             .register();
 
     public final static MultiblockMachineDefinition MEGA_VACUUM_FREEZER = REGISTRATE
