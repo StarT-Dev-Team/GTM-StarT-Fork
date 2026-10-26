@@ -988,10 +988,11 @@ public class LangHandler {
         provider.add("gtceu.recipe.temperature", "Temp: %sK");
         provider.add("gtceu.recipe.temperature.value", "Temp: %s");
         provider.add("gtceu.recipe.coil.tier", "Coil: %s");
-        multiLang(provider, "gtceu.recipe.coil.tooltip", "Min: %1$s", "Coil Temp: %2$sK",
-                "Left click to select the next coil", "Right click to select the previous coil",
-                "Middle click to reset the coil");
+        multiLang(provider, "gtceu.recipe.coil.tooltip", "Left click to select the next coil",
+                "Right click to select the previous coil", "Middle click to reset the coil");
+        multiLang(provider, "gtceu.recipe.blast.tooltip", "Min: %1$s", "Coil Temp: %2$sK");
         provider.add("gtceu.recipe.oc.duration.base", "Base Duration: %ss");
+        provider.add("gtceu.recipe.oc.duration.coil", "Coil Speed: %s");
         provider.add("gtceu.recipe.oc.duration.normal", "Overclocks: %1$s (time ÷%2$s each)");
         provider.add("gtceu.recipe.oc.duration.perfect", "Perfect Overclocks: %1$s (time ÷%2$s each)");
         provider.add("gtceu.recipe.oc.usage.base", "Base Usage: %s EU/t");

@@ -4,6 +4,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.*;
 import com.gregtechceu.gtceu.api.gui.SteamTexture;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.api.registry.registrate.BuilderBase;
 import com.gregtechceu.gtceu.api.sound.SoundEntry;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
@@ -39,6 +40,7 @@ public class GTRecipeTypeBuilder extends BuilderBase<GTRecipeType> {
     protected SoundEntry sound;
     protected boolean hasResearchSlot;
     protected int maxTooltips;
+    protected int minWidth;
 
     private GTRecipeType smallRecipeMap;
     private Supplier<ItemStack> iconSupplier;
@@ -58,6 +60,7 @@ public class GTRecipeTypeBuilder extends BuilderBase<GTRecipeType> {
         this.sound = null;
         this.hasResearchSlot = false;
         this.maxTooltips = 4;
+        this.minWidth = GTRecipeTypeUI.DEFAULT_MIN_WIDTH;
         this.smallRecipeMap = null;
         this.iconSupplier = null;
         this.uiBuilder = null;
@@ -133,6 +136,12 @@ public class GTRecipeTypeBuilder extends BuilderBase<GTRecipeType> {
         return this;
     }
 
+    public GTRecipeTypeBuilder setMinWidth(int minWidth) {
+        this.minWidth = minWidth;
+
+        return this;
+    }
+
     public GTRecipeTypeBuilder setSmallRecipeMap(GTRecipeType smallRecipeMap) {
         this.smallRecipeMap = smallRecipeMap;
         return this;
@@ -166,6 +175,7 @@ public class GTRecipeTypeBuilder extends BuilderBase<GTRecipeType> {
         type.setSound(sound);
         type.setHasResearchSlot(hasResearchSlot);
         type.setMaxTooltips(maxTooltips);
+        type.setMinWidth(minWidth);
         type.setSmallRecipeMap(smallRecipeMap);
         type.setIconSupplier(iconSupplier);
         if (uiBuilder != null) type.setUiBuilder(uiBuilder);
