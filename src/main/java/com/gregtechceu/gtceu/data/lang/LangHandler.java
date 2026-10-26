@@ -1224,6 +1224,12 @@ public class LangHandler {
         provider.add("gtceu.multiblock.preview.measurement_grid", "Toggle Measurement Grid");
         provider.add("gtceu.multiblock.preview.measurement_grid_graduation", "Grid Graduation");
         provider.add("gtceu.multiblock.preview.turntable", "Turntable Mode");
+        provider.add("gtceu.multiblock.preview.pitch", "Rotate Structure (Pitch)");
+        provider.add("gtceu.multiblock.preview.roll", "Rotate Structure (Roll)");
+        provider.add("gtceu.multiblock.preview.rotate_switch_roll", "Hold Shift for Roll");
+        provider.add("gtceu.multiblock.preview.rotate_switch_pitch", "Release Shift for Pitch");
+        provider.add("gtceu.multiblock.preview.flip", "Mirror / Flip Structure");
+        provider.add("gtceu.multiblock.preview.reset", "Reset Orientation");
         provider.add("gtceu.multiblock.pattern.error", "Expected components (%s) at (%s).");
         provider.add("gtceu.multiblock.pattern.error.limited_title", "Unexpected number of %s:");
         provider.add("gtceu.multiblock.pattern.error.limited_exact", "§cExactly: %d§r");

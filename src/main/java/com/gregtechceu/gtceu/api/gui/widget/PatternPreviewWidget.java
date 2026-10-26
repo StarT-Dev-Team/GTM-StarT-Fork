@@ -2,10 +2,13 @@ package com.gregtechceu.gtceu.api.gui.widget;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
+import com.gregtechceu.gtceu.api.block.property.GTBlockStateProperties;
+import com.gregtechceu.gtceu.api.data.RotationState;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
+import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockControllerMachine;
 import com.gregtechceu.gtceu.api.pattern.BlockPattern;
 import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
@@ -26,6 +29,7 @@ import com.lowdragmc.lowdraglib.utils.BlockPosFace;
 import com.lowdragmc.lowdraglib.utils.ItemStackKey;
 import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,7 +42,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -52,6 +58,7 @@ import dev.emi.emi.screen.RecipeScreen;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import lombok.Getter;
 import me.shedaniel.rei.impl.client.gui.screen.AbstractDisplayViewingScreen;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -79,6 +86,22 @@ public class PatternPreviewWidget extends WidgetGroup {
     public ButtonWidget layerButton;
     private SlotWidget[] slotWidgets;
     private SlotWidget[] candidates;
+
+    @Getter
+    private Direction frontFacing;
+    @Getter
+    private Direction baseHorizontalFacing;
+    @Getter
+    private Direction upwardsFacing;
+    @Getter
+    private boolean isFlipped;
+
+    public ButtonWidget rotateButton;
+    public ButtonWidget pitchButton;
+    public ButtonWidget yawButton;
+    public ButtonWidget rollButton;
+    public ButtonWidget flipButton;
+    public ButtonWidget resetButton;
 
     private static boolean defaultShowMeasurementGrid = true;
     public boolean showMeasurementGrid = defaultShowMeasurementGrid;
@@ -121,7 +144,7 @@ public class PatternPreviewWidget extends WidgetGroup {
 
     private void renderGrid(MultiBufferSource bufferSource, float partialTicks) {
         if (!this.showMeasurementGrid) return;
-        if (this.index < 0 || this.index >= this.patterns.length) return;
+        if (this.patterns == null || this.index < 0 || this.index >= this.patterns.length) return;
         GridRenderer.render(this.patterns[this.index], bufferSource, this.graduationStep);
     }
 
@@ -134,6 +157,10 @@ public class PatternPreviewWidget extends WidgetGroup {
         this.controllerDefinition = controllerDefinition;
         predicates = new ArrayList<>();
         layer = -1;
+        this.frontFacing = controllerDefinition.getRotationState().defaultDirection;
+        this.baseHorizontalFacing = this.frontFacing.getAxis() == Direction.Axis.Y ? Direction.NORTH : this.frontFacing;
+        this.upwardsFacing = Direction.NORTH;
+        this.isFlipped = false;
 
         addWidget(sceneWidget = new PatternSceneWidget(3, 3, WIDGET_WIDTH - 6, WIDGET_HEIGHT - 32, LEVEL) {
 
@@ -316,7 +343,177 @@ public class PatternPreviewWidget extends WidgetGroup {
                 .setHoverBorderTexture(1, -1)
                 .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.turntable")));
 
+        if (canRotatePitch() || canRotateRoll()) {
+            rotateButton = new ButtonWidget(WIDGET_WIDTH - 22, 130, 18, 18, new GuiTextureGroup(
+                    ColorPattern.T_GRAY.rectTexture(),
+                    new TextTexture("1").setSupplier(() -> {
+                        if (isRollMode()) {
+                            return "R:" + upwardsFacing.getName().substring(0, 1).toUpperCase();
+                        } else {
+                            return "P:" + frontFacing.getName().substring(0, 1).toUpperCase();
+                        }
+                    })),
+                    cd -> rotateStructure(cd.button != 1)) {
+
+                @Override
+                public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                    if (button == 1 && isMouseOverElement(mouseX, mouseY)) {
+                        rotateStructure(false);
+                        playButtonClickSound();
+                        return true;
+                    }
+                    return super.mouseClicked(mouseX, mouseY, button);
+                }
+
+                @Override
+                public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
+                    if (isMouseOverElement(mouseX, mouseY)) {
+                        rotateStructure(wheelDelta > 0);
+                        return true;
+                    }
+                    return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
+                }
+
+                @Override
+                public List<Component> getTooltipTexts() {
+                    List<Component> list = new ArrayList<>();
+                    if (canRotatePitch() && canRotateRoll()) {
+                        if (Screen.hasShiftDown()) {
+                            list.add(Component.translatable("gtceu.multiblock.preview.roll"));
+                            list.add(Component.translatable("gtceu.multiblock.preview.rotate_switch_pitch")
+                                    .withStyle(ChatFormatting.GRAY));
+                        } else {
+                            list.add(Component.translatable("gtceu.multiblock.preview.pitch"));
+                            list.add(Component.translatable("gtceu.multiblock.preview.rotate_switch_roll")
+                                    .withStyle(ChatFormatting.GRAY));
+                        }
+                    } else if (canRotateRoll()) {
+                        list.add(Component.translatable("gtceu.multiblock.preview.roll"));
+                    } else {
+                        list.add(Component.translatable("gtceu.multiblock.preview.pitch"));
+                    }
+                    return list;
+                }
+
+                @Override
+                protected void drawTooltipTexts(int mouseX, int mouseY) {
+                    List<Component> list = this.getTooltipTexts();
+                    this.tooltipTexts.clear();
+                    this.tooltipTexts.addAll(list);
+                    if (!list.isEmpty() && isMouseOverElement(mouseX, mouseY) &&
+                            getHoverElement(mouseX, mouseY) == this &&
+                            gui != null && gui.getModularUIGui() != null) {
+                        gui.getModularUIGui().setHoverTooltip(list, ItemStack.EMPTY, null, null);
+                    }
+                }
+            };
+            rotateButton.setHoverBorderTexture(1, -1);
+            rotateButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.pitch"));
+            addWidget(rotateButton);
+            pitchButton = rotateButton;
+            yawButton = rotateButton;
+            rollButton = rotateButton;
+        }
+
+        if (this.controllerDefinition.isAllowFlip()) {
+            flipButton = new ButtonWidget(WIDGET_WIDTH - 22, (canRotatePitch() || canRotateRoll()) ? 150 : 130, 18, 18,
+                    new GuiTextureGroup(
+                            ColorPattern.T_GRAY.rectTexture(),
+                            new TextTexture("1").setSupplier(() -> isFlipped ? "MIR" : "OFF")),
+                    cd -> flipStructure());
+            flipButton.setHoverBorderTexture(1, -1);
+            flipButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.flip"));
+            addWidget(flipButton);
+        }
+
+        if (canRotatePitch() || canRotateRoll() || this.controllerDefinition.isAllowFlip()) {
+            resetButton = new ButtonWidget(WIDGET_WIDTH - 22, (canRotatePitch() || canRotateRoll()) ? 170 : 150, 18, 18,
+                    new GuiTextureGroup(
+                            ColorPattern.T_GRAY.rectTexture(),
+                            new TextTexture("RST")),
+                    cd -> resetOrientation());
+            resetButton.setHoverBorderTexture(1, -1);
+            resetButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.reset"));
+            addWidget(resetButton);
+        }
+
         setPage(0);
+    }
+
+    public boolean canRotatePitch() {
+        return this.controllerDefinition.getRotationState() == RotationState.ALL ||
+                this.controllerDefinition.getRotationState() == RotationState.Y_AXIS;
+    }
+
+    public boolean canRotateRoll() {
+        return this.controllerDefinition.isAllowExtendedFacing();
+    }
+
+    public boolean isRollMode() {
+        if (!canRotateRoll()) return false;
+        if (!canRotatePitch()) return true;
+        return Screen.hasShiftDown();
+    }
+
+    public void rotateStructure(boolean clockwise) {
+        if (isRollMode()) {
+            if (!canRotateRoll()) return;
+            this.upwardsFacing = clockwise ? this.upwardsFacing.getClockWise() :
+                    this.upwardsFacing.getCounterClockWise();
+            this.onOrientationChanged();
+        } else {
+            if (!canRotatePitch()) return;
+            Direction horizontal = (this.baseHorizontalFacing != null) ? this.baseHorizontalFacing : Direction.NORTH;
+            Direction[] cycle = new Direction[] { horizontal, Direction.UP, horizontal.getOpposite(), Direction.DOWN };
+            int currentIndex = 0;
+            for (int i = 0; i < cycle.length; i++) {
+                if (cycle[i] == this.frontFacing) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+            int nextIndex = clockwise ? (currentIndex + 1) % 4 : (currentIndex + 3) % 4;
+            this.frontFacing = cycle[nextIndex];
+            this.onOrientationChanged();
+        }
+    }
+
+    public void flipStructure() {
+        if (!this.controllerDefinition.isAllowFlip()) return;
+        this.isFlipped = !this.isFlipped;
+        this.onOrientationChanged();
+    }
+
+    public void resetOrientation() {
+        this.frontFacing = controllerDefinition.getRotationState().defaultDirection;
+        this.baseHorizontalFacing = this.frontFacing.getAxis() == Direction.Axis.Y ? Direction.NORTH : this.frontFacing;
+        this.upwardsFacing = Direction.NORTH;
+        this.isFlipped = false;
+        this.onOrientationChanged();
+    }
+
+    private void onOrientationChanged() {
+        if (patterns == null || index < 0 || index >= patterns.length) return;
+        MBPattern pattern = patterns[index];
+        pattern.applyTransformation(this.frontFacing, this.upwardsFacing, this.isFlipped);
+
+        int maxLayer = Math.max(-1, pattern.maxY - pattern.minY);
+        if (this.layer > maxLayer) this.layer = maxLayer;
+
+        Vector3f focalCenter = new Vector3f(
+                (pattern.xMin + pattern.xMax) / 2.0f,
+                (pattern.yMin + pattern.yMax) / 2.0f,
+                (pattern.zMin + pattern.zMax) / 2.0f);
+        sceneWidget.setCenterSmooth(focalCenter);
+
+        if (candidates != null) {
+            for (SlotWidget candidate : candidates) {
+                removeWidget(candidate);
+            }
+            candidates = null;
+        }
+
+        setupScene(pattern);
     }
 
     private void updatePage(boolean reverse) {
@@ -377,6 +574,14 @@ public class PatternPreviewWidget extends WidgetGroup {
                 stream = stream.filter(pos -> !modelDisabled.contains(pos.asLong()));
             }
         }
+        Vector3f focalCenter = new Vector3f((pattern.xMin + pattern.xMax) / 2.0f,
+                (pattern.yMin + pattern.yMax) / 2.0f,
+                (pattern.zMin + pattern.zMax) / 2.0f);
+        float maxDim = Math.max(Math.max(pattern.xMax - pattern.xMin, pattern.yMax - pattern.minY),
+                pattern.zMax - pattern.zMin);
+        float fullZoom = (float) (3.5 * Math.sqrt(Math.max(maxDim, 1)));
+        sceneWidget.setFocalCenter(focalCenter);
+        sceneWidget.setCustomZoom(fullZoom);
         sceneWidget.setRenderedCore(stream.toList(), null);
     }
 
@@ -392,10 +597,15 @@ public class PatternPreviewWidget extends WidgetGroup {
     }
 
     public void setPage(int index) {
-        if (index >= patterns.length || index < 0) return;
+        if (this.patterns == null || index >= patterns.length || index < 0) return;
         this.index = index;
         this.layer = -1;
         MBPattern pattern = patterns[index];
+        pattern.applyTransformation(this.frontFacing, this.upwardsFacing, this.isFlipped);
+        Vector3f focalCenter = new Vector3f((pattern.xMin + pattern.xMax) / 2.0f,
+                (pattern.yMin + pattern.yMax) / 2.0f,
+                (pattern.zMin + pattern.zMax) / 2.0f);
+        sceneWidget.setCenter(focalCenter, false);
         setupScene(pattern);
         if (slotWidgets != null) {
             for (SlotWidget slotWidget : slotWidgets) {
@@ -540,6 +750,10 @@ public class PatternPreviewWidget extends WidgetGroup {
             stepLayer(delta);
             return true;
         }
+        if (rotateButton != null && rotateButton.isMouseOverElement(mouseX, mouseY)) {
+            rotateStructure(wheelDelta > 0);
+            return true;
+        }
         return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
     }
 
@@ -550,8 +764,8 @@ public class PatternPreviewWidget extends WidgetGroup {
     }
 
     private MBPattern initializePattern(MultiblockShapeInfo shapeInfo, HashSet<ItemStackKey> blockDrops) {
-        Map<BlockPos, BlockInfo> blockMap = new HashMap<>();
         IMultiController controllerBase = null;
+        BlockPos controllerPatternPos = BlockPos.ZERO;
         BlockPos multiPos = locateNextRegion();
 
         BlockInfo[][][] blocks = shapeInfo.getBlocks();
@@ -560,40 +774,42 @@ public class PatternPreviewWidget extends WidgetGroup {
             for (int y = 0; y < aisle.length; y++) {
                 BlockInfo[] column = aisle[y];
                 for (int z = 0; z < column.length; z++) {
-                    BlockState blockState = column[z].getBlockState();
                     BlockPos pos = multiPos.offset(x, y, z);
                     if (column[z].getBlockEntity(pos) instanceof IMachineBlockEntity holder &&
                             holder.getMetaMachine() instanceof IMultiController controller) {
                         holder.getSelf().setLevel(LEVEL);
                         controllerBase = controller;
+                        controllerPatternPos = new BlockPos(x, y, z);
                     }
-                    blockMap.put(pos, BlockInfo.fromBlockState(blockState));
                 }
             }
         }
 
-        LEVEL.addBlocks(blockMap);
-        if (controllerBase != null) {
-            LEVEL.setInnerBlockEntity(controllerBase.self().holder.getSelf());
-        }
+        if (controllerBase == null) return null;
 
-        Map<ItemStackKey, PartInfo> parts = gatherBlockDrops(blockMap);
+        MBPattern pattern = new MBPattern(shapeInfo, multiPos, controllerPatternPos, controllerBase);
+        pattern.applyTransformation(controllerDefinition.getRotationState().defaultDirection, Direction.NORTH, false);
+
+        LEVEL.setInnerBlockEntity(controllerBase.self().holder.getSelf());
+
+        Map<ItemStackKey, PartInfo> parts = gatherBlockDrops(pattern.blockMap);
         blockDrops.addAll(parts.keySet());
 
-        Map<BlockPos, TraceabilityPredicate> predicateMap = new HashMap<>();
-        if (controllerBase != null) {
-            loadControllerFormed(predicateMap.keySet(), controllerBase);
-            predicateMap = controllerBase.getMultiblockState().getMatchContext().get("predicates");
-        }
-        return controllerBase == null ? null : new MBPattern(blockMap, parts.values().stream().sorted((one, two) -> {
+        pattern.parts = parts.values().stream().sorted((one, two) -> {
             if (one.isController) return -1;
             if (two.isController) return +1;
             if (one.isTile && !two.isTile) return -1;
             if (two.isTile && !one.isTile) return +1;
             if (one.blockId != two.blockId) return two.blockId - one.blockId;
             return two.amount - one.amount;
-        }).map(PartInfo::getItemStack).filter(list -> !list.isEmpty()).collect(Collectors.toList()), predicateMap,
-                controllerBase);
+        }).map(PartInfo::getItemStack).filter(list -> !list.isEmpty()).collect(Collectors.toList());
+
+        loadControllerFormed(pattern.blockMap.keySet(), controllerBase);
+        Map<BlockPos, TraceabilityPredicate> predicates = controllerBase.getMultiblockState().getMatchContext()
+                .get("predicates");
+        pattern.predicateMap = predicates != null ? predicates : new HashMap<>();
+
+        return pattern;
     }
 
     private void loadControllerFormed(Collection<BlockPos> positions, IMultiController controllerBase) {
@@ -661,25 +877,152 @@ public class PatternPreviewWidget extends WidgetGroup {
 
     public static class MBPattern {
 
+        public final MultiblockShapeInfo shapeInfo;
+        public final BlockPos multiPos;
+        public final BlockPos controllerPatternPos;
         @NotNull
-        final List<List<ItemStack>> parts;
+        public List<List<ItemStack>> parts;
         @NotNull
-        final Map<BlockPos, TraceabilityPredicate> predicateMap;
+        public Map<BlockPos, TraceabilityPredicate> predicateMap;
         @NotNull
-        final Map<BlockPos, BlockInfo> blockMap;
+        public Map<BlockPos, BlockInfo> blockMap;
         @NotNull
-        final IMultiController controllerBase;
+        public final IMultiController controllerBase;
 
-        public final int maxY, minY;
-        public final int xMin, xMax, yMin, yMax, zMin, zMax;
+        public int maxY, minY;
+        public int xMin, xMax, yMin, yMax, zMin, zMax;
 
-        public MBPattern(@NotNull Map<BlockPos, BlockInfo> blockMap, @NotNull List<List<ItemStack>> parts,
-                         @NotNull Map<BlockPos, TraceabilityPredicate> predicateMap,
-                         @NotNull IMultiController controllerBase) {
-            this.parts = parts;
-            this.blockMap = blockMap;
-            this.predicateMap = predicateMap;
+        public Direction currentFront;
+        public Direction currentUp;
+        public boolean currentFlipped;
+
+        public MBPattern(@NotNull MultiblockShapeInfo shapeInfo, @NotNull BlockPos multiPos,
+                         @NotNull BlockPos controllerPatternPos, @NotNull IMultiController controllerBase) {
+            this.shapeInfo = shapeInfo;
+            this.multiPos = multiPos;
+            this.controllerPatternPos = controllerPatternPos;
             this.controllerBase = controllerBase;
+            this.parts = new ArrayList<>();
+            this.predicateMap = new HashMap<>();
+            this.blockMap = new HashMap<>();
+        }
+
+        public static Direction.Axis getMirrorAxis(Direction front, Direction up) {
+            if (up == Direction.NORTH || up == Direction.SOUTH) {
+                if (front.getAxis() == Direction.Axis.Z || front.getAxis() == Direction.Axis.Y) {
+                    return Direction.Axis.X;
+                } else {
+                    return Direction.Axis.Z;
+                }
+            } else {
+                return Direction.Axis.Y;
+            }
+        }
+
+        public void applyTransformation(Direction front, Direction up, boolean isFlipped) {
+            if (LEVEL != null) {
+                for (BlockPos pos : this.blockMap.keySet()) {
+                    LEVEL.removeBlock(pos);
+                }
+            }
+
+            Direction.Axis mirrorAxis = getMirrorAxis(front, up);
+            Map<BlockPos, BlockInfo> newBlockMap = new HashMap<>();
+            BlockInfo[][][] blocks = shapeInfo.getBlocks();
+            for (int x = 0; x < blocks.length; x++) {
+                BlockInfo[][] aisle = blocks[x];
+                for (int y = 0; y < aisle.length; y++) {
+                    BlockInfo[] column = aisle[y];
+                    for (int z = 0; z < column.length; z++) {
+                        BlockInfo info = column[z];
+                        if (info == null) continue;
+                        boolean isController = (x == controllerPatternPos.getX() &&
+                                y == controllerPatternPos.getY() &&
+                                z == controllerPatternPos.getZ());
+                        BlockPos relP = new BlockPos(x - controllerPatternPos.getX(),
+                                y - controllerPatternPos.getY(),
+                                z - controllerPatternPos.getZ());
+
+                        BlockPos o1 = rotateByFront(relP, front);
+                        BlockPos o2 = rotateByFrontAxis(o1, front, getRollRotation(up));
+                        BlockPos o3 = isFlipped ? mirror(o2, mirrorAxis) : o2;
+
+                        BlockPos worldPos = multiPos.offset(controllerPatternPos).offset(o3);
+                        BlockState transformedState = rotateBlockState(info.getBlockState(), front, up, isFlipped,
+                                mirrorAxis, isController);
+                        newBlockMap.put(worldPos, BlockInfo.fromBlockState(transformedState));
+                    }
+                }
+            }
+
+            this.blockMap = newBlockMap;
+            this.currentFront = front;
+            this.currentUp = up;
+            this.currentFlipped = isFlipped;
+
+            BlockPos controllerPos = multiPos.offset(controllerPatternPos);
+            BlockInfo cInfo = this.blockMap.get(controllerPos);
+            BlockState cState = cInfo != null ? cInfo.getBlockState() : null;
+
+            if (this.controllerBase != null && cState != null) {
+                this.controllerBase.self().holder.getSelf().setBlockState(cState);
+            }
+
+            if (LEVEL != null) {
+                LEVEL.addBlocks(this.blockMap);
+                if (this.controllerBase != null) {
+                    LEVEL.setInnerBlockEntity(this.controllerBase.self().holder.getSelf());
+                }
+            }
+
+            recalculateBounds();
+
+            if (this.controllerBase != null) {
+                Direction initialFacing = this.controllerBase.self().getDefinition()
+                        .getRotationState().defaultDirection;
+                Direction controllerFacing = rotateFacing(initialFacing, front, up, isFlipped, mirrorAxis);
+                if (controllerFacing == null) controllerFacing = front;
+
+                Direction initialTop = Direction.UP;
+                Direction targetTop = rotateFacing(initialTop, front, up, isFlipped, mirrorAxis);
+                Direction controllerUpwards = getUpwardsFacing(controllerFacing, targetTop);
+
+                if (this.controllerBase.self().isFacingValid(controllerFacing)) {
+                    this.controllerBase.self().setFrontFacing(controllerFacing);
+                }
+
+                if (this.controllerBase.self().allowExtendedFacing()) {
+                    this.controllerBase.self().setUpwardsFacing(controllerUpwards);
+                }
+
+                if (this.controllerBase instanceof MultiblockControllerMachine mcm) {
+                    mcm.setFlipped(isFlipped);
+                }
+
+                if (cState != null) {
+                    this.controllerBase.self().holder.getSelf().setBlockState(cState);
+                }
+
+                BlockPattern pattern = this.controllerBase.getPattern();
+                if (pattern != null) {
+                    this.controllerBase.getMultiblockState().clean();
+
+                    if (pattern.checkPatternAt(this.controllerBase.getMultiblockState(),
+                            controllerPos, controllerFacing, controllerUpwards, isFlipped, true) ||
+                            pattern.checkPatternAt(this.controllerBase.getMultiblockState(), true)) {
+                        this.controllerBase.onStructureFormed();
+                    } else {
+                        this.controllerBase.onStructureInvalid();
+                    }
+
+                    Map<BlockPos, TraceabilityPredicate> predicates = this.controllerBase.getMultiblockState()
+                            .getMatchContext().get("predicates");
+                    this.predicateMap = (predicates != null) ? predicates : new HashMap<>();
+                }
+            }
+        }
+
+        public void recalculateBounds() {
             int minXVal = Integer.MAX_VALUE, maxXVal = Integer.MIN_VALUE;
             int minYVal = Integer.MAX_VALUE, maxYVal = Integer.MIN_VALUE;
             int minZVal = Integer.MAX_VALUE, maxZVal = Integer.MIN_VALUE;
@@ -691,6 +1034,11 @@ public class PatternPreviewWidget extends WidgetGroup {
                 minZVal = Math.min(minZVal, pos.getZ());
                 maxZVal = Math.max(maxZVal, pos.getZ());
             }
+
+            if (minXVal == Integer.MAX_VALUE) {
+                minXVal = maxXVal = minYVal = maxYVal = minZVal = maxZVal = 0;
+            }
+
             minY = minYVal;
             maxY = maxYVal;
             xMin = minXVal;
@@ -700,5 +1048,193 @@ public class PatternPreviewWidget extends WidgetGroup {
             zMin = minZVal;
             zMax = maxZVal + 1;
         }
+    }
+
+    public static BlockPos rotateByFront(BlockPos pos, Direction front) {
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+
+        return switch (front) {
+            case NORTH -> new BlockPos(x, y, z);
+            case SOUTH -> new BlockPos(x, -y, -z);
+            case EAST -> new BlockPos(-z, y, x);
+            case WEST -> new BlockPos(z, y, -x);
+            case UP -> new BlockPos(x, -z, y);
+            case DOWN -> new BlockPos(x, z, -y);
+        };
+    }
+
+    public static Rotation getRollRotation(Direction up) {
+        return switch (up) {
+            case EAST -> Rotation.CLOCKWISE_90;
+            case SOUTH -> Rotation.CLOCKWISE_180;
+            case WEST -> Rotation.COUNTERCLOCKWISE_90;
+            default -> Rotation.NONE;
+        };
+    }
+
+    public static BlockPos rotateByFrontAxis(BlockPos pos, Direction frontFacing, Rotation rotation) {
+        if (rotation == Rotation.NONE) return pos;
+
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+
+        if (rotation == Rotation.CLOCKWISE_180) {
+            return switch (frontFacing.getAxis()) {
+                case X -> new BlockPos(x, -y, -z);
+                case Y -> new BlockPos(-x, y, -z);
+                case Z -> new BlockPos(-x, -y, z);
+            };
+        }
+
+        int step = frontFacing.getAxisDirection().getStep();
+        boolean clockwise90 = rotation == Rotation.CLOCKWISE_90;
+
+        return switch (frontFacing.getAxis()) {
+            case Z -> {
+                int newX = clockwise90 ? -step * y : step * y;
+                int newY = clockwise90 ? step * x : -step * x;
+                yield new BlockPos(newX, newY, z);
+            }
+            case X -> {
+                int newZ = clockwise90 ? step * y : -step * y;
+                int newY = clockwise90 ? -step * z : step * z;
+                yield new BlockPos(x, newY, newZ);
+            }
+            case Y -> {
+                int newX = clockwise90 ? -step * z : step * z;
+                int newZ = clockwise90 ? step * x : -step * x;
+                yield new BlockPos(newX, y, newZ);
+            }
+        };
+    }
+
+    public static BlockPos mirror(BlockPos pos, Direction.Axis axis) {
+        return switch (axis) {
+            case X -> new BlockPos(-pos.getX(), pos.getY(), pos.getZ());
+            case Y -> new BlockPos(pos.getX(), -pos.getY(), pos.getZ());
+            case Z -> new BlockPos(pos.getX(), pos.getY(), -pos.getZ());
+        };
+    }
+
+    private static Direction getDirectionFromNormal(int x, int y, int z) {
+        if (x > 0) return Direction.EAST;
+        if (x < 0) return Direction.WEST;
+        if (y > 0) return Direction.UP;
+        if (y < 0) return Direction.DOWN;
+        if (z > 0) return Direction.SOUTH;
+        if (z < 0) return Direction.NORTH;
+        return null;
+    }
+
+    public static Direction rotateFacing(Direction facing, Direction front, Direction up, boolean isFlipped,
+                                         Direction.Axis mirrorAxis) {
+        if (facing == null) return null;
+
+        BlockPos normal = new BlockPos(facing.getStepX(), facing.getStepY(), facing.getStepZ());
+
+        BlockPos o1 = rotateByFront(normal, front);
+        BlockPos o2 = rotateByFrontAxis(o1, front, getRollRotation(up));
+        BlockPos o3 = isFlipped ? mirror(o2, mirrorAxis) : o2;
+
+        Direction rotated = getDirectionFromNormal(o3.getX(), o3.getY(), o3.getZ());
+
+        return (rotated != null) ? rotated : facing;
+    }
+
+    public static Direction getTopDirection(Direction facing, Direction upwardsFacing) {
+        if (facing == null) facing = Direction.NORTH;
+
+        if (upwardsFacing == null) upwardsFacing = Direction.NORTH;
+
+        if (facing.getAxis() == Direction.Axis.Y) {
+            return upwardsFacing.getAxis().isHorizontal() ? upwardsFacing : Direction.NORTH;
+        }
+
+        return switch (upwardsFacing) {
+            case NORTH -> Direction.UP;
+            case SOUTH -> Direction.DOWN;
+            case EAST -> facing.getClockWise();
+            case WEST -> facing.getCounterClockWise();
+            default -> Direction.UP;
+        };
+    }
+
+    public static Direction getUpwardsFacing(Direction facing, Direction top) {
+        if (facing == null) facing = Direction.NORTH;
+
+        if (top == null) top = Direction.UP;
+
+        if (facing.getAxis() == Direction.Axis.Y) {
+            return top.getAxis().isHorizontal() ? top : Direction.NORTH;
+        }
+
+        if (top == Direction.UP) {
+            return Direction.NORTH;
+        } else if (top == Direction.DOWN) {
+            return Direction.SOUTH;
+        } else if (top == facing.getClockWise()) {
+            return Direction.EAST;
+        } else if (top == facing.getCounterClockWise()) {
+            return Direction.WEST;
+        }
+
+        return Direction.NORTH;
+    }
+
+    public static BlockState rotateBlockState(BlockState state, Direction front, Direction up, boolean isFlipped,
+                                              Direction.Axis mirrorAxis, boolean isController) {
+        if (state.getBlock() instanceof MetaMachineBlock machine) {
+            var rotationState = machine.definition.getRotationState();
+            Direction initialFacing = null;
+
+            if (rotationState != RotationState.NONE && rotationState.property != null &&
+                    state.hasProperty(rotationState.property)) {
+                initialFacing = state.getValue(rotationState.property);
+            }
+
+            if (initialFacing == null) initialFacing = Direction.NORTH;
+
+            Direction newFacing = rotateFacing(initialFacing, front, up, isFlipped, mirrorAxis);
+            if (newFacing != null && rotationState != RotationState.NONE && rotationState.property != null &&
+                    state.hasProperty(rotationState.property) && rotationState.test(newFacing)) {
+                state = state.setValue(rotationState.property, newFacing);
+            }
+
+            if (machine.definition.isAllowExtendedFacing() &&
+                    state.hasProperty(GTBlockStateProperties.UPWARDS_FACING)) {
+                Direction initialUpwards = state.getValue(GTBlockStateProperties.UPWARDS_FACING);
+                Direction initialTop = getTopDirection(initialFacing, initialUpwards);
+                Direction newTop = rotateFacing(initialTop, front, up, isFlipped, mirrorAxis);
+
+                Direction effectiveFacing = (rotationState != RotationState.NONE && rotationState.property != null &&
+                        state.hasProperty(rotationState.property)) ? state.getValue(rotationState.property) :
+                                (newFacing != null ? newFacing : front);
+
+                Direction newUpwards = getUpwardsFacing(effectiveFacing, newTop);
+                state = state.setValue(GTBlockStateProperties.UPWARDS_FACING, newUpwards);
+            }
+            return state;
+        }
+
+        if (state.hasProperty(BlockStateProperties.FACING)) {
+            Direction facing = state.getValue(BlockStateProperties.FACING);
+            Direction newFacing = rotateFacing(facing, front, up, isFlipped, mirrorAxis);
+
+            if (newFacing != null) {
+                state = state.setValue(BlockStateProperties.FACING, newFacing);
+            }
+        } else if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
+            Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+            Direction newFacing = rotateFacing(facing, front, up, isFlipped, mirrorAxis);
+
+            if (newFacing != null && newFacing.getAxis().isHorizontal()) {
+                state = state.setValue(BlockStateProperties.HORIZONTAL_FACING, newFacing);
+            }
+        }
+
+        return state;
     }
 }
