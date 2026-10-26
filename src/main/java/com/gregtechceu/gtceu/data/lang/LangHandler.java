@@ -861,11 +861,48 @@ public class LangHandler {
         provider.add("metaitem.terminal.tooltip", "Sharp tools make good work");
         provider.add("metaitem.terminal.tooltip.creative", "§bCreative Mode");
         provider.add("metaitem.terminal.tooltip.hardware", "§aHardware: %d");
-        provider.add("metaitem.terminal.mode", "§aBuild Mode:§r %s");
-        provider.add("metaitem.terminal.mode.normal", "§6Normal§r");
-        provider.add("metaitem.terminal.mode.flipped", "§dMirrored§r");
-        provider.add("metaitem.terminal.mode.no_hatches", "§bNo Hatches§r");
-        provider.add("metaitem.terminal.mode.flipped_no_hatches", "§dMirrored§r + §bNo Hatches§r");
+        provider.add("metaitem.terminal.tooltip.flipped", "§aMirrored:§r %s");
+        provider.add("metaitem.terminal.tooltip.no_hatches", "§aSkip Hatches:§r %s");
+        provider.add("metaitem.terminal.tooltip.layers", "§aLayers:§r %s");
+        provider.add("metaitem.terminal.layers.min", "Minimum");
+        provider.add("metaitem.terminal.layers.label", "Layers:");
+        provider.add("metaitem.terminal.variant.label", "Variant:");
+        provider.add("metaitem.terminal.tooltip.variant", "§aVariant:§r %s");
+        provider.add("metaitem.terminal.help.variant",
+                " §7(which version of the structure is previewed, like a different coil)");
+        provider.add("metaitem.terminal.ui.variant", "Variant (0 = first)");
+        provider.add("metaitem.terminal.ui.flipped.info", "Previews and builds the structure mirrored");
+        provider.add("metaitem.terminal.ui.no_hatches.info",
+                "Leaves out all hatches, so you can place them yourself");
+        provider.add("metaitem.terminal.ui.layers.info",
+                "How often repeatable sections are built. Limited to what the multiblock allows");
+        provider.add("metaitem.terminal.ui.variant.info",
+                "Which version of the structure is previewed, like a different coil");
+        provider.add("metaitem.terminal.help.preview", "§7R-Click a controller to preview its structure.");
+        provider.add("metaitem.terminal.help.build",
+                "%s + R-Click a controller to build it from your inventory.");
+        provider.add("metaitem.terminal.help.settings", "%s + R-Click in the air to open the settings.");
+        provider.add("metaitem.terminal.tooltip.hold_shift", "§7Hold §d[SHIFT]§7 to show Terminal Info");
+        provider.add("metaitem.terminal.help.flipped", " §7(previews and builds the structure mirrored)");
+        provider.add("metaitem.terminal.help.no_hatches",
+                " §7(leaves out all hatches, so you can place them yourself)");
+        provider.add("metaitem.terminal.help.layers",
+                " §7(how often repeatable sections are built. Limited to what the multiblock allows)");
+        provider.add("metaitem.terminal.ui.title", "Terminal Settings");
+        provider.add("metaitem.terminal.ui.flipped", "Mirrored");
+        provider.add("metaitem.terminal.ui.flipped.tooltip", "Preview and build the mirrored layout");
+        provider.add("metaitem.terminal.ui.no_hatches", "Skip Hatches");
+        provider.add("metaitem.terminal.ui.no_hatches.tooltip", "Leave out all hatches when building");
+        provider.add("metaitem.terminal.ui.layers", "Layers (0 = minimum)");
+        provider.add("metaitem.terminal.build.success", "Built %s blocks.");
+        provider.add("metaitem.terminal.build.success.no_hatches",
+                "Built %s blocks. Add hatches to form the structure.");
+        provider.add("metaitem.terminal.build.nothing", "Nothing to build.");
+        provider.add("metaitem.terminal.build.no_blocks", "No matching blocks in your inventory:");
+        provider.add("metaitem.terminal.build.partial", "Built %s blocks, but some are missing:");
+        provider.add("metaitem.terminal.build.missing_entry", "- %sx %s");
+        provider.add("metaitem.terminal.build.missing_more", "And %s more");
+        provider.add("metaitem.terminal.build.obstructed", "%s blocks could not be placed, something is in the way.");
         provider.add("metaitem.plugin.tooltips.1",
                 "Plugins can be added to the screen for more functionality.");
         provider.add("metaitem.plugin.proxy.tooltips.1", "(Please adjust to proxy mode in the screen)");
