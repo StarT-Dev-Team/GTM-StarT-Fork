@@ -128,7 +128,7 @@ public class CircuitFancyConfigurator implements IFancyConfigurator, IFancyCusto
         group.addWidget(new SlotWidget(circuitSlot, 0, (group.getSize().width - 18) / 2, 20,
                 !ConfigHolder.INSTANCE.machines.ghostCircuit, !ConfigHolder.INSTANCE.machines.ghostCircuit)
                 .setBackground(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY)));
-        if (circuitMachine != null) {
+        if (circuitMachine != null && circuitMachine.isCircuitPastingEnabled()) {
             group.addWidget(new ToggleButtonWidget(149, 20, 18, 18,
                     GuiTextures.BUTTON_LOCK, circuitMachine::isCircuitPastingBlocked,
                     circuitMachine::setCircuitPastingBlocked)

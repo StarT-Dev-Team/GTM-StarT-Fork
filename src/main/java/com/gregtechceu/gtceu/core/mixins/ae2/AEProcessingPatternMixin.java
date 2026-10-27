@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.core.mixins.ae2;
 
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.IPatternDetails.IInput;
@@ -27,6 +28,7 @@ public abstract class AEProcessingPatternMixin {
 
     @Inject(method = "getInputs", at = @At("RETURN"), cancellable = true)
     private void gtceu$filterCircuitInputs(CallbackInfoReturnable<IInput[]> cir) {
+        if (!ConfigHolder.INSTANCE.compat.ae2.isCircuitPastingEnabled()) return;
         IInput[] original = cir.getReturnValue();
         if (original == null || original.length == 0) return;
         List<IInput> filtered = new ArrayList<>(original.length);
@@ -44,6 +46,7 @@ public abstract class AEProcessingPatternMixin {
     private void gtceu$pushInputsSkippingCircuits(KeyCounter[] inputHolder,
                                                   IPatternDetails.PatternInputSink inputSink,
                                                   CallbackInfo ci) {
+        if (!ConfigHolder.INSTANCE.compat.ae2.isCircuitPastingEnabled()) return;
         if (this.sparseInputs == null) return;
 
         if (!hasCircuit(this.sparseInputs)) return;

@@ -6,7 +6,7 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.part.MultiblockPartMachine;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
-import com.gregtechceu.gtceu.integration.ae2.crafting.AEDynamicGTRecipePattern;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -36,7 +36,7 @@ public class AE2PatternCircuitHandler {
 
     public static void handlePatternPush(PatternProviderLogicHost host, IPatternDetails patternDetails,
                                          KeyCounter[] inputHolder) {
-        if (host == null) return;
+        if (host == null || !ConfigHolder.INSTANCE.compat.ae2.isCircuitPastingEnabled()) return;
 
         int circuitConfig = getCircuitConfig(patternDetails, inputHolder);
         if (circuitConfig < 0) return;
@@ -60,29 +60,38 @@ public class AE2PatternCircuitHandler {
             if (targetBe != null) {
                 MetaMachine machine = MetaMachine.getMachine(level, targetPos);
                 if (machine != null && visitedMachines.add(machine)) {
-                    applyCircuitToMachine(machine, circuitConfig);
+                    applyCircuitToMachine(machine, circuitConfig, false);
                 }
             }
 
-            IGridNode gridNode = GridHelper.getExposedNode(level, targetPos, side.getOpposite());
-            if (gridNode == null) {
-                IInWorldGridNodeHost nodeHost = GridHelper.getNodeHost(level, targetPos);
-                if (nodeHost != null) {
-                    gridNode = nodeHost.getGridNode(side.getOpposite());
-                    if (gridNode == null) {
-                        gridNode = nodeHost.getGridNode(null);
+            if (ConfigHolder.INSTANCE.compat.ae2.subnetPastingOnSingleblock ||
+                    ConfigHolder.INSTANCE.compat.ae2.subnetPastingOnHatch ||
+                    ConfigHolder.INSTANCE.compat.ae2.pastingOnController) {
+                IGridNode gridNode = GridHelper.getExposedNode(level, targetPos, side.getOpposite());
+                if (gridNode == null) {
+                    IInWorldGridNodeHost nodeHost = GridHelper.getNodeHost(level, targetPos);
+                    if (nodeHost != null) {
+                        gridNode = nodeHost.getGridNode(side.getOpposite());
+                        if (gridNode == null) {
+                            gridNode = nodeHost.getGridNode(null);
+                        }
                     }
                 }
-            }
 
-            if (gridNode != null && gridNode.getGrid() != null) {
-                applyCircuitToSubnet(gridNode.getGrid(), circuitConfig, visitedMachines, visitedGrids);
+                if (gridNode != null && gridNode.getGrid() != null) {
+                    applyCircuitToSubnet(gridNode.getGrid(), circuitConfig, visitedMachines, visitedGrids, 0);
+                }
             }
         }
     }
 
     public static void applyCircuitToMachine(MetaMachine machine, int circuitConfig) {
+        applyCircuitToMachine(machine, circuitConfig, false);
+    }
+
+    public static void applyCircuitToMachine(MetaMachine machine, int circuitConfig, boolean fromSubnet) {
         if (machine instanceof IMultiController controller) {
+            if (!ConfigHolder.INSTANCE.compat.ae2.pastingOnController) return;
             boolean controllerBlocked = controller instanceof IHasCircuitSlot controllerCircuit &&
                     controllerCircuit.isCircuitPastingBlocked();
             // case 1: multis with pc (custom primitive ones)
@@ -100,6 +109,9 @@ public class AE2PatternCircuitHandler {
                 }
             }
         } else if (machine instanceof MultiblockPartMachine) {
+            if (!(fromSubnet ? ConfigHolder.INSTANCE.compat.ae2.subnetPastingOnHatch :
+                    ConfigHolder.INSTANCE.compat.ae2.pastingOnHatch))
+                return;
             // case 3: apply on hatch directly
             if (machine instanceof IHasCircuitSlot circuitMachine && circuitMachine.isCircuitSlotEnabled() &&
                     !circuitMachine.isCircuitPastingBlocked()) {
@@ -107,18 +119,16 @@ public class AE2PatternCircuitHandler {
             }
         } else if (machine instanceof IHasCircuitSlot circuitMachine && circuitMachine.isCircuitSlotEnabled() &&
                 !circuitMachine.isCircuitPastingBlocked()) {
-            // case 4: singleblock machine
-            circuitMachine.getCircuitInventory().setStackInSlot(0, IntCircuitBehaviour.stack(circuitConfig));
-        }
+                    if (!(fromSubnet ? ConfigHolder.INSTANCE.compat.ae2.subnetPastingOnSingleblock :
+                            ConfigHolder.INSTANCE.compat.ae2.pastingOnSingleblock))
+                        return;
+                    // case 4: singleblock machine
+                    circuitMachine.getCircuitInventory().setStackInSlot(0, IntCircuitBehaviour.stack(circuitConfig));
+                }
     }
 
     // for pattern buffers. this gets the circuit
     public static int getCircuitConfig(IPatternDetails patternDetails, KeyCounter[] inputHolder) {
-        if (patternDetails instanceof AEDynamicGTRecipePattern dynamicPattern) {
-            if (dynamicPattern.getCircuitConfig() >= 0) {
-                return dynamicPattern.getCircuitConfig();
-            }
-        }
         if (patternDetails instanceof AEProcessingPattern processingPattern) {
             for (GenericStack sparseInput : processingPattern.getSparseInputs()) {
                 if (sparseInput != null && sparseInput.what() instanceof AEItemKey itemKey) {
@@ -165,6 +175,11 @@ public class AE2PatternCircuitHandler {
 
     public static void applyCircuitToSubnet(IGrid grid, int circuitConfig, Set<MetaMachine> visitedMachines,
                                             Set<IGrid> visitedGrids) {
+        applyCircuitToSubnet(grid, circuitConfig, visitedMachines, visitedGrids, 0);
+    }
+
+    public static void applyCircuitToSubnet(IGrid grid, int circuitConfig, Set<MetaMachine> visitedMachines,
+                                            Set<IGrid> visitedGrids, int currentDepth) {
         if (grid == null || !visitedGrids.add(grid)) return;
 
         for (IGridNode node : grid.getNodes()) {
@@ -178,7 +193,7 @@ public class AE2PatternCircuitHandler {
 
                 MetaMachine machine = MetaMachine.getMachine(level, targetPos);
                 if (machine != null && visitedMachines.add(machine)) {
-                    applyCircuitToMachine(machine, circuitConfig);
+                    applyCircuitToMachine(machine, circuitConfig, true);
                 }
 
                 IGridNode targetNode = GridHelper.getExposedNode(level, targetPos, side.getOpposite());
@@ -193,7 +208,11 @@ public class AE2PatternCircuitHandler {
                 }
 
                 if (targetNode != null && targetNode.getGrid() != null) {
-                    applyCircuitToSubnet(targetNode.getGrid(), circuitConfig, visitedMachines, visitedGrids);
+                    int maxDepth = ConfigHolder.INSTANCE.compat.ae2.recursiveSubnetDepthPastingAllowed;
+                    if (maxDepth == -1 || currentDepth < maxDepth) {
+                        applyCircuitToSubnet(targetNode.getGrid(), circuitConfig, visitedMachines, visitedGrids,
+                                currentDepth + 1);
+                    }
                 }
             }
         }
