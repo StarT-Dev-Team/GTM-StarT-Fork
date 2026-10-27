@@ -75,11 +75,33 @@ public class PatternPreviewWidget extends WidgetGroup {
     private static final int REGION_SIZE = 512;
     private static int LAST_OFFSET_INDEX = 0;
     private static final Map<MultiblockMachineDefinition, MBPattern[]> CACHE = new HashMap<>();
+    private static final Map<MultiblockMachineDefinition, Integer> CURRENT_PAGE = new HashMap<>();
+
+    public static int getPage(MultiblockMachineDefinition definition) {
+        return CURRENT_PAGE.getOrDefault(definition, 0);
+    }
+
+    public static MBPattern getPattern(MultiblockMachineDefinition definition, int page) {
+        MBPattern[] patterns = CACHE.get(definition);
+        if (patterns == null || patterns.length == 0) {
+            getPatternWidget(definition);
+            patterns = CACHE.get(definition);
+        }
+        if (patterns == null || patterns.length == 0) return null;
+        if (page < 0 || page >= patterns.length) page = 0;
+        return patterns[page];
+    }
+
+    public static MBPattern getCurrentPattern(MultiblockMachineDefinition definition) {
+        return getPattern(definition, getPage(definition));
+    }
+
     private final PatternSceneWidget sceneWidget;
     private final DraggableScrollableWidgetGroup scrollableWidgetGroup;
     public final MultiblockMachineDefinition controllerDefinition;
     public final MBPattern[] patterns;
     private final List<SimplePredicate> predicates;
+    @Getter
     private int index;
     public int layer;
     public ButtonWidget pageButton;
@@ -437,7 +459,7 @@ public class PatternPreviewWidget extends WidgetGroup {
             addWidget(resetButton);
         }
 
-        setPage(0);
+        setPage(getPage(this.controllerDefinition));
     }
 
     public boolean canRotatePitch() {
@@ -599,6 +621,7 @@ public class PatternPreviewWidget extends WidgetGroup {
     public void setPage(int index) {
         if (this.patterns == null || index >= patterns.length || index < 0) return;
         this.index = index;
+        CURRENT_PAGE.put(this.controllerDefinition, index);
         this.layer = -1;
         MBPattern pattern = patterns[index];
         pattern.applyTransformation(this.frontFacing, this.upwardsFacing, this.isFlipped);
@@ -729,11 +752,11 @@ public class PatternPreviewWidget extends WidgetGroup {
         }
         // I can only think of this way
         if (!isLoaded && GTCEu.Mods.isEMILoaded() && Minecraft.getInstance().screen instanceof RecipeScreen) {
-            setPage(0);
+            setPage(getPage(this.controllerDefinition));
             isLoaded = true;
         } else if (!isLoaded && GTCEu.Mods.isREILoaded() &&
                 Minecraft.getInstance().screen instanceof AbstractDisplayViewingScreen) {
-                    setPage(0);
+                    setPage(getPage(this.controllerDefinition));
                     isLoaded = true;
                 }
     }
