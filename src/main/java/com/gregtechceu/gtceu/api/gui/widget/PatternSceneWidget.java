@@ -68,6 +68,9 @@ public class PatternSceneWidget extends SceneWidget {
     @Override
     public SceneWidget setRenderedCore(Collection<BlockPos> blocks,
                                        ISceneBlockRenderHook renderHook) {
+        if (this.renderer != null) {
+            this.renderer.renderedBlocksMap.clear();
+        }
         super.setRenderedCore(blocks, renderHook);
         if (this.focalCenter != null) {
             if (this.targetCenter == null) {

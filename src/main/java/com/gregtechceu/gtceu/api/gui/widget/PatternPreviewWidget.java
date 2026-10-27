@@ -663,7 +663,6 @@ public class PatternPreviewWidget extends WidgetGroup {
             this.layer = -1;
             loadControllerFormed(pattern.blockMap.keySet(), controllerBase);
         } else {
-            sceneWidget.setRenderedCore(pattern.blockMap.keySet(), null);
             controllerBase.onStructureInvalid();
         }
     }
