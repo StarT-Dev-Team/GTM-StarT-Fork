@@ -104,6 +104,11 @@ public class SimpleTieredMachine extends WorkableTieredMachine
     @Getter
     @Persisted
     protected final NotifiableItemStackHandler circuitInventory;
+    @Getter
+    @Setter
+    @Persisted
+    @DescSynced
+    protected boolean circuitPastingBlocked;
     @Nullable
     protected TickableSubscription autoOutputSubs, batterySubs;
     @Nullable
@@ -319,7 +324,7 @@ public class SimpleTieredMachine extends WorkableTieredMachine
         IFancyUIMachine.super.attachConfigurators(configuratorPanel);
 
         if (isCircuitSlotEnabled()) {
-            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
+            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(this));
         }
     }
 
@@ -442,6 +447,7 @@ public class SimpleTieredMachine extends WorkableTieredMachine
             return slotWidget;
         }, (slotWidget, machine) -> {
             slotWidget.setCircuitInventory(machine.circuitInventory);
+            slotWidget.setCircuitMachine(machine);
             slotWidget.setCanPutItems(false);
             slotWidget.setCanTakeItems(false);
             slotWidget.setHoverTooltips(

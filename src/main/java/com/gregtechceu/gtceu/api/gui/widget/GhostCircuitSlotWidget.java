@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.api.gui.widget;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
@@ -18,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -33,6 +35,9 @@ public class GhostCircuitSlotWidget extends SlotWidget {
 
     @Getter
     private IItemHandlerModifiable circuitInventory;
+    @Nullable
+    @Setter
+    private IHasCircuitSlot circuitMachine;
     @Nullable
     private Widget configurator;
 
@@ -151,6 +156,13 @@ public class GhostCircuitSlotWidget extends SlotWidget {
         group.addWidget(new SlotWidget(this.circuitInventory, 0, (group.getSize().width - 18) / 2, 20,
                 !ConfigHolder.INSTANCE.machines.ghostCircuit, !ConfigHolder.INSTANCE.machines.ghostCircuit)
                 .setBackground(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY)));
+        if (circuitMachine != null && circuitMachine.isCircuitPastingEnabled()) {
+            group.addWidget(new ToggleButtonWidget(149, 20, 18, 18,
+                    GuiTextures.BUTTON_LOCK, circuitMachine::isCircuitPastingBlocked,
+                    circuitMachine::setCircuitPastingBlocked)
+                    .setTooltipText("gtceu.gui.circuit_pasting.tooltip")
+                    .setShouldUseBaseBackground());
+        }
         if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
             group.addWidget(new ButtonWidget((group.getSize().width - 18) / 2, 20, 18, 18, IGuiTexture.EMPTY,
                     clickData -> {
