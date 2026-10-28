@@ -22,7 +22,6 @@ public class LaserNetWalker extends PipeNetWalker<LaserPipeBlockEntity, LaserPip
             LaserNetWalker walker = new LaserNetWalker(world, sourcePipe, 1);
             walker.sourcePipe = sourcePipe;
             walker.facingToHandler = faceToSourceHandler;
-            walker.axis = faceToSourceHandler.getAxis();
             walker.traversePipeNet();
             return walker.routePath;
         } catch (Exception e) {
@@ -30,14 +29,9 @@ public class LaserNetWalker extends PipeNetWalker<LaserPipeBlockEntity, LaserPip
         }
     }
 
-    private static final Direction[] X_AXIS_FACINGS = { Direction.WEST, Direction.EAST };
-    private static final Direction[] Y_AXIS_FACINGS = { Direction.UP, Direction.DOWN };
-    private static final Direction[] Z_AXIS_FACINGS = { Direction.NORTH, Direction.SOUTH };
-
     private LaserRoutePath routePath;
     private BlockPos sourcePipe;
     private Direction facingToHandler;
-    private Direction.Axis axis;
 
     protected LaserNetWalker(LaserPipeNet world, BlockPos sourcePipe, int distance) {
         super(world, sourcePipe, distance);
@@ -52,7 +46,6 @@ public class LaserNetWalker extends PipeNetWalker<LaserPipeBlockEntity, LaserPip
         LaserNetWalker walker = new LaserNetWalker(net, nextPos, walkedBlocks);
         walker.facingToHandler = facingToHandler;
         walker.sourcePipe = sourcePipe;
-        walker.axis = axis;
         return walker;
     }
 
@@ -63,15 +56,6 @@ public class LaserNetWalker extends PipeNetWalker<LaserPipeBlockEntity, LaserPip
 
     @Override
     protected void checkPipe(LaserPipeBlockEntity pipeTile, BlockPos pos) {}
-
-    @Override
-    protected Direction[] getSurroundingPipeSides() {
-        return switch (axis) {
-            case X -> X_AXIS_FACINGS;
-            case Y -> Y_AXIS_FACINGS;
-            case Z -> Z_AXIS_FACINGS;
-        };
-    }
 
     @Override
     protected void checkNeighbour(LaserPipeBlockEntity pipeNode, BlockPos pipePos, Direction faceToNeighbour,

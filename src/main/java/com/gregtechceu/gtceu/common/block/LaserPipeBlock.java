@@ -1,11 +1,11 @@
 package com.gregtechceu.gtceu.common.block;
 
-import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.block.PipeBlock;
 import com.gregtechceu.gtceu.api.blockentity.PipeBlockEntity;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.pipenet.IPipeNode;
+import com.gregtechceu.gtceu.client.model.LaserPipeModel;
 import com.gregtechceu.gtceu.client.model.PipeModel;
 import com.gregtechceu.gtceu.client.renderer.block.PipeBlockRenderer;
 import com.gregtechceu.gtceu.common.blockentity.LaserPipeBlockEntity;
@@ -40,8 +40,7 @@ public class LaserPipeBlock extends PipeBlock<LaserPipeType, LaserPipeProperties
     public LaserPipeBlock(Properties properties, LaserPipeType type) {
         super(properties, type);
         this.properties = LaserPipeProperties.INSTANCE;
-        this.model = new PipeModel(LaserPipeType.NORMAL.getThickness(), () -> GTCEu.id("block/pipe/pipe_laser_side"),
-                () -> GTCEu.id("block/pipe/pipe_laser_in"), null, null);
+        this.model = new LaserPipeModel(type == LaserPipeType.MIRROR);
         this.renderer = new PipeBlockRenderer(this.model);
     }
 
@@ -57,9 +56,8 @@ public class LaserPipeBlock extends PipeBlock<LaserPipeType, LaserPipeProperties
                         return pipe.getFrameMaterial().getMaterialSecondaryRGB();
                     }
                 }
-                if (pipe.isPainted()) {
-                    return pipe.getRealColor();
-                }
+
+                if (pipe.isPainted() && index != 2) return pipe.getRealColor();
             }
             return -1;
         };

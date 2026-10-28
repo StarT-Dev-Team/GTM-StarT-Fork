@@ -5,7 +5,6 @@ import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.capability.ILaserContainer;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
-import com.gregtechceu.gtceu.api.pipenet.IPipeNode;
 import com.gregtechceu.gtceu.common.pipelike.laser.*;
 import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.TaskHandler;
@@ -165,23 +164,26 @@ public class LaserPipeBlockEntity extends PipeBlockEntity<LaserPipeType, LaserPi
     @Override
     public void setConnection(Direction side, boolean connected, boolean fromNeighbor) {
         if (!getLevel().isClientSide && connected) {
-            int connections = getConnections();
-            // block connection if any side other than the requested side and its opposite side are already connected.
-            connections &= ~(1 << side.ordinal());
-            connections &= ~(1 << side.getOpposite().ordinal());
-            if (connections != 0) return;
+            if (!canAcceptConnection(side)) return;
 
             // check the same for the targeted pipe
             BlockEntity tile = getLevel().getBlockEntity(getBlockPos().relative(side));
-            if (tile instanceof IPipeNode<?, ?> pipeTile &&
-                    pipeTile.getPipeType().getClass() == this.getPipeType().getClass()) {
-                connections = pipeTile.getConnections();
-                connections &= ~(1 << side.ordinal());
-                connections &= ~(1 << side.getOpposite().ordinal());
-                if (connections != 0) return;
+            if (tile instanceof LaserPipeBlockEntity pipeTile && !pipeTile.canAcceptConnection(side.getOpposite())) {
+                return;
             }
         }
         super.setConnection(side, connected, fromNeighbor);
+    }
+
+    private boolean canAcceptConnection(Direction side) {
+        int others = getConnections() & ~(1 << side.ordinal());
+        int opposite = 1 << side.getOpposite().ordinal();
+
+        if (getPipeType() == LaserPipeType.MIRROR) {
+            return others == 0 || (Integer.bitCount(others) == 1 && (others & opposite) == 0);
+        }
+
+        return (others & ~opposite) == 0;
     }
 
     @Override
