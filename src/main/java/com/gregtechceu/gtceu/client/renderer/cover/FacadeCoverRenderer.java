@@ -1,5 +1,7 @@
 package com.gregtechceu.gtceu.client.renderer.cover;
 
+import com.gregtechceu.gtceu.api.block.IMachineBlock;
+import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.item.ComponentItem;
 import com.gregtechceu.gtceu.client.model.BaseBakedModel;
@@ -33,8 +35,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.ChunkRenderTypeSet;
 import net.minecraftforge.client.model.data.ModelData;
 
+import com.google.common.collect.Iterables;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -177,32 +181,72 @@ public class FacadeCoverRenderer extends BaseBakedModel implements ICoverRendere
     public void renderCover(List<BakedQuad> quads, Direction side, RandomSource rand,
                             @NotNull CoverBehavior coverBehavior, BlockPos pos, BlockAndTintGetter level,
                             @NotNull ModelData modelData, @Nullable RenderType renderType) {
+        ICoverable.RENDERING_FACADE_DIRECTION.set(coverBehavior.attachedSide);
+
+        try {
+            renderFacade(quads, side, rand, coverBehavior, pos, level, modelData, renderType);
+        } finally {
+            ICoverable.RENDERING_FACADE_DIRECTION.remove();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private void renderFacade(List<BakedQuad> quads, Direction side, RandomSource rand,
+                              @NotNull CoverBehavior coverBehavior, BlockPos pos, BlockAndTintGetter level,
+                              @NotNull ModelData modelData, @Nullable RenderType renderType) {
         if (!(coverBehavior instanceof FacadeCover facadeCover)) {
             return;
         }
+
         BlockState state = facadeCover.getFacadeState();
+
         if (state.getRenderShape() != RenderShape.MODEL) {
             return;
         }
 
         Direction attachedSide = coverBehavior.attachedSide;
-
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(state);
-        ModelData extraData = model.getModelData(level, pos, state, modelData);
+        BlockAndTintGetter facadeLevel = new FacadeBlockAndTintGetter(level, pos, state, null);
+        ModelData extraData = model.getModelData(facadeLevel, pos, state, modelData);
+        ChunkRenderTypeSet facadeTypes = model.getRenderTypes(state, rand, extraData);
 
-        List<BakedQuad> facadeQuads = model.getQuads(state, attachedSide, rand, extraData, renderType);
-        facadeQuads = new LinkedList<>(facadeQuads);
+        if (renderType != null && !facadeTypes.contains(renderType)) {
+            if (level.getBlockState(pos).getBlock() instanceof IMachineBlock ||
+                    renderType == RenderType.translucent()) {
+                return;
+            }
+
+            for (RenderType type : facadeTypes) {
+                if (type != RenderType.translucent()) {
+                    renderType = type;
+                    break;
+                }
+            }
+        }
+
+        List<BakedQuad> culledQuads = model.getQuads(state, attachedSide, rand, extraData, renderType);
+        List<BakedQuad> unculledQuads = new ArrayList<>();
+
+        for (BakedQuad quad : model.getQuads(state, null, rand, extraData, renderType)) {
+            if (quad.getDirection() == attachedSide) {
+                unculledQuads.add(quad);
+            }
+        }
 
         List<BakedQuad> coverQuads = new ArrayList<>();
         if (side == attachedSide) {
-            coverQuads.addAll(facadeQuads);
-        } else if (side == null && coverBehavior.coverHolder.shouldRenderBackSide()) {
-            AABB cube = COVER_BACK_CUBES.get(attachedSide);
+            coverQuads.addAll(culledQuads);
+        } else if (side == null) {
+            coverQuads.addAll(unculledQuads);
 
-            for (BakedQuad quad : facadeQuads) {
-                coverQuads.add(StaticFaceBakery.bakeFace(cube, attachedSide.getOpposite(),
-                        quad.getSprite(), BlockModelRotation.X0_Y0,
-                        quad.getTintIndex(), 0, false, quad.isShade()));
+            if (coverBehavior.coverHolder.shouldRenderBackSide()) {
+                AABB cube = COVER_BACK_CUBES.get(attachedSide);
+
+                for (BakedQuad quad : Iterables.concat(culledQuads, unculledQuads)) {
+                    coverQuads.add(StaticFaceBakery.bakeFace(cube, attachedSide.getOpposite(),
+                            quad.getSprite(), BlockModelRotation.X0_Y0,
+                            quad.getTintIndex(), 0, false, quad.isShade()));
+                }
             }
         }
 
@@ -211,7 +255,8 @@ public class FacadeCoverRenderer extends BaseBakedModel implements ICoverRendere
         for (BakedQuad quad : coverQuads) {
             if (quad.isTinted()) {
                 // if the quad has a tint index set, bake the tint into the vertex
-                int color = blockColors.getColor(state, level, pos, quad.getTintIndex());
+                int color = blockColors.getColor(state, facadeLevel, pos, quad.getTintIndex());
+
                 quad = GTQuadTransformers.setColor(quad, color, true);
             } else {
                 // otherwise just copy the quad so we don't mutate the original model with the overlay offset
@@ -220,6 +265,27 @@ public class FacadeCoverRenderer extends BaseBakedModel implements ICoverRendere
             TextureOverrideModel.OVERLAY_OFFSET.processInPlace(quad);
 
             quads.add(quad);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static ChunkRenderTypeSet getFacadeRenderTypes(FacadeCover cover, BlockAndTintGetter level, BlockPos pos,
+                                                          RandomSource rand, ModelData modelData) {
+        BlockState state = cover.getFacadeState();
+
+        if (state.getRenderShape() != RenderShape.MODEL) return ChunkRenderTypeSet.none();
+
+        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(state);
+
+        ICoverable.RENDERING_FACADE_DIRECTION.set(cover.attachedSide);
+
+        try {
+            ModelData data = model.getModelData(new FacadeBlockAndTintGetter(level, pos, state, null), pos, state,
+                    modelData);
+
+            return model.getRenderTypes(state, rand, data);
+        } finally {
+            ICoverable.RENDERING_FACADE_DIRECTION.remove();
         }
     }
 
