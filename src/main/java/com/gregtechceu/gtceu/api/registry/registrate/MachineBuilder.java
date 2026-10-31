@@ -386,10 +386,12 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return model(createOverlayCasingMachineModel(baseCasing, overlayModel));
     }
 
+    @HideFromJS
     public MachineBuilder<DEFINITION> colorOverlayCasingModel(ResourceLocation casing, String overlay) {
         return colorOverlayCasingModel(casing, overlay, null, null);
     }
 
+    @HideFromJS
     public MachineBuilder<DEFINITION> colorOverlayCasingModel(ResourceLocation casing, String overlay,
                                                               @Nullable String pipeOverlay,
                                                               @Nullable String emissiveOverlay) {
@@ -402,6 +404,7 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return colorOverlayCasingModel(casing, overlayTex, pipeOverlayTex, emissiveOverlayTex);
     }
 
+    @HideFromJS
     public MachineBuilder<DEFINITION> colorOverlayCasingModel(ResourceLocation casing, ResourceLocation overlay) {
         return colorOverlayCasingModel(casing, overlay, null, null);
     }

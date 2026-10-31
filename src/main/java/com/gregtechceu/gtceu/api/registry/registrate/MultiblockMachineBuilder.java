@@ -282,11 +282,13 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
         return (MultiblockMachineBuilder) super.overlayCasingModel(baseCasing, overlayModel);
     }
 
+    @HideFromJS
     @Override
     public MultiblockMachineBuilder colorOverlayCasingModel(ResourceLocation casing, String overlay) {
         return (MultiblockMachineBuilder) super.colorOverlayCasingModel(casing, overlay);
     }
 
+    @HideFromJS
     @Override
     public MultiblockMachineBuilder colorOverlayCasingModel(ResourceLocation casing, String overlay,
                                                             @Nullable String pipeOverlay,
@@ -294,6 +296,7 @@ public class MultiblockMachineBuilder extends MachineBuilder<MultiblockMachineDe
         return (MultiblockMachineBuilder) super.colorOverlayCasingModel(casing, overlay, pipeOverlay, emissiveOverlay);
     }
 
+    @HideFromJS
     @Override
     public MultiblockMachineBuilder colorOverlayCasingModel(ResourceLocation casing, ResourceLocation overlay) {
         return (MultiblockMachineBuilder) super.colorOverlayCasingModel(casing, overlay);
