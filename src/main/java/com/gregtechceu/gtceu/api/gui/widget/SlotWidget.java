@@ -326,6 +326,7 @@ public class SlotWidget extends com.lowdragmc.lowdraglib.gui.widget.SlotWidget {
         @Override
         public void setByPlayer(@NotNull ItemStack stack) {
             this.itemHandler.setStackInSlot(index, stack);
+            this.setChanged();
         }
 
         @Override
@@ -358,7 +359,7 @@ public class SlotWidget extends com.lowdragmc.lowdraglib.gui.widget.SlotWidget {
         @Override
         public ItemStack remove(int amount) {
             var result = this.itemHandler.extractItem(index, amount, false);
-            if (changeListener != null && !getItem().isEmpty()) {
+            if (changeListener != null) {
                 changeListener.run();
             }
             return result;
