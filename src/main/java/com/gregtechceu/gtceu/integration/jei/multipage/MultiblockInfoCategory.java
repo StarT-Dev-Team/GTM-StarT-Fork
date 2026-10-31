@@ -2,8 +2,6 @@ package com.gregtechceu.gtceu.integration.jei.multipage;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
-import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
-import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.machines.GTMultiMachines;
 
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
@@ -50,10 +48,7 @@ public class MultiblockInfoCategory extends ModularUIRecipeCategory<MultiblockIn
     }
 
     public static void registerRecipes(IRecipeRegistration registry) {
-        registry.addRecipes(RECIPE_TYPE, GTRegistries.MACHINES.values().stream()
-                .filter(MultiblockMachineDefinition.class::isInstance)
-                .map(MultiblockMachineDefinition.class::cast)
-                .filter(MultiblockMachineDefinition::isRenderXEIPreview)
+        registry.addRecipes(RECIPE_TYPE, PatternPreviewWidget.getMultiblockPreviews().stream()
                 .map(MultiblockInfoWrapper::new)
                 .toList());
     }

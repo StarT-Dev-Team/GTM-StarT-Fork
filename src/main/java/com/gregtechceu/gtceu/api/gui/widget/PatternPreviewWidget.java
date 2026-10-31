@@ -14,6 +14,7 @@ import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.pattern.predicates.SimplePredicate;
 import com.gregtechceu.gtceu.config.ConfigHolder;
+import com.gregtechceu.gtceu.config.MultiblockPreviewConfig;
 import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemStackHandler;
 
 import com.lowdragmc.lowdraglib.client.scene.WorldSceneRenderer;
@@ -79,6 +80,10 @@ public class PatternPreviewWidget extends WidgetGroup {
 
     public static int getPage(MultiblockMachineDefinition definition) {
         return CURRENT_PAGE.getOrDefault(definition, 0);
+    }
+
+    public static List<MultiblockMachineDefinition> getMultiblockPreviews() {
+        return MultiblockPreviewConfig.getOrderedMultiblocks();
     }
 
     public static MBPattern getPattern(MultiblockMachineDefinition definition, int page) {
