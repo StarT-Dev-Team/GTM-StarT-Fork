@@ -115,6 +115,24 @@ public class GTMachineModels {
         };
     }
 
+    public static MachineBuilder.ModelInitializer createColorOverlayCasingMachineModel(ResourceLocation casingTexture,
+                                                                                       ResourceLocation overlay,
+                                                                                       @Nullable ResourceLocation pipeOverlay,
+                                                                                       @Nullable ResourceLocation emissiveOverlay) {
+        return (ctx, prov, builder) -> {
+            builder.forAllStatesModels(state -> {
+                BlockModelBuilder model = colorOverlayHullModel(overlay, pipeOverlay, emissiveOverlay, state,
+                        prov.models());
+                model.texture("bottom", casingTexture);
+                model.texture("top", casingTexture);
+                model.texture("side", casingTexture);
+                return model;
+            });
+
+            builder.addReplaceableTextures("bottom", "top", "side");
+        };
+    }
+
     public static MachineBuilder.ModelInitializer createColorOverlayTieredHullMachineModel(ResourceLocation overlay,
                                                                                            @Nullable ResourceLocation pipeOverlay,
                                                                                            @Nullable ResourceLocation emissiveOverlay) {
