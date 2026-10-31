@@ -66,6 +66,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("UnusedReturnValue")
 public class GTRecipeTypeUI {
 
+    public static final int DEFAULT_MIN_WIDTH = 150;
+
     @Getter
     @Setter
     private Byte2ObjectMap<IGuiTexture> slotOverlays = new Byte2ObjectArrayMap<>();
@@ -90,6 +92,8 @@ public class GTRecipeTypeUI {
     @Setter
     @Getter
     protected int maxTooltips = 3;
+    @Getter
+    protected int minWidth = DEFAULT_MIN_WIDTH;
 
     private CompoundTag customUICache;
     private Size xeiSize;
@@ -148,7 +152,7 @@ public class GTRecipeTypeUI {
         if (size == null) {
             var originalSize = createEditableUITemplate(false, false).createDefault().getSize();
             this.originalWidth = originalSize.width;
-            this.xeiSize = size = new Size(Math.max(originalWidth, 150),
+            this.xeiSize = size = new Size(Math.max(originalWidth, minWidth),
                     getPropertyHeightShift() + 5 + originalSize.height);
         }
         return size;
@@ -436,6 +440,17 @@ public class GTRecipeTypeUI {
     public GTRecipeTypeUI setProgressBar(ResourceTexture progressBar, ProgressTexture.FillDirection moveType) {
         this.progressBarTexture = new ProgressTexture(progressBar.getSubTexture(0, 0, 1, 0.5),
                 progressBar.getSubTexture(0, 0.5, 1, 0.5)).setFillDirection(moveType);
+        return this;
+    }
+
+    public GTRecipeTypeUI setMinWidth(int minWidth) {
+        if (minWidth < DEFAULT_MIN_WIDTH) {
+            GTCEu.LOGGER.debug("Min width {} of {} is below the default of {}, using the default", minWidth,
+                    recipeType.registryName, DEFAULT_MIN_WIDTH);
+        }
+
+        this.minWidth = Math.max(DEFAULT_MIN_WIDTH, minWidth);
+
         return this;
     }
 }

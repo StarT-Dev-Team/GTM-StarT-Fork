@@ -91,6 +91,30 @@ public interface IMultiController extends IMachineFeature, IInteractedMachine {
     }
 
     /**
+     * Get structure pattern for the given layers, see {@link BlockPattern#getRepetitions(int)}.
+     * You can override it if the size of the structure depends on the layers.
+     */
+    default BlockPattern getPattern(int layers) {
+        return getPattern();
+    }
+
+    /**
+     * Get the minimum and maximum of the layers that change the structure.
+     *
+     * @return null if the layers don't change anything.
+     */
+    @Nullable
+    default int[] getLayerRange() {
+        if (!self().getDefinition().getShapes().get().isEmpty()) return null;
+
+        for (int[] range : getPattern().aisleRepetitions) {
+            if (range[0] != range[1]) return range;
+        }
+
+        return null;
+    }
+
+    /**
      * Whether Multiblock Formed.
      * <br>
      * NOTE: even machine is formed, it doesn't mean to workable!
@@ -209,7 +233,7 @@ public interface IMultiController extends IMachineFeature, IInteractedMachine {
         if (!self().isFormed() && player.isShiftKeyDown() && player.getItemInHand(hand).isEmpty()) {
             if (world.isClientSide()) {
                 MultiblockInWorldPreviewRenderer.showPreview(pos, self(),
-                        ConfigHolder.INSTANCE.client.inWorldPreviewDuration * 20, false);
+                        ConfigHolder.INSTANCE.client.inWorldPreviewDuration * 20, false, 0, 0);
             }
             return InteractionResult.SUCCESS;
         }
