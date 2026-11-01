@@ -213,12 +213,18 @@ public class RecipeRunner {
         }
 
         if (!simulated) {
-            // Start actually removing items
-            for (var handler : handlerList) {
-                recipeContents = handler.handleRecipe(io, recipe, recipeContents, false);
-                if (recipeContents.isEmpty()) {
-                    break;
+            try (var transaction = RecipeTransaction.begin()) {
+                var remaining = recipeContents;
+                for (var handler : handlerList) {
+                    remaining = handler.handleRecipe(io, recipe, remaining, false);
+                    if (remaining.isEmpty()) break;
                 }
+
+                var failed = io == IO.OUT ? hasAnyNonVoidingContents(remaining) : !remaining.isEmpty();
+                if (failed) return false;
+
+                transaction.commit();
+                recipeContents = remaining;
             }
         }
 
