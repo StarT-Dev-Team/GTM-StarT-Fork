@@ -1259,6 +1259,8 @@ public class LangHandler {
         provider.add("gtceu.multiblock.preview.zoom", "Use mousewheel or right-click + drag to zoom");
         provider.add("gtceu.multiblock.preview.rotate", "Click and drag to rotate");
         provider.add("gtceu.multiblock.preview.select", "Right-click to check candidates");
+        provider.add("gtceu.multiblock.preview.page", "Page");
+        provider.add("gtceu.multiblock.preview.layer", "Layer");
         provider.add("gtceu.multiblock.preview.measurement_grid", "Toggle Measurement Grid");
         provider.add("gtceu.multiblock.preview.measurement_grid_graduation", "Grid Graduation");
         provider.add("gtceu.multiblock.preview.turntable", "Turntable Mode");

@@ -111,6 +111,9 @@ public class PatternPreviewWidget extends WidgetGroup {
     public int layer;
     public ButtonWidget pageButton;
     public ButtonWidget layerButton;
+    public ButtonWidget gridButton;
+    public ButtonWidget graduationButton;
+    public ButtonWidget turntableButton;
     private SlotWidget[] slotWidgets;
     private SlotWidget[] candidates;
 
@@ -154,17 +157,36 @@ public class PatternPreviewWidget extends WidgetGroup {
     public void toggleGrid() {
         this.showMeasurementGrid = !this.showMeasurementGrid;
         defaultShowMeasurementGrid = this.showMeasurementGrid;
+        if (this.graduationButton != null) {
+            this.graduationButton.setVisible(this.showMeasurementGrid);
+        }
     }
 
     public void cycleGraduation() {
-        if (this.graduationStep == 0) {
-            this.graduationStep = 3;
-        } else if (this.graduationStep == 3) {
-            this.graduationStep = 5;
-        } else if (this.graduationStep == 5) {
-            this.graduationStep = 10;
+        cycleGraduation(false);
+    }
+
+    public void cycleGraduation(boolean reverse) {
+        if (reverse) {
+            if (this.graduationStep == 0) {
+                this.graduationStep = 10;
+            } else if (this.graduationStep == 10) {
+                this.graduationStep = 5;
+            } else if (this.graduationStep == 5) {
+                this.graduationStep = 3;
+            } else {
+                this.graduationStep = 0;
+            }
         } else {
-            this.graduationStep = 0;
+            if (this.graduationStep == 0) {
+                this.graduationStep = 3;
+            } else if (this.graduationStep == 3) {
+                this.graduationStep = 5;
+            } else if (this.graduationStep == 5) {
+                this.graduationStep = 10;
+            } else {
+                this.graduationStep = 0;
+            }
         }
         defaultGraduationStep = this.graduationStep;
     }
@@ -297,7 +319,7 @@ public class PatternPreviewWidget extends WidgetGroup {
                     .toArray(MBPattern[]::new);
         });
 
-        addWidget(pageButton = new ButtonWidget(WIDGET_WIDTH - 22, 30, 18, 18, new GuiTextureGroup(
+        addWidget(pageButton = new ButtonWidget(WIDGET_WIDTH - 42, 30, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
                 new TextTexture("1").setSupplier(() -> "P:" + index)),
                 cd -> updatePage(cd.button == 1)) {
@@ -322,8 +344,10 @@ public class PatternPreviewWidget extends WidgetGroup {
                 return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
             }
         }.setHoverBorderTexture(1, -1));
+        pageButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.page"));
+        pageButton.setVisible(this.patterns != null && this.patterns.length > 1);
 
-        addWidget(layerButton = new ButtonWidget(WIDGET_WIDTH - 22, 50, 18, 18, new GuiTextureGroup(
+        addWidget(layerButton = new ButtonWidget(WIDGET_WIDTH - 22, 30, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
                 new TextTexture("1").setSupplier(() -> layer >= 0 ? "L:" + layer : "ALL")),
                 cd -> updateLayer(cd.button == 1)) {
@@ -348,30 +372,57 @@ public class PatternPreviewWidget extends WidgetGroup {
                 return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
             }
         }.setHoverBorderTexture(1, -1));
+        layerButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.layer"));
 
-        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 70, 18, 18, new GuiTextureGroup(
+        addWidget(graduationButton = new ButtonWidget(WIDGET_WIDTH - 42, 50, 18, 18, new GuiTextureGroup(
+                ColorPattern.T_GRAY.rectTexture(),
+                new TextTexture("1").setSupplier(() -> graduationStep == 0 ? "OFF" : String.valueOf(graduationStep))),
+                cd -> cycleGraduation(cd.button == 1)) {
+
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                if (button == 1 && isMouseOverElement(mouseX, mouseY)) {
+                    cycleGraduation(true);
+                    playButtonClickSound();
+                    return true;
+                }
+                return super.mouseClicked(mouseX, mouseY, button);
+            }
+
+            @Override
+            public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
+                if (isMouseOverElement(mouseX, mouseY)) {
+                    cycleGraduation(wheelDelta < 0);
+                    return true;
+                }
+                return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
+            }
+        }.setHoverBorderTexture(1, -1));
+        graduationButton
+                .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.measurement_grid_graduation"));
+        graduationButton.setVisible(this.showMeasurementGrid);
+
+        addWidget(gridButton = new ButtonWidget(WIDGET_WIDTH - 22, 50, 18, 18, new GuiTextureGroup(
                 ColorPattern.T_GRAY.rectTexture(),
                 new TextTexture("1").setSupplier(() -> showMeasurementGrid ? "ON" : "OFF")),
                 cd -> toggleGrid())
-                .setHoverBorderTexture(1, -1)
-                .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.measurement_grid")));
+                .setHoverBorderTexture(1, -1));
+        gridButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.measurement_grid"));
 
-        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 90, 18, 18, new GuiTextureGroup(
-                ColorPattern.T_GRAY.rectTexture(),
-                new TextTexture("1").setSupplier(() -> graduationStep == 0 ? "OFF" : String.valueOf(graduationStep))),
-                cd -> cycleGraduation())
-                .setHoverBorderTexture(1, -1)
-                .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.measurement_grid_graduation")));
-
-        addWidget(new ButtonWidget(WIDGET_WIDTH - 22, 110, 18, 18, new GuiTextureGroup(
-                ColorPattern.T_GRAY.rectTexture(),
-                new TextTexture("1").setSupplier(() -> isTurntableActive ? "ON" : "OFF")),
-                cd -> toggleTurntable())
-                .setHoverBorderTexture(1, -1)
-                .setHoverTooltips(Component.translatable("gtceu.multiblock.preview.turntable")));
+        if (this.controllerDefinition.isAllowFlip()) {
+            flipButton = new ButtonWidget(WIDGET_WIDTH - 22, 70, 18, 18,
+                    new GuiTextureGroup(
+                            ColorPattern.T_GRAY.rectTexture(),
+                            new TextTexture("1").setSupplier(() -> isFlipped ? "MIR" : "OFF")),
+                    cd -> flipStructure());
+            flipButton.setHoverBorderTexture(1, -1);
+            flipButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.flip"));
+            addWidget(flipButton);
+        }
 
         if (canRotatePitch() || canRotateRoll()) {
-            rotateButton = new ButtonWidget(WIDGET_WIDTH - 22, 130, 18, 18, new GuiTextureGroup(
+            int rotateX = this.controllerDefinition.isAllowFlip() ? (WIDGET_WIDTH - 42) : (WIDGET_WIDTH - 22);
+            rotateButton = new ButtonWidget(rotateX, 70, 18, 18, new GuiTextureGroup(
                     ColorPattern.T_GRAY.rectTexture(),
                     new TextTexture("1").setSupplier(() -> {
                         if (isRollMode()) {
@@ -442,19 +493,9 @@ public class PatternPreviewWidget extends WidgetGroup {
             rollButton = rotateButton;
         }
 
-        if (this.controllerDefinition.isAllowFlip()) {
-            flipButton = new ButtonWidget(WIDGET_WIDTH - 22, (canRotatePitch() || canRotateRoll()) ? 150 : 130, 18, 18,
-                    new GuiTextureGroup(
-                            ColorPattern.T_GRAY.rectTexture(),
-                            new TextTexture("1").setSupplier(() -> isFlipped ? "MIR" : "OFF")),
-                    cd -> flipStructure());
-            flipButton.setHoverBorderTexture(1, -1);
-            flipButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.flip"));
-            addWidget(flipButton);
-        }
-
         if (canRotatePitch() || canRotateRoll() || this.controllerDefinition.isAllowFlip()) {
-            resetButton = new ButtonWidget(WIDGET_WIDTH - 22, (canRotatePitch() || canRotateRoll()) ? 170 : 150, 18, 18,
+            int resetX = (canRotatePitch() || canRotateRoll()) && this.controllerDefinition.isAllowFlip() ? (WIDGET_WIDTH - 62) : (WIDGET_WIDTH - 42);
+            resetButton = new ButtonWidget(resetX, 70, 18, 18,
                     new GuiTextureGroup(
                             ColorPattern.T_GRAY.rectTexture(),
                             new TextTexture("RST")),
@@ -462,7 +503,18 @@ public class PatternPreviewWidget extends WidgetGroup {
             resetButton.setHoverBorderTexture(1, -1);
             resetButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.reset"));
             addWidget(resetButton);
+            if (resetButton != null) {
+                resetButton.setVisible(!isDefaultOrientation());
+            }
         }
+
+        int turntableY = (canRotatePitch() || canRotateRoll() || this.controllerDefinition.isAllowFlip()) ? 90 : 70;
+        addWidget(turntableButton = new ButtonWidget(WIDGET_WIDTH - 22, turntableY, 18, 18, new GuiTextureGroup(
+                ColorPattern.T_GRAY.rectTexture(),
+                new TextTexture("1").setSupplier(() -> isTurntableActive ? "ON" : "OFF")),
+                cd -> toggleTurntable())
+                .setHoverBorderTexture(1, -1));
+        turntableButton.setHoverTooltips(Component.translatable("gtceu.multiblock.preview.turntable"));
 
         setPage(getPage(this.controllerDefinition));
     }
@@ -541,6 +593,15 @@ public class PatternPreviewWidget extends WidgetGroup {
         }
 
         setupScene(pattern);
+        if (resetButton != null) {
+            resetButton.setVisible(!isDefaultOrientation());
+        }
+    }
+
+    public boolean isDefaultOrientation() {
+        return this.frontFacing == controllerDefinition.getRotationState().defaultDirection &&
+                this.upwardsFacing == Direction.NORTH &&
+                !this.isFlipped;
     }
 
     private void updatePage(boolean reverse) {
@@ -635,6 +696,9 @@ public class PatternPreviewWidget extends WidgetGroup {
                 (pattern.zMin + pattern.zMax) / 2.0f);
         sceneWidget.setCenter(focalCenter, false);
         setupScene(pattern);
+        if (resetButton != null) {
+            resetButton.setVisible(!isDefaultOrientation());
+        }
         if (slotWidgets != null) {
             for (SlotWidget slotWidget : slotWidgets) {
                 scrollableWidgetGroup.removeWidget(slotWidget);
@@ -767,17 +831,22 @@ public class PatternPreviewWidget extends WidgetGroup {
 
     @Override
     public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-        if (pageButton != null && pageButton.isMouseOverElement(mouseX, mouseY)) {
+        if (pageButton != null && pageButton.isVisible() && pageButton.isMouseOverElement(mouseX, mouseY)) {
             int delta = wheelDelta > 0 ? 1 : -1;
             stepPage(delta);
             return true;
         }
-        if (layerButton != null && layerButton.isMouseOverElement(mouseX, mouseY)) {
+        if (layerButton != null && layerButton.isVisible() && layerButton.isMouseOverElement(mouseX, mouseY)) {
             int delta = wheelDelta > 0 ? 1 : -1;
             stepLayer(delta);
             return true;
         }
-        if (rotateButton != null && rotateButton.isMouseOverElement(mouseX, mouseY)) {
+        if (graduationButton != null && graduationButton.isVisible() &&
+                graduationButton.isMouseOverElement(mouseX, mouseY)) {
+            cycleGraduation(wheelDelta < 0);
+            return true;
+        }
+        if (rotateButton != null && rotateButton.isVisible() && rotateButton.isMouseOverElement(mouseX, mouseY)) {
             rotateStructure(wheelDelta > 0);
             return true;
         }
