@@ -51,6 +51,10 @@ public class PatternSceneWidget extends SceneWidget {
         super(x, y, width, height, world);
     }
 
+    public void clearSelection() {
+        this.selectedPosFace = null;
+    }
+
     public void setCenter(Vector3f target, boolean smooth) {
         this.focalCenter = new Vector3f(target);
         if (!smooth || this.center == null) {

@@ -1,11 +1,14 @@
 package com.gregtechceu.gtceu.api.pattern;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.predicates.SimplePredicate;
 
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
 
 import net.minecraft.network.chat.Component;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +22,8 @@ public class TraceabilityPredicate {
     public List<SimplePredicate> common = new ArrayList<>();
     public List<SimplePredicate> limited = new ArrayList<>();
     public boolean isController;
+    @Nullable
+    public PartAbility partAbility;
 
     public TraceabilityPredicate() {}
 
@@ -26,6 +31,7 @@ public class TraceabilityPredicate {
         common.addAll(predicate.common);
         limited.addAll(predicate.limited);
         isController = predicate.isController;
+        partAbility = predicate.partAbility;
     }
 
     public TraceabilityPredicate(Predicate<MultiblockState> predicate, Supplier<BlockInfo[]> candidates) {
@@ -45,6 +51,17 @@ public class TraceabilityPredicate {
      */
     public TraceabilityPredicate setController() {
         isController = true;
+        return this;
+    }
+
+    public TraceabilityPredicate setPartAbility(PartAbility ability) {
+        this.partAbility = ability;
+        for (SimplePredicate p : common) {
+            p.partAbility = ability;
+        }
+        for (SimplePredicate p : limited) {
+            p.partAbility = ability;
+        }
         return this;
     }
 
