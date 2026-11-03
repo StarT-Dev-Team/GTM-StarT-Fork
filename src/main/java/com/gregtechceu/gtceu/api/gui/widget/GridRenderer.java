@@ -1,5 +1,7 @@
 package com.gregtechceu.gtceu.api.gui.widget;
 
+import com.gregtechceu.gtceu.api.gui.widget.preview.MBPattern;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -30,11 +32,11 @@ public class GridRenderer {
 
     private record LineSegment(float x1, float y1, float z1, float x2, float y2, float z2) {}
 
-    public static void render(PatternPreviewWidget.MBPattern pattern, MultiBufferSource bufferSource) {
+    public static void render(MBPattern pattern, MultiBufferSource bufferSource) {
         render(pattern, bufferSource, 0);
     }
 
-    public static void render(PatternPreviewWidget.MBPattern pattern, MultiBufferSource bufferSource,
+    public static void render(MBPattern pattern, MultiBufferSource bufferSource,
                               int graduationStep) {
         if (pattern == null || pattern.blockMap.isEmpty()) return;
 

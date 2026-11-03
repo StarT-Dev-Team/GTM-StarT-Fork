@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.integration.emi.multipage;
 
 import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
+import com.gregtechceu.gtceu.api.gui.widget.preview.MBPattern;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 
 import com.lowdragmc.lowdraglib.emi.ModularEmiRecipe;
@@ -49,7 +50,7 @@ public class MultiblockInfoEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
     @Override
     public List<EmiIngredient> getInputs() {
         int page = (activeWidget != null) ? activeWidget.getIndex() : PatternPreviewWidget.getPage(definition);
-        PatternPreviewWidget.MBPattern pattern = PatternPreviewWidget.getPattern(definition, page);
+        MBPattern pattern = PatternPreviewWidget.getPattern(definition, page);
         if (pattern != null && pattern.parts != null) {
             return pattern.parts.stream()
                     .filter(list -> !list.isEmpty())
