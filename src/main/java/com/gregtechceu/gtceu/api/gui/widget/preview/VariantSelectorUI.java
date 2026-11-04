@@ -62,6 +62,8 @@ public class VariantSelectorUI {
     private static final int LIST_HEIGHT = 162;
     private static final int MAX_UNSCROLLED_ENTRIES = 8;
     private static final int ENTRY_SPACING = 20;
+    private static final int MAX_VISIBLE_FLYOUT_ROWS = 6;
+    private static final int FLYOUT_SCROLLBAR_WIDTH = 3;
 
     private final Host host;
     private final int widgetWidth;
@@ -72,7 +74,7 @@ public class VariantSelectorUI {
     @Nullable
     private VariantCategory activeFlyoutCategory = null;
     @Nullable
-    private WidgetGroup activeFlyoutPopup = null;
+    private DraggableScrollableWidgetGroup activeFlyoutPopup = null;
 
     public VariantSelectorUI(Host host, int widgetWidth, int widgetHeight) {
         this.host = host;
@@ -144,6 +146,16 @@ public class VariantSelectorUI {
 
     public boolean isMouseOverAny(double mouseX, double mouseY) {
         return isMouseOverFlyout(mouseX, mouseY) || isMouseOverList(mouseX, mouseY);
+    }
+
+    public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
+        if (isMouseOverFlyout(mouseX, mouseY)) {
+            return flyoutGroup.mouseWheelMove(mouseX, mouseY, wheelDelta);
+        }
+        if (isMouseOverList(mouseX, mouseY)) {
+            return listGroup.mouseWheelMove(mouseX, mouseY, wheelDelta);
+        }
+        return false;
     }
 
     public void clear() {
@@ -347,8 +359,8 @@ public class VariantSelectorUI {
         BlockState currentChoice = pattern.activeAbilityChoices.get(category.ability());
 
         int count = category.variants().size();
-        int cols = Math.min(count, 6);
-        WidgetGroup popup = createPopup(sourceWidget, count, cols);
+        int cols = Math.max(1, Math.min(count, 6));
+        DraggableScrollableWidgetGroup popup = createPopup(sourceWidget, count, cols);
 
         for (int i = 0; i < count; i++) {
             int x = 2 + (i % cols) * 18;
@@ -379,32 +391,86 @@ public class VariantSelectorUI {
             popup.addWidget(vBtn);
         }
 
+        int rows = (count + cols - 1) / cols;
+        int visibleRows = Math.min(rows, MAX_VISIBLE_FLYOUT_ROWS);
+        if (rows > MAX_VISIBLE_FLYOUT_ROWS) {
+            popup.addWidget(new Widget(0, 2 + rows * 18, 1, 2));
+
+            int selectedIndex = VariantDiscovery.indexOfBlock(category.variants(), currentChoice);
+            if (selectedIndex >= 0) {
+                int selectedRow = selectedIndex / cols;
+                int maxScroll = (rows - visibleRows) * 18;
+                int targetScroll = Mth.clamp((selectedRow - visibleRows / 2) * 18, 0, maxScroll);
+                if (targetScroll > 0) {
+                    popup.setScrollYOffset(targetScroll);
+                }
+            }
+        }
+
         flyoutGroup.addWidget(popup);
         this.activeFlyoutPopup = popup;
     }
 
-    private @NotNull WidgetGroup createPopup(@Nullable Widget sourceWidget, int count, int cols) {
+    private @NotNull DraggableScrollableWidgetGroup createPopup(@Nullable Widget sourceWidget, int count, int cols) {
         int rows = (count + cols - 1) / cols;
+        int visibleRows = Math.max(1, Math.min(rows, MAX_VISIBLE_FLYOUT_ROWS));
+        boolean needScroll = rows > MAX_VISIBLE_FLYOUT_ROWS;
 
-        int flyoutWidth = cols * 18 + 4;
-        int flyoutHeight = rows * 18 + 4;
+        int flyoutWidth = cols * 18 + 4 + (needScroll ? FLYOUT_SCROLLBAR_WIDTH + 1 : 0);
+        int flyoutHeight = visibleRows * 18 + 4;
 
         int flyoutX = LIST_X + LIST_WIDTH + 1;
         int sourceY = sourceWidget != null ? sourceWidget.getPosition().y - host.widgetPosition().y : LIST_Y;
         int flyoutY = Mth.clamp(sourceY, LIST_Y, Math.max(LIST_Y, widgetHeight - 32 - flyoutHeight));
 
-        return new WidgetGroup(flyoutX, flyoutY, flyoutWidth, flyoutHeight) {
+        DraggableScrollableWidgetGroup popup = new DraggableScrollableWidgetGroup(flyoutX, flyoutY, flyoutWidth,
+                flyoutHeight) {
 
             @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                return super.mouseClicked(mouseX, mouseY, button) || isMouseOverElement(mouseX, mouseY);
+                if (!isMouseOverElement(mouseX, mouseY)) {
+                    return false;
+                }
+                return super.mouseClicked(mouseX, mouseY, button) || true;
             }
 
             @Override
             public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-                return super.mouseWheelMove(mouseX, mouseY, wheelDelta) || isMouseOverElement(mouseX, mouseY);
+                if (!isMouseOverElement(mouseX, mouseY)) {
+                    return false;
+                }
+                return super.mouseWheelMove(mouseX, mouseY, wheelDelta) || true;
+            }
+
+            @Nullable
+            @Override
+            public Widget getHoverElement(double mouseX, double mouseY) {
+                if (!isMouseOverElement(mouseX, mouseY)) {
+                    return null;
+                }
+                return super.getHoverElement(mouseX, mouseY);
             }
         };
+
+        popup.setBackground(new GuiTextureGroup(
+                new ColorRectTexture(0xEE5A5A5A),
+                new ColorBorderTexture(1, 0x50A0A0A0)));
+
+        if (needScroll) {
+            popup.setYScrollBarWidth(FLYOUT_SCROLLBAR_WIDTH)
+                    .setYBarStyle(new ColorRectTexture(0x40000000), ColorPattern.T_WHITE.rectTexture())
+                    .setScrollable(true)
+                    .setDraggable(false)
+                    .setScrollWheelDirection(DraggableScrollableWidgetGroup.ScrollWheelDirection.VERTICAL)
+                    .setUseScissor(true);
+        } else {
+            popup.setYScrollBarWidth(0)
+                    .setScrollable(false)
+                    .setDraggable(false)
+                    .setUseScissor(false);
+        }
+
+        return popup;
     }
 
     public void closeFlyout() {

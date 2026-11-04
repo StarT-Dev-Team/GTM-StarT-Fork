@@ -673,11 +673,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
                 return true;
             }
         }
-        if (variantSelector.isMouseOverFlyout(mouseX, mouseY)) {
-            return true;
-        }
-        if (variantSelector.isMouseOverList(mouseX, mouseY) &&
-                variantSelector.getListGroup().mouseWheelMove(mouseX, mouseY, wheelDelta)) {
+        if (variantSelector.mouseWheelMove(mouseX, mouseY, wheelDelta)) {
             return true;
         }
         return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
