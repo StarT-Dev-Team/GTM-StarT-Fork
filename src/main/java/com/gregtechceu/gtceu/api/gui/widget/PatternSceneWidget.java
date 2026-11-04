@@ -3,8 +3,10 @@ package com.gregtechceu.gtceu.api.gui.widget;
 import com.lowdragmc.lowdraglib.client.scene.ISceneBlockRenderHook;
 import com.lowdragmc.lowdraglib.gui.widget.SceneWidget;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,6 +40,7 @@ public class PatternSceneWidget extends SceneWidget {
     private long lastInteractionTime = 0L;
     private boolean pausedUntilRetoggle = false;
     private long lastRenderTime = 0L;
+    private long lastAtlasTickTime = 0L;
 
     @Getter
     @Setter
@@ -164,6 +167,25 @@ public class PatternSceneWidget extends SceneWidget {
 
         updateCameraCenter(dt);
         updateTurntable(dt);
+
+        if (now - this.lastAtlasTickTime >= 50L) {
+            this.lastAtlasTickTime = now;
+            var modelManager = Minecraft.getInstance().getModelManager();
+            if (modelManager != null) {
+                var atlas = modelManager.getAtlas(TextureAtlas.LOCATION_BLOCKS);
+                if (atlas != null) {
+                    for (var loc : atlas.getTextureLocations()) {
+                        atlas.getSprite(loc);
+                    }
+                    atlas.cycleAnimationFrames();
+                }
+            }
+            var particleManager = getParticleManager();
+            if (particleManager != null) {
+                particleManager.tick();
+            }
+        }
+
         super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
     }
 

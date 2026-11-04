@@ -1264,6 +1264,11 @@ public class LangHandler {
         provider.add("gtceu.multiblock.preview.measurement_grid", "Toggle Measurement Grid");
         provider.add("gtceu.multiblock.preview.measurement_grid_graduation", "Grid Graduation");
         provider.add("gtceu.multiblock.preview.turntable", "Turntable Mode");
+        provider.add("gtceu.multiblock.preview.mode", "Mode");
+        provider.add("gtceu.multiblock.preview.mode.formed", "Formed");
+        provider.add("gtceu.multiblock.preview.mode.unformed", "Unformed");
+        provider.add("gtceu.multiblock.preview.mode.active", "Active (Simulation)");
+        provider.add("gtceu.multiblock.preview.mode.desc", "Cycle between Formed, Unformed, and Active simulation");
         provider.add("gtceu.multiblock.preview.pitch", "Rotate Structure (Pitch)");
         provider.add("gtceu.multiblock.preview.roll", "Rotate Structure (Roll)");
         provider.add("gtceu.multiblock.preview.rotate_switch_roll", "Hold Shift for Roll");

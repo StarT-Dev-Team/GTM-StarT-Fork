@@ -11,6 +11,7 @@ public class PreviewState {
     private static boolean defaultShowGrid = true;
     private static boolean defaultTurntable = false;
     private static int defaultGraduationIndex = 0;
+    private static PreviewMode defaultMode = PreviewMode.FORMED;
 
     public Direction frontFacing;
     public Direction baseHorizontalFacing;
@@ -22,6 +23,7 @@ public class PreviewState {
 
     public boolean showGrid = defaultShowGrid;
     public boolean turntable = defaultTurntable;
+    public PreviewMode mode = defaultMode;
     private int graduationIndex = defaultGraduationIndex;
 
     public PreviewState(MultiblockMachineDefinition definition) {
@@ -59,5 +61,10 @@ public class PreviewState {
     public void setTurntable(boolean active) {
         turntable = active;
         defaultTurntable = active;
+    }
+
+    public void cycleMode(boolean reverse) {
+        mode = reverse ? mode.previous() : mode.next();
+        defaultMode = mode;
     }
 }

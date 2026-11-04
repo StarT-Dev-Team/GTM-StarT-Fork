@@ -1,22 +1,23 @@
 package com.gregtechceu.gtceu.api.gui.widget;
 
 import com.gregtechceu.gtceu.GTCEu;
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.RotationState;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.preview.MBPattern;
-import com.gregtechceu.gtceu.api.gui.widget.preview.PatternLoader;
-import com.gregtechceu.gtceu.api.gui.widget.preview.PreviewButton;
-import com.gregtechceu.gtceu.api.gui.widget.preview.PreviewLevel;
-import com.gregtechceu.gtceu.api.gui.widget.preview.PreviewSceneWidget;
-import com.gregtechceu.gtceu.api.gui.widget.preview.PreviewState;
-import com.gregtechceu.gtceu.api.gui.widget.preview.VariantSelectorUI;
+import com.gregtechceu.gtceu.api.gui.widget.preview.*;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
-import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
+import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
+import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMufflerMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
+import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
+import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
+import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
+import com.gregtechceu.gtceu.common.data.GTParticleTypes;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.config.MultiblockPreviewConfig;
 import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemStackHandler;
 
+import com.lowdragmc.lowdraglib.core.mixins.accessor.ParticleEngineAccessor;
 import com.lowdragmc.lowdraglib.gui.editor.ColorPattern;
 import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib.gui.widget.*;
@@ -27,6 +28,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -101,10 +103,14 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     private PreviewButton layerButton;
     private PreviewButton gridButton;
     private PreviewButton graduationButton;
+    private PreviewButton modeButton;
     private PreviewButton turntableButton;
     private PreviewButton rotateButton;
     private PreviewButton flipButton;
     private PreviewButton resetButton;
+
+    private int simulationTick = 0;
+    private long lastSimulationTickTime = 0L;
 
     @Nullable
     private BlockPos selectedPos = null;
@@ -144,12 +150,15 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         scene.setRenderFacing(false);
         scene.setBeforeBatchEnd(this::renderGrid);
         scene.setTurntableActive(state.turntable);
+        if (scene.getDummyWorld() != null && scene.getParticleManager() != null) {
+            scene.getDummyWorld().setParticleManager(scene.getParticleManager());
+        }
         return scene;
     }
 
     private DraggableScrollableWidgetGroup buildPartsBar() {
         DraggableScrollableWidgetGroup bar = new DraggableScrollableWidgetGroup(3, WIDGET_HEIGHT - 28,
-                WIDGET_WIDTH - 28,
+                WIDGET_WIDTH - 8,
                 25)
                 .setXScrollBarHeight(4)
                 .setXBarStyle(GuiTextures.SLIDER_BACKGROUND, GuiTextures.BUTTON)
@@ -226,9 +235,25 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         }
 
         int turntableY = (canRotate || canFlip) ? ROW_TURNTABLE_SHIFTED : ROW_ORIENT;
+        addWidget(modeButton = new PreviewButton(COL_MIDDLE, turntableY, () -> state.mode.label,
+                cd -> cycleMode(cd.button == 1))
+                .onRightClick(() -> cycleMode(true))
+                .onWheel(delta -> cycleMode(delta < 0))
+                .dynamicTooltip(this::modeTooltip));
+
         addWidget(turntableButton = new PreviewButton(COL_RIGHT, turntableY, () -> state.turntable ? "ON" : "OFF",
                 cd -> toggleTurntable())
                 .tooltip("gtceu.multiblock.preview.turntable"));
+    }
+
+    private List<Component> modeTooltip() {
+        List<Component> list = new ArrayList<>();
+        list.add(Component.translatable("gtceu.multiblock.preview.mode")
+                .append(": ")
+                .append(Component.translatable(state.mode.tooltipKey).withStyle(ChatFormatting.GOLD)));
+        list.add(Component.translatable("gtceu.multiblock.preview.mode.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
     }
 
     private List<Component> rotateTooltip() {
@@ -353,6 +378,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
 
     public void setPage(int index) {
         if (index >= patterns.length || index < 0) return;
+        revertActiveSimulation(currentPattern());
         clearBlockSelection();
         state.index = index;
         PatternLoader.setPage(controllerDefinition, index);
@@ -389,22 +415,68 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         if (selectedPos != null && newLayer != -1 && newLayer + pattern.minY != selectedPos.getY()) {
             clearBlockSelection();
         }
-        if (newLayer == -1 && !pattern.controllerBase.isFormed()) {
-            onFormedSwitch(pattern, true);
-        } else if (pattern.controllerBase.isFormed()) {
-            onFormedSwitch(pattern, false);
-        }
         setupScene(pattern);
     }
 
-    private void onFormedSwitch(MBPattern pattern, boolean isFormed) {
-        IMultiController controllerBase = pattern.controllerBase;
-        if (isFormed) {
-            state.layer = -1;
-            PatternLoader.loadControllerFormed(pattern.blockMap.keySet(), controllerBase,
-                    positions -> sceneWidget.setRenderedCore(positions, null));
-        } else {
-            controllerBase.onStructureInvalid();
+    public void cycleMode(boolean reverse) {
+        state.cycleMode(reverse);
+        applyMode(currentPattern());
+    }
+
+    private void applyMode(@Nullable MBPattern pattern) {
+        if (pattern == null) return;
+        PreviewMode mode = state.mode;
+        if (mode == PreviewMode.UNFORMED) {
+            revertActiveSimulation(pattern);
+            if (pattern.controllerBase.isFormed()) {
+                pattern.invalidateStructure();
+            }
+            pattern.setRotorHoldersState(false, false);
+        } else if (mode == PreviewMode.FORMED) {
+            revertActiveSimulation(pattern);
+            if (!pattern.controllerBase.isFormed()) {
+                pattern.formStructure();
+            }
+            pattern.setRotorHoldersState(true, false);
+        } else if (mode == PreviewMode.ACTIVE) {
+            if (!pattern.controllerBase.isFormed()) {
+                pattern.formStructure();
+            }
+            applyActiveSimulation(pattern);
+            pattern.setRotorHoldersState(true, true);
+        }
+        sceneWidget.needCompileCache();
+        setupScene(pattern);
+    }
+
+    private void applyActiveSimulation(MBPattern pattern) {
+        pattern.setCoilsActive(true);
+        if (pattern.controllerBase instanceof IRecipeLogicMachine rlm) {
+            rlm.getRecipeLogic().setStatus(RecipeLogic.Status.WORKING);
+        }
+        MachineRenderState renderState = pattern.controllerBase.self().getRenderState();
+        if (renderState.hasProperty(GTMachineModelProperties.RECIPE_LOGIC_STATUS)) {
+            pattern.controllerBase.self().setRenderState(
+                    renderState.setValue(GTMachineModelProperties.RECIPE_LOGIC_STATUS, RecipeLogic.Status.WORKING));
+        }
+    }
+
+    private void revertActiveSimulation(@Nullable MBPattern pattern) {
+        if (pattern != null) {
+            pattern.setCoilsActive(false);
+            if (pattern.controllerBase instanceof IRecipeLogicMachine rlm) {
+                rlm.getRecipeLogic().setStatus(RecipeLogic.Status.IDLE);
+            }
+            MachineRenderState renderState = pattern.controllerBase.self().getRenderState();
+            if (renderState.hasProperty(GTMachineModelProperties.RECIPE_LOGIC_STATUS)) {
+                pattern.controllerBase.self().setRenderState(
+                        renderState.setValue(GTMachineModelProperties.RECIPE_LOGIC_STATUS, RecipeLogic.Status.IDLE));
+            }
+            pattern.setRotorHoldersState(state.mode != PreviewMode.UNFORMED, false);
+        }
+        var particleManager = sceneWidget.getParticleManager();
+        if (particleManager != null) {
+            particleManager.clearAllParticles();
         }
     }
 
@@ -415,7 +487,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     }
 
     private void refreshPattern(MBPattern pattern) {
-        setupScene(pattern);
+        applyMode(pattern);
         setupParts(pattern);
         if (resetButton != null) {
             resetButton.setVisible(!isDefaultOrientation());
@@ -427,7 +499,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     private void setupScene(MBPattern pattern) {
         Stream<BlockPos> stream = pattern.blockMap.keySet().stream()
                 .filter(pos -> state.layer == -1 || state.layer + pattern.minY == pos.getY());
-        if (pattern.controllerBase.isFormed()) {
+        if (state.mode != PreviewMode.UNFORMED && pattern.controllerBase.isFormed()) {
             LongSet modelDisabled = pattern.controllerBase.getMultiblockState().getMatchContext().getOrDefault(
                     "renderMask",
                     LongSets.EMPTY_SET);
@@ -529,9 +601,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
 
         sceneWidget.needCompileCache();
         pattern.applyTransformation(state.frontFacing, state.upwardsFacing, state.flipped);
-        setupParts(pattern);
-        setupScene(pattern);
-        updateVariantUI();
+        refreshPattern(pattern);
     }
 
     @Override
@@ -539,6 +609,10 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         super.updateScreen();
         if (sceneWidget.isTurntableActive() != state.turntable) {
             sceneWidget.setTurntableActive(state.turntable);
+        }
+
+        if (state.mode == PreviewMode.ACTIVE) {
+            updateActiveSimulation();
         }
 
         if (!isLoaded) {
@@ -551,10 +625,49 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         }
     }
 
+    private void updateActiveSimulation() {
+        simulationTick++;
+        if (simulationTick % 5 == 0) {
+            emitMufflerParticles();
+        }
+    }
+
+    private void emitMufflerParticles() {
+        MBPattern pattern = currentPattern();
+        if (pattern == null) return;
+        List<IMufflerMachine> mufflers = pattern.getMufflers();
+        if (mufflers.isEmpty()) return;
+
+        var particleManager = sceneWidget.getParticleManager();
+        if (particleManager == null) return;
+
+        for (IMufflerMachine muffler : mufflers) {
+            var pos = muffler.self().getPos();
+            var facing = muffler.self().getFrontFacing();
+            if (facing == null) facing = Direction.UP;
+
+            var center = pos.getCenter();
+            var offset = 0.75f;
+            double xPos = center.x + facing.getStepX() * offset + (GTValues.RNG.nextFloat() - 0.5f) * 0.35f;
+            double yPos = center.y + facing.getStepY() * offset + (GTValues.RNG.nextFloat() - 0.5f) * 0.35f;
+            double zPos = center.z + facing.getStepZ() * offset + (GTValues.RNG.nextFloat() - 0.5f) * 0.35f;
+
+            double ySpd = facing.getStepY() + (GTValues.RNG.nextFloat() - 0.15f) * 0.5f;
+            double xSpd = facing.getStepX() + (GTValues.RNG.nextFloat() - 0.5f) * 0.5f;
+            double zSpd = facing.getStepZ() + (GTValues.RNG.nextFloat() - 0.5f) * 0.5f;
+
+            Particle particle = ((ParticleEngineAccessor) Minecraft.getInstance().particleEngine)
+                    .invokeMakeParticle(GTParticleTypes.MUFFLER_PARTICLE.get(), xPos, yPos, zPos, xSpd, ySpd, zSpd);
+            if (particle != null) {
+                particleManager.addParticle(particle);
+            }
+        }
+    }
+
     @Override
     public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
         for (PreviewButton button : new PreviewButton[] { pageButton, layerButton, graduationButton,
-                rotateButton }) {
+                rotateButton, modeButton }) {
             if (button != null && button.isVisible() && button.isMouseOverElement(mouseX, mouseY) &&
                     button.mouseWheelMove(mouseX, mouseY, wheelDelta)) {
                 return true;
@@ -582,6 +695,13 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     @Override
     public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.enableBlend();
+        if (state.mode == PreviewMode.ACTIVE) {
+            long now = System.currentTimeMillis();
+            if (now - lastSimulationTickTime >= 50L) {
+                lastSimulationTickTime = now;
+                updateActiveSimulation();
+            }
+        }
         super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
     }
 }

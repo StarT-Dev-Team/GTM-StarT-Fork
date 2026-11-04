@@ -1,11 +1,24 @@
 package com.gregtechceu.gtceu.api.gui.widget.preview;
 
+import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.api.block.property.GTBlockStateProperties;
+import com.gregtechceu.gtceu.api.data.chemical.material.Material;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMufflerMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
+import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockControllerMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
+import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
 import com.gregtechceu.gtceu.api.pattern.BlockPattern;
 import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
+import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
+import com.gregtechceu.gtceu.common.data.GTItems;
+import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.item.TurbineRotorBehaviour;
+import com.gregtechceu.gtceu.common.machine.multiblock.part.RotorHolderPartMachine;
 
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
 import com.lowdragmc.lowdraglib.utils.ItemStackKey;
@@ -226,5 +239,132 @@ public class MBPattern {
         yMax = maxYVal + 1;
         zMin = minZVal;
         zMax = maxZVal + 1;
+    }
+
+    public boolean setCoilsActive(boolean active) {
+        boolean changed = false;
+        TrackedDummyWorld level = PreviewLevel.get();
+        for (Map.Entry<BlockPos, BlockInfo> entry : blockMap.entrySet()) {
+            BlockState state = entry.getValue().getBlockState();
+            if (state.hasProperty(GTBlockStateProperties.ACTIVE)) {
+                if (state.getValue(GTBlockStateProperties.ACTIVE) != active) {
+                    BlockState newState = state.setValue(GTBlockStateProperties.ACTIVE, active);
+                    BlockInfo newInfo = BlockInfo.fromBlockState(newState);
+                    entry.setValue(newInfo);
+                    if (level != null) {
+                        level.addBlock(entry.getKey(), newInfo);
+                    }
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    public List<IMufflerMachine> getMufflers() {
+        List<IMufflerMachine> mufflers = new ArrayList<>();
+        Set<MetaMachine> seen = new HashSet<>();
+        if (controllerBase instanceof MultiblockControllerMachine mcm) {
+            for (IMultiPart part : mcm.getParts()) {
+                if (part instanceof IMufflerMachine muffler && seen.add(muffler.self())) {
+                    mufflers.add(muffler);
+                }
+            }
+        }
+        TrackedDummyWorld level = PreviewLevel.get();
+        if (level != null) {
+            for (BlockPos pos : blockMap.keySet()) {
+                if (level.getBlockEntity(pos) instanceof IMachineBlockEntity holder &&
+                        holder.getMetaMachine() instanceof IMufflerMachine muffler &&
+                        seen.add(muffler.self())) {
+                    mufflers.add(muffler);
+                }
+            }
+        }
+        return mufflers;
+    }
+
+    public List<RotorHolderPartMachine> getRotorHolders() {
+        List<RotorHolderPartMachine> holders = new ArrayList<>();
+        Set<MetaMachine> seen = new HashSet<>();
+        if (controllerBase instanceof MultiblockControllerMachine mcm) {
+            for (IMultiPart part : mcm.getParts()) {
+                if (part instanceof RotorHolderPartMachine rh && seen.add(rh.self())) {
+                    holders.add(rh);
+                }
+            }
+        }
+        TrackedDummyWorld level = PreviewLevel.get();
+        if (level != null) {
+            for (BlockPos pos : blockMap.keySet()) {
+                if (level.getBlockEntity(pos) instanceof IMachineBlockEntity holder &&
+                        holder.getMetaMachine() instanceof RotorHolderPartMachine rh &&
+                        seen.add(rh.self())) {
+                    holders.add(rh);
+                }
+            }
+        }
+        return holders;
+    }
+
+    public void setRotorHoldersState(boolean hasRotor, boolean spinning) {
+        for (RotorHolderPartMachine rotorHolder : getRotorHolders()) {
+            if (hasRotor) {
+                Material rotorMat = switch (rotorHolder.getTier()) {
+                    case GTValues.EV -> GTMaterials.StainlessSteel;
+                    case GTValues.IV -> GTMaterials.Titanium;
+                    case GTValues.LuV -> GTMaterials.TungstenSteel;
+                    case GTValues.ZPM -> GTMaterials.RhodiumPlatedPalladium;
+                    case GTValues.UV -> GTMaterials.NaquadahAlloy;
+                    default -> GTMaterials.Steel;
+                };
+                if (rotorHolder.getRotorStack().isEmpty()) {
+                    ItemStack rotor = GTItems.TURBINE_ROTOR.asStack();
+                    var behaviour = TurbineRotorBehaviour.getBehaviour(rotor);
+                    if (behaviour != null) {
+                        behaviour.setPartMaterial(rotor, rotorMat);
+                    }
+                    rotorHolder.setRotorStack(rotor);
+                }
+                rotorHolder.setRotorMaterial(rotorMat);
+                rotorHolder.setRotorSpeed(spinning ? rotorHolder.getMaxRotorHolderSpeed() : 0);
+            } else {
+                rotorHolder.setRotorStack(ItemStack.EMPTY);
+                rotorHolder.setRotorMaterial(GTMaterials.NULL);
+                rotorHolder.setRotorSpeed(0);
+            }
+            MachineRenderState renderState = rotorHolder.self().getRenderState();
+            if (renderState.hasProperty(GTMachineModelProperties.IS_FORMED)) {
+                renderState = renderState.setValue(GTMachineModelProperties.IS_FORMED, hasRotor);
+            }
+            if (renderState.hasProperty(GTMachineModelProperties.HAS_ROTOR)) {
+                renderState = renderState.setValue(GTMachineModelProperties.HAS_ROTOR, hasRotor);
+            }
+            if (renderState.hasProperty(GTMachineModelProperties.IS_ROTOR_SPINNING)) {
+                renderState = renderState.setValue(GTMachineModelProperties.IS_ROTOR_SPINNING, spinning);
+            }
+            if (renderState.hasProperty(GTMachineModelProperties.IS_EMISSIVE_ROTOR)) {
+                renderState = renderState.setValue(GTMachineModelProperties.IS_EMISSIVE_ROTOR, false);
+            }
+            rotorHolder.self().setRenderState(renderState);
+        }
+    }
+
+    public void formStructure() {
+        BlockPos controllerPos = multiPos.offset(controllerPatternPos);
+        var machine = controllerBase.self();
+        BlockPattern pattern = controllerBase.getPattern();
+        if (pattern != null) {
+            controllerBase.getMultiblockState().clean();
+            if (pattern.checkPatternAt(controllerBase.getMultiblockState(), controllerPos, machine.getFrontFacing(),
+                    machine.getUpwardsFacing(), currentFlipped, true) ||
+                    pattern.checkPatternAt(controllerBase.getMultiblockState(), true)) {
+                controllerBase.onStructureFormed();
+            }
+        }
+    }
+
+    public void invalidateStructure() {
+        controllerBase.onStructureInvalid();
     }
 }
