@@ -813,6 +813,8 @@
   "block.gtceu.mega_blast_furnace": "Rotary Hearth Furnace [RHF]",
   "block.gtceu.mega_vacuum_freezer": "Bulk Blast Chiller [BBC]",
   "block.gtceu.miner_pipe": "Miner Pipe",
+  "block.gtceu.mirror_laser_pipe": "Mirror Laser Pipe",
+  "block.gtceu.mirror_laser_pipe.tooltip": "§7Transmitting power with §fno loss§7 around corners only",
   "block.gtceu.mob_infestation_hazard_sign_block": "Mob Infestation Hazard Sign Block",
   "block.gtceu.mob_spawner_hazard_sign_block": "Mob Spawner Hazard Sign Block",
   "block.gtceu.molybdenum_disilicide_coil_block": "Molybdenum Disilicide Coil Block",

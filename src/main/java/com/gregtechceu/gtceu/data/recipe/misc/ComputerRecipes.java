@@ -373,5 +373,14 @@ public class ComputerRecipes {
                 .cleanroom(CleanroomType.CLEANROOM)
                 .duration(100).EUt(VA[IV])
                 .addMaterialInfo(true).save(provider);
+
+        ASSEMBLER_RECIPES.recipeBuilder("mirror_laser_cable")
+                .inputItems(LASER_PIPES[0])
+                .inputItems(NEUTRON_REFLECTOR, 2)
+                .inputFluids(Gold.getFluid(L * 2))
+                .outputItems(LASER_PIPES[1])
+                .cleanroom(CleanroomType.CLEANROOM)
+                .duration(500).EUt(VA[ZPM])
+                .addMaterialInfo(true).save(provider);
     }
 }
