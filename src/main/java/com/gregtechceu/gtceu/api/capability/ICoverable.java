@@ -59,6 +59,8 @@ public interface ICoverable extends ITickSubscription {
 
     boolean shouldRenderBackSide();
 
+    ThreadLocal<Direction> RENDERING_FACADE_DIRECTION = new ThreadLocal<>();
+
     IItemHandlerModifiable getItemHandlerCap(@Nullable Direction side, boolean useCoverCapability);
 
     IFluidHandlerModifiable getFluidHandlerCap(@Nullable Direction side, boolean useCoverCapability);
@@ -270,9 +272,16 @@ public interface ICoverable extends ITickSubscription {
     @Nullable
     default BlockState getBlockAppearance(BlockState state, BlockAndTintGetter level, BlockPos pos, Direction side,
                                           BlockState sourceState, BlockPos sourcePos) {
-        if (hasCover(side)) {
+        Direction rendering = RENDERING_FACADE_DIRECTION.get();
+
+        if (side.getOpposite() != rendering && hasCover(side)) {
             return getCoverAtSide(side).getAppearance(sourceState, sourcePos);
         }
+
+        if (rendering != null && hasCover(rendering)) {
+            return getCoverAtSide(rendering).getAppearance(sourceState, sourcePos);
+        }
+
         return null;
     }
 }

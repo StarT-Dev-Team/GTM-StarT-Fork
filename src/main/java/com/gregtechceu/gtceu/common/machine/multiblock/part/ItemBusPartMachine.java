@@ -146,6 +146,13 @@ public class ItemBusPartMachine extends TieredIOPartMachine
         if (!ConfigHolder.INSTANCE.machines.ghostCircuit) {
             clearInventory(circuitInventory.storage);
         }
+
+        var filterItem = filterHandler.getFilterItem();
+        if (!filterItem.isEmpty()) {
+            var drop = filterItem.copy();
+            filterHandler.clear();
+            Block.popResource(getLevel(), getPos(), drop);
+        }
     }
 
     @Override
