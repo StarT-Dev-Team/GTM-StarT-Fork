@@ -186,7 +186,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
                 cd -> updatePage(cd.button == 1))
                 .onRightClick(() -> updatePage(true))
                 .onWheel(delta -> stepPage(delta > 0 ? 1 : -1))
-                .tooltip("gtceu.multiblock.preview.page"));
+                .dynamicTooltip(this::pageTooltip));
         pageButton.setVisible(patterns.length > 1);
 
         addWidget(layerButton = new PreviewButton(COL_RIGHT, ROW_PAGE,
@@ -194,24 +194,24 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
                 cd -> updateLayer(cd.button == 1))
                 .onRightClick(() -> updateLayer(true))
                 .onWheel(delta -> stepLayer(delta > 0 ? 1 : -1))
-                .tooltip("gtceu.multiblock.preview.layer"));
+                .dynamicTooltip(this::layerTooltip));
 
         addWidget(graduationButton = new PreviewButton(COL_MIDDLE, ROW_GRID,
                 () -> state.graduationStep() == 0 ? "OFF" : String.valueOf(state.graduationStep()),
                 cd -> state.cycleGraduation(cd.button == 1))
                 .onRightClick(() -> state.cycleGraduation(true))
                 .onWheel(delta -> state.cycleGraduation(delta < 0))
-                .tooltip("gtceu.multiblock.preview.measurement_grid_graduation"));
+                .dynamicTooltip(this::graduationTooltip));
         graduationButton.setVisible(state.showGrid);
 
         addWidget(gridButton = new PreviewButton(COL_RIGHT, ROW_GRID, () -> state.showGrid ? "ON" : "OFF",
                 cd -> toggleGrid())
-                .tooltip("gtceu.multiblock.preview.measurement_grid"));
+                .dynamicTooltip(this::gridTooltip));
 
         if (canFlip) {
             addWidget(flipButton = new PreviewButton(COL_RIGHT, ROW_ORIENT, () -> state.flipped ? "MIR" : "OFF",
                     cd -> flipStructure())
-                    .tooltip("gtceu.multiblock.preview.flip"));
+                    .dynamicTooltip(this::flipTooltip));
         }
 
         if (canRotate) {
@@ -230,7 +230,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         if (canRotate || canFlip) {
             addWidget(resetButton = new PreviewButton(canRotate && canFlip ? COL_LEFT : COL_MIDDLE, ROW_ORIENT,
                     () -> "RST", cd -> resetOrientation())
-                    .tooltip("gtceu.multiblock.preview.reset"));
+                    .dynamicTooltip(this::resetTooltip));
             resetButton.setVisible(!state.isDefaultOrientation(controllerDefinition));
         }
 
@@ -243,7 +243,122 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
 
         addWidget(turntableButton = new PreviewButton(COL_RIGHT, turntableY, () -> state.turntable ? "ON" : "OFF",
                 cd -> toggleTurntable())
-                .tooltip("gtceu.multiblock.preview.turntable"));
+                .dynamicTooltip(this::turntableTooltip));
+    }
+
+    private List<Component> pageTooltip() {
+        List<Component> list = new ArrayList<>();
+        list.add(Component.translatable("gtceu.multiblock.preview.page")
+                .append(": ")
+                .append(Component.literal((state.index + 1) + " / " + patterns.length).withStyle(ChatFormatting.GOLD)));
+        list.add(Component.translatable("gtceu.multiblock.preview.page.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
+    }
+
+    private List<Component> layerTooltip() {
+        List<Component> list = new ArrayList<>();
+        MBPattern pattern = currentPattern();
+        Component value = state.layer < 0 ?
+                Component.translatable("gtceu.multiblock.preview.layer.all") :
+                Component.literal(
+                        (state.layer + 1) + " / " + (pattern != null ? (pattern.maxLayer() + 1) : (state.layer + 1)));
+        list.add(Component.translatable("gtceu.multiblock.preview.layer")
+                .append(": ")
+                .append(value.copy().withStyle(ChatFormatting.GOLD)));
+        list.add(Component.translatable("gtceu.multiblock.preview.layer.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
+    }
+
+    private List<Component> graduationTooltip() {
+        List<Component> list = new ArrayList<>();
+        Component value = state.graduationStep() == 0 ?
+                Component.translatable("gtceu.multiblock.preview.off") :
+                Component.translatable("gtceu.multiblock.preview.measurement_grid_graduation.blocks",
+                        state.graduationStep());
+        list.add(Component.translatable("gtceu.multiblock.preview.measurement_grid_graduation")
+                .append(": ")
+                .append(value.copy().withStyle(ChatFormatting.GOLD)));
+        list.add(Component.translatable("gtceu.multiblock.preview.measurement_grid_graduation.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
+    }
+
+    private List<Component> gridTooltip() {
+        List<Component> list = new ArrayList<>();
+        list.add(Component.translatable("gtceu.multiblock.preview.measurement_grid")
+                .append(": ")
+                .append(Component
+                        .translatable(state.showGrid ? "gtceu.multiblock.preview.on" : "gtceu.multiblock.preview.off")
+                        .withStyle(ChatFormatting.GOLD)));
+        list.add(Component.translatable("gtceu.multiblock.preview.measurement_grid.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
+    }
+
+    private List<Component> flipTooltip() {
+        List<Component> list = new ArrayList<>();
+        list.add(Component.translatable("gtceu.multiblock.preview.flip")
+                .append(": ")
+                .append(Component
+                        .translatable(state.flipped ? "gtceu.multiblock.preview.flip.mirrored" :
+                                "gtceu.multiblock.preview.flip.normal")
+                        .withStyle(ChatFormatting.GOLD)));
+        list.add(Component.translatable("gtceu.multiblock.preview.flip.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
+    }
+
+    private List<Component> rotateTooltip() {
+        List<Component> list = new ArrayList<>();
+        if (isRollMode()) {
+            list.add(Component.translatable("gtceu.multiblock.preview.roll")
+                    .append(": ")
+                    .append(Component.literal(formatDirection(state.upwardsFacing)).withStyle(ChatFormatting.GOLD)));
+            list.add(Component.translatable("gtceu.multiblock.preview.roll.desc")
+                    .withStyle(ChatFormatting.GRAY));
+            if (canRotatePitch() && canRotateRoll()) {
+                list.add(Component.translatable("gtceu.multiblock.preview.rotate_switch_pitch")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        } else {
+            list.add(Component.translatable("gtceu.multiblock.preview.pitch")
+                    .append(": ")
+                    .append(Component.literal(formatDirection(state.frontFacing)).withStyle(ChatFormatting.GOLD)));
+            list.add(Component.translatable("gtceu.multiblock.preview.pitch.desc")
+                    .withStyle(ChatFormatting.GRAY));
+            if (canRotatePitch() && canRotateRoll()) {
+                list.add(Component.translatable("gtceu.multiblock.preview.rotate_switch_roll")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+        return list;
+    }
+
+    private static String formatDirection(Direction direction) {
+        String name = direction.getName();
+        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    private List<Component> resetTooltip() {
+        List<Component> list = new ArrayList<>();
+        list.add(Component.translatable("gtceu.multiblock.preview.reset"));
+        list.add(Component.translatable("gtceu.multiblock.preview.reset.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
+    }
+
+    private List<Component> turntableTooltip() {
+        List<Component> list = new ArrayList<>();
+        list.add(Component.translatable("gtceu.multiblock.preview.turntable")
+                .append(": ")
+                .append(Component
+                        .translatable(state.turntable ? "gtceu.multiblock.preview.on" : "gtceu.multiblock.preview.off")
+                        .withStyle(ChatFormatting.GOLD)));
+        list.add(Component.translatable("gtceu.multiblock.preview.turntable.desc")
+                .withStyle(ChatFormatting.GRAY));
+        return list;
     }
 
     private List<Component> modeTooltip() {
@@ -253,26 +368,6 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
                 .append(Component.translatable(state.mode.tooltipKey).withStyle(ChatFormatting.GOLD)));
         list.add(Component.translatable("gtceu.multiblock.preview.mode.desc")
                 .withStyle(ChatFormatting.GRAY));
-        return list;
-    }
-
-    private List<Component> rotateTooltip() {
-        List<Component> list = new ArrayList<>();
-        if (canRotatePitch() && canRotateRoll()) {
-            if (Screen.hasShiftDown()) {
-                list.add(Component.translatable("gtceu.multiblock.preview.roll"));
-                list.add(Component.translatable("gtceu.multiblock.preview.rotate_switch_pitch")
-                        .withStyle(ChatFormatting.GRAY));
-            } else {
-                list.add(Component.translatable("gtceu.multiblock.preview.pitch"));
-                list.add(Component.translatable("gtceu.multiblock.preview.rotate_switch_roll")
-                        .withStyle(ChatFormatting.GRAY));
-            }
-        } else if (canRotateRoll()) {
-            list.add(Component.translatable("gtceu.multiblock.preview.roll"));
-        } else {
-            list.add(Component.translatable("gtceu.multiblock.preview.pitch"));
-        }
         return list;
     }
 
