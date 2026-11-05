@@ -380,6 +380,43 @@ public class MachineBuilder<DEFINITION extends MachineDefinition> extends Builde
         return model(createSidedWorkableCasingMachineModel(baseCasing, workableModel));
     }
 
+    public MachineBuilder<DEFINITION> overlayCasingModel(ResourceLocation baseCasing,
+                                                         ResourceLocation overlayModel) {
+        modelProperty(GTMachineModelProperties.IS_FORMED, false);
+        return model(createOverlayCasingMachineModel(baseCasing, overlayModel));
+    }
+
+    @HideFromJS
+    public MachineBuilder<DEFINITION> colorOverlayCasingModel(ResourceLocation casing, String overlay) {
+        return colorOverlayCasingModel(casing, overlay, null, null);
+    }
+
+    @HideFromJS
+    public MachineBuilder<DEFINITION> colorOverlayCasingModel(ResourceLocation casing, String overlay,
+                                                              @Nullable String pipeOverlay,
+                                                              @Nullable String emissiveOverlay) {
+        modelProperty(GTMachineModelProperties.IS_FORMED, false);
+        ResourceLocation overlayTex = new ResourceLocation(registrate.getModid(), "block/overlay/machine/" + overlay);
+        ResourceLocation pipeOverlayTex = pipeOverlay == null ? null :
+                new ResourceLocation(registrate.getModid(), "block/overlay/machine/" + pipeOverlay);
+        ResourceLocation emissiveOverlayTex = emissiveOverlay == null ? null :
+                new ResourceLocation(registrate.getModid(), "block/overlay/machine/" + emissiveOverlay);
+        return colorOverlayCasingModel(casing, overlayTex, pipeOverlayTex, emissiveOverlayTex);
+    }
+
+    @HideFromJS
+    public MachineBuilder<DEFINITION> colorOverlayCasingModel(ResourceLocation casing, ResourceLocation overlay) {
+        return colorOverlayCasingModel(casing, overlay, null, null);
+    }
+
+    public MachineBuilder<DEFINITION> colorOverlayCasingModel(ResourceLocation casing, ResourceLocation overlay,
+                                                              @Nullable ResourceLocation pipeOverlay,
+                                                              @Nullable ResourceLocation emissiveOverlay) {
+        modelProperty(GTMachineModelProperties.IS_FORMED, false);
+        modelProperty(GTMachineModelProperties.IS_PAINTED, false);
+        return model(createColorOverlayCasingMachineModel(casing, overlay, pipeOverlay, emissiveOverlay));
+    }
+
     public MachineBuilder<DEFINITION> appearanceBlock(Supplier<? extends Block> block) {
         appearance = () -> block.get().defaultBlockState();
         return this;
