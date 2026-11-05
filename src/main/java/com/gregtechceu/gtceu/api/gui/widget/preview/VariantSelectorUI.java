@@ -453,7 +453,7 @@ public class VariantSelectorUI {
         };
 
         popup.setBackground(new GuiTextureGroup(
-                new ColorRectTexture(0xEE5A5A5A),
+                new ColorRectTexture(0xEE8F8F8F),
                 new ColorBorderTexture(1, 0x50A0A0A0)));
 
         if (needScroll) {
