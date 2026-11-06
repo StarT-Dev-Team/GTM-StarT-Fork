@@ -69,6 +69,8 @@ public class RecipeRunner {
         ChanceBoostFunction function = recipe.getType().getChanceFunction();
         int recipeTier = RecipeHelper.getPreOCRecipeEuTier(recipe);
         int chanceTier = RecipeHelper.getChanceTier(recipe, recipeTier);
+        int tierDiff = function.getTierDiff(recipeTier, chanceTier);
+
         for (var entry : entries.entrySet()) {
             RecipeCapability<?> cap = entry.getKey();
             if (!cap.doMatchInRecipe()) continue;
@@ -89,7 +91,7 @@ public class RecipeRunner {
                 if (simulated) continue;
 
                 if (cont.chance >= cont.maxChance) {
-                    contentList.add(cont.content);
+                    contentList.add(cap.copyContentWithTierDiff(cont.content, tierDiff));
                 } else if (cont.chance > 0 || cont.tierChanceBoost > 0) {
                     chancedContents.add(cont);
                 }
@@ -103,7 +105,7 @@ public class RecipeRunner {
                         recipe.parallels);
 
                 for (Content cont : chancedContents) {
-                    contentList.add(cont.content);
+                    contentList.add(cap.copyContentWithTierDiff(cont.content, tierDiff));
                 }
             }
 
