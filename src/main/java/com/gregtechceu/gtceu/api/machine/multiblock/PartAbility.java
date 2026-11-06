@@ -1,5 +1,10 @@
 package com.gregtechceu.gtceu.api.machine.multiblock;
 
+import com.gregtechceu.gtceu.api.GTCEuAPI;
+import com.gregtechceu.gtceu.api.block.ICoilType;
+import com.gregtechceu.gtceu.api.block.IFilterType;
+import com.gregtechceu.gtceu.common.block.BatteryBlock;
+import com.gregtechceu.gtceu.common.block.CoilBlock;
 import com.gregtechceu.gtceu.utils.memoization.GTMemoizer;
 
 import net.minecraft.world.level.block.Block;
@@ -59,6 +64,10 @@ public class PartAbility {
     public static final PartAbility HPCA_COMPONENT = new PartAbility("hpca_component");
     public static final PartAbility OBJECT_HOLDER = new PartAbility("object_holder");
 
+    public static final PartAbility HEATING_COILS = new PartAbility("heating_coils");
+    public static final PartAbility CLEANROOM_FILTERS = new PartAbility("cleanroom_filters");
+    public static final PartAbility PSS_BATTERIES = new PartAbility("substation_batteries");
+
     /**
      * tier -> available blocks
      */
@@ -72,6 +81,32 @@ public class PartAbility {
 
     public PartAbility(String name) {
         this.name = name;
+    }
+
+    public Map<Integer, Set<Block>> getRegistry() {
+        return Collections.unmodifiableMap(registry);
+    }
+
+    public static void syncDynamicAbilities() {
+        for (Map.Entry<ICoilType, Supplier<CoilBlock>> entry : GTCEuAPI.HEATING_COILS.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().get() != null) {
+                HEATING_COILS.register(entry.getKey().getTier(), entry.getValue().get());
+            }
+        }
+
+        int idx = 0;
+        for (var entry : GTCEuAPI.CLEANROOM_FILTERS.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(Comparator.comparing(IFilterType::getSerializedName))).toList()) {
+            if (entry.getValue() != null && entry.getValue().get() != null) {
+                CLEANROOM_FILTERS.register(idx++, entry.getValue().get());
+            }
+        }
+
+        for (Map.Entry<IBatteryData, Supplier<BatteryBlock>> entry : GTCEuAPI.PSS_BATTERIES.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().get() != null) {
+                PSS_BATTERIES.register(entry.getKey().getTier(), entry.getValue().get());
+            }
+        }
     }
 
     public void register(int tier, Block block) {
