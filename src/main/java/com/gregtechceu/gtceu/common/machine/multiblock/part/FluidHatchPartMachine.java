@@ -80,6 +80,11 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
     @DescSynced
     protected boolean circuitSlotEnabled;
     @Getter
+    @Setter
+    @Persisted
+    @DescSynced
+    protected boolean circuitPastingBlocked;
+    @Getter
     @Persisted
     protected final NotifiableItemStackHandler circuitInventory;
     @Getter
@@ -300,7 +305,7 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
     public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         super.attachConfigurators(configuratorPanel);
         if (isCircuitSlotEnabled() && this.io == IO.IN) {
-            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
+            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(this));
         }
     }
 
