@@ -116,7 +116,7 @@ public class QuantumChestMachine extends TieredMachine implements IAutoOutputIte
         super(holder, tier);
         this.outputFacingItems = getFrontFacing().getOpposite();
         this.maxAmount = maxAmount;
-        this.cache = createCacheItemHandler(args);
+        this.cache = attachTrait(createCacheItemHandler(args));
         this.lockedItem = new CustomItemStackHandler();
     }
 
@@ -130,7 +130,7 @@ public class QuantumChestMachine extends TieredMachine implements IAutoOutputIte
     }
 
     protected ItemCache createCacheItemHandler(Object... args) {
-        return new ItemCache(this);
+        return new ItemCache();
     }
 
     @Override
@@ -450,8 +450,8 @@ public class QuantumChestMachine extends TieredMachine implements IAutoOutputIte
         private final Predicate<ItemStack> filter = i -> !isLocked() ||
                 GTUtil.isSameItemSameTags(i, getLockedItem());
 
-        public ItemCache(MetaMachine holder) {
-            super(holder);
+        public ItemCache() {
+            super();
         }
 
         @Override

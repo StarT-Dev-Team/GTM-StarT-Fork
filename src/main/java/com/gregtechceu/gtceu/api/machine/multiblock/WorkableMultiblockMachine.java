@@ -87,7 +87,7 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
         super(holder);
         this.recipeTypes = getDefinition().getRecipeTypes();
         this.activeRecipeType = 0;
-        this.recipeLogic = createRecipeLogic(args);
+        this.recipeLogic = attachTrait(createRecipeLogic(args));
         this.capabilitiesProxy = new EnumMap<>(IO.class);
         this.capabilitiesFlat = new EnumMap<>(IO.class);
         this.traitSubscriptions = new ArrayList<>();
@@ -111,7 +111,7 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
     }
 
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new RecipeLogic(this);
+        return new RecipeLogic();
     }
 
     //////////////////////////////////////
@@ -142,7 +142,7 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
 
         // attach self traits
         Map<IO, List<IRecipeHandler<?>>> ioTraits = new EnumMap<>(IO.class);
-        for (MachineTrait trait : getTraits()) {
+        for (MachineTrait trait : getAllTraits()) {
             if (trait instanceof IRecipeHandlerTrait<?> handlerTrait) {
                 ioTraits.computeIfAbsent(handlerTrait.getHandlerIO(), i -> new ArrayList<>()).add(handlerTrait);
             }

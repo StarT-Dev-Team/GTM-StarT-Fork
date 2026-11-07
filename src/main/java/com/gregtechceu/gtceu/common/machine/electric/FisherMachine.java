@@ -138,8 +138,8 @@ public class FisherMachine extends TieredEnergyMachine
         this.inventorySize = (tier + 1) * (tier + 1);
         this.maxProgress = calcMaxProgress(tier);
         this.energyPerTick = GTValues.V[tier - 1];
-        this.cache = createCacheItemHandler();
-        this.baitHandler = createBaitItemHandler();
+        this.cache = attachTrait(createCacheItemHandler());
+        this.baitHandler = attachTrait(createBaitItemHandler());
         this.chargerInventory = createChargerItemHandler();
         setOutputFacingItems(getFrontFacing());
     }
@@ -162,11 +162,11 @@ public class FisherMachine extends TieredEnergyMachine
     }
 
     protected NotifiableItemStackHandler createCacheItemHandler() {
-        return new NotifiableItemStackHandler(this, inventorySize, IO.BOTH, IO.OUT);
+        return new NotifiableItemStackHandler(inventorySize, IO.BOTH, IO.OUT);
     }
 
     protected NotifiableItemStackHandler createBaitItemHandler() {
-        var handler = new NotifiableItemStackHandler(this, 1, IO.BOTH, IO.IN);
+        var handler = new NotifiableItemStackHandler(1, IO.BOTH, IO.IN);
         handler.setFilter(item -> item.is(Items.STRING));
         return handler;
     }

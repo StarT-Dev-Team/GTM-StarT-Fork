@@ -101,7 +101,7 @@ public class BlockBreakerMachine extends TieredEnergyMachine
     public BlockBreakerMachine(IMachineBlockEntity holder, int tier, Object... ignoredArgs) {
         super(holder, tier);
         this.inventorySize = (tier + 1) * (tier + 1);
-        this.cache = createCacheItemHandler();
+        this.cache = attachTrait(createCacheItemHandler());
         this.chargerInventory = createChargerItemHandler();
         this.energyPerTick = GTValues.V[tier - 1];
         setOutputFacingItems(getFrontFacing().getOpposite());
@@ -137,7 +137,7 @@ public class BlockBreakerMachine extends TieredEnergyMachine
     }
 
     protected NotifiableItemStackHandler createCacheItemHandler() {
-        return new NotifiableItemStackHandler(this, inventorySize, IO.BOTH, IO.OUT);
+        return new NotifiableItemStackHandler(inventorySize, IO.BOTH, IO.OUT);
     }
 
     @Override

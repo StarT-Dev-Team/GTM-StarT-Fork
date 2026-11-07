@@ -5,8 +5,6 @@ import com.gregtechceu.gtceu.api.capability.IMiner;
 import com.gregtechceu.gtceu.api.capability.recipe.*;
 import com.gregtechceu.gtceu.api.item.MaterialBlockItem;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
-import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.IgnoreEnergyRecipeHandler;
@@ -129,13 +127,12 @@ public class MinerLogic extends RecipeLogic implements IRecipeCapabilityHolder {
     /**
      * Creates the general logic for all in-world ore block miners
      *
-     * @param machine       the {@link MetaMachine} this logic belongs to
      * @param fortune       the fortune amount to apply when mining ores
      * @param speed         the speed in ticks per block mined
      * @param maximumRadius the maximum radius (square shaped) the miner can mine in
      */
-    public MinerLogic(@NotNull IRecipeLogicMachine machine, int fortune, int speed, int maximumRadius) {
-        super(machine);
+    public MinerLogic(int fortune, int speed, int maximumRadius) {
+        super();
         this.miner = (IMiner) machine;
         this.fortune = fortune;
         this.speed = speed;

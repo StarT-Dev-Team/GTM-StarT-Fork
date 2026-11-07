@@ -21,6 +21,8 @@ import com.gregtechceu.gtceu.common.data.GTMaterialBlocks;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.PowerSubstationMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
+import com.lowdragmc.lowdraglib.utils.BlockInfo;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -28,7 +30,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.apache.commons.lang3.ArrayUtils;

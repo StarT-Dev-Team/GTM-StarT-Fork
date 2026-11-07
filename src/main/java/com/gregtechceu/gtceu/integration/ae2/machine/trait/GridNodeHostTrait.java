@@ -1,6 +1,5 @@
 package com.gregtechceu.gtceu.integration.ae2.machine.trait;
 
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.trait.MachineTrait;
 
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -16,11 +15,17 @@ import appeng.me.helpers.IGridConnectedBlockEntity;
 public class GridNodeHostTrait extends MachineTrait implements IGridConnectedBlockEntity {
 
     protected final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(GridNodeHostTrait.class);
-    private final IManagedGridNode proxy;
 
-    public GridNodeHostTrait(MetaMachine machine) {
-        super(machine);
-        this.proxy = GridHelper.createManagedNode(this, BlockEntityNodeListener.INSTANCE)
+    private IManagedGridNode proxy;
+
+    public GridNodeHostTrait() {
+        super();
+    }
+
+    @Override
+    public void onTraitAttached() {
+        super.onTraitAttached();
+        proxy = GridHelper.createManagedNode(this, BlockEntityNodeListener.INSTANCE)
                 .setInWorldNode(true)
                 .setVisualRepresentation(machine.getDefinition().getItem());
     }

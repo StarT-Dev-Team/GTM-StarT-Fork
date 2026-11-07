@@ -93,10 +93,10 @@ public class ItemBusPartMachine extends TieredIOPartMachine
 
     public ItemBusPartMachine(IMachineBlockEntity holder, int tier, IO io, Object... args) {
         super(holder, tier, io);
-        this.inventory = createInventory(args);
+        this.inventory = attachTrait(createInventory(args));
         this.inventory.setIsIODisabled(this::isLocked);
         this.circuitSlotEnabled = true;
-        this.circuitInventory = createCircuitItemHandler(io).shouldSearchContent(false);
+        this.circuitInventory = attachTrait(createCircuitItemHandler(io)).shouldSearchContent(false);
         filterHandler = FilterHandlers.item(this);
     }
 
@@ -120,17 +120,17 @@ public class ItemBusPartMachine extends TieredIOPartMachine
     }
 
     protected NotifiableItemStackHandler createInventory(Object... args) {
-        return new NotifiableItemStackHandler(this, getInventorySize(), io).setFilter(this::matchesFilter);
+        return new NotifiableItemStackHandler(getInventorySize(), io).setFilter(this::matchesFilter);
     }
 
     protected NotifiableItemStackHandler createCircuitItemHandler(Object... args) {
         if (args.length > 0 && args[0] instanceof IO io && io == IO.IN) {
-            return new NotifiableItemStackHandler(this, 1, IO.IN, IO.NONE)
+            return new NotifiableItemStackHandler(1, IO.IN, IO.NONE)
                     .setFilter(IntCircuitBehaviour::isIntegratedCircuit);
         } else {
             hasCircuitSlot = false;
             setCircuitSlotEnabled(false);
-            return new NotifiableItemStackHandler(this, 0, IO.NONE);
+            return new NotifiableItemStackHandler(0, IO.NONE);
         }
     }
 

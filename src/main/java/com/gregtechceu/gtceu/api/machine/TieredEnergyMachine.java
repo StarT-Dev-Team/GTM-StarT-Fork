@@ -33,7 +33,7 @@ public class TieredEnergyMachine extends TieredMachine implements ITieredMachine
 
     public TieredEnergyMachine(IMachineBlockEntity holder, int tier, Object... args) {
         super(holder, tier);
-        energyContainer = createEnergyContainer(args);
+        energyContainer = attachTrait(createEnergyContainer(args));
     }
 
     //////////////////////////////////////
@@ -47,10 +47,10 @@ public class TieredEnergyMachine extends TieredMachine implements ITieredMachine
     protected NotifiableEnergyContainer createEnergyContainer(Object... args) {
         long tierVoltage = GTValues.V[tier];
         if (isEnergyEmitter()) {
-            return NotifiableEnergyContainer.emitterContainer(this,
-                    tierVoltage * 64L, tierVoltage, getMaxInputOutputAmperage());
-        } else return NotifiableEnergyContainer.receiverContainer(this,
-                tierVoltage * 64L, tierVoltage, getMaxInputOutputAmperage());
+            return NotifiableEnergyContainer.emitterContainer(tierVoltage * 64L, tierVoltage,
+                    getMaxInputOutputAmperage());
+        } else return NotifiableEnergyContainer.receiverContainer(tierVoltage * 64L, tierVoltage,
+                getMaxInputOutputAmperage());
     }
 
     @Override

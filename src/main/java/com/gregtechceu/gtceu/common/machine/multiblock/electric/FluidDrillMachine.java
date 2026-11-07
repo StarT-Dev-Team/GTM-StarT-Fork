@@ -48,7 +48,7 @@ public class FluidDrillMachine extends WorkableElectricMultiblockMachine impleme
 
     @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new FluidDrillLogic(this);
+        return new FluidDrillLogic();
     }
 
     @NotNull

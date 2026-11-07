@@ -38,10 +38,10 @@ public class PrimitiveWorkableMachine extends WorkableMultiblockMachine
 
     public PrimitiveWorkableMachine(IMachineBlockEntity holder, Object... args) {
         super(holder, args);
-        this.importItems = createImportItemHandler(args);
-        this.exportItems = createExportItemHandler(args);
-        this.importFluids = createImportFluidHandler(args);
-        this.exportFluids = createExportFluidHandler(args);
+        this.importItems = attachTrait(createImportItemHandler(args));
+        this.exportItems = attachTrait(createExportItemHandler(args));
+        this.importFluids = attachTrait(createImportFluidHandler(args));
+        this.exportFluids = attachTrait(createExportFluidHandler(args));
     }
 
     //////////////////////////////////////
@@ -53,23 +53,23 @@ public class PrimitiveWorkableMachine extends WorkableMultiblockMachine
     }
 
     protected NotifiableItemStackHandler createImportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN)
+        return new NotifiableItemStackHandler(getRecipeType().getMaxInputs(ItemRecipeCapability.CAP), IO.IN)
                 .basePriority(IFilteredHandler.LOW);
     }
 
     protected NotifiableItemStackHandler createExportItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT)
+        return new NotifiableItemStackHandler(getRecipeType().getMaxOutputs(ItemRecipeCapability.CAP), IO.OUT)
                 .basePriority(IFilteredHandler.LOW);
     }
 
     protected NotifiableFluidTank createImportFluidHandler(Object... args) {
-        return new NotifiableFluidTank(this, getRecipeType().getMaxInputs(FluidRecipeCapability.CAP),
+        return new NotifiableFluidTank(getRecipeType().getMaxInputs(FluidRecipeCapability.CAP),
                 32 * FluidType.BUCKET_VOLUME, IO.IN)
                 .basePriority(IFilteredHandler.LOW);
     }
 
     protected NotifiableFluidTank createExportFluidHandler(Object... args) {
-        return new NotifiableFluidTank(this, getRecipeType().getMaxOutputs(FluidRecipeCapability.CAP),
+        return new NotifiableFluidTank(getRecipeType().getMaxOutputs(FluidRecipeCapability.CAP),
                 32 * FluidType.BUCKET_VOLUME, IO.OUT)
                 .basePriority(IFilteredHandler.LOW);
     }

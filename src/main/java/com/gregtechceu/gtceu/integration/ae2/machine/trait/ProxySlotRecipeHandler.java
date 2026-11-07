@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.integration.ae2.machine.trait;
 
 import com.gregtechceu.gtceu.api.capability.recipe.*;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.trait.IRecipeHandlerTrait;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableRecipeHandlerTrait;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupDistinctness;
@@ -60,11 +59,11 @@ public final class ProxySlotRecipeHandler {
 
         public ProxyRHL(MEPatternBufferProxyPartMachine machine) {
             super(IO.IN);
-            circuit = new ProxyItemRecipeHandler(machine);
-            sharedItem = new ProxyItemRecipeHandler(machine);
-            slotItem = new ProxyItemRecipeHandler(machine);
-            sharedFluid = new ProxyFluidRecipeHandler(machine);
-            slotFluid = new ProxyFluidRecipeHandler(machine);
+            circuit = machine.attachTrait(new ProxyItemRecipeHandler());
+            sharedItem = machine.attachTrait(new ProxyItemRecipeHandler());
+            slotItem = machine.attachTrait(new ProxyItemRecipeHandler());
+            sharedFluid = machine.attachTrait(new ProxyFluidRecipeHandler());
+            slotFluid = machine.attachTrait(new ProxyFluidRecipeHandler());
             addHandlers(circuit, sharedItem, slotItem, sharedFluid, slotFluid);
             this.setGroup(RecipeHandlerGroupDistinctness.BUS_DISTINCT);
         }
@@ -104,8 +103,8 @@ public final class ProxySlotRecipeHandler {
         private final RecipeCapability<Ingredient> capability = ItemRecipeCapability.CAP;
         private final boolean isDistinct = true;
 
-        public ProxyItemRecipeHandler(MetaMachine machine) {
-            super(machine);
+        public ProxyItemRecipeHandler() {
+            super();
         }
 
         public void setProxy(IRecipeHandlerTrait<Ingredient> proxy) {
@@ -159,8 +158,8 @@ public final class ProxySlotRecipeHandler {
         private final RecipeCapability<FluidIngredient> capability = FluidRecipeCapability.CAP;
         private final boolean isDistinct = true;
 
-        public ProxyFluidRecipeHandler(MetaMachine machine) {
-            super(machine);
+        public ProxyFluidRecipeHandler() {
+            super();
         }
 
         public void setProxy(IRecipeHandlerTrait<FluidIngredient> proxy) {

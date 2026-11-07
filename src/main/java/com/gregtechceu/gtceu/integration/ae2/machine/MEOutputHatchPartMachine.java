@@ -2,7 +2,6 @@ package com.gregtechceu.gtceu.integration.ae2.machine;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
@@ -52,7 +51,7 @@ public class MEOutputHatchPartMachine extends MEHatchPartMachine implements IMac
     @Override
     protected NotifiableFluidTank createTank(int initialCapacity, int slots, Object... args) {
         this.internalBuffer = new KeyStorage();
-        return new InaccessibleInfiniteTank(this);
+        return new InaccessibleInfiniteTank();
     }
 
     @Override
@@ -120,8 +119,8 @@ public class MEOutputHatchPartMachine extends MEHatchPartMachine implements IMac
 
         FluidStorageDelegate storage;
 
-        public InaccessibleInfiniteTank(MetaMachine holder) {
-            super(holder, List.of(new FluidStorageDelegate()), IO.OUT, IO.NONE);
+        public InaccessibleInfiniteTank() {
+            super(List.of(new FluidStorageDelegate()), IO.OUT, IO.NONE);
             internalBuffer.setOnContentsChanged(this::onContentsChanged);
             storage = (FluidStorageDelegate) getStorages()[0];
             allowSameFluids = true;

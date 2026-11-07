@@ -26,7 +26,7 @@ public class FluidTankProxyTrait extends MachineTrait implements IFluidHandlerMo
     public IFluidHandlerModifiable proxy;
 
     public FluidTankProxyTrait(MetaMachine machine, IO capabilityIO) {
-        super(machine);
+        super();
         this.capabilityIO = capabilityIO;
     }
 

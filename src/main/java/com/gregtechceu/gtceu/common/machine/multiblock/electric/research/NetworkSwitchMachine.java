@@ -6,7 +6,6 @@ import com.gregtechceu.gtceu.api.capability.IOpticalComputationProvider;
 import com.gregtechceu.gtceu.api.capability.recipe.CWURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockDisplayText;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableComputationContainer;
@@ -43,10 +42,11 @@ public class NetworkSwitchMachine extends AlwaysActiveComputationMachine impleme
     @DescSynced
     private int transmittersCount;
 
-    private final MultipleComputationHandler computationHandler = new MultipleComputationHandler(this);
+    private final MultipleComputationHandler computationHandler;
 
     public NetworkSwitchMachine(IMachineBlockEntity holder) {
         super(holder);
+        computationHandler = attachTrait(new MultipleComputationHandler());
     }
 
     @Override
@@ -183,8 +183,8 @@ public class NetworkSwitchMachine extends AlwaysActiveComputationMachine impleme
         private boolean tickSaturated;
         private long timerCWUt = -1;
 
-        public MultipleComputationHandler(MetaMachine machine) {
-            super(machine, IO.IN, false);
+        public MultipleComputationHandler() {
+            super(IO.IN, false);
         }
 
         private void onStructureForm(Collection<IOpticalComputationHatch> providers,

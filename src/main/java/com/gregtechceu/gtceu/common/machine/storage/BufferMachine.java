@@ -96,8 +96,8 @@ public class BufferMachine extends TieredMachine implements IMachineLife, IAutoO
 
     public BufferMachine(IMachineBlockEntity holder, int tier, Object... args) {
         super(holder, tier);
-        this.inventory = createInventory(args);
-        this.tank = createTank(args);
+        this.inventory = attachTrait(createInventory(args));
+        this.tank = attachTrait(createTank(args));
     }
 
     ////////////////////////////////
@@ -118,11 +118,11 @@ public class BufferMachine extends TieredMachine implements IMachineLife, IAutoO
     }
 
     protected NotifiableItemStackHandler createInventory(Object... args) {
-        return new NotifiableItemStackHandler(this, getInventorySize(tier), IO.BOTH);
+        return new NotifiableItemStackHandler(getInventorySize(tier), IO.BOTH);
     }
 
     protected NotifiableFluidTank createTank(Object... args) {
-        return new NotifiableFluidTank(this, getTankSize(tier), TANK_SIZE, IO.BOTH);
+        return new NotifiableFluidTank(getTankSize(tier), TANK_SIZE, IO.BOTH);
     }
 
     @Override

@@ -93,10 +93,10 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
                                  Object... args) {
         super(holder, tier, io);
         this.slots = slots;
-        this.tank = createTank(initialCapacity, slots, args);
+        this.tank = attachTrait(createTank(initialCapacity, slots, args));
         this.tank.setIsIODisabled(this::isLocked);
         this.circuitSlotEnabled = true;
-        this.circuitInventory = createCircuitItemHandler(io).shouldSearchContent(false);
+        this.circuitInventory = attachTrait(createCircuitItemHandler(io).shouldSearchContent(false));
     }
 
     //////////////////////////////////////
@@ -108,7 +108,7 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
     }
 
     protected NotifiableFluidTank createTank(int initialCapacity, int slots, Object... args) {
-        return new NotifiableFluidTank(this, slots, getTankCapacity(initialCapacity, getTier()), io);
+        return new NotifiableFluidTank(slots, getTankCapacity(initialCapacity, getTier()), io);
     }
 
     public static int getTankCapacity(int initialCapacity, int tier) {
@@ -117,10 +117,10 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
 
     protected NotifiableItemStackHandler createCircuitItemHandler(Object... args) {
         if (args.length > 0 && args[0] instanceof IO io && io == IO.IN) {
-            return new NotifiableItemStackHandler(this, 1, IO.IN, IO.NONE)
+            return new NotifiableItemStackHandler(1, IO.IN, IO.NONE)
                     .setFilter(IntCircuitBehaviour::isIntegratedCircuit);
         } else {
-            return new NotifiableItemStackHandler(this, 0, IO.NONE);
+            return new NotifiableItemStackHandler(0, IO.NONE);
         }
     }
 

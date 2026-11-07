@@ -37,7 +37,7 @@ public class EnergyHatchPartMachine extends TieredIOPartMachine implements IExpl
     public EnergyHatchPartMachine(IMachineBlockEntity holder, int tier, IO io, int amperage, Object... args) {
         super(holder, tier, io);
         this.amperage = amperage;
-        this.energyContainer = createEnergyContainer(args);
+        this.energyContainer = attachTrait(createEnergyContainer(args));
     }
 
     //////////////////////////////////////
@@ -51,12 +51,12 @@ public class EnergyHatchPartMachine extends TieredIOPartMachine implements IExpl
     protected NotifiableEnergyContainer createEnergyContainer(Object... args) {
         NotifiableEnergyContainer container;
         if (io == IO.OUT) {
-            container = NotifiableEnergyContainer.emitterContainer(this, GTValues.V[tier] * 64L * amperage,
+            container = NotifiableEnergyContainer.emitterContainer(GTValues.V[tier] * 64L * amperage,
                     GTValues.V[tier], amperage);
             container.setSideOutputCondition(s -> s == getFrontFacing() && isWorkingEnabled());
             container.setCapabilityValidator(s -> s == null || s == getFrontFacing());
         } else {
-            container = NotifiableEnergyContainer.receiverContainer(this, GTValues.V[tier] * 16L * amperage,
+            container = NotifiableEnergyContainer.receiverContainer(GTValues.V[tier] * 16L * amperage,
                     GTValues.V[tier], amperage);
             container.setSideInputCondition(s -> s == getFrontFacing() && isWorkingEnabled());
             container.setCapabilityValidator(s -> s == null || s == getFrontFacing());

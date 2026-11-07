@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.integration.ae2.machine;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.gui.fancy.TabsWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.AutoStockingFancyConfigurator;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
@@ -94,7 +93,7 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
 
     @Override
     protected NotifiableFluidTank createTank(int initialCapacity, int slots, Object... args) {
-        this.aeFluidHandler = new ExportOnlyAEStockingFluidList(this, CONFIG_SIZE);
+        this.aeFluidHandler = new ExportOnlyAEStockingFluidList(CONFIG_SIZE);
         return this.aeFluidHandler;
     }
 
@@ -313,8 +312,8 @@ public class MEStockingHatchPartMachine extends MEInputHatchPartMachine implemen
 
     public class ExportOnlyAEStockingFluidList extends ExportOnlyAEFluidList {
 
-        public ExportOnlyAEStockingFluidList(MetaMachine holder, int slots) {
-            super(holder, slots, ExportOnlyAEStockingFluidSlot::new);
+        public ExportOnlyAEStockingFluidList(int slots) {
+            super(slots, ExportOnlyAEStockingFluidSlot::new);
         }
 
         @Override

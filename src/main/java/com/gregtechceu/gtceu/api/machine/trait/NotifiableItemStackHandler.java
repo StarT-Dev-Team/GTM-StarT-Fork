@@ -4,7 +4,6 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.recipe.DummyCraftingContainer;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
@@ -60,9 +59,9 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
     @Setter
     protected BooleanSupplier isIODisabled = () -> false;
 
-    public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO,
+    public NotifiableItemStackHandler(int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO,
                                       IntFunction<CustomItemStackHandler> storageFactory, int basePriority) {
-        super(machine);
+        super();
         this.handlerIO = handlerIO;
         this.storage = storageFactory.apply(slots);
         this.capabilityIO = capabilityIO;
@@ -70,17 +69,17 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
         this.basePriority = basePriority;
     }
 
-    public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO,
+    public NotifiableItemStackHandler(int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO,
                                       IntFunction<CustomItemStackHandler> storageFactory) {
-        this(machine, slots, handlerIO, capabilityIO, storageFactory, NORMAL);
+        this(slots, handlerIO, capabilityIO, storageFactory, NORMAL);
     }
 
-    public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO) {
-        this(machine, slots, handlerIO, capabilityIO, CustomItemStackHandler::new);
+    public NotifiableItemStackHandler(int slots, @NotNull IO handlerIO, @NotNull IO capabilityIO) {
+        this(slots, handlerIO, capabilityIO, CustomItemStackHandler::new);
     }
 
-    public NotifiableItemStackHandler(MetaMachine machine, int slots, @NotNull IO handlerIO) {
-        this(machine, slots, handlerIO, handlerIO);
+    public NotifiableItemStackHandler(int slots, @NotNull IO handlerIO) {
+        this(slots, handlerIO, handlerIO);
     }
 
     public NotifiableItemStackHandler setFilter(Predicate<ItemStack> filter) {

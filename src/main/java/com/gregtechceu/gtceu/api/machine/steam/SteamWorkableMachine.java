@@ -82,7 +82,7 @@ public abstract class SteamWorkableMachine extends SteamMachine
         super(holder, isHighPressure, args);
         this.recipeTypes = getDefinition().getRecipeTypes();
         this.activeRecipeType = 0;
-        this.recipeLogic = createRecipeLogic(args);
+        this.recipeLogic = attachTrait(createRecipeLogic(args));
         this.capabilitiesProxy = new EnumMap<>(IO.class);
         this.capabilitiesFlat = new EnumMap<>(IO.class);
         this.traitSubscriptions = new ArrayList<>();
@@ -103,7 +103,7 @@ public abstract class SteamWorkableMachine extends SteamMachine
         // attach self traits
         Map<IO, List<IRecipeHandler<?>>> ioTraits = new Object2ObjectOpenHashMap<>();
 
-        for (MachineTrait trait : getTraits()) {
+        for (MachineTrait trait : getAllTraits()) {
             if (trait instanceof IRecipeHandlerTrait<?> handlerTrait) {
                 ioTraits.computeIfAbsent(handlerTrait.getHandlerIO(), i -> new ArrayList<>()).add(handlerTrait);
             }
@@ -117,7 +117,7 @@ public abstract class SteamWorkableMachine extends SteamMachine
     }
 
     protected RecipeLogic createRecipeLogic(@SuppressWarnings("unused") Object... args) {
-        return new RecipeLogic(this);
+        return new RecipeLogic();
     }
 
     @Override

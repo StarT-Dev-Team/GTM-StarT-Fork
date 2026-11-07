@@ -91,7 +91,7 @@ public abstract class SteamBoilerMachine extends SteamWorkableMachine
 
     public SteamBoilerMachine(IMachineBlockEntity holder, boolean isHighPressure, Object... args) {
         super(holder, isHighPressure, args);
-        this.waterTank = createWaterTank(args);
+        this.waterTank = attachTrait(createWaterTank(args));
         this.waterTank.setFilter(fluid -> fluid.getFluid().is(GTMaterials.Water.getFluidTag()));
     }
 
@@ -105,11 +105,11 @@ public abstract class SteamBoilerMachine extends SteamWorkableMachine
 
     @Override
     protected NotifiableFluidTank createSteamTank(Object... args) {
-        return new NotifiableFluidTank(this, 1, 16 * FluidType.BUCKET_VOLUME, IO.OUT);
+        return new NotifiableFluidTank(1, 16 * FluidType.BUCKET_VOLUME, IO.OUT);
     }
 
     protected NotifiableFluidTank createWaterTank(@SuppressWarnings("unused") Object... args) {
-        return new NotifiableFluidTank(this, 1, 16 * FluidType.BUCKET_VOLUME, IO.IN);
+        return new NotifiableFluidTank(1, 16 * FluidType.BUCKET_VOLUME, IO.IN);
     }
 
     @Override

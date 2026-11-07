@@ -46,11 +46,11 @@ public class MultiblockTankMachine extends MultiblockControllerMachine implement
                                  Object... args) {
         super(holder);
 
-        this.tank = createTank(capacity, filter, args);
+        this.tank = attachTrait(createTank(capacity, filter, args));
     }
 
     protected NotifiableFluidTank createTank(int capacity, @Nullable PropertyFluidFilter filter, Object... args) {
-        var fluidTank = new NotifiableFluidTank(this, 1, capacity, IO.BOTH);
+        var fluidTank = new NotifiableFluidTank(1, capacity, IO.BOTH);
 
         if (filter != null)
             fluidTank.setFilter(filter);

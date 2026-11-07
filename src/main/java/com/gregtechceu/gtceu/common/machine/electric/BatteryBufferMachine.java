@@ -214,7 +214,7 @@ public class BatteryBufferMachine extends TieredEnergyMachine
     protected class EnergyBatteryTrait extends NotifiableEnergyContainer {
 
         protected EnergyBatteryTrait(int inventorySize) {
-            super(BatteryBufferMachine.this, GTValues.V[tier] * inventorySize * 32L, GTValues.V[tier],
+            super(GTValues.V[tier] * inventorySize * 32L, GTValues.V[tier],
                     inventorySize * AMPS_PER_BATTERY, GTValues.V[tier], inventorySize);
             this.setSideInputCondition(side -> side != getFrontFacing() && isWorkingEnabled());
             this.setSideOutputCondition(side -> side == getFrontFacing() && isWorkingEnabled());

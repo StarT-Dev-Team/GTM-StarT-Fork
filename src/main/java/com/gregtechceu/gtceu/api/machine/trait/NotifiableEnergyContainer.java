@@ -8,7 +8,6 @@ import com.gregtechceu.gtceu.api.capability.compat.FeCompat;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IExplosionMachine;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
@@ -60,9 +59,9 @@ public class NotifiableEnergyContainer extends NotifiableRecipeHandlerTrait<Ener
     protected long energyInputPerSec = 0;
     protected long energyOutputPerSec = 0;
 
-    public NotifiableEnergyContainer(MetaMachine machine, long maxCapacity, long maxInputVoltage, long maxInputAmperage,
+    public NotifiableEnergyContainer(long maxCapacity, long maxInputVoltage, long maxInputAmperage,
                                      long maxOutputVoltage, long maxOutputAmperage) {
-        super(machine);
+        super();
         this.lastTimeStamp = Long.MIN_VALUE;
         this.energyCapacity = maxCapacity;
         this.inputVoltage = maxInputVoltage;
@@ -74,14 +73,14 @@ public class NotifiableEnergyContainer extends NotifiableRecipeHandlerTrait<Ener
         this.handlerIO = (isIn && isOut) ? IO.BOTH : isIn ? IO.IN : isOut ? IO.OUT : IO.NONE;
     }
 
-    public static NotifiableEnergyContainer emitterContainer(MetaMachine machine, long maxCapacity,
+    public static NotifiableEnergyContainer emitterContainer(long maxCapacity,
                                                              long maxOutputVoltage, long maxOutputAmperage) {
-        return new NotifiableEnergyContainer(machine, maxCapacity, 0L, 0L, maxOutputVoltage, maxOutputAmperage);
+        return new NotifiableEnergyContainer(maxCapacity, 0L, 0L, maxOutputVoltage, maxOutputAmperage);
     }
 
-    public static NotifiableEnergyContainer receiverContainer(MetaMachine machine, long maxCapacity,
+    public static NotifiableEnergyContainer receiverContainer(long maxCapacity,
                                                               long maxInputVoltage, long maxInputAmperage) {
-        return new NotifiableEnergyContainer(machine, maxCapacity, maxInputVoltage, maxInputAmperage, 0L, 0L);
+        return new NotifiableEnergyContainer(maxCapacity, maxInputVoltage, maxInputAmperage, 0L, 0L);
     }
 
     public void resetBasicInfo(long maxCapacity, long maxInputVoltage, long maxInputAmperage, long maxOutputVoltage,

@@ -56,7 +56,7 @@ public class EUToStartCondition extends RecipeCondition<EUToStartCondition> {
             var container = multiblockMachine.getEnergyContainer();
             return container.getEnergyCapacity() > euToStart;
         }
-        return recipeLogic.getMachine().getTraits().stream().filter(IEnergyContainer.class::isInstance)
+        return recipeLogic.getMachine().getAllTraits().stream().filter(IEnergyContainer.class::isInstance)
                 .anyMatch(energyContainer -> ((IEnergyContainer) energyContainer).getEnergyCapacity() > euToStart);
     }
 

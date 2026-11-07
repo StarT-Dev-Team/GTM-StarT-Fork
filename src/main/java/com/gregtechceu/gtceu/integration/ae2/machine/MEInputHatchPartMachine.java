@@ -56,7 +56,7 @@ public class MEInputHatchPartMachine extends MEHatchPartMachine
 
     @Override
     protected NotifiableFluidTank createTank(int initialCapacity, int slots, Object... args) {
-        this.aeFluidHandler = new ExportOnlyAEFluidList(this, slots);
+        this.aeFluidHandler = new ExportOnlyAEFluidList(slots);
         return aeFluidHandler;
     }
 

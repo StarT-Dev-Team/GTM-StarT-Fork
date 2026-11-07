@@ -34,11 +34,16 @@ public class GridNodeHolder extends MachineTrait {
     @ReadOnlyManaged(onDirtyMethod = "onGridNodeDirty",
                      serializeMethod = "serializeGridNode",
                      deserializeMethod = "deserializeGridNode")
-    protected final SerializableManagedGridNode mainNode;
+    protected SerializableManagedGridNode mainNode;
 
-    public GridNodeHolder(IGridConnectedMachine machine) {
-        super(machine.self());
-        this.mainNode = createManagedNode();
+    public GridNodeHolder() {
+        super();
+    }
+
+    @Override
+    public void onTraitAttached() {
+        super.onTraitAttached();
+        mainNode = createManagedNode();
     }
 
     protected SerializableManagedGridNode createManagedNode() {

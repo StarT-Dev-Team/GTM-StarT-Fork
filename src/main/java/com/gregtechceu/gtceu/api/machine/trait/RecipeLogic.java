@@ -69,7 +69,7 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
     public static final EnumProperty<RecipeLogic.Status> STATUS_PROPERTY = GTMachineModelProperties.RECIPE_LOGIC_STATUS;
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(RecipeLogic.class);
 
-    public final IRecipeLogicMachine machine;
+    public IRecipeLogicMachine machine;
     public List<GTRecipe> lastFailedMatches;
 
     @Getter
@@ -143,9 +143,16 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
     protected TickableSubscription subscription;
     protected Object workingSound;
 
-    public RecipeLogic(IRecipeLogicMachine machine) {
-        super(machine.self());
-        this.machine = machine;
+    public RecipeLogic() {
+        super();
+    }
+
+    @Override
+    public void onTraitAttached() {
+        super.onTraitAttached();
+        if (!(getMachine() instanceof IRecipeLogicMachine rlMachine))
+            throw new IllegalStateException("Invalid machine machine type for recipe logic");
+        machine = rlMachine;
     }
 
     @SuppressWarnings("unused")
@@ -697,18 +704,6 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
                 map.put(entry, value);
             }
         }
-        this.chanceCaches.forEach((cap, cache) -> {
-            ListTag cacheTag = new ListTag();
-            for (var entry : cache.object2IntEntrySet()) {
-                CompoundTag compoundTag = new CompoundTag();
-                var obj = cap.contentToNbt(entry.getKey());
-                compoundTag.put("entry", obj);
-                compoundTag.putInt("cached_chance", entry.getIntValue());
-                cacheTag.add(compoundTag);
-            }
-            chanceCache.put(cap.name, cacheTag);
-        });
-        tag.put("chance_cache", chanceCache);
     }
 
     public static void putFailureReason(Object machine, GTRecipe recipe, RecipeFailureReason reason) {

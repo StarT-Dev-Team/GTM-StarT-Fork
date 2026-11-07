@@ -115,7 +115,7 @@ public class SimpleTieredMachine extends WorkableTieredMachine
         this.outputFacingItems = hasFrontFacing() ? getFrontFacing().getOpposite() : Direction.UP;
         this.outputFacingFluids = outputFacingItems;
         this.chargerInventory = createChargerItemHandler(args);
-        this.circuitInventory = createCircuitItemHandler(args);
+        this.circuitInventory = attachTrait(createCircuitItemHandler(args));
     }
 
     //////////////////////////////////////
@@ -140,7 +140,7 @@ public class SimpleTieredMachine extends WorkableTieredMachine
     }
 
     protected NotifiableItemStackHandler createCircuitItemHandler(Object... args) {
-        return new NotifiableItemStackHandler(this, 1, IO.IN, IO.NONE)
+        return new NotifiableItemStackHandler(1, IO.IN, IO.NONE)
                 .setFilter(IntCircuitBehaviour::isIntegratedCircuit);
     }
 

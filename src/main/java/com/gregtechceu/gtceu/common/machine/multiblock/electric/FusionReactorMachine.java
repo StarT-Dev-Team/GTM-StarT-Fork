@@ -88,7 +88,7 @@ public class FusionReactorMachine extends WorkableElectricMultiblockMachine impl
     public FusionReactorMachine(IMachineBlockEntity holder, int tier) {
         super(holder);
         this.tier = tier;
-        this.energyContainer = createEnergyContainer();
+        this.energyContainer = attachTrait(createEnergyContainer());
     }
 
     //////////////////////////////////////
@@ -102,7 +102,7 @@ public class FusionReactorMachine extends WorkableElectricMultiblockMachine impl
     public NotifiableEnergyContainer createEnergyContainer() {
         // create an internal energy container for temp storage. its capacity is decided when the structure formed.
         // it doesn't provide any capability of all sides, but null for the goggles mod to check it storages.
-        var container = new NotifiableEnergyContainer(this, 0, 0, 0, 0, 0);
+        var container = new NotifiableEnergyContainer(0, 0, 0, 0, 0);
         container.setCapabilityValidator(Objects::isNull);
         return container;
     }
