@@ -101,7 +101,8 @@ public abstract class AEListGridWidget extends DraggableScrollableWidgetGroup {
 
         buffer.writeVarInt(this.changeMap.size());
         for (var entry : this.changeMap.object2LongEntrySet()) {
-            entry.getKey().writeToPacket(buffer);
+            toPacket(buffer, entry.getKey());
+
             buffer.writeVarLong(entry.getLongValue());
         }
     }
@@ -228,6 +229,28 @@ public abstract class AEListGridWidget extends DraggableScrollableWidgetGroup {
         @Override
         protected Widget createDisplayWidget(int x, int y, int index) {
             return new AEFluidDisplayWidget(x, y, this, index);
+        }
+    }
+
+    public static class Generic extends AEListGridWidget {
+
+        public Generic(int x, int y, int slotsY, KeyStorage internalList) {
+            super(x, y, slotsY, internalList);
+        }
+
+        @Override
+        protected void toPacket(FriendlyByteBuf buffer, AEKey key) {
+            AEKey.writeKey(buffer, key);
+        }
+
+        @Override
+        protected AEKey fromPacket(FriendlyByteBuf buffer) {
+            return AEKey.readKey(buffer);
+        }
+
+        @Override
+        protected Widget createDisplayWidget(int x, int y, int index) {
+            return new AEGenericDisplayWidget(x, y, this, index);
         }
     }
 }

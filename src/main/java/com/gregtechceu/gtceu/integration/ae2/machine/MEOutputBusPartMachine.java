@@ -1,12 +1,16 @@
 package com.gregtechceu.gtceu.integration.ae2.machine;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
+import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
+import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
+import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.list.AEListGridWidget;
 import com.gregtechceu.gtceu.integration.ae2.utils.KeyStorage;
@@ -19,6 +23,7 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 
 import appeng.api.config.Actionable;
 import appeng.api.stacks.AEItemKey;
@@ -117,6 +122,69 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
         public InaccessibleInfiniteHandler(MetaMachine holder) {
             super(holder, 1, IO.OUT, IO.NONE, ItemStackHandlerDelegate::new);
             internalBuffer.setOnContentsChanged(this::onContentsChanged);
+        }
+
+        @Override
+        public List<Ingredient> handleRecipeInner(IO io, GTRecipe recipe, List<Ingredient> left, boolean simulate) {
+            if (io != IO.OUT) return left;
+            if (hasIngredientActions(recipe)) return super.handleRecipeInner(io, recipe, left, simulate);
+
+            for (var ingredient : left) {
+                if (ingredient instanceof IntProviderIngredient || (ingredient instanceof SizedIngredient sized &&
+                        sized.getInner() instanceof IntProviderIngredient)) {
+                    return super.handleRecipeInner(io, recipe, left, simulate);
+                }
+            }
+
+            boolean changed = false;
+
+            for (var it = left.listIterator(); it.hasNext();) {
+                var ingredient = it.next();
+
+                if (ingredient.isEmpty()) {
+                    it.remove();
+
+                    continue;
+                }
+
+                var items = ingredient.getItems();
+
+                if (items.length == 0 || items[0].isEmpty()) {
+                    it.remove();
+
+                    continue;
+                }
+
+                int amount = ingredient instanceof SizedIngredient si ? si.getAmount() : items[0].getCount();
+
+                for (int slot = 0; slot < this.storage.getSlots(); ++slot) {
+                    var remainder = this.storage.insertItem(slot, items[0].copyWithCount(amount), simulate);
+
+                    if (remainder.getCount() < amount) {
+                        changed = true;
+                        amount = remainder.getCount();
+                    }
+
+                    if (amount <= 0) {
+                        it.remove();
+
+                        break;
+                    }
+                }
+
+                if (amount > 0) {
+                    if (ingredient instanceof SizedIngredient si) si.setAmount(amount);
+                    else items[0].setCount(amount);
+                }
+            }
+
+            if (changed && !simulate) onContentsChanged();
+
+            return left.isEmpty() ? null : left;
+        }
+
+        private static boolean hasIngredientActions(GTRecipe recipe) {
+            return GTCEu.Mods.isKubeJSLoaded() && recipe.ingredientActions != null && !recipe.ingredientActions.isEmpty();
         }
 
         @Override

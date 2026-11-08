@@ -154,15 +154,28 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
                     output = items[0];
                 }
                 amount = output.getCount();
-            } else {
-                items = ingredient.getItems();
-                if (items.length == 0 || items[0].isEmpty()) {
-                    it.remove();
-                    continue;
-                }
-                if (ingredient instanceof SizedIngredient si) amount = si.getAmount();
-                else amount = items[0].getCount();
-            }
+            } else if (io == IO.IN && ingredient instanceof SizedIngredient si &&
+                    !(si.getInner() instanceof IntProviderIngredient)) {
+                        var innerItems = si.getInner().getItems();
+
+                        amount = si.getAmount();
+
+                        if (amount <= 0 || innerItems.length == 0 || innerItems[0].isEmpty()) {
+                            it.remove();
+
+                            continue;
+                        }
+
+                        items = null;
+                    } else {
+                        items = ingredient.getItems();
+                        if (items.length == 0 || items[0].isEmpty()) {
+                            it.remove();
+                            continue;
+                        }
+                        if (ingredient instanceof SizedIngredient si) amount = si.getAmount();
+                        else amount = items[0].getCount();
+                    }
 
             for (int slot = 0; slot < storage.getSlots(); ++slot) {
                 ItemStack current = visited[slot] == null ? storage.getStackInSlot(slot) : visited[slot];

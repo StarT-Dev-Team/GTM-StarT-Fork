@@ -1,9 +1,13 @@
 package com.gregtechceu.gtceu.api.recipe;
 
+import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.IRecipeCapabilityHolder;
+import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.machine.feature.IVoidable;
+import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
+import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroup;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupColor;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
@@ -16,6 +20,7 @@ import net.minecraft.network.chat.Component;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -153,9 +158,25 @@ public class RecipeRunner {
             }
         }
         if (!matched) {
+            var itemIngredients = searchRecipeContents.get(ItemRecipeCapability.CAP);
+            var fluidIngredients = searchRecipeContents.get(FluidRecipeCapability.CAP);
+
+            boolean pruneItems = io == IO.IN && itemIngredients != null &&
+                    !mayContribute(undyedHandlerList, ItemRecipeCapability.CAP) &&
+                    !mayContribute(bypassHandlerList, ItemRecipeCapability.CAP);
+            boolean pruneFluids = io == IO.IN && fluidIngredients != null &&
+                    !mayContribute(undyedHandlerList, FluidRecipeCapability.CAP) &&
+                    !mayContribute(bypassHandlerList, FluidRecipeCapability.CAP);
+
+            Map<Object, Object> pruneMemo = new HashMap<>();
+
             for (var distinctHandler : handlerGroups.getOrDefault(BUS_DISTINCT, Collections.emptyList())) {
+                if (pruneItems && distinctHandler.cannotSupplyItems(itemIngredients, pruneMemo)) continue;
+                if (pruneFluids && distinctHandler.cannotSupplyFluids(fluidIngredients, pruneMemo)) continue;
+
                 matched = handleRecipeHandlerList(Stream.of(distinctHandler), undyedHandlerList.stream(),
                         bypassHandlerList.stream());
+
                 if (matched) break;
             }
         }
@@ -189,6 +210,29 @@ public class RecipeRunner {
         }
 
         return ActionResult.FAIL_NO_REASON;
+    }
+
+    @VisibleForTesting
+    public static boolean mayContribute(List<RecipeHandlerList> handlerLists, RecipeCapability<?> capability) {
+        for (var handlerList : handlerLists) {
+            for (var handler : handlerList.getCapability(capability)) {
+                if (handler.getClass() == NotifiableItemStackHandler.class) {
+                    var storage = ((NotifiableItemStackHandler) handler).storage;
+
+                    for (int i = 0; i < storage.getSlots(); i++) {
+                        if (!storage.getStackInSlot(i).isEmpty()) return true;
+                    }
+                } else if (handler.getClass() == NotifiableFluidTank.class) {
+                    for (var tank : ((NotifiableFluidTank) handler).getStorages()) {
+                        if (!tank.getFluid().isEmpty()) return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @SafeVarargs

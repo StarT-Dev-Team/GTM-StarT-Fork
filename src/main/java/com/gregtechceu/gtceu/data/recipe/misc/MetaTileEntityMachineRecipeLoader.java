@@ -6,11 +6,13 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.MaterialEntry;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.common.data.machines.GTAEMachines;
+import com.gregtechceu.gtceu.common.data.machines.GTMachineUtils;
 import com.gregtechceu.gtceu.common.data.machines.GTMultiMachines;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 import com.gregtechceu.gtceu.data.recipe.GTCraftingComponents;
 import com.gregtechceu.gtceu.data.recipe.VanillaRecipeHelper;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
+import com.gregtechceu.gtceu.integration.ae2.machine.MEPatternBufferPartMachine;
 
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.world.item.ItemStack;
@@ -652,14 +654,6 @@ public class MetaTileEntityMachineRecipeLoader {
                     .duration(300).EUt(VA[HV])
                     .addMaterialInfo(true).save(provider);
 
-            ASSEMBLER_RECIPES.recipeBuilder("me_import_hatch")
-                    .inputItems(FLUID_IMPORT_HATCH[EV])
-                    .inputItems(meInterface.copy())
-                    .inputItems(accelerationCard.copy())
-                    .outputItems(GTAEMachines.FLUID_IMPORT_HATCH_ME)
-                    .duration(300).EUt(VA[HV])
-                    .addMaterialInfo(true).save(provider);
-
             ASSEMBLER_RECIPES.recipeBuilder("me_export_bus")
                     .inputItems(ITEM_EXPORT_BUS[EV])
                     .inputItems(meInterface.copy())
@@ -668,33 +662,7 @@ public class MetaTileEntityMachineRecipeLoader {
                     .duration(300).EUt(VA[HV])
                     .addMaterialInfo(true).save(provider);
 
-            ASSEMBLER_RECIPES.recipeBuilder("me_import_bus")
-                    .inputItems(ITEM_IMPORT_BUS[EV])
-                    .inputItems(meInterface.copy())
-                    .inputItems(accelerationCard.copy())
-                    .outputItems(GTAEMachines.ITEM_IMPORT_BUS_ME)
-                    .duration(300).EUt(VA[HV])
-                    .addMaterialInfo(true).save(provider);
-
-            ASSEMBLER_RECIPES.recipeBuilder("me_stocking_import_bus")
-                    .inputItems(ITEM_IMPORT_BUS[IV])
-                    .inputItems(meInterface.copy())
-                    .inputItems(CONVEYOR_MODULE_IV)
-                    .inputItems(SENSOR_IV)
-                    .inputItems(accelerationCard.copyWithCount(4))
-                    .outputItems(GTAEMachines.STOCKING_IMPORT_BUS_ME)
-                    .duration(300).EUt(VA[IV])
-                    .addMaterialInfo(true).save(provider);
-
-            ASSEMBLER_RECIPES.recipeBuilder("me_stocking_import_hatch")
-                    .inputItems(FLUID_IMPORT_HATCH[IV])
-                    .inputItems(meInterface.copy())
-                    .inputItems(ELECTRIC_PUMP_IV)
-                    .inputItems(SENSOR_IV)
-                    .inputItems(accelerationCard.copyWithCount(4))
-                    .outputItems(GTAEMachines.STOCKING_IMPORT_HATCH_ME)
-                    .duration(300).EUt(VA[IV])
-                    .addMaterialInfo(true).save(provider);
+            registerMEInputRecipes(provider, meInterface, accelerationCard);
 
             ASSEMBLY_LINE_RECIPES.recipeBuilder("me_pattern_buffer")
                     .inputItems(DUAL_IMPORT_HATCH[LuV], 1)
@@ -726,6 +694,169 @@ public class MetaTileEntityMachineRecipeLoader {
                     .stationResearch(b -> b.researchStack(GTAEMachines.ME_PATTERN_BUFFER.asStack())
                             .CWUt(32))
                     .duration(600).EUt(VA[ZPM]).save(provider);
+
+            registerMEPortRecipes(provider, meInterface, accelerationCard);
+            registerMEPatternBufferRecipes(provider);
+        }
+    }
+
+    private static void registerMEInputRecipes(Consumer<FinishedRecipe> provider, ItemStack meInterface,
+                                               ItemStack accelerationCard) {
+        ItemStack capacityCard = AEItems.CAPACITY_CARD.stack(1);
+
+        for (var machine : GTAEMachines.ITEM_IMPORT_BUSES_ME) {
+            if (machine == null) continue;
+
+            int tier = machine.getTier();
+            int steps = tier - GTMachineUtils.ME_INPUT_TIERS[0];
+            var builder = ASSEMBLER_RECIPES
+                    .recipeBuilder(getTieredId("me_import_bus", tier, GTMachineUtils.ME_INPUT_TIERS))
+                    .inputItems(ITEM_IMPORT_BUS[tier])
+                    .inputItems(meInterface.copy())
+                    .inputItems(accelerationCard.copy());
+
+            if (steps > 0) builder.inputItems(capacityCard.copyWithCount(steps));
+
+            builder.outputItems(machine)
+                    .duration(300).EUt(VA[Math.max(HV, tier)])
+                    .addMaterialInfo(true).save(provider);
+        }
+
+        for (var machine : GTAEMachines.FLUID_IMPORT_HATCHES_ME) {
+            if (machine == null) continue;
+
+            int tier = machine.getTier();
+            int steps = tier - GTMachineUtils.ME_INPUT_TIERS[0];
+            var builder = ASSEMBLER_RECIPES
+                    .recipeBuilder(getTieredId("me_import_hatch", tier, GTMachineUtils.ME_INPUT_TIERS))
+                    .inputItems(FLUID_IMPORT_HATCH[tier])
+                    .inputItems(meInterface.copy())
+                    .inputItems(accelerationCard.copy());
+
+            if (steps > 0) builder.inputItems(capacityCard.copyWithCount(steps));
+
+            builder.outputItems(machine)
+                    .duration(300).EUt(VA[Math.max(HV, tier)])
+                    .addMaterialInfo(true).save(provider);
+        }
+
+        for (var machine : GTAEMachines.STOCKING_IMPORT_BUSES_ME) {
+            if (machine == null) continue;
+
+            int tier = machine.getTier();
+            int steps = tier - GTMachineUtils.ME_STOCKING_TIERS[0];
+            var builder = ASSEMBLER_RECIPES
+                    .recipeBuilder(getTieredId("me_stocking_import_bus", tier, GTMachineUtils.ME_STOCKING_TIERS))
+                    .inputItems(ITEM_IMPORT_BUS[tier - 1])
+                    .inputItems(meInterface.copy())
+                    .inputItems(GTCraftingComponents.CONVEYOR.get(tier - 1))
+                    .inputItems(GTCraftingComponents.SENSOR.get(tier - 1))
+                    .inputItems(accelerationCard.copyWithCount(4));
+
+            if (steps > 0) builder.inputItems(capacityCard.copyWithCount(steps));
+
+            builder.outputItems(machine)
+                    .duration(300).EUt(VA[tier - 1])
+                    .addMaterialInfo(true).save(provider);
+        }
+
+        for (var machine : GTAEMachines.STOCKING_IMPORT_HATCHES_ME) {
+            if (machine == null) continue;
+
+            int tier = machine.getTier();
+            int steps = tier - GTMachineUtils.ME_STOCKING_TIERS[0];
+            var builder = ASSEMBLER_RECIPES
+                    .recipeBuilder(getTieredId("me_stocking_import_hatch", tier, GTMachineUtils.ME_STOCKING_TIERS))
+                    .inputItems(FLUID_IMPORT_HATCH[tier - 1])
+                    .inputItems(meInterface.copy())
+                    .inputItems(GTCraftingComponents.PUMP.get(tier - 1))
+                    .inputItems(GTCraftingComponents.SENSOR.get(tier - 1))
+                    .inputItems(accelerationCard.copyWithCount(4));
+
+            if (steps > 0) builder.inputItems(capacityCard.copyWithCount(steps));
+
+            builder.outputItems(machine)
+                    .duration(300).EUt(VA[tier - 1])
+                    .addMaterialInfo(true).save(provider);
+        }
+    }
+
+    private static String getTieredId(String id, int tier, int[] tiers) {
+        return tier == tiers[0] ? id : id + "_" + VN[tier].toLowerCase(Locale.ROOT);
+    }
+
+    private static void registerMEPortRecipes(Consumer<FinishedRecipe> provider, ItemStack meInterface,
+                                              ItemStack accelerationCard) {
+        ItemStack capacityCard = AEItems.CAPACITY_CARD.stack(1);
+
+        for (var machine : GTAEMachines.INPUT_PORTS_ME) {
+            if (machine == null) continue;
+
+            int tier = machine.getTier();
+
+            ASSEMBLER_RECIPES.recipeBuilder("me_input_port_" + VN[tier].toLowerCase(Locale.ROOT))
+                    .inputItems(ITEM_IMPORT_BUS[tier])
+                    .inputItems(FLUID_IMPORT_HATCH[tier])
+                    .inputItems(meInterface.copy())
+                    .inputItems(accelerationCard.copy())
+                    .inputItems(capacityCard.copyWithCount(tier - GTMachineUtils.ME_INPUT_TIERS[0] + 1))
+                    .outputItems(machine)
+                    .duration(300).EUt(VA[Math.max(HV, tier)])
+                    .addMaterialInfo(true).save(provider);
+        }
+
+        for (var machine : GTAEMachines.STOCKING_INPUT_PORTS_ME) {
+            if (machine == null) continue;
+
+            int tier = machine.getTier();
+
+            ASSEMBLER_RECIPES.recipeBuilder("me_stocking_input_port_" + VN[tier].toLowerCase(Locale.ROOT))
+                    .inputItems(ITEM_IMPORT_BUS[tier - 1])
+                    .inputItems(FLUID_IMPORT_HATCH[tier - 1])
+                    .inputItems(meInterface.copy())
+                    .inputItems(GTCraftingComponents.CONVEYOR.get(tier - 1))
+                    .inputItems(GTCraftingComponents.PUMP.get(tier - 1))
+                    .inputItems(GTCraftingComponents.SENSOR.get(tier - 1))
+                    .inputItems(accelerationCard.copyWithCount(4))
+                    .inputItems(capacityCard.copyWithCount(tier - GTMachineUtils.ME_STOCKING_TIERS[0] + 1))
+                    .outputItems(machine)
+                    .duration(300).EUt(VA[tier - 1])
+                    .addMaterialInfo(true).save(provider);
+        }
+
+        ASSEMBLER_RECIPES.recipeBuilder("me_output_port")
+                .inputItems(ITEM_EXPORT_BUS[EV])
+                .inputItems(FLUID_EXPORT_HATCH[EV])
+                .inputItems(meInterface.copy())
+                .inputItems(accelerationCard.copy())
+                .outputItems(GTAEMachines.OUTPUT_PORT_ME)
+                .duration(300).EUt(VA[HV])
+                .addMaterialInfo(true).save(provider);
+    }
+
+    private static void registerMEPatternBufferRecipes(Consumer<FinishedRecipe> provider) {
+        for (var machine : GTAEMachines.ME_PATTERN_BUFFERS) {
+            if (machine == null || machine.getTier() == GTMachineUtils.ME_PATTERN_BUFFER_TIERS[0]) continue;
+
+            int tier = machine.getTier();
+            int providers = MEPatternBufferPartMachine.patternCountForTier(tier) / 9;
+
+            ASSEMBLY_LINE_RECIPES.recipeBuilder("me_pattern_buffer_" + VN[tier].toLowerCase(Locale.ROOT))
+                    .inputItems(DUAL_IMPORT_HATCH[tier], 1)
+                    .inputItems(GTCraftingComponents.EMITTER.get(tier), 1)
+                    .inputItems(GTCraftingComponents.CIRCUIT.get(tier), 4)
+                    .inputItems(AEBlocks.PATTERN_PROVIDER.asItem(), providers)
+                    .inputItems(AEBlocks.INTERFACE.asItem(), providers)
+                    .inputItems(AEItems.SPEED_CARD.asItem(), 4)
+                    .inputItems(AEItems.CAPACITY_CARD.asItem(), 2 + tier - GTMachineUtils.ME_PATTERN_BUFFER_TIERS[0])
+                    .inputItems(GTCraftingComponents.WIRE_FINE.get(tier + 1), 64)
+                    .inputItems(GTCraftingComponents.WIRE_FINE.get(tier + 1), 32)
+                    .inputFluids(SolderingAlloy, L * 4)
+                    .inputFluids(Lubricant, 500)
+                    .outputItems(machine)
+                    .stationResearch(b -> b.researchStack(DUAL_IMPORT_HATCH[tier].asStack())
+                            .CWUt(32 << (tier - GTMachineUtils.ME_PATTERN_BUFFER_TIERS[0] - 1)))
+                    .duration(600).EUt(VA[tier]).save(provider);
         }
     }
 
