@@ -351,7 +351,8 @@ public class AEConfigSlotWidget extends Widget
     }
 
     private int tryClickContainer(boolean isShiftKeyDown) {
-        ExportOnlyAEFluidSlot fluidTank = this.parentWidget.getConfig(this.index) instanceof ExportOnlyAEFluidSlot fluid ? fluid : null;
+        ExportOnlyAEFluidSlot fluidTank = this.parentWidget
+                .getConfig(this.index) instanceof ExportOnlyAEFluidSlot fluid ? fluid : null;
 
         if (fluidTank == null) return -1;
 

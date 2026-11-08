@@ -184,7 +184,8 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
         }
 
         private static boolean hasIngredientActions(GTRecipe recipe) {
-            return GTCEu.Mods.isKubeJSLoaded() && recipe.ingredientActions != null && !recipe.ingredientActions.isEmpty();
+            return GTCEu.Mods.isKubeJSLoaded() && recipe.ingredientActions != null &&
+                    !recipe.ingredientActions.isEmpty();
         }
 
         @Override
