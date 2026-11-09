@@ -11,6 +11,7 @@ import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderFluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
+import com.gregtechceu.gtceu.api.recipe.ingredient.RangedDisplay;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.integration.jade.GTElementHelper;
 import com.gregtechceu.gtceu.utils.GTUtil;
@@ -65,11 +66,14 @@ public class RecipeOutputProvider extends CapabilityBlockProvider<RecipeLogic> {
         var itemContents = recipe.getOutputContents(ItemRecipeCapability.CAP);
         var fluidContents = recipe.getOutputContents(FluidRecipeCapability.CAP);
         int runs = recipe.parallels;
+        int tierDiff = function.getTierDiff(recipeTier, chanceTier);
 
         ListTag itemTags = new ListTag();
         for (var item : itemContents) {
             CompoundTag itemTag;
-            if (item.content instanceof IntProviderIngredient provider) {
+            if (item.content instanceof IntProviderIngredient rawProvider) {
+                IntProviderIngredient provider = (IntProviderIngredient) ItemRecipeCapability.CAP
+                        .copyWithTierDiff(rawProvider, tierDiff);
                 // don't roll for output but do copy for chance and batch
                 IntProviderIngredient chanced = provider;
                 if (item.chance < item.maxChance) {
@@ -99,7 +103,9 @@ public class RecipeOutputProvider extends CapabilityBlockProvider<RecipeLogic> {
         ListTag fluidTags = new ListTag();
         for (var fluid : fluidContents) {
             CompoundTag fluidTag;
-            if (fluid.content instanceof IntProviderFluidIngredient provider) {
+            if (fluid.content instanceof IntProviderFluidIngredient rawProvider) {
+                IntProviderFluidIngredient provider = (IntProviderFluidIngredient) FluidRecipeCapability.CAP
+                        .copyWithTierDiff(rawProvider, tierDiff);
                 // don't bother rolling output for nothing
                 IntProviderFluidIngredient chanced = provider;
                 if (fluid.chance < fluid.maxChance) {
@@ -219,6 +225,10 @@ public class RecipeOutputProvider extends CapabilityBlockProvider<RecipeLogic> {
 
                 iTooltip.add(helper.smallItem(item));
                 iTooltip.append(text);
+
+                if (itemOutput instanceof IntProviderIngredient ranged) {
+                    RangedDisplay.averageLine(ranged.getCountProvider()).ifPresent(iTooltip::add);
+                }
             }
         }
     }
@@ -243,6 +253,10 @@ public class RecipeOutputProvider extends CapabilityBlockProvider<RecipeLogic> {
 
                 iTooltip.add(GTElementHelper.smallFluid(getFluid(stack)));
                 iTooltip.append(text);
+
+                if (fluidOutput instanceof IntProviderFluidIngredient ranged) {
+                    RangedDisplay.averageLine(ranged.getCountProvider()).ifPresent(iTooltip::add);
+                }
             }
         }
     }
