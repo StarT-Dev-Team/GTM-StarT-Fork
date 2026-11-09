@@ -304,7 +304,7 @@ public class SeparationRecipes {
                 .save(provider);
 
         CENTRIFUGE_RECIPES.recipeBuilder("electrotine_separation").duration(800).EUt(VA[LV])
-                .inputItems(dust, Electrotine, 8)
+                .inputItems(dust, Electrotine, 1)
                 .outputItems(dust, Redstone)
                 .outputItems(dust, Electrum)
                 .save(provider);
