@@ -260,6 +260,48 @@ public class ConfigHolder {
             @Configurable.Comment({ "The energy consumption of ME Hatch/Bus.", "Default: 4.0AE/t" })
             @Configurable.DecimalRange(min = 0.0, max = Integer.MAX_VALUE)
             public double meHatchEnergyUsage = 4.0;
+
+            @Configurable
+            @Configurable.Comment({
+                    "If circuit pasting from pattern providers is enabled for pasting directly on the singleblock machines",
+                    "Default: true" })
+            public boolean pastingOnSingleblock = true;
+
+            @Configurable
+            @Configurable.Comment({
+                    "If circuit pasting from pattern providers is enabled for pasting via a subnet on the singleblock machines",
+                    "Default: true" })
+            public boolean subnetPastingOnSingleblock = true;
+
+            @Configurable
+            @Configurable.Comment({
+                    "If circuit pasting from pattern providers is enabled for pasting directly on the multiblock hatches",
+                    "Default: true" })
+            public boolean pastingOnHatch = true;
+
+            @Configurable
+            @Configurable.Comment({
+                    "If circuit pasting from pattern providers is enabled for pasting via a subnet on the multiblock hatches",
+                    "Default: true" })
+            public boolean subnetPastingOnHatch = true;
+
+            @Configurable
+            @Configurable.Comment({
+                    "If circuit pasting from pattern providers is enabled for pasting via the controller on the multiblock hatches",
+                    "Default: false" })
+            public boolean pastingOnController = false;
+
+            @Configurable
+            @Configurable.Comment({
+                    "The maximum depth of subnets that can be pasted, 0 means no recursive pasting and -1 means unlimited recursion depth.",
+                    "Default: 3" })
+            @Configurable.Range(min = -1, max = Integer.MAX_VALUE)
+            public int recursiveSubnetDepthPastingAllowed = 3;
+
+            public boolean isCircuitPastingEnabled() {
+                return this.pastingOnSingleblock || this.subnetPastingOnSingleblock || this.pastingOnHatch ||
+                        this.subnetPastingOnHatch || this.pastingOnController;
+            }
         }
 
         public static class MinimapCompatConfig {

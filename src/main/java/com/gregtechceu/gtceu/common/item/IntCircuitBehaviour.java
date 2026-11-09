@@ -144,10 +144,13 @@ public class IntCircuitBehaviour implements IItemUIFactory, IAddInformation {
         if (entity instanceof MetaMachineBlockEntity machineEntity && context.isSecondaryUseActive()) {
             if (machineEntity.metaMachine instanceof IHasCircuitSlot circuitMachine &&
                     circuitMachine.getCircuitInventory().getSlots() > 0) {
-                setCircuitConfig(circuitMachine.getCircuitInventory(), circuitSetting);
+                if (!circuitMachine.isCircuitPastingBlocked()) {
+                    setCircuitConfig(circuitMachine.getCircuitInventory(), circuitSetting);
+                    if (!ConfigHolder.INSTANCE.machines.ghostCircuit)
+                        stack.shrink(1);
+                    return InteractionResult.SUCCESS;
+                }
             }
-            if (!ConfigHolder.INSTANCE.machines.ghostCircuit)
-                stack.shrink(1);
             return InteractionResult.SUCCESS;
         }
         return IItemUIFactory.super.useOn(context);
