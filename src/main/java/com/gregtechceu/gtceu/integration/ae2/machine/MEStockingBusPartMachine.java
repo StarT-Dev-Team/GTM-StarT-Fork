@@ -8,6 +8,7 @@ import com.gregtechceu.gtceu.api.machine.fancyconfigurator.AutoStockingFancyConf
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
+import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEStockingPart;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemList;
@@ -379,6 +380,14 @@ public class MEStockingBusPartMachine extends MEInputBusPartMachine implements I
                         ItemStack resultStack = key instanceof AEItemKey itemKey ?
                                 itemKey.toStack((int) extracted) : ItemStack.EMPTY;
                         if (!simulate) {
+                            var previousStock = this.stock;
+                            RecipeTransaction.record(() -> {
+                                aeNetwork.insert(key, extracted, Actionable.MODULATE, actionSource);
+                                this.stock = previousStock;
+                                if (this.onContentsChanged != null) {
+                                    this.onContentsChanged.run();
+                                }
+                            });
                             // may as well update the display here
                             this.stock = ExportOnlyAESlot.copy(stock, stock.amount() - extracted);
                             if (this.stock.amount() == 0) {

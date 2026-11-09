@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
+import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.list.AEListGridWidget;
 import com.gregtechceu.gtceu.integration.ae2.utils.KeyStorage;
@@ -172,6 +173,12 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
                 if (!simulate) {
                     internalBuffer.storage.put(key, oldValue + changeValue);
                     internalBuffer.onChanged();
+                    RecipeTransaction.record(() -> {
+                        var current = internalBuffer.storage.getOrDefault(key, 0L) - changeValue;
+                        if (current > 0) internalBuffer.storage.put(key, current);
+                        else internalBuffer.storage.removeLong(key);
+                        internalBuffer.onChanged();
+                    });
                 }
                 return stack.copyWithCount((int) (count - changeValue));
             } else {
