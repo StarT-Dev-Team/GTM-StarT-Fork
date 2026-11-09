@@ -11,12 +11,14 @@ import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.content.SerializerFluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderFluidIngredient;
+import com.gregtechceu.gtceu.api.recipe.ingredient.RangedDisplay;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.AbstractMapIngredient;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.fluid.*;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.client.TooltipsHandler;
 import com.gregtechceu.gtceu.common.valueprovider.*;
+import com.gregtechceu.gtceu.common.valueprovider.StatisticalInt;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidEntryList;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidStackList;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidTagList;
@@ -72,6 +74,16 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
         FluidIngredient copy = content.copy();
         copy.setAmount(modifier.apply(copy.getAmount()));
         return copy;
+    }
+
+    @Override
+    public FluidIngredient copyWithTierDiff(FluidIngredient content, int tierDiff) {
+        if (tierDiff != 0 && content instanceof IntProviderFluidIngredient provider &&
+                provider.getCountProvider() instanceof StatisticalInt statistical && statistical.hasTierWeightBoost()) {
+            return IntProviderFluidIngredient.of(provider.getInner(), statistical.withTierDiff(tierDiff));
+        }
+
+        return content;
     }
 
     @Override
@@ -395,6 +407,9 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
                 float chance = (float) recipeType.getChanceFunction()
                         .getBoostedChance(content, recipeTier, chanceTier) / content.maxChance;
                 tank.setXEIChance(chance);
+
+                int tooltipTierDiff = recipeType.getChanceFunction().getTierDiff(recipeTier, chanceTier);
+
                 tank.setOnAddedTooltips((w, tooltips) -> {
                     FluidIngredient ingredient = FluidRecipeCapability.CAP.of(content.content);
                     if (!isXEI && ingredient.getStacks().length > 0) {
@@ -403,9 +418,11 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
                     }
                     if (ingredient instanceof IntProviderFluidIngredient provider) {
                         IntProvider countProvider = provider.getCountProvider();
+
                         tooltips.add(Component.translatable("gtceu.gui.content.fluid_range",
                                 countProvider.getMinValue(), countProvider.getMaxValue())
                                 .withStyle(ChatFormatting.GOLD));
+                        tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
                     }
                     GTRecipeWidget.setConsumedChance(io == IO.IN, content,
                             recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),

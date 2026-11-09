@@ -24,6 +24,10 @@ import com.gregtechceu.gtceu.api.recipe.ingredient.nbtpredicate.NBTPredicate;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.common.recipe.condition.*;
+import com.gregtechceu.gtceu.common.valueprovider.WeightedInt;
+import com.gregtechceu.gtceu.common.valueprovider.distribution.Distributions;
+import com.gregtechceu.gtceu.common.valueprovider.distribution.IntDistribution;
+import com.gregtechceu.gtceu.common.valueprovider.distribution.WeightFunction;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 import com.gregtechceu.gtceu.data.recipe.builder.LayeredRecipeInfo;
@@ -65,6 +69,7 @@ import dev.latvian.mods.kubejs.recipe.component.TimeComponent;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeConstructor;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchema;
 import dev.latvian.mods.kubejs.util.ConsoleJS;
+import dev.latvian.mods.rhino.Wrapper;
 import dev.latvian.mods.rhino.util.HideFromJS;
 import lombok.Getter;
 import lombok.Setter;
@@ -492,6 +497,66 @@ public interface GTRecipeSchema {
             return output(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, UniformInt.of(min, max)));
         }
 
+        private WeightedInt buildWeights(IntDistribution distribution, int min, int max) {
+            try {
+                return distribution.build(min, max);
+            } catch (IllegalArgumentException e) {
+                throw new RecipeExceptionJS(String.format("%s, id: %s", e.getMessage(), id));
+            }
+        }
+
+        private WeightedInt buildWeights(Object weights) {
+            Object unwrapped = weights instanceof Wrapper wrapper ? wrapper.unwrap() : weights;
+
+            if (unwrapped instanceof WeightedInt table) {
+                return table;
+            }
+            if (unwrapped instanceof Map<?, ?> map) {
+                try {
+                    return Distributions.fromMap(map);
+                } catch (IllegalArgumentException e) {
+                    throw new RecipeExceptionJS(String.format("%s, id: %s", e.getMessage(), id));
+                }
+            }
+
+            throw new RecipeExceptionJS(String.format(
+                    "weights must be a map of amounts to weights or a table from Distributions.fromMap, id: %s", id));
+        }
+
+        private GTRecipeJS weightedItemInput(ItemStack stack, WeightedInt provider) {
+            validateItems("weighted input", stack);
+            return input(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, provider));
+        }
+
+        private GTRecipeJS weightedItemOutput(ItemStack stack, WeightedInt provider) {
+            validateItems("weighted output", stack);
+            return output(ItemRecipeCapability.CAP, new ExtendedOutputItem(stack, provider));
+        }
+
+        public GTRecipeJS outputItemsWeighted(ItemStack stack, int min, int max, IntDistribution distribution) {
+            return weightedItemOutput(stack, buildWeights(distribution, min, max));
+        }
+
+        public GTRecipeJS outputItemsWeighted(ItemStack stack, int min, int max, WeightFunction function) {
+            return outputItemsWeighted(stack, min, max, Distributions.fromFunction(function));
+        }
+
+        public GTRecipeJS outputItemsWeighted(ItemStack stack, Object weights) {
+            return weightedItemOutput(stack, buildWeights(weights));
+        }
+
+        public GTRecipeJS inputItemsWeighted(ItemStack stack, int min, int max, IntDistribution distribution) {
+            return weightedItemInput(stack, buildWeights(distribution, min, max));
+        }
+
+        public GTRecipeJS inputItemsWeighted(ItemStack stack, int min, int max, WeightFunction function) {
+            return inputItemsWeighted(stack, min, max, Distributions.fromFunction(function));
+        }
+
+        public GTRecipeJS inputItemsWeighted(ItemStack stack, Object weights) {
+            return weightedItemInput(stack, buildWeights(weights));
+        }
+
         public GTRecipeJS outputItemsRanged(TagPrefix orePrefix, Material material, int min, int max) {
             return outputItemsRanged(ChemicalHelper.get(orePrefix, material), min, max);
         }
@@ -865,6 +930,30 @@ public interface GTRecipeSchema {
             FluidStack stack = new FluidStack(output.getFluid(), (int) output.getAmount(), output.getNbt());
             return output(FluidRecipeCapability.CAP,
                     IntProviderFluidIngredient.of(FluidIngredient.of(stack), range));
+        }
+
+        public GTRecipeJS outputFluidsWeighted(FluidStackJS output, int min, int max, IntDistribution distribution) {
+            return outputFluidsRanged(output, buildWeights(distribution, min, max));
+        }
+
+        public GTRecipeJS outputFluidsWeighted(FluidStackJS output, int min, int max, WeightFunction function) {
+            return outputFluidsWeighted(output, min, max, Distributions.fromFunction(function));
+        }
+
+        public GTRecipeJS outputFluidsWeighted(FluidStackJS output, Object weights) {
+            return outputFluidsRanged(output, buildWeights(weights));
+        }
+
+        public GTRecipeJS inputFluidsWeighted(FluidStackJS input, int min, int max, IntDistribution distribution) {
+            return inputFluidsRanged(input, buildWeights(distribution, min, max));
+        }
+
+        public GTRecipeJS inputFluidsWeighted(FluidStackJS input, int min, int max, WeightFunction function) {
+            return inputFluidsWeighted(input, min, max, Distributions.fromFunction(function));
+        }
+
+        public GTRecipeJS inputFluidsWeighted(FluidStackJS input, Object weights) {
+            return inputFluidsRanged(input, buildWeights(weights));
         }
 
         //////////////////////////////////////
@@ -1346,6 +1435,9 @@ public interface GTRecipeSchema {
         }
 
         public InputItem readInputItem(Object from) {
+            if (from instanceof OutputItem ranged && ranged.rolls != null) {
+                return InputItem.of(IntProviderIngredient.of(ranged.item, ranged.rolls), 1);
+            }
             if (from instanceof SizedIngredient ingr) {
                 return InputItem.of(ingr.getInner(), ingr.getAmount());
             } else if (from instanceof JsonObject jsonObject) {
@@ -1360,6 +1452,7 @@ public interface GTRecipeSchema {
         }
 
         public JsonElement writeInputItem(InputItem value) {
+            if (value.ingredient instanceof IntProviderIngredient ranged) return ranged.toJson();
             if (value.ingredient instanceof SizedIngredient sized) return sized.toJson();
             else return SizedIngredient.create(value.ingredient, value.count).toJson();
         }
