@@ -12,15 +12,19 @@ import com.gregtechceu.gtceu.client.model.BaseBakedModel;
 import com.gregtechceu.gtceu.client.model.IBlockEntityRendererBakedModel;
 import com.gregtechceu.gtceu.client.model.TextureOverrideModel;
 import com.gregtechceu.gtceu.client.model.machine.multipart.MultiPartBakedModel;
+import com.gregtechceu.gtceu.client.renderer.cover.FacadeCoverRenderer;
 import com.gregtechceu.gtceu.client.renderer.cover.ICoverableRenderer;
 import com.gregtechceu.gtceu.client.renderer.machine.DynamicRender;
 import com.gregtechceu.gtceu.client.util.StaticFaceBakery;
+import com.gregtechceu.gtceu.common.cover.FacadeCover;
 import com.gregtechceu.gtceu.common.data.models.GTModels;
+import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib.client.model.custommodel.CustomBakedModel;
 
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -42,6 +46,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.ChunkRenderTypeSet;
 import net.minecraftforge.client.model.QuadTransformers;
 import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
@@ -216,6 +221,29 @@ public final class MachineModel extends BaseBakedModel implements ICoverableRend
         return quads;
     }
 
+    @Override
+    public @NotNull ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource rand,
+                                                      @NotNull ModelData modelData) {
+        ChunkRenderTypeSet types = super.getRenderTypes(state, rand, modelData);
+        BlockAndTintGetter level = modelData.get(MODEL_DATA_LEVEL);
+        BlockPos pos = modelData.get(MODEL_DATA_POS);
+        MetaMachine machine = (level == null || pos == null) ? null : MetaMachine.getMachine(level, pos);
+
+        if (machine == null) return types;
+
+        List<ChunkRenderTypeSet> sets = new ArrayList<>();
+
+        sets.add(types);
+
+        for (Direction face : GTUtil.DIRECTIONS) {
+            if (machine.getCoverContainer().getCoverAtSide(face) instanceof FacadeCover facade) {
+                sets.add(FacadeCoverRenderer.getFacadeRenderTypes(facade, level, pos, rand, modelData));
+            }
+        }
+
+        return ChunkRenderTypeSet.union(sets);
+    }
+
     public List<BakedQuad> getMachineQuads(@Nullable BlockState blockState, @Nullable Direction side,
                                            @NotNull RandomSource rand, @NotNull ModelData modelData,
                                            @Nullable RenderType renderType) {
@@ -223,8 +251,18 @@ public final class MachineModel extends BaseBakedModel implements ICoverableRend
         BlockPos pos = modelData.get(MODEL_DATA_POS);
 
         MetaMachine machine = (level == null || pos == null) ? null : MetaMachine.getMachine(level, pos);
-        // render machine quads
+        if (machine != null && blockState != null && renderType != null &&
+                !ItemBlockRenderTypes.getRenderLayers(blockState).contains(renderType)) {
+            List<BakedQuad> coverQuads = new LinkedList<>();
+
+            ICoverableRenderer.super.renderCovers(coverQuads, machine.getCoverContainer(), pos, level,
+                    side, rand, modelData, renderType);
+
+            return coverQuads;
+        }
+
         List<BakedQuad> quads = renderMachine(machine, level, pos, blockState, side, rand, modelData, renderType);
+
         if (machine == null) {
             return quads;
         }
