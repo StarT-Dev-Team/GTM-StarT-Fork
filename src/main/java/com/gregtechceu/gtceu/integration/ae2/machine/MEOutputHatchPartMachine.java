@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.list.AEListGridWidget;
@@ -217,6 +218,12 @@ public class MEOutputHatchPartMachine extends MEHatchPartMachine implements IMac
             if (changeValue > 0 && action.execute()) {
                 internalBuffer.storage.put(key, oldValue + changeValue);
                 internalBuffer.onChanged();
+                RecipeTransaction.record(() -> {
+                    var current = internalBuffer.storage.getOrDefault(key, 0L) - changeValue;
+                    if (current > 0) internalBuffer.storage.put(key, current);
+                    else internalBuffer.storage.removeLong(key);
+                    internalBuffer.onChanged();
+                });
             }
             return changeValue;
         }

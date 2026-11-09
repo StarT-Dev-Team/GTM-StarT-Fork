@@ -16,6 +16,7 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
+import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
@@ -600,6 +601,12 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                         count -= extracted;
                         if (count == 0) it2.remove();
                         else entry.setValue(count);
+                        if (RecipeTransaction.isActive()) {
+                            RecipeTransaction.record(() -> {
+                                itemInventory.addTo(stack, extracted);
+                                onContentsChanged();
+                            });
+                        }
                     }
                     amount -= extracted;
 
@@ -652,6 +659,12 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                         count -= extracted;
                         if (count == 0) it2.remove();
                         else entry.setValue(count);
+                        if (RecipeTransaction.isActive()) {
+                            RecipeTransaction.record(() -> {
+                                fluidInventory.addTo(stack, extracted);
+                                onContentsChanged();
+                            });
+                        }
                     }
                     amount -= extracted;
 
