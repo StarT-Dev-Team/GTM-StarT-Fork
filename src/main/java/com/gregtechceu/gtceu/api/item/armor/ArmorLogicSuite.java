@@ -25,6 +25,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +34,9 @@ import java.util.UUID;
 
 public abstract class ArmorLogicSuite implements IArmorLogic, IItemHUDProvider {
 
+    @Getter
     protected final int energyPerUse;
+    @Getter
     protected final int tier;
     protected final long maxCapacity;
     protected final ArmorItem.Type type;
@@ -131,10 +134,6 @@ public abstract class ArmorLogicSuite implements IArmorLogic, IItemHUDProvider {
     @Override
     public boolean shouldDrawHUD() {
         return this.type == ArmorItem.Type.CHESTPLATE;
-    }
-
-    public int getEnergyPerUse() {
-        return this.energyPerUse;
     }
 
     protected float getAbsorption() {
