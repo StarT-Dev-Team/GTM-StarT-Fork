@@ -7,11 +7,10 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
-import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.AbstractMapIngredient;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.MapIngredientTypeManager;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
-import com.gregtechceu.gtceu.common.item.armor.PowerlessJetpack;
+import com.gregtechceu.gtceu.common.item.armor.PowerlessJetpackLogic;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
@@ -475,9 +474,7 @@ public class GTRecipeLookup {
 
         // Add combustion fuels to the Powerless Jetpack
         if (recipe.getType() == GTRecipeTypes.COMBUSTION_GENERATOR_FUELS) {
-            Content content = recipe.getInputContents(FluidRecipeCapability.CAP).get(0);
-            FluidIngredient fluid = FluidRecipeCapability.CAP.of(content.content);
-            PowerlessJetpack.FUELS.putIfAbsent(fluid, recipe.duration);
+            PowerlessJetpackLogic.registerFuel(recipe);
         }
         List<List<AbstractMapIngredient>> items = fromRecipe(recipe);
         if (recurseIngredientTreeAdd(recipe, items, lookup, 0, 0)) {

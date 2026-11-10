@@ -4,12 +4,12 @@ import com.gregtechceu.gtceu.api.item.armor.ArmorUtils;
 import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,45 +22,49 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface IJetpack {
 
+    default JetpackStats getJetpackStats() {
+        return JetpackStats.DEFAULT;
+    }
+
     default double getSprintEnergyModifier() {
-        return 1.0D;
+        return getJetpackStats().sprintEnergyModifier();
     }
 
     default double getSprintSpeedModifier() {
-        return 1.0D;
+        return getJetpackStats().sprintSpeedModifier();
     }
 
     default double getVerticalHoverSpeed() {
-        return 0.18D;
+        return getJetpackStats().verticalHoverSpeed();
     }
 
     default double getVerticalHoverSlowSpeed() {
-        return 0.14D;
+        return getJetpackStats().verticalHoverSlowSpeed();
     }
 
     default double getVerticalAcceleration() {
-        return 0.1D;
+        return getJetpackStats().verticalAcceleration();
     }
 
     default double getVerticalSpeed() {
-        return 0.22D;
+        return getJetpackStats().verticalSpeed();
     }
 
     default double getSidewaysSpeed() {
-        return 0.0D;
+        return getJetpackStats().sidewaysSpeed();
     }
 
     default boolean removeMiningSpeedPenalty() {
-        return true;
+        return getJetpackStats().removeMiningSpeedPenalty();
     }
 
     @Nullable
     default ParticleOptions getParticle() {
-        return ParticleTypes.LARGE_SMOKE;
+        return getJetpackStats().particle();
     }
 
     default float getFallDamageReduction() {
-        return 0.0f;
+        return getJetpackStats().fallDamageReduction();
     }
 
     int getEnergyPerUse();
@@ -70,6 +74,15 @@ public interface IJetpack {
     void drainEnergy(ItemStack stack, int amount);
 
     boolean hasEnergy(ItemStack stack);
+
+    default void tickJetpack(Level level, Player player, ItemStack stack,
+                             @Nullable JetpackHelper.ExtraToggle extra) {
+        CompoundTag data = stack.getOrCreateTag();
+        JetpackHelper.initTag(data);
+        JetpackHelper.tickToggles(level, player, data, extra);
+        performFlying(player, data.getBoolean("enabled"), data.getBoolean("hover"),
+                stack);
+    }
 
     default void performFlying(@NotNull Player player, boolean flightEnabled, boolean hover, ItemStack stack) {
         double deltaY = player.getDeltaMovement().y();
@@ -182,10 +195,5 @@ public interface IJetpack {
         }
 
         player.inventoryMenu.sendAllDataToRemote();
-    }
-
-    private static void addYMotion(Player player, double value) {
-        var motion = player.getDeltaMovement();
-        player.addDeltaMovement(new Vec3(motion.x(), value, motion.z()));
     }
 }

@@ -9,7 +9,6 @@ import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -27,11 +26,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.ints.IntList;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack {
+public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IElectricJetpack {
 
     // A replacement for checking the current world time, to get around the gamerule that stops it
     private long timer = 0L;
@@ -49,50 +47,22 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
         }
 
         CompoundTag data = item.getOrCreateTag();
-        // Assume no tags exist if we don't see the enabled tag
-        if (!data.contains("enabled")) {
-            data.putBoolean("enabled", true);
-            data.putBoolean("hover", false);
-            data.putByte("toggleTimer", (byte) 0);
-            data.putBoolean("canShare", false);
-        }
+        if (!data.contains("canShare")) data.putBoolean("canShare", false);
 
-        boolean jetpackEnabled = data.getBoolean("enabled");
-        boolean hoverMode = data.getBoolean("hover");
-        byte toggleTimer = data.getByte("toggleTimer");
+        this.tickJetpack(world, player, item, (p, tag) -> {
+            if (!SyncedKeyMappings.ARMOR_CHARGING.isKeyDown(p)) return null;
+            boolean share = !tag.getBoolean("canShare");
+            String key;
+            if (share && cont.getCharge() == 0) {
+                key = "metaarmor.nms.share.error";
+                share = false;
+            } else {
+                key = "metaarmor.nms.share." + (share ? "enable" : "disable");
+            }
+            tag.putBoolean("canShare", share);
+            return key;
+        });
         boolean canShare = data.getBoolean("canShare");
-
-        String messageKey = null;
-        if (toggleTimer == 0) {
-            if (SyncedKeyMappings.JETPACK_ENABLE.isKeyDown(player)) {
-                jetpackEnabled = !jetpackEnabled;
-                messageKey = "metaarmor.jetpack.flight." + (jetpackEnabled ? "enable" : "disable");
-                data.putBoolean("enabled", jetpackEnabled);
-            } else if (SyncedKeyMappings.ARMOR_HOVER.isKeyDown(player)) {
-                hoverMode = !hoverMode;
-                messageKey = "metaarmor.jetpack.hover." + (hoverMode ? "enable" : "disable");
-                data.putBoolean("hover", hoverMode);
-            } else if (SyncedKeyMappings.ARMOR_CHARGING.isKeyDown(player)) {
-                canShare = !canShare;
-                if (canShare && cont.getCharge() == 0) { // Only allow for charging to be enabled if charge is nonzero
-                    messageKey = "metaarmor.nms.share.error";
-                    canShare = false;
-                } else {
-                    messageKey = "metaarmor.nms.share." + (canShare ? "enable" : "disable");
-                }
-                data.putBoolean("canShare", canShare);
-            }
-
-            if (messageKey != null) {
-                toggleTimer = 5;
-                if (!world.isClientSide) player.displayClientMessage(Component.translatable(messageKey), true);
-            }
-        }
-
-        if (toggleTimer > 0) toggleTimer--;
-        data.putByte("toggleTimer", toggleTimer);
-
-        performFlying(player, jetpackEnabled, hoverMode, item);
 
         // Charging mechanics
         if (canShare && !world.isClientSide) {
@@ -145,22 +115,11 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
     public void addInfo(ItemStack itemStack, List<Component> lines) {
         super.addInfo(itemStack, lines);
         CompoundTag data = itemStack.getOrCreateTag();
-        Component state;
-        boolean enabled = !data.contains("enabled") || data.getBoolean("enabled");
-        state = enabled ? Component.translatable("metaarmor.hud.status.enabled") :
-                Component.translatable("metaarmor.hud.status.disabled");
-        lines.add(Component.translatable("metaarmor.hud.engine_enabled", state));
-
-        boolean canShare = data.contains("canShare") && data.getBoolean("canShare");
-        state = canShare ? Component.translatable("metaarmor.hud.status.enabled") :
-                Component.translatable("metaarmor.hud.status.disabled");
-        lines.add(Component.translatable("metaarmor.energy_share.tooltip", state));
+        lines.add(JetpackHelper.engineLine(data));
+        lines.add(Component.translatable("metaarmor.energy_share.tooltip",
+                JetpackHelper.statusComponent(data.getBoolean("canShare"))));
         lines.add(Component.translatable("metaarmor.energy_share.tooltip.guide"));
-
-        boolean hover = data.contains("hover") && data.getBoolean("hover");
-        state = hover ? Component.translatable("metaarmor.hud.status.enabled") :
-                Component.translatable("metaarmor.hud.status.disabled");
-        lines.add(Component.translatable("metaarmor.hud.hover_mode", state));
+        lines.add(JetpackHelper.hoverLine(data));
     }
 
     @Override
@@ -202,26 +161,12 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
         if (cont == null) return;
         if (!cont.canUse(energyPerUse)) return;
         CompoundTag data = item.getTag();
-        if (data != null) {
-            if (data.contains("enabled")) {
-                Component status = (data.getBoolean("enabled") ?
-                        Component.translatable("metaarmor.hud.status.enabled") :
-                        Component.translatable("metaarmor.hud.status.disabled"));
-                Component result = Component.translatable("metaarmor.hud.engine_enabled", status);
-                this.HUD.newString(result);
-            }
-            if (data.contains("canShare")) {
-                String status = data.getBoolean("canShare") ? "metaarmor.hud.status.enabled" :
-                        "metaarmor.hud.status.disabled";
-                this.HUD.newString(Component.translatable("mataarmor.hud.supply_mode", Component.translatable(status)));
-            }
-
-            if (data.contains("hover")) {
-                String status = data.getBoolean("hover") ? "metaarmor.hud.status.enabled" :
-                        "metaarmor.hud.status.disabled";
-                this.HUD.newString(Component.translatable("metaarmor.hud.hover_mode", Component.translatable(status)));
-            }
+        JetpackHelper.addEngineHUD(this.HUD, data);
+        if (data != null && data.contains("canShare")) {
+            this.HUD.newString(Component.translatable("mataarmor.hud.supply_mode",
+                    JetpackHelper.statusComponent(data.getBoolean("canShare"))));
         }
+        JetpackHelper.addHoverHUD(this.HUD, data);
         this.HUD.draw(guiGraphics);
         this.HUD.reset();
     }
@@ -232,78 +177,8 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
     }
 
     @Override
-    public boolean canUseEnergy(@NotNull ItemStack stack, int amount) {
-        IElectricItem container = getIElectricItem(stack);
-        if (container == null)
-            return false;
-        return container.canUse(amount);
-    }
-
-    @Override
-    public void drainEnergy(@NotNull ItemStack stack, int amount) {
-        IElectricItem container = getIElectricItem(stack);
-        if (container == null)
-            return;
-        container.discharge(amount, tier, true, false, false);
-    }
-
-    @Override
-    public boolean hasEnergy(@NotNull ItemStack stack) {
-        IElectricItem container = getIElectricItem(stack);
-        if (container == null)
-            return false;
-        return container.getCharge() > 0;
-    }
-
-    @Nullable
-    private static IElectricItem getIElectricItem(@NotNull ItemStack stack) {
-        return GTCapabilityHelper.getElectricItem(stack);
-    }
-
-    @Override
-    public double getSprintEnergyModifier() {
-        return 4.0D;
-    }
-
-    @Override
-    public double getSprintSpeedModifier() {
-        return 1.8D;
-    }
-
-    @Override
-    public double getVerticalHoverSpeed() {
-        return 0.4D;
-    }
-
-    @Override
-    public double getVerticalHoverSlowSpeed() {
-        return 0.005D;
-    }
-
-    @Override
-    public double getVerticalAcceleration() {
-        return 0.14D;
-    }
-
-    @Override
-    public double getVerticalSpeed() {
-        return 0.8D;
-    }
-
-    @Override
-    public double getSidewaysSpeed() {
-        return 0.19D;
-    }
-
-    @Nullable
-    @Override
-    public ParticleOptions getParticle() {
-        return null;
-    }
-
-    @Override
-    public float getFallDamageReduction() {
-        return 3.5f;
+    public JetpackStats getJetpackStats() {
+        return JetpackStats.NANO_SUITE;
     }
 
     @Override

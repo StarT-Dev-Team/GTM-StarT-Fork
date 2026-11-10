@@ -2544,7 +2544,7 @@ public class GTItems {
     public static ItemEntry<ArmorComponentItem> LIQUID_FUEL_JETPACK = REGISTRATE
             .item("liquid_fuel_jetpack",
                     (p) -> new ArmorComponentItem(GTArmorMaterials.JETPACK, ArmorItem.Type.CHESTPLATE, p)
-                            .setArmorLogic(new PowerlessJetpack()))
+                            .setArmorLogic(new PowerlessJetpackLogic()))
             .lang("Liquid Fuel Jetpack")
             .tag(Tags.Items.ARMORS_CHESTPLATES)
             .setData(ProviderType.ITEM_MODEL, NonNullBiConsumer.noop())
@@ -2552,9 +2552,9 @@ public class GTItems {
     public static ItemEntry<ArmorComponentItem> ELECTRIC_JETPACK = REGISTRATE
             .item("electric_jetpack",
                     (p) -> new ArmorComponentItem(GTArmorMaterials.JETPACK, ArmorItem.Type.CHESTPLATE, p)
-                            .setArmorLogic(new Jetpack(15,
-                                    1_000_000L * (long) Math.max(1,
-                                            Math.pow(4, ConfigHolder.INSTANCE.tools.voltageTierImpeller - 2)),
+                            .setArmorLogic(new JetpackLogic(15,
+                                    JetpackHelper.scaleCapacity(1_000_000L, 2,
+                                            ConfigHolder.INSTANCE.tools.voltageTierImpeller),
                                     ConfigHolder.INSTANCE.tools.voltageTierImpeller)))
             .lang("Electric Jetpack")
             .properties(p -> p.rarity(Rarity.UNCOMMON))
@@ -2566,10 +2566,11 @@ public class GTItems {
     public static ItemEntry<ArmorComponentItem> ELECTRIC_JETPACK_ADVANCED = REGISTRATE
             .item("advanced_electric_jetpack",
                     (p) -> new ArmorComponentItem(GTArmorMaterials.JETPACK, ArmorItem.Type.CHESTPLATE, p)
-                            .setArmorLogic(new AdvancedJetpack(256,
-                                    6_400_000L * (long) Math.max(1,
-                                            Math.pow(4, ConfigHolder.INSTANCE.tools.voltageTierAdvImpeller - 4)),
-                                    ConfigHolder.INSTANCE.tools.voltageTierAdvImpeller)))
+                            .setArmorLogic(new JetpackLogic(256,
+                                    JetpackHelper.scaleCapacity(6_400_000L, 4,
+                                            ConfigHolder.INSTANCE.tools.voltageTierAdvImpeller),
+                                    ConfigHolder.INSTANCE.tools.voltageTierAdvImpeller,
+                                    JetpackStats.ADVANCED, GTCEu.id("textures/armor/advanced_jetpack.png"))))
             .lang("Advanced Electric Jetpack")
             .properties(p -> p.rarity(Rarity.RARE))
             .tag(Tags.Items.ARMORS_CHESTPLATES)
