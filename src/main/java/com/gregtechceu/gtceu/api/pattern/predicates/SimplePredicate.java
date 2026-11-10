@@ -2,6 +2,7 @@ package com.gregtechceu.gtceu.api.pattern.predicates;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.MultiblockState;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.pattern.error.PatternStringError;
@@ -49,6 +50,8 @@ public class SimplePredicate {
     public IO io = IO.BOTH;
     public String slotName;
     public String nbtParser;
+    @Nullable
+    public PartAbility partAbility;
 
     public final String type;
 
