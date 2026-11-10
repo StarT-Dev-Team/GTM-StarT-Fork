@@ -33,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class MBPattern {
 
@@ -262,35 +263,20 @@ public class MBPattern {
     }
 
     public List<IMufflerMachine> getMufflers() {
-        List<IMufflerMachine> mufflers = new ArrayList<>();
-        Set<MetaMachine> seen = new HashSet<>();
-        if (controllerBase instanceof MultiblockControllerMachine mcm) {
-            for (IMultiPart part : mcm.getParts()) {
-                if (part instanceof IMufflerMachine muffler && seen.add(muffler.self())) {
-                    mufflers.add(muffler);
-                }
-            }
-        }
-        TrackedDummyWorld level = PreviewLevel.get();
-        if (level != null) {
-            for (BlockPos pos : blockMap.keySet()) {
-                if (level.getBlockEntity(pos) instanceof IMachineBlockEntity holder &&
-                        holder.getMetaMachine() instanceof IMufflerMachine muffler &&
-                        seen.add(muffler.self())) {
-                    mufflers.add(muffler);
-                }
-            }
-        }
-        return mufflers;
+        return getMachinesOfType(IMufflerMachine.class, IMufflerMachine::self);
     }
 
     public List<RotorHolderPartMachine> getRotorHolders() {
-        List<RotorHolderPartMachine> holders = new ArrayList<>();
+        return getMachinesOfType(RotorHolderPartMachine.class, RotorHolderPartMachine::self);
+    }
+
+    private <T> List<T> getMachinesOfType(Class<T> type, Function<T, MetaMachine> selfGetter) {
+        List<T> result = new ArrayList<>();
         Set<MetaMachine> seen = new HashSet<>();
-        if (controllerBase instanceof MultiblockControllerMachine mcm) {
-            for (IMultiPart part : mcm.getParts()) {
-                if (part instanceof RotorHolderPartMachine rh && seen.add(rh.self())) {
-                    holders.add(rh);
+        if (controllerBase instanceof MultiblockControllerMachine controller) {
+            for (IMultiPart part : controller.getParts()) {
+                if (type.isInstance(part) && seen.add(selfGetter.apply(type.cast(part)))) {
+                    result.add(type.cast(part));
                 }
             }
         }
@@ -298,13 +284,15 @@ public class MBPattern {
         if (level != null) {
             for (BlockPos pos : blockMap.keySet()) {
                 if (level.getBlockEntity(pos) instanceof IMachineBlockEntity holder &&
-                        holder.getMetaMachine() instanceof RotorHolderPartMachine rh &&
-                        seen.add(rh.self())) {
-                    holders.add(rh);
+                        type.isInstance(holder.getMetaMachine())) {
+                    T machine = type.cast(holder.getMetaMachine());
+                    if (seen.add(selfGetter.apply(machine))) {
+                        result.add(machine);
+                    }
                 }
             }
         }
-        return holders;
+        return result;
     }
 
     public void setRotorHoldersState(boolean hasRotor, boolean spinning) {
