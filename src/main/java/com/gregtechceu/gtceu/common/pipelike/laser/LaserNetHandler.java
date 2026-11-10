@@ -37,12 +37,18 @@ public class LaserNetHandler implements ILaserContainer {
     }
 
     @Nullable
-    private ILaserContainer getInnerContainer() {
+    private LaserRoutePath getRoute() {
         if (net == null || pipe == null || pipe.isInValid() || (facing == null || pipe.isBlocked(facing))) {
             return null;
         }
 
-        LaserRoutePath data = net.getNetData(pipe.getPipePos(), facing);
+        return net.getNetData(pipe.getPipePos(), facing);
+    }
+
+    @Nullable
+    private ILaserContainer getInnerContainer() {
+        LaserRoutePath data = getRoute();
+
         if (data == null) {
             return null;
         }
@@ -50,26 +56,33 @@ public class LaserNetHandler implements ILaserContainer {
         return data.getHandler(net.getLevel());
     }
 
+    @Nullable
+    private Direction getTargetSide() {
+        LaserRoutePath data = getRoute();
+
+        return data == null ? null : data.getTargetFacing().getOpposite();
+    }
+
     @Override
     public long acceptEnergyFromNetwork(Direction side, long voltage, long amperage) {
         ILaserContainer handler = getInnerContainer();
         if (handler == null) return 0;
         setPipesActive();
-        return handler.acceptEnergyFromNetwork(side, voltage, amperage);
+        return handler.acceptEnergyFromNetwork(getTargetSide(), voltage, amperage);
     }
 
     @Override
     public boolean inputsEnergy(Direction side) {
         ILaserContainer handler = getInnerContainer();
         if (handler == null) return false;
-        return handler.inputsEnergy(side);
+        return handler.inputsEnergy(getTargetSide());
     }
 
     @Override
     public boolean outputsEnergy(Direction side) {
         ILaserContainer handler = getInnerContainer();
         if (handler == null) return false;
-        return handler.outputsEnergy(side);
+        return handler.outputsEnergy(getTargetSide());
     }
 
     @Override

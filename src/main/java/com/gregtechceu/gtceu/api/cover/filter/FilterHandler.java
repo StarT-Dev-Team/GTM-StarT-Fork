@@ -36,7 +36,6 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
 
     @Persisted
     @DescSynced
-    @Getter
     private @NotNull ItemStack filterItem = ItemStack.EMPTY;
 
     private @Nullable F filter;
@@ -111,14 +110,24 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
         return this;
     }
 
+    public @NotNull ItemStack getFilterItem() {
+        return (this.filterSlot != null) ? this.filterSlot.getStackInSlot(0) : this.filterItem;
+    }
+
+    public void setFilterItem(ItemStack item) {
+        getFilterSlot().setStackInSlot(0, item);
+        updateFilter();
+    }
+
     public void clear() {
         this.filterItem = ItemStack.EMPTY;
         if (this.filterSlot != null) {
             this.filterSlot.setStackInSlot(0, ItemStack.EMPTY);
         }
         if (this.filter != null) {
+            var oldFilter = this.filter;
             this.filter = null;
-            this.onFilterRemoved.accept(this.filter);
+            this.onFilterRemoved.accept(oldFilter);
         }
         this.loadFilterFromItem();
         this.onChanged();
@@ -139,6 +148,7 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
             };
 
             this.filterSlot.setFilter(this::canInsertFilterItem);
+            this.filterSlot.setOnContentsChanged(this::updateFilter);
         }
 
         return this.filterSlot;
@@ -156,17 +166,22 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
         this.filterItem = filterContainer.getStackInSlot(0);
 
         if (this.filter != null) {
+            var oldFilter = this.filter;
             this.filter = null;
-            this.onFilterRemoved.accept(this.filter);
+            this.onFilterRemoved.accept(oldFilter);
         }
 
         loadFilterFromItem();
+        this.onChanged();
     }
 
     private void loadFilterFromItem() {
         if (!this.filterItem.isEmpty()) {
             this.filter = loadFilter(this.filterItem);
-            filter.setOnUpdated(this.onFilterUpdated);
+            filter.setOnUpdated(f -> {
+                this.onFilterUpdated.accept(f);
+                this.onChanged();
+            });
             if (filter instanceof SmartItemFilter smart &&
                     container instanceof CoverBehavior cover &&
                     cover.coverHolder instanceof MachineCoverContainer mcc) {

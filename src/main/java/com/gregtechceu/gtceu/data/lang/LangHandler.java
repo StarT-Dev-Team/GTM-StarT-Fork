@@ -1115,6 +1115,8 @@ public class LangHandler {
                 "§fConfigurator Slot§r\n§7Place a §6Programmed Circuit§7 in this slot to\n§7change its configured value.\n§7Hold §6Shift§7 when clicking buttons to change by §65.\n§aA Programmed Circuit in this slot is also valid for recipe inputs.§r");
         provider.add("gtceu.gui.fluid_lock.tooltip.enabled", "Fluid Locking Enabled");
         provider.add("gtceu.gui.fluid_lock.tooltip.disabled", "Fluid Locking Disabled");
+        provider.add("gtceu.gui.circuit_pasting.tooltip.enabled", "Programmed Circuit Pasting: Blocked");
+        provider.add("gtceu.gui.circuit_pasting.tooltip.disabled", "Programmed Circuit Pasting: Allowed");
         provider.add("gtceu.gui.fluid_voiding_partial.tooltip.enabled", "Fluid Voiding Enabled");
         provider.add("gtceu.gui.fluid_voiding_partial.tooltip.disabled", "Fluid Voiding Disabled");
         provider.add("gtceu.gui.item_lock.tooltip.enabled", "Item Locking Enabled");
@@ -1518,6 +1520,14 @@ public class LangHandler {
         provider.add("gtceu.gui.content.count_range", "%s-%sx");
         provider.add("gtceu.gui.content.fluid_range", "%s-%smB");
         provider.add("gtceu.gui.content.range", "%s-%s");
+        provider.add("gtceu.gui.content.average", "Average: %s");
+        provider.add("gtceu.gui.content.average_base", "Base Average: %s");
+        provider.add("gtceu.gui.content.average_tier_boost_plus", "Bonus Weight: +%s%%/tier");
+        provider.add("gtceu.gui.content.average_tier_boost_minus", "Bonus Weight: -%s%%/tier");
+        provider.add("gtceu.gui.content.average_boosted", "Average at Tier: %s");
+        provider.add("gtceu.gui.content.odds_most_likely", "Most Likely: %sx (%s%%)");
+        provider.add("gtceu.gui.content.odds_line", "%sx: %s%%");
+        provider.add("gtceu.gui.content.odds_hold_shift", "§7Hold §d[SHIFT]§7 to show Odds Info");
         provider.add("gtceu.gui.content.times_item", "x %s");
 
         provider.add("gtceu.chance_logic.or", "OR");

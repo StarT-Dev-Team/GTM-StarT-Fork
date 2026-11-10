@@ -16,14 +16,17 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
+import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.data.machines.GTAEMachines;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.AETextInputButtonWidget;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.slot.AEPatternViewSlotWidget;
 import com.gregtechceu.gtceu.integration.ae2.machine.trait.InternalSlotRecipeHandler;
+import com.gregtechceu.gtceu.integration.ae2.utils.AE2PatternCircuitHandler;
 import com.gregtechceu.gtceu.utils.GTMath;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 
@@ -275,7 +278,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                 new GuiTextureGroup(GuiTextures.BUTTON, GuiTextures.REFUND_OVERLAY), this::refundAll)
                 .setTooltips(List.of(Component.translatable("gui.gtceu.refund_all.desc"))));
         if (isHasCircuitSlot() && isCircuitSlotEnabled()) {
-            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(circuitInventory.storage));
+            configuratorPanel.attachConfigurators(new CircuitFancyConfigurator(this));
         }
         configuratorPanel.attachConfigurators(new FancyInvConfigurator(
                 shareInventory.storage, Component.translatable("gui.gtceu.share_inventory.title"))
@@ -338,6 +341,16 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
         if (!isFormed() || !getMainNode().isActive() || !detailsSlotMap.containsKey(patternDetails) ||
                 !checkInput(inputHolder)) {
             return false;
+        }
+
+        if (ConfigHolder.INSTANCE.compat.ae2.pastingOnHatch) {
+            int circuitConfig = AE2PatternCircuitHandler.getCircuitConfig(patternDetails, inputHolder);
+            if (circuitConfig >= 0) {
+                AE2PatternCircuitHandler.stripCircuitFromInputHolder(inputHolder);
+                if (isHasCircuitSlot() && isCircuitSlotEnabled() && !isCircuitPastingBlocked()) {
+                    getCircuitInventory().setStackInSlot(0, IntCircuitBehaviour.stack(circuitConfig));
+                }
+            }
         }
 
         var slot = detailsSlotMap.get(patternDetails);
@@ -588,6 +601,12 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                         count -= extracted;
                         if (count == 0) it2.remove();
                         else entry.setValue(count);
+                        if (RecipeTransaction.isActive()) {
+                            RecipeTransaction.record(() -> {
+                                itemInventory.addTo(stack, extracted);
+                                onContentsChanged();
+                            });
+                        }
                     }
                     amount -= extracted;
 
@@ -640,6 +659,12 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                         count -= extracted;
                         if (count == 0) it2.remove();
                         else entry.setValue(count);
+                        if (RecipeTransaction.isActive()) {
+                            RecipeTransaction.record(() -> {
+                                fluidInventory.addTo(stack, extracted);
+                                onContentsChanged();
+                            });
+                        }
                     }
                     amount -= extracted;
 

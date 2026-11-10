@@ -25,6 +25,8 @@ import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.common.recipe.condition.*;
+import com.gregtechceu.gtceu.common.valueprovider.distribution.Distributions;
+import com.gregtechceu.gtceu.common.valueprovider.distribution.IntDistribution;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.ResearchManager;
@@ -552,6 +554,29 @@ public class GTRecipeBuilder {
         return inputItemsRanged(machine.asStack(), intProvider);
     }
 
+    public GTRecipeBuilder inputItemsWeighted(ItemStack input, int min, int max, IntDistribution distribution) {
+        return inputItemsRanged(input, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder inputItemsWeighted(Item input, int min, int max, IntDistribution distribution) {
+        return inputItemsRanged(input, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder inputItemsWeighted(Supplier<? extends ItemLike> input, int min, int max,
+                                              IntDistribution distribution) {
+        return inputItemsRanged(input, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder inputItemsWeighted(TagPrefix orePrefix, Material material, int min, int max,
+                                              IntDistribution distribution) {
+        return inputItemsRanged(orePrefix, material, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder inputItemsWeighted(MachineDefinition machine, int min, int max,
+                                              IntDistribution distribution) {
+        return inputItemsRanged(machine, distribution.build(min, max));
+    }
+
     public GTRecipeBuilder inputItemNbtPredicate(ItemStack stack, NBTPredicate predicate) {
         if (missingIngredientError(0, true, ItemRecipeCapability.CAP, stack::isEmpty)) {
             return this;
@@ -717,6 +742,29 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder outputItemsRanged(MachineDefinition machine, IntProvider intProvider) {
         return outputItemsRanged(machine.asStack(), intProvider);
+    }
+
+    public GTRecipeBuilder outputItemsWeighted(ItemStack output, int min, int max, IntDistribution distribution) {
+        return outputItemsRanged(output, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder outputItemsWeighted(Item output, int min, int max, IntDistribution distribution) {
+        return outputItemsRanged(output, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder outputItemsWeighted(Supplier<? extends ItemLike> output, int min, int max,
+                                               IntDistribution distribution) {
+        return outputItemsRanged(output, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder outputItemsWeighted(TagPrefix orePrefix, Material material, int min, int max,
+                                               IntDistribution distribution) {
+        return outputItemsRanged(orePrefix, material, distribution.build(min, max));
+    }
+
+    public GTRecipeBuilder outputItemsWeighted(MachineDefinition machine, int min, int max,
+                                               IntDistribution distribution) {
+        return outputItemsRanged(machine, distribution.build(min, max));
     }
 
     public GTRecipeBuilder notConsumable(ItemStack itemStack) {
@@ -1103,6 +1151,10 @@ public class GTRecipeBuilder {
         return inputFluidsRanged(FluidIngredient.of(input), intProvider);
     }
 
+    public GTRecipeBuilder inputFluidsWeighted(FluidStack input, int min, int max, IntDistribution distribution) {
+        return inputFluidsRanged(input, distribution.build(min, max));
+    }
+
     public GTRecipeBuilder inputFluids(FluidIngredient... inputs) {
         return input(FluidRecipeCapability.CAP, inputs);
     }
@@ -1130,6 +1182,10 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder outputFluidsRanged(FluidStack output, IntProvider intProvider) {
         return outputFluidsRanged(FluidIngredient.of(output), intProvider);
+    }
+
+    public GTRecipeBuilder outputFluidsWeighted(FluidStack output, int min, int max, IntDistribution distribution) {
+        return outputFluidsRanged(output, distribution.build(min, max));
     }
 
     //////////////////////////////////////
