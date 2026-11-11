@@ -156,6 +156,7 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
                 amount = output.getCount();
             } else if (io == IO.IN && ingredient instanceof SizedIngredient si &&
                     !(si.getInner() instanceof IntProviderIngredient)) {
+                        // Reads the amount from the ingredient without building a stack array
                         var innerItems = si.getInner().getItems();
 
                         amount = si.getAmount();

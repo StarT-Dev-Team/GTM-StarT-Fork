@@ -55,6 +55,7 @@ public final class ProxySlotRecipeHandler {
             }
         }
 
+        // Reuses the handlers and rebuilds the active list when the slot count changes
         boolean changed = this.activeHandlers.size() != size;
 
         if (changed) this.activeHandlers = List.copyOf(this.allHandlers.subList(0, size));
@@ -94,6 +95,7 @@ public final class ProxySlotRecipeHandler {
             this.setGroup(RecipeHandlerGroupDistinctness.BUS_DISTINCT);
         }
 
+        // Asks the linked buffer slot
         @Override
         public boolean cannotSupplyItems(List<Object> itemIngredients, Map<Object, Object> memo) {
             var handler = this.slotRHL;

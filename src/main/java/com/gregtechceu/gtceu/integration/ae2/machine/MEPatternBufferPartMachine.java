@@ -229,6 +229,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
         return false;
     }
 
+    // Collects pattern changes and sends one update to AE2 on the next tick
     protected void markPatternSync() {
         this.needPatternSync = true;
 
@@ -520,6 +521,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
         }
 
         public void onContentsChanged() {
+            // Cached stack lists get rebuilt on the next read
             itemStacks = null;
             fluidStacks = null;
             onContentsChanged.run();
@@ -606,6 +608,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
             onContentsChanged();
         }
 
+        // Read-only match, used to skip slots before the recipe is simulated
         public boolean hasItemMatching(Ingredient ingredient) {
             for (var key : this.itemInventory.keySet()) {
                 if (key.matches(ingredient)) return true;
@@ -635,6 +638,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
 
                 int amount;
 
+                // Fast path: reads the amount from the ingredient without building a stack array
                 if (ingredient instanceof SizedIngredient si && !(si.getInner() instanceof IntProviderIngredient)) {
                     var innerItems = si.getInner().getItems();
 
@@ -677,6 +681,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                         count -= extracted;
                         if (count == 0) it2.remove();
                         else entry.setValue(count);
+                        // Give the items back if the recipe fails after this point
                         if (RecipeTransaction.isActive()) {
                             RecipeTransaction.record(() -> {
                                 itemInventory.addTo(key, extracted);
@@ -738,6 +743,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                         count -= extracted;
                         if (count == 0) it2.remove();
                         else entry.setValue(count);
+                        // Give the fluids back if the recipe fails after this point
                         if (RecipeTransaction.isActive()) {
                             RecipeTransaction.record(() -> {
                                 fluidInventory.addTo(key, extracted);

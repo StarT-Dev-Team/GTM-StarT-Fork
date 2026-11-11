@@ -21,6 +21,7 @@ public final class TopStacks {
     public static PriorityQueue<GenericStack> selectMixed(Iterable<? extends Object2LongMap.Entry<AEKey>> counter,
                                                           int limit, ToLongFunction<AEKey> minStackSize,
                                                           Predicate<GenericStack> autoPullTest) {
+        // Holds the biggest stacks, the smallest sits at the head and gets replaced first
         PriorityQueue<GenericStack> topStacks = new PriorityQueue<>(Comparator.comparingDouble(TopStacks::getUnits));
 
         for (var entry : counter) {

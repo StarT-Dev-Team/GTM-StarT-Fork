@@ -163,6 +163,8 @@ public class RecipeRunner {
             var itemIngredients = searchRecipeContents.get(ItemRecipeCapability.CAP);
             var fluidIngredients = searchRecipeContents.get(FluidRecipeCapability.CAP);
 
+            // Skip distinct handlers (pattern buffer slots) that can't supply the recipe.
+            // Needs every non-distinct handler to be empty.
             boolean pruneItems = io == IO.IN && itemIngredients != null &&
                     !mayContribute(undyedHandlerList, ItemRecipeCapability.CAP) &&
                     !mayContribute(bypassHandlerList, ItemRecipeCapability.CAP);
@@ -170,6 +172,7 @@ public class RecipeRunner {
                     !mayContribute(undyedHandlerList, FluidRecipeCapability.CAP) &&
                     !mayContribute(bypassHandlerList, FluidRecipeCapability.CAP);
 
+            // One memo for all handlers, so a shared ingredient is checked once
             Map<Object, Object> pruneMemo = new HashMap<>();
 
             for (var distinctHandler : handlerGroups.getOrDefault(BUS_DISTINCT, Collections.emptyList())) {
@@ -214,6 +217,7 @@ public class RecipeRunner {
         return ActionResult.FAIL_NO_REASON;
     }
 
+    // Plain item and fluid storages count by content, any other handler type may contribute
     @VisibleForTesting
     public static boolean mayContribute(List<RecipeHandlerList> handlerLists, RecipeCapability<?> capability) {
         for (var handlerList : handlerLists) {

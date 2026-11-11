@@ -127,6 +127,7 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
         @Override
         public List<Ingredient> handleRecipeInner(IO io, GTRecipe recipe, List<Ingredient> left, boolean simulate) {
             if (io != IO.OUT) return left;
+            // Scripted and ranged outputs use the normal handling, the rest go into the buffer
             if (hasIngredientActions(recipe)) return super.handleRecipeInner(io, recipe, left, simulate);
 
             for (var ingredient : left) {
@@ -242,6 +243,7 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
                 if (!simulate) {
                     internalBuffer.storage.put(key, oldValue + changeValue);
                     internalBuffer.onChanged();
+                    // Take the items back out of the buffer if the recipe fails after this point
                     RecipeTransaction.record(() -> {
                         var current = internalBuffer.storage.getOrDefault(key, 0L) - changeValue;
                         if (current > 0) internalBuffer.storage.put(key, current);

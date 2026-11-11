@@ -68,9 +68,11 @@ public final class InternalSlotRecipeHandler {
             this.setGroup(RecipeHandlerGroupDistinctness.BUS_DISTINCT);
         }
 
+        // Returns true when an ingredient is in neither the slot nor the shared inventories
         @Override
         public boolean cannotSupplyItems(List<Object> itemIngredients, Map<Object, Object> memo) {
             for (Object ingredient : itemIngredients) {
+                // Ranged and unsized ingredients are left to the normal recipe check
                 if (!(ingredient instanceof SizedIngredient si) || si.getInner() instanceof IntProviderIngredient) {
                     continue;
                 }
@@ -98,6 +100,7 @@ public final class InternalSlotRecipeHandler {
             return false;
         }
 
+        // Every slot of a buffer shares these inventories, so the result is stored per ingredient
         @SuppressWarnings("unchecked")
         private boolean sharedItemsMatch(Ingredient ingredient, Map<Object, Object> memo) {
             var results = (Map<Object, Boolean>) memo.computeIfAbsent(Pair.of(this.buffer, ItemRecipeCapability.CAP),

@@ -56,6 +56,7 @@ public final class PortInputHandlers {
         public List<Ingredient> handleRecipeInner(IO io, GTRecipe recipe, List<Ingredient> left, boolean simulate) {
             if (io != IO.IN) return left;
 
+            // Created on the first take, tracks what the recipe already used from each slot
             long[] takenAmounts = null;
 
             for (var it = left.listIterator(); it.hasNext();) {
