@@ -7,8 +7,7 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.MEPartFancyConfigurator;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.ItemBusPartMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
-import com.gregtechceu.gtceu.integration.ae2.machine.feature.IGridConnectedMachine;
-import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEPart;
+import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEIOPart;
 import com.gregtechceu.gtceu.integration.ae2.machine.trait.GridNodeHolder;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
@@ -18,7 +17,6 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -36,7 +34,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Getter
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class MEBusPartMachine extends ItemBusPartMachine implements IMEPart, IGridConnectedMachine {
+public abstract class MEBusPartMachine extends ItemBusPartMachine implements IMEIOPart {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MEBusPartMachine.class,
             ItemBusPartMachine.MANAGED_FIELD_HOLDER);
@@ -48,6 +46,7 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
     @Getter
     @Setter
     protected boolean isOnline;
+    @Setter
     @Persisted
     protected boolean exposeAllSides = false;
     @Getter
@@ -60,7 +59,12 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
     protected final IActionSource actionSource;
 
     public MEBusPartMachine(IMachineBlockEntity holder, IO io, Object... args) {
-        super(holder, GTValues.LuV, io, args);
+        this(holder, GTValues.EV, io, args);
+    }
+
+    public MEBusPartMachine(IMachineBlockEntity holder, int tier, IO io, Object... args) {
+        super(holder, tier, io, args);
+
         this.nodeHolder = createNodeHolder();
         this.actionSource = IActionSource.ofMachine(nodeHolder.getMainNode()::getNode);
     }
@@ -68,8 +72,10 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
     @Override
     public void onLoad() {
         super.onLoad();
+
         if (isRemote()) return;
-        getMainNode().setExposedOnSides(exposeAllSides ? EnumSet.allOf(Direction.class) : EnumSet.of(getFrontFacing()));
+
+        updateExposedSides();
     }
 
     protected GridNodeHolder createNodeHolder() {
@@ -83,7 +89,8 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
 
     @Override
     public void onMainNodeStateChanged(IGridNodeListener.State reason) {
-        IGridConnectedMachine.super.onMainNodeStateChanged(reason);
+        IMEIOPart.super.onMainNodeStateChanged(reason);
+
         this.updateInventorySubscription();
     }
 
@@ -95,6 +102,11 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
             autoIOSubs.unsubscribe();
             autoIOSubs = null;
         }
+    }
+
+    @Override
+    public void updateSubscription() {
+        updateInventorySubscription();
     }
 
     protected boolean shouldSubscribe() {
@@ -143,14 +155,9 @@ public abstract class MEBusPartMachine extends ItemBusPartMachine implements IME
         var superResult = super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
         if (superResult != InteractionResult.PASS) return superResult;
         if (io == IO.BOTH) return InteractionResult.PASS;
-        if (playerIn.isShiftKeyDown()) {
-            exposeAllSides = !exposeAllSides;
-            getMainNode()
-                    .setExposedOnSides(exposeAllSides ? EnumSet.allOf(Direction.class) : EnumSet.of(getFrontFacing()));
-            playerIn.sendSystemMessage(
-                    Component.translatable("gtceu.machine.me.io.expose.description", exposeAllSides));
-            return InteractionResult.sidedSuccess(playerIn.level().isClientSide);
-        }
+
+        if (playerIn.isShiftKeyDown()) return toggleExposeSides(playerIn);
+
         return InteractionResult.PASS;
     }
 }

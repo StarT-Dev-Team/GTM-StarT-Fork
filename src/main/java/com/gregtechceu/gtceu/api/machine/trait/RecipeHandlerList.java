@@ -162,6 +162,15 @@ public class RecipeHandlerList {
         return (extIO == IO.BOTH || handlerIO == IO.BOTH || extIO == handlerIO);
     }
 
+    // Returns true if this list can't supply the ingredients, the runner then skips the full check
+    public boolean cannotSupplyItems(List<Object> itemIngredients, Map<Object, Object> memo) {
+        return false;
+    }
+
+    public boolean cannotSupplyFluids(List<Object> fluidIngredients, Map<Object, Object> memo) {
+        return false;
+    }
+
     public long getPriority() {
         long priority = 0;
         for (var handler : allHandlers) priority += handler.getPriority();

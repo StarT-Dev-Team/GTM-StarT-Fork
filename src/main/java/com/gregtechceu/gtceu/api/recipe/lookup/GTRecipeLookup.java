@@ -224,6 +224,15 @@ public class GTRecipeLookup {
         return null;
     }
 
+    // Skips ingredients that have no entry in this branch before diving into it
+    private static boolean hasEntryIn(List<AbstractMapIngredient> alternatives, Branch branch) {
+        for (AbstractMapIngredient object : alternatives) {
+            if (determineRootNodes(object, branch).containsKey(object)) return true;
+        }
+
+        return false;
+    }
+
     /**
      * Recursively finds a recipe
      *
@@ -245,7 +254,7 @@ public class GTRecipeLookup {
         int i = (currentIndex + 1) % ingredients.size();
         while (i != currentIndex) {
             // Have we already used this ingredient? If so, skip this one.
-            if (!(skip.get(i))) {
+            if (!(skip.get(i)) && hasEntryIn(ingredients.get(i), map)) {
                 // Recursive call
                 // Increase the count, so the recursion can terminate if needed (ingredients is exhausted)
                 // Append the current index to the skip list

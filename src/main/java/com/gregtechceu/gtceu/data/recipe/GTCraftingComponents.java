@@ -23,6 +23,7 @@ public class GTCraftingComponents {
     public static CraftingComponent BETTER_CIRCUIT;
     public static CraftingComponent PUMP;
     public static CraftingComponent WIRE_ELECTRIC;
+    public static CraftingComponent WIRE_FINE;
     public static CraftingComponent WIRE_QUAD;
     public static CraftingComponent WIRE_OCT;
     public static CraftingComponent WIRE_HEX;
@@ -124,6 +125,18 @@ public class GTCraftingComponents {
                 .add(ZPM, wireGtSingle, Osmium)
                 .add(UV, wireGtSingle, Osmium)
                 .add(UHV, wireGtSingle, Osmium);
+
+        WIRE_FINE = CraftingComponent.of("wire_fine", wireFine, Tritanium)
+                .add(ULV, wireFine, Lead)
+                .add(LV, wireFine, Steel)
+                .add(MV, wireFine, Aluminium)
+                .add(HV, wireFine, BlackSteel)
+                .add(EV, wireFine, Platinum)
+                .add(IV, wireFine, Iridium)
+                .add(LuV, wireFine, Osmiridium)
+                .add(ZPM, wireFine, Europium)
+                .add(UV, wireFine, Europium)
+                .add(UHV, wireFine, Tritanium);
 
         WIRE_QUAD = CraftingComponent.of("wire_quad", wireGtQuadruple, Lead)
                 .add(ULV, wireGtQuadruple, Lead)
