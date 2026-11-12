@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.api.machine.trait;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
@@ -60,8 +59,8 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
     @Setter
     protected BooleanSupplier isIODisabled = () -> false;
 
-    public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io, IO capabilityIO, int basePriority) {
-        super(machine);
+    public NotifiableFluidTank(int slots, int capacity, IO io, IO capabilityIO, int basePriority) {
+        super();
         this.handlerIO = io;
         this.storages = new CustomFluidTank[slots];
         this.capabilityIO = capabilityIO;
@@ -72,9 +71,9 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
         this.basePriority = basePriority;
     }
 
-    public NotifiableFluidTank(MetaMachine machine, List<CustomFluidTank> storages, IO io, IO capabilityIO,
+    public NotifiableFluidTank(List<CustomFluidTank> storages, IO io, IO capabilityIO,
                                int basePriority) {
-        super(machine);
+        super();
         this.handlerIO = io;
         this.storages = storages.toArray(CustomFluidTank[]::new);
         this.capabilityIO = capabilityIO;
@@ -87,20 +86,20 @@ public class NotifiableFluidTank extends NotifiableRecipeHandlerTrait<FluidIngre
         this.basePriority = basePriority;
     }
 
-    public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io, IO capabilityIO) {
-        this(machine, slots, capacity, io, capabilityIO, NORMAL);
+    public NotifiableFluidTank(int slots, int capacity, IO io, IO capabilityIO) {
+        this(slots, capacity, io, capabilityIO, NORMAL);
     }
 
-    public NotifiableFluidTank(MetaMachine machine, int slots, int capacity, IO io) {
-        this(machine, slots, capacity, io, io);
+    public NotifiableFluidTank(int slots, int capacity, IO io) {
+        this(slots, capacity, io, io);
     }
 
-    public NotifiableFluidTank(MetaMachine machine, List<CustomFluidTank> storages, IO io, IO capabilityIO) {
-        this(machine, storages, io, capabilityIO, NORMAL);
+    public NotifiableFluidTank(List<CustomFluidTank> storages, IO io, IO capabilityIO) {
+        this(storages, io, capabilityIO, NORMAL);
     }
 
-    public NotifiableFluidTank(MetaMachine machine, List<CustomFluidTank> storages, IO io) {
-        this(machine, storages, io, io);
+    public NotifiableFluidTank(List<CustomFluidTank> storages, IO io) {
+        this(storages, io, io);
     }
 
     public void onContentsChanged() {

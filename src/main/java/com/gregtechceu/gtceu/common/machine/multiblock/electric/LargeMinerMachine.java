@@ -81,10 +81,10 @@ public class LargeMinerMachine extends WorkableElectricMultiblockMachine
     // ***** Initialization ******//
     //////////////////////////////////////
     @Override
-    protected @NotNull RecipeLogic createRecipeLogic(Object... args) {
+    protected RecipeLogic createRecipeLogic(Object... args) {
         if (args[args.length - 3] instanceof Integer fortune && args[args.length - 2] instanceof Integer speed &&
                 args[args.length - 1] instanceof Integer maxRadius) {
-            return new LargeMinerLogic(this, fortune, speed, maxRadius * CHUNK_LENGTH / 2);
+            return new LargeMinerLogic(fortune, speed, maxRadius * CHUNK_LENGTH / 2);
         }
         throw new IllegalArgumentException(
                 "MinerMachine need args [inventorySize, fortune, speed, maximumRadius] for initialization");

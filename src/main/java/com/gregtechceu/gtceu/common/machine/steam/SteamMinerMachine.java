@@ -75,8 +75,8 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
         super(holder, isHighPressure, fortune, speed, maximumRadius);
         this.inventorySize = 4;
         this.energyPerTick = energyPerTick;
-        this.importItems = createImportItemHandler();
-        this.exportItems = createExportItemHandler();
+        this.importItems = attachTrait(createImportItemHandler());
+        this.exportItems = attachTrait(createExportItemHandler());
     }
 
     //////////////////////////////////////
@@ -86,7 +86,7 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
     protected @NotNull RecipeLogic createRecipeLogic(Object... args) {
         if (args.length > 2 && args[args.length - 3] instanceof Integer fortune &&
                 args[args.length - 2] instanceof Integer speed && args[args.length - 1] instanceof Integer maxRadius) {
-            return new SteamMinerLogic(this, fortune, speed, maxRadius);
+            return new SteamMinerLogic(fortune, speed, maxRadius);
         }
         throw new IllegalArgumentException(
                 "MinerMachine need args [fortune, speed, maximumRadius] for initialization");
@@ -99,15 +99,15 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
 
     @Override
     protected NotifiableFluidTank createSteamTank(Object... args) {
-        return new NotifiableFluidTank(this, 1, 16 * FluidType.BUCKET_VOLUME, IO.IN);
+        return new NotifiableFluidTank(1, 16 * FluidType.BUCKET_VOLUME, IO.IN);
     }
 
     protected NotifiableItemStackHandler createImportItemHandler(@SuppressWarnings("unused") Object... args) {
-        return new NotifiableItemStackHandler(this, 0, IO.IN);
+        return new NotifiableItemStackHandler(0, IO.IN);
     }
 
     protected NotifiableItemStackHandler createExportItemHandler(@SuppressWarnings("unused") Object... args) {
-        return new NotifiableItemStackHandler(this, inventorySize, IO.OUT);
+        return new NotifiableItemStackHandler(inventorySize, IO.OUT);
     }
 
     @Override

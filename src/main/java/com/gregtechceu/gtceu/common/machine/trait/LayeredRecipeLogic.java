@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.common.machine.trait;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
-import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.ActionResult;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
@@ -48,8 +47,8 @@ public class LayeredRecipeLogic extends RecipeLogic {
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(LayeredRecipeLogic.class,
             RecipeLogic.MANAGED_FIELD_HOLDER);
 
-    public LayeredRecipeLogic(IRecipeLogicMachine machine) {
-        super(machine);
+    public LayeredRecipeLogic() {
+        super();
     }
 
     @Override

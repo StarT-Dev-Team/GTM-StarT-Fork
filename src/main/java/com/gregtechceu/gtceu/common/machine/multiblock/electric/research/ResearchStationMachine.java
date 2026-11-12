@@ -37,7 +37,7 @@ public class ResearchStationMachine extends OpticalComputationMachine {
 
     @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new ResearchStationRecipeLogic(this);
+        return new ResearchStationRecipeLogic();
     }
 
     @Override
@@ -103,8 +103,8 @@ public class ResearchStationMachine extends OpticalComputationMachine {
 
     public static class ResearchStationRecipeLogic extends RecipeLogic {
 
-        public ResearchStationRecipeLogic(ResearchStationMachine metaTileEntity) {
-            super(metaTileEntity);
+        public ResearchStationRecipeLogic() {
+            super();
         }
 
         @NotNull

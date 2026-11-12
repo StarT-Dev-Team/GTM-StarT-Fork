@@ -26,7 +26,7 @@ public class OpticalComputationHatchMachine extends MultiblockPartMachine {
     public OpticalComputationHatchMachine(IMachineBlockEntity holder, boolean transmitter) {
         super(holder);
         this.transmitter = transmitter;
-        this.computationContainer = createComputationContainer(transmitter);
+        this.computationContainer = attachTrait(createComputationContainer(transmitter));
     }
 
     protected NotifiableComputationContainer createComputationContainer(Object... args) {
@@ -35,7 +35,7 @@ public class OpticalComputationHatchMachine extends MultiblockPartMachine {
             io = newIo;
         }
         if (args.length > 0 && args[args.length - 1] instanceof Boolean transmitter) {
-            return new NotifiableComputationContainer(this, io, transmitter);
+            return new NotifiableComputationContainer(io, transmitter);
         }
         throw new IllegalArgumentException();
     }

@@ -72,7 +72,7 @@ public class TransformerMachine extends TieredEnergyMachine implements IControll
         NotifiableEnergyContainer energyContainer;
         long tierVoltage = GTValues.V[getTier()];
         // Since this.baseAmp is not yet initialized, we substitute with 1A as default
-        energyContainer = new NotifiableEnergyContainer(this, tierVoltage * 8L, tierVoltage * 4, amp, tierVoltage,
+        energyContainer = new NotifiableEnergyContainer(tierVoltage * 8L, tierVoltage * 4, amp, tierVoltage,
                 4L * amp);
         energyContainer.setSideInputCondition(s -> s == getFrontFacing() && isWorkingEnabled());
         energyContainer.setSideOutputCondition(s -> s != getFrontFacing() && isWorkingEnabled());

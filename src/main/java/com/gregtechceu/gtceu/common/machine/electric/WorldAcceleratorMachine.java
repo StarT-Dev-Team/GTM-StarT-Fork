@@ -95,7 +95,7 @@ public class WorldAcceleratorMachine extends TieredEnergyMachine implements ICon
     @Override
     protected @NotNull NotifiableEnergyContainer createEnergyContainer(Object @NotNull... args) {
         long tierVoltage = GTValues.V[getTier()];
-        return new NotifiableEnergyContainer(this, tierVoltage * 256L, tierVoltage, 8, 0L, 0L);
+        return new NotifiableEnergyContainer(tierVoltage * 256L, tierVoltage, 8, 0L, 0L);
     }
 
     @Override

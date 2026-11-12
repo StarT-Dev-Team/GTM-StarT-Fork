@@ -45,7 +45,7 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
 
     public DualHatchPartMachine(IMachineBlockEntity holder, int tier, IO io, Object... args) {
         super(holder, tier, io);
-        this.tank = createTank(INITIAL_TANK_CAPACITY, (int) Math.sqrt(getInventorySize()), args);
+        this.tank = attachTrait(createTank(INITIAL_TANK_CAPACITY, (int) Math.sqrt(getInventorySize()), args));
         this.tank.setIsIODisabled(this::isLocked);
     }
 
@@ -63,7 +63,7 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
     }
 
     protected NotifiableFluidTank createTank(int initialCapacity, int slots, Object... args) {
-        return new NotifiableFluidTank(this, slots, getTankCapacity(initialCapacity, getTier()), io);
+        return new NotifiableFluidTank(slots, getTankCapacity(initialCapacity, getTier()), io);
     }
 
     @Override

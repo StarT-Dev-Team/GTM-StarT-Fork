@@ -2,7 +2,6 @@ package com.gregtechceu.gtceu.api.machine.trait;
 
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.capability.ILaserContainer;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -15,19 +14,19 @@ public class NotifiableLaserContainer extends NotifiableEnergyContainer implemen
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             NotifiableEnergyContainer.class, NotifiableRecipeHandlerTrait.MANAGED_FIELD_HOLDER);
 
-    public NotifiableLaserContainer(MetaMachine machine, long maxCapacity, long maxInputVoltage, long maxInputAmperage,
+    public NotifiableLaserContainer(long maxCapacity, long maxInputVoltage, long maxInputAmperage,
                                     long maxOutputVoltage, long maxOutputAmperage) {
-        super(machine, maxCapacity, maxInputVoltage, maxInputAmperage, maxOutputVoltage, maxOutputAmperage);
+        super(maxCapacity, maxInputVoltage, maxInputAmperage, maxOutputVoltage, maxOutputAmperage);
     }
 
-    public static NotifiableLaserContainer emitterContainer(MetaMachine machine, long maxCapacity,
+    public static NotifiableLaserContainer emitterContainer(long maxCapacity,
                                                             long maxOutputVoltage, long maxOutputAmperage) {
-        return new NotifiableLaserContainer(machine, maxCapacity, 0L, 0L, maxOutputVoltage, maxOutputAmperage);
+        return new NotifiableLaserContainer(maxCapacity, 0L, 0L, maxOutputVoltage, maxOutputAmperage);
     }
 
-    public static NotifiableLaserContainer receiverContainer(MetaMachine machine, long maxCapacity,
+    public static NotifiableLaserContainer receiverContainer(long maxCapacity,
                                                              long maxInputVoltage, long maxInputAmperage) {
-        return new NotifiableLaserContainer(machine, maxCapacity, maxInputVoltage, maxInputAmperage, 0L, 0L);
+        return new NotifiableLaserContainer(maxCapacity, maxInputVoltage, maxInputAmperage, 0L, 0L);
     }
 
     @Override

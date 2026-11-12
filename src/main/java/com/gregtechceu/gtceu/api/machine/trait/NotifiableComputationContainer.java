@@ -6,7 +6,6 @@ import com.gregtechceu.gtceu.api.capability.IOpticalComputationProvider;
 import com.gregtechceu.gtceu.api.capability.IOpticalComputationReceiver;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.*;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
@@ -36,8 +35,8 @@ public class NotifiableComputationContainer extends NotifiableRecipeHandlerTrait
     protected long lastTimeStamp;
     private int currentOutputCwu = 0, lastOutputCwu = 0;
 
-    public NotifiableComputationContainer(MetaMachine machine, IO handlerIO, boolean transmitter) {
-        super(machine);
+    public NotifiableComputationContainer(IO handlerIO, boolean transmitter) {
+        super();
         this.handlerIO = handlerIO;
         this.transmitter = transmitter;
 
@@ -67,7 +66,7 @@ public class NotifiableComputationContainer extends NotifiableRecipeHandlerTrait
                         if (controller instanceof IOpticalComputationProvider provider) {
                             return provider.requestCWUt(cwut, simulate, seen);
                         }
-                        for (MachineTrait trait : controller.self().getTraits()) {
+                        for (MachineTrait trait : controller.self().getAllTraits()) {
                             if (trait instanceof IOpticalComputationProvider provider) {
                                 return provider.requestCWUt(cwut, simulate, seen);
                             }
@@ -111,7 +110,7 @@ public class NotifiableComputationContainer extends NotifiableRecipeHandlerTrait
                         if (controller instanceof IOpticalComputationProvider provider) {
                             return provider.getMaxCWUt(seen);
                         }
-                        for (MachineTrait trait : controller.self().getTraits()) {
+                        for (MachineTrait trait : controller.self().getAllTraits()) {
                             if (trait instanceof IOpticalComputationProvider provider) {
                                 return provider.getMaxCWUt(seen);
                             }
@@ -154,7 +153,7 @@ public class NotifiableComputationContainer extends NotifiableRecipeHandlerTrait
                         if (controller instanceof IOpticalComputationProvider provider) {
                             return provider.canBridge(seen);
                         }
-                        for (MachineTrait trait : controller.self().getTraits()) {
+                        for (MachineTrait trait : controller.self().getAllTraits()) {
                             if (trait instanceof IOpticalComputationProvider provider) {
                                 return provider.canBridge(seen);
                             }

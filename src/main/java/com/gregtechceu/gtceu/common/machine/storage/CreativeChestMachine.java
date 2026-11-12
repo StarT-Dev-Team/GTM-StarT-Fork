@@ -4,7 +4,6 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.widget.PhantomSlotWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
@@ -53,7 +52,7 @@ public class CreativeChestMachine extends QuantumChestMachine {
 
     @Override
     protected ItemCache createCacheItemHandler(Object... args) {
-        return new InfiniteCache(this);
+        return new InfiniteCache();
     }
 
     protected void checkAutoOutput() {
@@ -141,8 +140,8 @@ public class CreativeChestMachine extends QuantumChestMachine {
 
     private class InfiniteCache extends ItemCache {
 
-        public InfiniteCache(MetaMachine holder) {
-            super(holder);
+        public InfiniteCache() {
+            super();
         }
 
         @Override

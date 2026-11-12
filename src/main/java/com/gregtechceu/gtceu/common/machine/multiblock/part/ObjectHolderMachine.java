@@ -8,7 +8,6 @@ import com.gregtechceu.gtceu.api.item.IComponentItem;
 import com.gregtechceu.gtceu.api.item.component.IDataItem;
 import com.gregtechceu.gtceu.api.item.component.IItemComponent;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.multiblock.part.MultiblockPartMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
@@ -50,7 +49,7 @@ public class ObjectHolderMachine extends MultiblockPartMachine implements IObjec
 
     public ObjectHolderMachine(IMachineBlockEntity holder) {
         super(holder);
-        heldItems = new ObjectHolderHandler(this);
+        heldItems = attachTrait(new ObjectHolderHandler());
     }
 
     @Override
@@ -122,8 +121,8 @@ public class ObjectHolderMachine extends MultiblockPartMachine implements IObjec
 
     private class ObjectHolderHandler extends NotifiableItemStackHandler {
 
-        public ObjectHolderHandler(MetaMachine metaTileEntity) {
-            super(metaTileEntity, 2, IO.IN, IO.BOTH, size -> new CustomItemStackHandler(size) {
+        public ObjectHolderHandler() {
+            super(2, IO.IN, IO.BOTH, size -> new CustomItemStackHandler(size) {
 
                 @Override
                 public int getSlotLimit(int slot) {

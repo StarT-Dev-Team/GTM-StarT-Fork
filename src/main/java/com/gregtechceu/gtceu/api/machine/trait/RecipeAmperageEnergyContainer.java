@@ -4,23 +4,30 @@ import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 
 public class RecipeAmperageEnergyContainer extends NotifiableEnergyContainer {
 
-    protected final IRecipeLogicMachine machine;
+    protected IRecipeLogicMachine machine;
 
-    public RecipeAmperageEnergyContainer(IRecipeLogicMachine machine, long maxCapacity,
+    public RecipeAmperageEnergyContainer(long maxCapacity,
                                          long maxInputVoltage, long maxInputAmperage,
                                          long maxOutputVoltage, long maxOutputAmperage) {
-        super(machine.self(), maxCapacity, maxInputVoltage, maxInputAmperage, maxOutputVoltage, maxOutputAmperage);
-        this.machine = machine;
+        super(maxCapacity, maxInputVoltage, maxInputAmperage, maxOutputVoltage, maxOutputAmperage);
     }
 
-    public static RecipeAmperageEnergyContainer makeEmitterContainer(IRecipeLogicMachine machine, long maxCapacity,
+    public static RecipeAmperageEnergyContainer makeEmitterContainer(long maxCapacity,
                                                                      long maxOutputVoltage, long maxOutputAmperage) {
-        return new RecipeAmperageEnergyContainer(machine, maxCapacity, 0L, 0L, maxOutputVoltage, maxOutputAmperage);
+        return new RecipeAmperageEnergyContainer(maxCapacity, 0L, 0L, maxOutputVoltage, maxOutputAmperage);
     }
 
-    public static RecipeAmperageEnergyContainer makeReceiverContainer(IRecipeLogicMachine machine, long maxCapacity,
+    public static RecipeAmperageEnergyContainer makeReceiverContainer(long maxCapacity,
                                                                       long maxInputVoltage, long maxInputAmperage) {
-        return new RecipeAmperageEnergyContainer(machine, maxCapacity, maxInputVoltage, maxInputAmperage, 0L, 0L);
+        return new RecipeAmperageEnergyContainer(maxCapacity, maxInputVoltage, maxInputAmperage, 0L, 0L);
+    }
+
+    @Override
+    public void onTraitAttached() {
+        super.onTraitAttached();
+        if (!(getMachine() instanceof IRecipeLogicMachine rlMachine))
+            throw new IllegalStateException("Invalid machine machine type for recipe logic");
+        machine = rlMachine;
     }
 
     @Override

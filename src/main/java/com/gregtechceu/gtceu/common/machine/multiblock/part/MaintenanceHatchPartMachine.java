@@ -92,7 +92,7 @@ public class MaintenanceHatchPartMachine extends TieredPartMachine
     public MaintenanceHatchPartMachine(IMachineBlockEntity holder, boolean isConfigurable) {
         super(holder, isConfigurable ? GTValues.HV : GTValues.LV);
         this.isConfigurable = isConfigurable;
-        this.itemStackHandler = createInventory();
+        this.itemStackHandler = attachTrait(createInventory());
         this.itemStackHandler.setFilter(itemStack -> itemStack.is(GTItems.DUCT_TAPE.get()));
     }
 
@@ -100,7 +100,7 @@ public class MaintenanceHatchPartMachine extends TieredPartMachine
     // ****** Initialization ******//
     //////////////////////////////////////
     protected NotifiableItemStackHandler createInventory() {
-        return new NotifiableItemStackHandler(this, 1, IO.BOTH, IO.BOTH);
+        return new NotifiableItemStackHandler(1, IO.BOTH, IO.BOTH);
     }
 
     @Override

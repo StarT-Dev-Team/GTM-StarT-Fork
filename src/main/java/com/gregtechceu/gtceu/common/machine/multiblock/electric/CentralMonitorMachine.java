@@ -124,7 +124,7 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
 
     @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
-        return new CentralMonitorLogic(this);
+        return new CentralMonitorLogic();
     }
 
     public @Nullable EnergyContainerList getFormedEnergyContainer() {
