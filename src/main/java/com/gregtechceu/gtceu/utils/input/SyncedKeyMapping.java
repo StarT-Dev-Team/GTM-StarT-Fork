@@ -28,6 +28,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Supplier;
@@ -42,6 +43,7 @@ public final class SyncedKeyMapping {
     @OnlyIn(Dist.CLIENT)
     private Supplier<Supplier<KeyMapping>> keyMappingGetter;
     private final boolean needsRegister;
+    private String nameKey;
     @OnlyIn(Dist.CLIENT)
     private int keyCode;
     @OnlyIn(Dist.CLIENT)
@@ -53,7 +55,9 @@ public final class SyncedKeyMapping {
     private final WeakHashMap<ServerPlayer, Set<IKeyPressedListener>> playerListeners = new WeakHashMap<>();
     private final Set<IKeyPressedListener> globalListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
-    private SyncedKeyMapping(Supplier<Supplier<KeyMapping>> mcKeyMapping) {
+    private SyncedKeyMapping(String nameKey, Supplier<Supplier<KeyMapping>> mcKeyMapping) {
+        this.nameKey = nameKey;
+
         if (GTCEu.isClientSide()) {
             this.keyMappingGetter = mcKeyMapping;
         }
@@ -90,11 +94,13 @@ public final class SyncedKeyMapping {
     /**
      * Create a SyncedKeyMapping wrapper around a Minecraft {@link KeyMapping}.
      *
+     * @param nameKey      Translation key of the Minecraft keymapping, used to display the key in static tooltips.
      * @param mcKeyMapping Doubly-wrapped supplier around a keymapping from
      *                     {@link net.minecraft.client.Options Minecraft.getInstance().options}.
      */
-    public static @NotNull SyncedKeyMapping createFromMC(@NotNull Supplier<Supplier<KeyMapping>> mcKeyMapping) {
-        return new SyncedKeyMapping(mcKeyMapping);
+    public static @NotNull SyncedKeyMapping createFromMC(@NotNull String nameKey,
+                                                         @NotNull Supplier<Supplier<KeyMapping>> mcKeyMapping) {
+        return new SyncedKeyMapping(nameKey, mcKeyMapping);
     }
 
     /**
@@ -177,6 +183,11 @@ public final class SyncedKeyMapping {
     @OnlyIn(Dist.CLIENT)
     public MutableComponent getBracketedDisplayName(KeyModifier modifier) {
         return Component.literal("[").append(getCombinedDisplayName(modifier)).append("]")
+                .withStyle(ChatFormatting.LIGHT_PURPLE);
+    }
+
+    public MutableComponent getBracketedKeybind() {
+        return Component.literal("[").append(Component.keybind(Objects.requireNonNull(nameKey))).append("]")
                 .withStyle(ChatFormatting.LIGHT_PURPLE);
     }
 

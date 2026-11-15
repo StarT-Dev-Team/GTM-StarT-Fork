@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "gtceu:block/machine/me_input_port_ev",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "gtceu:block/machine/me_input_port_ev",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "gtceu:block/machine/me_input_port_ev"
+    },
+    "facing=south": {
+      "model": "gtceu:block/machine/me_input_port_ev",
+      "y": 180
+    },
+    "facing=up": {
+      "gtceu:z": 180,
+      "model": "gtceu:block/machine/me_input_port_ev",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "gtceu:block/machine/me_input_port_ev",
+      "y": 270
+    }
+  }
+}

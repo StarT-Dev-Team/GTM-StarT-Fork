@@ -54,7 +54,8 @@ public class MEPatternBufferProxyPartMachine extends TieredIOPartMachine
 
     public MEPatternBufferProxyPartMachine(IMachineBlockEntity holder) {
         super(holder, GTValues.LuV, IO.IN);
-        proxySlotRecipeHandler = new ProxySlotRecipeHandler(this, MEPatternBufferPartMachine.MAX_PATTERN_COUNT);
+
+        proxySlotRecipeHandler = new ProxySlotRecipeHandler(this);
     }
 
     @Override
@@ -75,13 +76,24 @@ public class MEPatternBufferProxyPartMachine extends TieredIOPartMachine
         var level = getLevel();
         if (level == null || pos == null) {
             buffer = null;
+
+            if (!isRemote() && proxySlotRecipeHandler.clearProxy()) refreshControllers();
         } else if (MetaMachine.getMachine(level, pos) instanceof MEPatternBufferPartMachine machine) {
             bufferPos = pos;
             buffer = machine;
             machine.addProxy(this);
-            if (!isRemote()) proxySlotRecipeHandler.updateProxy(machine);
+
+            if (!isRemote() && proxySlotRecipeHandler.updateProxy(machine)) refreshControllers();
         } else {
             buffer = null;
+        }
+    }
+
+    private void refreshControllers() {
+        if (!isFormed()) return;
+
+        for (var controller : getControllers()) {
+            controller.onStructureFormed();
         }
     }
 
