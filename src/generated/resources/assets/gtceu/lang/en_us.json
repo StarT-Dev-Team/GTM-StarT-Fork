@@ -1093,6 +1093,7 @@
   "block.gtceu.powderbarrel.drops_tooltip": "Slightly larger than TNT, drops all destroyed Blocks as Items",
   "block.gtceu.power_substation": "Power Substation [PS]",
   "block.gtceu.primitive_blast_furnace": "Primitive Blast Furnace [PBF]",
+  "block.gtceu.primitive_hatch": "Primitive Hatch",
   "block.gtceu.primitive_pump": "Primitive Pump [PP]",
   "block.gtceu.ptfe_pipe_casing": "PTFE Pipe Casing",
   "block.gtceu.pump_deck": "Pump Deck",
