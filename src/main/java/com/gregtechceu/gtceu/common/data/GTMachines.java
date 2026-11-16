@@ -878,6 +878,13 @@ public class GTMachines {
             .simpleModel(GTCEu.id("block/machine/part/coke_oven_hatch"))
             .register();
 
+    public static final MachineDefinition PRIMITIVE_HATCH = REGISTRATE.machine("primitive_hatch", PrimitiveHatch::new)
+            .rotationState(RotationState.ALL)
+            .modelProperty(IS_FORMED, false)
+            .overlayTieredHullModel(GTCEu.id("block/machine/part/primitive_hatch"))
+            .tier(ULV)
+            .register();
+
     public static final MachineDefinition PUMP_HATCH = REGISTRATE.machine("pump_hatch", PumpHatchPartMachine::new)
             .rotationState(RotationState.ALL)
             .abilities(PartAbility.PUMP_FLUID_HATCH)
