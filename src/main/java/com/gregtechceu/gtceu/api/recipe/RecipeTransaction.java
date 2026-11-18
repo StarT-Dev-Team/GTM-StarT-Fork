@@ -63,7 +63,6 @@ public final class RecipeTransaction implements AutoCloseable {
     @Override
     public void close() {
         if (!finished) rollback();
-        if (parent == null) CURRENT.remove();
-        else CURRENT.set(parent);
+        CURRENT.set(parent);
     }
 }

@@ -27,8 +27,10 @@ import net.minecraft.world.item.crafting.Ingredient;
 
 import appeng.api.config.Actionable;
 import appeng.api.stacks.AEItemKey;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +47,7 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             MEOutputBusPartMachine.class, MEBusPartMachine.MANAGED_FIELD_HOLDER);
 
+    @Getter
     @Persisted
     private KeyStorage internalBuffer; // Do not use KeyCounter, use our simple implementation
 
@@ -124,66 +127,6 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
             internalBuffer.setOnContentsChanged(this::onContentsChanged);
         }
 
-        @Override
-        public List<Ingredient> handleRecipeInner(IO io, GTRecipe recipe, List<Ingredient> left, boolean simulate) {
-            if (io != IO.OUT) return left;
-            // Scripted and ranged outputs use the normal handling, the rest go into the buffer
-            if (hasIngredientActions(recipe)) return super.handleRecipeInner(io, recipe, left, simulate);
-
-            for (var ingredient : left) {
-                if (ingredient instanceof IntProviderIngredient || (ingredient instanceof SizedIngredient sized &&
-                        sized.getInner() instanceof IntProviderIngredient)) {
-                    return super.handleRecipeInner(io, recipe, left, simulate);
-                }
-            }
-
-            boolean changed = false;
-
-            for (var it = left.listIterator(); it.hasNext();) {
-                var ingredient = it.next();
-
-                if (ingredient.isEmpty()) {
-                    it.remove();
-
-                    continue;
-                }
-
-                var items = ingredient.getItems();
-
-                if (items.length == 0 || items[0].isEmpty()) {
-                    it.remove();
-
-                    continue;
-                }
-
-                int amount = ingredient instanceof SizedIngredient si ? si.getAmount() : items[0].getCount();
-
-                for (int slot = 0; slot < this.storage.getSlots(); ++slot) {
-                    var remainder = this.storage.insertItem(slot, items[0].copyWithCount(amount), simulate);
-
-                    if (remainder.getCount() < amount) {
-                        changed = true;
-                        amount = remainder.getCount();
-                    }
-
-                    if (amount <= 0) {
-                        it.remove();
-
-                        break;
-                    }
-                }
-
-                if (amount > 0) {
-                    if (ingredient instanceof SizedIngredient si) si.setAmount(amount);
-                    else items[0].setCount(amount);
-                }
-            }
-
-            if (changed && !simulate) onContentsChanged();
-
-            return left.isEmpty() ? null : left;
-        }
-
         private static boolean hasIngredientActions(GTRecipe recipe) {
             return GTCEu.Mods.isKubeJSLoaded() && recipe.ingredientActions != null &&
                     !recipe.ingredientActions.isEmpty();
@@ -202,6 +145,51 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
         @Override
         public boolean isEmpty() {
             return true;
+        }
+
+        /// Insert straight into the buffer instead of allocating a full array of size
+        /// {@link ItemStackHandlerDelegate#getSlots()}
+        @Override
+        public @Nullable List<Ingredient> handleRecipeInner(IO io, GTRecipe recipe,
+                                                            List<Ingredient> left,
+                                                            boolean simulate) {
+            if (io != IO.OUT) return left;
+            if (hasIngredientActions(recipe)) return super.handleRecipeInner(io, recipe, left, simulate);
+
+            for (var it = left.iterator(); it.hasNext();) {
+                var ingredient = it.next();
+                if (ingredient.isEmpty()) {
+                    it.remove();
+                    continue;
+                }
+
+                ItemStack output;
+                if (ingredient instanceof IntProviderIngredient provider) {
+                    provider.setItemStacks(null);
+                    provider.setSampledCount(-1);
+                    if (simulate) {
+                        output = provider.getMaxSizeStack();
+                    } else {
+                        var items = provider.getItems();
+                        output = items.length == 0 ? ItemStack.EMPTY : items[0];
+                    }
+                } else {
+                    var items = ingredient.getItems();
+                    output = items.length == 0 ? ItemStack.EMPTY : items[0];
+                }
+                int amount = ingredient instanceof SizedIngredient si ? si.getAmount() : output.getCount();
+                if (output.isEmpty() || amount <= 0) {
+                    it.remove();
+                    continue;
+                }
+
+                // the delegate records the transaction undo itself
+                int remaining = storage.insertItem(0, output.copyWithCount(amount), simulate).getCount();
+                if (remaining <= 0) it.remove();
+                else if (ingredient instanceof SizedIngredient si) si.setAmount(remaining);
+                else output.setCount(remaining);
+            }
+            return left.isEmpty() ? null : left;
         }
     }
 
