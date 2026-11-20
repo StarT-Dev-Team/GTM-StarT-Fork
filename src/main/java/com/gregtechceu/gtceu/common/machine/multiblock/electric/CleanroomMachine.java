@@ -39,6 +39,7 @@ import com.gregtechceu.gtceu.common.machine.multiblock.primitive.PrimitivePumpMa
 import com.gregtechceu.gtceu.common.machine.trait.CleanroomLogic;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
@@ -521,11 +522,10 @@ public class CleanroomMachine extends WorkableElectricMultiblockMachine
             } else if (isActive()) {
                 textList.add(Component.translatable("gtceu.multiblock.running"));
                 int currentProgress = (int) (recipeLogic.getProgressPercent() * 100);
-                double maxInSec = (float) recipeLogic.getDuration() / 20.0f;
-                double currentInSec = (float) recipeLogic.getProgress() / 20.0f;
-                textList.add(
-                        Component.translatable("gtceu.multiblock.progress", String.format("%.2f", (float) currentInSec),
-                                String.format("%.2f", (float) maxInSec), currentProgress));
+
+                textList.add(Component.translatable("gtceu.multiblock.progress",
+                        FormattingUtil.formatDurationShortFixed(recipeLogic.getProgress(), recipeLogic.getDuration()),
+                        FormattingUtil.formatDurationShortFixed(recipeLogic.getDuration()), currentProgress));
             } else {
                 textList.add(Component.translatable("gtceu.multiblock.idling"));
             }

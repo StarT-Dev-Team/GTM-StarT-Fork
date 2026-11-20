@@ -2045,14 +2045,16 @@ public class GTItems {
     // Solar Panels: ID 331-346
     public static ItemEntry<ComponentItem> COVER_SOLAR_PANEL = REGISTRATE.item("solar_panel", ComponentItem::create)
             .lang("Solar Panel").onRegister(attach(new TooltipBehavior(lines -> {
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", 1, GTValues.VNF[GTValues.ULV]));
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(1, "gtceu.unit.eu_per_tick"), GTValues.VNF[GTValues.ULV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL_BASIC)))
             .register();
     public static ItemEntry<ComponentItem> COVER_SOLAR_PANEL_ULV = REGISTRATE
             .item("ulv_solar_panel", ComponentItem::create).lang("Ultra Low Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.ULV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.ULV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.ULV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[0])))
             .register();
@@ -2060,7 +2062,8 @@ public class GTItems {
             .item("lv_solar_panel", ComponentItem::create).lang("Low Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.LV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.LV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.LV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[1])))
             .register();
@@ -2068,7 +2071,8 @@ public class GTItems {
             .item("mv_solar_panel", ComponentItem::create).lang("Medium Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.MV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.MV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.MV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[2])))
             .register();
@@ -2076,7 +2080,8 @@ public class GTItems {
             .item("hv_solar_panel", ComponentItem::create).lang("High Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.HV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.HV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.HV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[3])))
             .register();
@@ -2084,7 +2089,8 @@ public class GTItems {
             .item("ev_solar_panel", ComponentItem::create).lang("Extreme Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.EV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.EV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.EV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[4])))
             .register();
@@ -2092,7 +2098,8 @@ public class GTItems {
             .item("iv_solar_panel", ComponentItem::create).lang("Insane Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.IV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.IV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.IV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[5])))
             .register();
@@ -2100,7 +2107,8 @@ public class GTItems {
             .item("luv_solar_panel", ComponentItem::create).lang("Ludicrous Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.LuV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.LuV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.LuV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[6])))
             .register();
@@ -2108,7 +2116,8 @@ public class GTItems {
             .item("zpm_solar_panel", ComponentItem::create).lang("Zero Point Module Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.ZPM],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.ZPM], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.ZPM]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[7])))
             .register();
@@ -2116,7 +2125,8 @@ public class GTItems {
             .item("uv_solar_panel", ComponentItem::create).lang("Ultimate Voltage Solar Panel")
             .onRegister(attach(new TooltipBehavior(lines -> {
                 lines.addAll(LangHandler.getMultiLang("item.gtceu.solar_panel.tooltip"));
-                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out", GTValues.V[GTValues.UV],
+                lines.add(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                        FormattingUtil.formatNumberCompact(GTValues.V[GTValues.UV], "gtceu.unit.eu_per_tick"),
                         GTValues.VNF[GTValues.UV]));
             }))).onRegister(attach(new CoverPlaceBehavior(GTCovers.SOLAR_PANEL[8])))
             .register();

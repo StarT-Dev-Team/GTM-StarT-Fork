@@ -356,10 +356,10 @@ public class GTMachines {
                     .langValue("%s Pump %s".formatted(VLVH[tier], VLVT[tier]))
                     .tooltips(Component.translatable("gtceu.machine.pump.tooltip"),
                             Component.translatable("gtceu.universal.tooltip.voltage_in",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier]),
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier], "gtceu.unit.eu_per_tick"),
                                     GTValues.VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier] * 64)),
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier] * 64, "gtceu.unit.eu")),
                             Component.translatable("gtceu.universal.tooltip.fluid_storage_capacity",
                                     FormattingUtil.formatNumbers(16 * FluidType.BUCKET_VOLUME * Math.max(1, tier))),
                             Component.translatable("gtceu.universal.tooltip.working_area",
@@ -379,10 +379,10 @@ public class GTMachines {
                             Component.translatable("gtceu.machine.fisher.requirement", FisherMachine.WATER_CHECK_SIZE,
                                     FisherMachine.WATER_CHECK_SIZE),
                             Component.translatable("gtceu.universal.tooltip.voltage_in",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier]),
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier], "gtceu.unit.eu_per_tick"),
                                     GTValues.VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier] * 64)))
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier] * 64, "gtceu.unit.eu")))
                     .register(),
             LV, MV, HV, EV, IV, LuV);
 
@@ -398,10 +398,10 @@ public class GTMachines {
                             Component.translatable("gtceu.machine.block_breaker.speed_bonus",
                                     (int) (BlockBreakerMachine.getEfficiencyMultiplier(tier) * 100)),
                             Component.translatable("gtceu.universal.tooltip.voltage_in",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier]),
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier], "gtceu.unit.eu_per_tick"),
                                     GTValues.VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier] * 64)))
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier] * 64, "gtceu.unit.eu")))
                     .register(),
             LV, MV, HV, EV);
 
@@ -419,14 +419,19 @@ public class GTMachines {
                         long energyPerTick = GTValues.V[tier - 1];
                         int tickSpeed = ConfigHolder.INSTANCE.machines.minerSpeed / (tier * 2);
                         tooltip.add(Component.translatable("gtceu.machine.miner.tooltip", maxArea, maxArea));
-                        tooltip.add(Component.translatable("gtceu.universal.tooltip.uses_per_tick", energyPerTick)
-                                .append(Component.literal(", ").withStyle(ChatFormatting.GRAY))
-                                .append(Component.translatable("gtceu.machine.miner.per_block", tickSpeed / 20)));
+                        tooltip.add(
+                                Component
+                                        .translatable("gtceu.universal.tooltip.uses_per_tick",
+                                                FormattingUtil.formatNumberCompact(energyPerTick,
+                                                        "gtceu.unit.eu_per_tick"))
+                                        .append(Component.literal(", ").withStyle(ChatFormatting.GRAY))
+                                        .append(Component.translatable("gtceu.machine.miner.per_block",
+                                                tickSpeed / 20)));
                         tooltip.add(Component.translatable("gtceu.universal.tooltip.voltage_in",
-                                FormattingUtil.formatNumbers(GTValues.V[tier]),
+                                FormattingUtil.formatNumberCompact(GTValues.V[tier], "gtceu.unit.eu_per_tick"),
                                 GTValues.VNF[tier]));
                         tooltip.add(Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                FormattingUtil.formatNumbers(GTValues.V[tier] * 64L)));
+                                FormattingUtil.formatNumberCompact(GTValues.V[tier] * 64L, "gtceu.unit.eu")));
 
                         tooltip.add(
                                 Component.translatable("gtceu.universal.tooltip.working_area_max", maxArea, maxArea));
@@ -450,10 +455,10 @@ public class GTMachines {
                         tooltip.add(Component.translatable("gtceu.machine.world_accelerator.description"));
 
                         tooltip.add(Component.translatable("gtceu.universal.tooltip.voltage_in",
-                                FormattingUtil.formatNumbers(GTValues.V[tier]),
+                                FormattingUtil.formatNumberCompact(GTValues.V[tier], "gtceu.unit.eu_per_tick"),
                                 GTValues.VNF[tier]));
                         tooltip.add(Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                FormattingUtil.formatNumbers(GTValues.V[tier] * 64L)));
+                                FormattingUtil.formatNumberCompact(GTValues.V[tier] * 64L, "gtceu.unit.eu")));
 
                         tooltip.add(Component.translatable("gtceu.machine.world_accelerator.working_area"));
                         tooltip.add(Component.translatable("gtceu.machine.world_accelerator.working_area_tile"));
@@ -479,10 +484,10 @@ public class GTMachines {
                             Component.translatable("gtceu.machine.item_collector.gui.collect_range",
                                     IntMath.pow(2, tier + 2), IntMath.pow(2, tier + 2)),
                             Component.translatable("gtceu.universal.tooltip.voltage_in",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier]),
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier], "gtceu.unit.eu_per_tick"),
                                     GTValues.VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier] * 64L)))
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier] * 64L, "gtceu.unit.eu")))
                     .register(),
             LV, MV, HV, EV);
 
@@ -679,11 +684,12 @@ public class GTMachines {
                     .abilities(PartAbility.INPUT_ENERGY, PartAbility.INPUT_ENERGY_2A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_in",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_in", 2),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 2))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 2),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.energy_hatch.input.tooltip"))
                     .overlayTieredHullModel("energy_input_hatch")
                     .register(),
@@ -697,11 +703,12 @@ public class GTMachines {
                     .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.OUTPUT_ENERGY_2A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_out", 2),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 2))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 2),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.energy_hatch.output.tooltip"))
                     .overlayTieredHullModel("energy_output_hatch")
                     .register(),
@@ -715,11 +722,12 @@ public class GTMachines {
                     .abilities(PartAbility.INPUT_ENERGY, PartAbility.INPUT_ENERGY_4A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_in",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_in", 4),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 4))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 4),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.energy_hatch.input_hi_amp.tooltip"))
                     .overlayTieredHullModel("energy_input_hatch_4a")
                     .register(),
@@ -733,11 +741,12 @@ public class GTMachines {
                     .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.OUTPUT_ENERGY_4A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_out", 4),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 4))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 4),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.energy_hatch.output_hi_amp.tooltip"))
                     .overlayTieredHullModel("energy_output_hatch_4a")
                     .register(),
@@ -751,11 +760,12 @@ public class GTMachines {
                     .abilities(PartAbility.INPUT_ENERGY, PartAbility.INPUT_ENERGY_16A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_in",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_in", 16),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 16))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 16),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.energy_hatch.input_hi_amp.tooltip"))
                     .overlayTieredHullModel("energy_input_hatch_16a")
                     .register(),
@@ -769,11 +779,12 @@ public class GTMachines {
                     .abilities(PartAbility.OUTPUT_ENERGY, PartAbility.OUTPUT_ENERGY_16A)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_out", 16),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 16))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 16),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.energy_hatch.output_hi_amp.tooltip"))
                     .overlayTieredHullModel("energy_output_hatch_16a")
                     .register(),
@@ -788,11 +799,12 @@ public class GTMachines {
                     .abilities(PartAbility.SUBSTATION_INPUT_ENERGY)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_in",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_in", 64),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 64))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 64),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.substation_hatch.input.tooltip"))
                     .overlayTieredHullModel("energy_input_hatch_64a")
                     .register(),
@@ -807,11 +819,12 @@ public class GTMachines {
                     .abilities(PartAbility.SUBSTATION_OUTPUT_ENERGY)
                     .modelProperty(IS_FORMED, false)
                     .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
-                            FormattingUtil.formatNumbers(V[tier]), VNF[tier]),
+                            FormattingUtil.formatNumberCompact(V[tier], "gtceu.unit.eu_per_tick"), VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_out", 64),
                             Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
-                                    FormattingUtil
-                                            .formatNumbers(EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 64))),
+                                    FormattingUtil.formatNumberCompact(
+                                            EnergyHatchPartMachine.getHatchEnergyCapacity(tier, 64),
+                                            "gtceu.unit.eu")),
                             Component.translatable("gtceu.machine.substation_hatch.output.tooltip"))
                     .overlayTieredHullModel("energy_output_hatch_64a")
                     .register(),
@@ -1045,7 +1058,7 @@ public class GTMachines {
                     .tooltips(Component.translatable("gtceu.machine.diode.tooltip_general"),
                             Component.translatable("gtceu.machine.diode.tooltip_starts_at"),
                             Component.translatable("gtceu.universal.tooltip.voltage_in_out",
-                                    FormattingUtil.formatNumbers(GTValues.V[tier]),
+                                    FormattingUtil.formatNumberCompact(GTValues.V[tier], "gtceu.unit.eu_per_tick"),
                                     GTValues.VNF[tier]),
                             Component.translatable("gtceu.universal.tooltip.amperage_in_out_till",
                                     DiodePartMachine.MAX_AMPS))

@@ -87,7 +87,7 @@ public class LangHandler {
         provider.add("gtceu.tooltip.tool_fluid_hold_shift",
                 "§7Hold SHIFT to show Fluid Containment and Tool Info");
         provider.add("metaitem.generic.fluid_container.tooltip", "%d/%dL %s");
-        provider.add("metaitem.generic.electric_item.tooltip", "%d/%d EU - Tier %s");
+        provider.add("metaitem.generic.electric_item.tooltip", "%s/%s - Tier %s");
         provider.add("metaitem.generic.electric_item.stored", "%d/%d EU (%s)");
         provider.add("metaitem.electric.discharge_mode.enabled", "§eDischarge Mode Enabled");
         provider.add("metaitem.electric.discharge_mode.disabled", "§eDischarge Mode Disabled");
@@ -127,9 +127,9 @@ public class LangHandler {
 
         provider.add("command.gtceu.medical_condition.get", "Player %s has these medical conditions:");
         provider.add("command.gtceu.medical_condition.get.empty", "Player %s has no medical conditions.");
-        provider.add("command.gtceu.medical_condition.get.element", "Condition %s§r: %s minutes %s seconds");
+        provider.add("command.gtceu.medical_condition.get.element", "Condition %s§r: %s");
         provider.add("command.gtceu.medical_condition.get.element.permanent",
-                "Condition %s§r: %s minutes %s seconds (permanent)");
+                "Condition %s§r: %s (permanent)");
         provider.add("command.gtceu.dump_data.success", "Dumped %s resources from registry %s to %s");
         provider.add("command.gtceu.place_vein.failure", "Failed to place vein %s at position %s");
         provider.add("command.gtceu.place_vein.success", "Placed vein %s at position %s");
@@ -957,11 +957,11 @@ public class LangHandler {
         provider.add("gtceu.universal.spaced_parentheses", "( %s )");
         provider.add("gtceu.universal.padded_parentheses", " (%s) ");
         provider.add("gtceu.universal.padded_spaced_parentheses", " ( %s ) ");
-        provider.add("gtceu.universal.tooltip.voltage_in", "§aVoltage IN: §f%d EU/t (%s§f)");
+        provider.add("gtceu.universal.tooltip.voltage_in", "§aVoltage IN: §f%s (%s§f)");
         provider.add("gtceu.universal.tooltip.max_voltage_in", "§aMax Voltage IN: §f%d (%s§f)");
-        provider.add("gtceu.universal.tooltip.voltage_out", "§aVoltage OUT: §f%d EU/t (%s§f)");
+        provider.add("gtceu.universal.tooltip.voltage_out", "§aVoltage OUT: §f%s (%s§f)");
         provider.add("gtceu.universal.tooltip.max_voltage_out", "§aMax Voltage OUT: §f%d (%s§f)");
-        provider.add("gtceu.universal.tooltip.voltage_in_out", "§aVoltage IN/OUT: §f%d EU/t (%s§f)");
+        provider.add("gtceu.universal.tooltip.voltage_in_out", "§aVoltage IN/OUT: §f%s (%s§f)");
         provider.add("gtceu.universal.tooltip.max_voltage_in_out", "§aMax Voltage IN/OUT: §f%d EU/t (%s§f)");
         provider.add("gtceu.universal.tooltip.amperage_in", "§eAmperage IN: §f%dA");
         provider.add("gtceu.universal.tooltip.amperage_in_till", "§eAmperage IN up to: §f%dA");
@@ -969,7 +969,7 @@ public class LangHandler {
         provider.add("gtceu.universal.tooltip.amperage_out_till", "§eAmperage OUT up to: §f%dA");
         provider.add("gtceu.universal.tooltip.amperage_in_out", "§eAmperage IN/OUT: §f%dA");
         provider.add("gtceu.universal.tooltip.amperage_in_out_till", "§eAmperage IN/OUT up to: §f%dA");
-        provider.add("gtceu.universal.tooltip.energy_storage_capacity", "§cEnergy Capacity: §r%d EU");
+        provider.add("gtceu.universal.tooltip.energy_storage_capacity", "§cEnergy Capacity: §r%s");
         provider.add("gtceu.universal.tooltip.energy_tier_range", "§aAllowed Voltage Tiers: §f%s §f- %s");
         provider.add("gtceu.universal.tooltip.item_storage_capacity", "§6Item Slots: §f%d");
         provider.add("gtceu.universal.tooltip.item_storage_total", "§6Item Capacity: §f%d items");
@@ -988,13 +988,13 @@ public class LangHandler {
         provider.add("gtceu.universal.tooltip.working_area_chunks", "§bWorking Area: §f%dx%d Chunks");
         provider.add("gtceu.universal.tooltip.working_area_max", "§bMax Working Area: §f%dx%d");
         provider.add("gtceu.universal.tooltip.working_area_chunks_max", "§bMax Working Area: §f%dx%d Chunks");
-        provider.add("gtceu.universal.tooltip.uses_per_tick", "Uses §f%d EU/t §7while working");
+        provider.add("gtceu.universal.tooltip.uses_per_tick", "Uses §f%s §7while working");
         provider.add("gtceu.universal.tooltip.uses_per_tick_steam", "Uses §f%d mB/t §7of §fSteam §7while working");
         provider.add("gtceu.universal.tooltip.uses_per_hour_lubricant",
                 "Uses §f%d mB/hr §7of §6Lubricant §7while working");
         provider.add("gtceu.universal.tooltip.uses_per_second", "Uses §f%d EU/s §7while working");
         provider.add("gtceu.universal.tooltip.uses_per_op", "Uses §f%d EU/operation");
-        provider.add("gtceu.universal.tooltip.base_production_eut", "§eBase Production: §f%d EU/t");
+        provider.add("gtceu.universal.tooltip.base_production_eut", "§eBase Production: §f%s");
         provider.add("gtceu.universal.tooltip.base_production_fluid", "§eBase Production: §f%d mB/t");
         provider.add("gtceu.universal.tooltip.produces_fluid", "§eProduces: §f%d mB/t");
         provider.add("gtceu.universal.tooltip.terrain_resist",
@@ -1010,14 +1010,8 @@ public class LangHandler {
         provider.add("gtceu.recipe.eu.total", "%s EU/t");
         provider.add("gtceu.recipe.eu.pure", "%s EU");
         provider.add("gtceu.recipe.eu.amp_notation", "%s A @ %s");
-        provider.add("gtceu.recipe.duration", "Duration: %ss");
-        provider.add("gtceu.recipe.duration.hour", "%s Hour");
-        provider.add("gtceu.recipe.duration.hours", "%s Hours");
-        provider.add("gtceu.recipe.duration.minute", "%s Minute");
-        provider.add("gtceu.recipe.duration.minutes", "%s Minutes");
-        provider.add("gtceu.recipe.duration.second", "%s Second");
-        provider.add("gtceu.recipe.duration.seconds", "%s Seconds");
-        provider.add("gtceu.recipe.total_duration", "Total Duration: %ss");
+        provider.add("gtceu.recipe.duration", "Duration: %s");
+        provider.add("gtceu.recipe.total_duration", "Total Duration: %s");
         provider.add("gtceu.recipe.voltage", "Voltage: %s V @ %s A");
         provider.add("gtceu.recipe.total_eu", "Total Usage: %s EU/t");
         provider.add("gtceu.recipe.not_consumed", "Does not get consumed in the process");
@@ -1028,7 +1022,7 @@ public class LangHandler {
         multiLang(provider, "gtceu.recipe.coil.tooltip", "Left click to select the next coil",
                 "Right click to select the previous coil", "Middle click to reset the coil");
         multiLang(provider, "gtceu.recipe.blast.tooltip", "Min: %1$s", "Coil Temp: %2$sK");
-        provider.add("gtceu.recipe.oc.duration.base", "Base Duration: %ss");
+        provider.add("gtceu.recipe.oc.duration.base", "Base Duration: %s");
         provider.add("gtceu.recipe.oc.duration.coil", "Coil Speed: %s");
         provider.add("gtceu.recipe.oc.duration.normal", "Overclocks: %1$s (time ÷%2$s each)");
         provider.add("gtceu.recipe.oc.duration.perfect", "Perfect Overclocks: %1$s (time ÷%2$s each)");
@@ -1203,7 +1197,7 @@ public class LangHandler {
         provider.add("gtceu.machine.batch_enabled", "Batching Enabled");
         provider.add("gtceu.machine.batch_disabled", "Batching Disabled");
         provider.add("gtceu.multiblock.progress_percent", "Progress: %s%%");
-        provider.add("gtceu.multiblock.progress", "Progress: %ss / %ss (%s%%)");
+        provider.add("gtceu.multiblock.progress", "Progress: %s / %s (%s%%)");
         provider.add("gtceu.multiblock.output_line.0", "%s x §e%s§r (%ss/ea)");
         provider.add("gtceu.multiblock.output_line.1", "%s x §e%s§r (%s/s)");
         provider.add("gtceu.multiblock.output_line.2", "%s ≈ §e%s§r (%ss/ea)");
@@ -1218,7 +1212,7 @@ public class LangHandler {
         provider.add("gtceu.multiblock.max_energy_per_tick_hover",
                 "The maximum EU/t available for running recipes or overclocking");
         provider.add("gtceu.multiblock.max_energy_per_tick_amps", "Max EU/t: %s (%sA %s)");
-        provider.add("gtceu.multiblock.energy_consumption", "Energy Usage: %s EU/t (%s)");
+        provider.add("gtceu.multiblock.energy_consumption", "Energy Usage: %s (%s)");
         provider.add("gtceu.multiblock.generation_eu", "Outputting: §a%s EU/t");
         provider.add("gtceu.multiblock.universal.no_problems", "No Maintenance Problems!");
         provider.add("gtceu.multiblock.universal.has_problems", "Has Maintenance Problems!");
@@ -1351,9 +1345,9 @@ public class LangHandler {
         provider.add("gtceu.multiblock.pattern.location_end", "§cVery End§r");
         provider.add("gtceu.multiblock.pattern.replaceable_air", "Replaceable by Air");
 
-        provider.add("gtceu.multiblock.layered.progress", "Total Progress: %ss / %ss (%s%%)");
+        provider.add("gtceu.multiblock.layered.progress", "Total Progress: %s / %s (%s%%)");
         provider.add("gtceu.multiblock.layered.step", "Current Step: %s/%s");
-        provider.add("gtceu.multiblock.layered.step_progress", "Step Progress: %ss / %ss (%s%%)");
+        provider.add("gtceu.multiblock.layered.step_progress", "Step Progress: %s / %s (%s%%)");
         provider.add("gtceu.multiblock.layered.recipe_contents_line", "%s x §e%s§r");
         provider.add("gtceu.multiblock.layered.next_step_inputs", "Next Step Inputs:");
         provider.add("gtceu.multiblock.layered.cancel", "Cancel");
@@ -1443,6 +1437,36 @@ public class LangHandler {
         provider.add("config.jade.plugin_gtceu.network_switch", "[GTCEu] Network Switch Info");
         provider.add("config.jade.plugin_gtceu.hpca", "[GTCEu] HPCA Info");
         provider.add("config.jade.plugin_gtceu.lockable_hatch_provider", "[GTCEu] Lockable Hatch");
+
+        provider.add("gtceu.duration.short.tick", "%st");
+        provider.add("gtceu.duration.short.second", "%ss");
+        provider.add("gtceu.duration.short.minute", "%sm");
+        provider.add("gtceu.duration.short.hour", "%sh");
+        provider.add("gtceu.duration.short.day", "%sd");
+        provider.add("gtceu.duration.short.year", "%sy");
+        provider.add("gtceu.duration.long.second", "%s Second");
+        provider.add("gtceu.duration.long.seconds", "%s Seconds");
+        provider.add("gtceu.duration.long.minute", "%s Minute");
+        provider.add("gtceu.duration.long.minutes", "%s Minutes");
+        provider.add("gtceu.duration.long.hour", "%s Hour");
+        provider.add("gtceu.duration.long.hours", "%s Hours");
+        provider.add("gtceu.duration.long.day", "%s Day");
+        provider.add("gtceu.duration.long.days", "%s Days");
+        provider.add("gtceu.duration.long.year", "%s Year");
+        provider.add("gtceu.duration.long.years", "%s Years");
+        provider.add("gtceu.unit.eu", "%s %sEU");
+        provider.add("gtceu.unit.eu_per_tick", "%s %sEU/t");
+        provider.add("gtceu.unit.eu_per_second", "%s %sEU/s");
+        provider.add("gtceu.unit.number", "%s%s");
+        provider.add("gtceu.unit.bucket", "%s%sB");
+        provider.add("gtceu.unit.prefix.milli", "m");
+        provider.add("gtceu.unit.prefix.kilo", "k");
+        provider.add("gtceu.unit.prefix.mega", "M");
+        provider.add("gtceu.unit.prefix.giga", "G");
+        provider.add("gtceu.unit.prefix.tera", "T");
+        provider.add("gtceu.unit.prefix.peta", "P");
+        provider.add("gtceu.unit.prefix.exa", "E");
+        provider.add("gtceu.unit.prefix.zetta", "Z");
 
         // gui
         provider.add("gtceu.button.ore_veins", "Show GT Ore Veins");

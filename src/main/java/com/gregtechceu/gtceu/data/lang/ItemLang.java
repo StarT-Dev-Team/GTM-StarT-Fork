@@ -122,10 +122,7 @@ public class ItemLang {
         provider.add("item.gtceu.zpm_battery_hull.tooltip", "§7An empty §fZPM §7Battery Hull");
         provider.add("item.gtceu.uv_battery_hull.tooltip", "§7An empty §3UV §7Battery Hull");
         provider.add("item.gtceu.battery.charge_time", "§aHolds %s %s of Power (%s)");
-        provider.add("item.gtceu.battery.charge_detailed", "%s/%s EU§7 - Tier %s §7(%s/%s %s remaining§7)");
-        provider.add("item.gtceu.battery.charge_unit.second", "seconds");
-        provider.add("item.gtceu.battery.charge_unit.minute", "minutes");
-        provider.add("item.gtceu.battery.charge_unit.hour", "hours");
+        provider.add("item.gtceu.battery.charge_detailed", "%s/%s§7 - Tier %s §7(%s/%s remaining§7)");
         provider.add("item.gtceu.ulv_tantalum_battery.tooltip", "§7Reusable Battery");
         provider.add("item.gtceu.lv_cadmium_battery.tooltip", "§7Reusable Battery");
         provider.add("item.gtceu.lv_lithium_battery.tooltip", "§7Reusable Battery");

@@ -336,7 +336,7 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
         var group = new WidgetGroup(0, 0, 90, 63);
         group.addWidget(new ImageWidget(4, 4, 82, 55, GuiTextures.DISPLAY))
                 .addWidget(new LabelWidget(8, 8, "gtceu.gui.fluid_amount"))
-                .addWidget(new LabelWidget(8, 18, () -> FormattingUtil.formatBuckets(storedAmount))
+                .addWidget(new LabelWidget(8, 18, () -> FormattingUtil.formatBuckets(storedAmount).getString())
                         .setTextColor(-1)
                         .setDropShadow(false))
                 .addWidget(new TankWidget(cache, 0, 68, 23, true, true)

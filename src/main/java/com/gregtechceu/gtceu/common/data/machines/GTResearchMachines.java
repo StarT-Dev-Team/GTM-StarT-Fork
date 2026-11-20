@@ -400,8 +400,10 @@ public class GTResearchMachines {
             "hpca_computation_component", "HPCA Computation Component",
             holder -> new HPCAComputationPartMachine(holder, false), "computation", false)
             .tooltips(
-                    Component.translatable("gtceu.machine.hpca.component_general.upkeep_eut", GTValues.VA[GTValues.EV]),
-                    Component.translatable("gtceu.machine.hpca.component_general.max_eut", GTValues.VA[GTValues.LuV]),
+                    Component.translatable("gtceu.machine.hpca.component_general.upkeep_eut",
+                            FormattingUtil.formatNumberCompact(GTValues.VA[GTValues.EV], "gtceu.unit.eu_per_tick")),
+                    Component.translatable("gtceu.machine.hpca.component_general.max_eut",
+                            FormattingUtil.formatNumberCompact(GTValues.VA[GTValues.LuV], "gtceu.unit.eu_per_tick")),
                     Component.translatable("gtceu.machine.hpca.component_type.computation_cwut", 4),
                     Component.translatable("gtceu.machine.hpca.component_type.computation_cooling", 2),
                     Component.translatable("gtceu.part_sharing.disabled"))
@@ -411,8 +413,10 @@ public class GTResearchMachines {
             "hpca_advanced_computation_component", "HPCA Advanced Computation Component",
             holder -> new HPCAComputationPartMachine(holder, true), "advanced_computation", true)
             .tooltips(
-                    Component.translatable("gtceu.machine.hpca.component_general.upkeep_eut", GTValues.VA[GTValues.IV]),
-                    Component.translatable("gtceu.machine.hpca.component_general.max_eut", GTValues.VA[GTValues.ZPM]),
+                    Component.translatable("gtceu.machine.hpca.component_general.upkeep_eut",
+                            FormattingUtil.formatNumberCompact(GTValues.VA[GTValues.IV], "gtceu.unit.eu_per_tick")),
+                    Component.translatable("gtceu.machine.hpca.component_general.max_eut",
+                            FormattingUtil.formatNumberCompact(GTValues.VA[GTValues.ZPM], "gtceu.unit.eu_per_tick")),
                     Component.translatable("gtceu.machine.hpca.component_type.computation_cwut", 16),
                     Component.translatable("gtceu.machine.hpca.component_type.computation_cooling", 4),
                     Component.translatable("gtceu.part_sharing.disabled"))
@@ -428,7 +432,9 @@ public class GTResearchMachines {
     public static final MachineDefinition HPCA_ACTIVE_COOLER_COMPONENT = registerHPCAPart(
             "hpca_active_cooler_component", "HPCA Active Cooling Component",
             holder -> new HPCACoolerPartMachine(holder, true), "active_cooler", true)
-            .tooltips(Component.translatable("gtceu.machine.hpca.component_general.max_eut", GTValues.VA[GTValues.IV]),
+            .tooltips(
+                    Component.translatable("gtceu.machine.hpca.component_general.max_eut",
+                            FormattingUtil.formatNumberCompact(GTValues.VA[GTValues.IV], "gtceu.unit.eu_per_tick")),
                     Component.translatable("gtceu.machine.hpca.component_type.cooler_active"),
                     Component.translatable("gtceu.machine.hpca.component_type.cooler_active_coolant",
                             8, GTMaterials.PCBCoolant.getLocalizedName()),
@@ -439,7 +445,8 @@ public class GTResearchMachines {
             "hpca_bridge_component", "HPCA Bridge Component",
             HPCABridgePartMachine::new, "bridge", false)
             .tooltips(Component.translatable("gtceu.machine.hpca.component_type.bridge"),
-                    Component.translatable("gtceu.machine.hpca.component_general.max_eut", GTValues.VA[GTValues.IV]),
+                    Component.translatable("gtceu.machine.hpca.component_general.max_eut",
+                            FormattingUtil.formatNumberCompact(GTValues.VA[GTValues.IV], "gtceu.unit.eu_per_tick")),
                     Component.translatable("gtceu.part_sharing.disabled"))
             .register();
 

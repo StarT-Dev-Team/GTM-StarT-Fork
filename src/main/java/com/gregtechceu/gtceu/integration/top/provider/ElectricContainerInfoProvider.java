@@ -41,14 +41,13 @@ public class ElectricContainerInfoProvider extends CapabilityInfoProvider<IEnerg
                                 BlockEntity blockEntity, IProbeHitData data) {
         var energyInfo = capability.getEnergyInfo();
         if (energyInfo.capacity().compareTo(BigInteger.ZERO) <= 0) return;
-        var threshold = BigInteger.valueOf((long) 1e12);
-        var energyStr = FormattingUtil.formatNumberOrSic(energyInfo.stored(), threshold);
-        var maxEnergyStr = FormattingUtil.formatNumberOrSic(energyInfo.capacity(), threshold);
+        var energyText = FormattingUtil.formatNumberCompact(energyInfo.stored(), "gtceu.unit.eu");
+        var maxEnergyText = FormattingUtil.formatNumberCompact(energyInfo.capacity(), "gtceu.unit.eu");
         var progress = getProgress(energyInfo.stored(), energyInfo.capacity());
 
         probeInfo.element(new ProgressElement(
                 progress,
-                Component.translatable("gtceu.jade.energy_stored", energyStr, maxEnergyStr),
+                Component.translatable("gtceu.jade.energy_stored", energyText, maxEnergyText),
                 probeInfo.defaultProgressStyle()
                         .filledColor(0xFFEEE600)
                         .alternateFilledColor(0xFFEEE600)

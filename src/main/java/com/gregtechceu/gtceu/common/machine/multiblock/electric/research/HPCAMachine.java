@@ -324,8 +324,8 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
                         // Energy Usage
                         tl.add(Component.translatable(
                                 "gtceu.multiblock.hpca.energy",
-                                FormattingUtil.formatNumbers(hpcaHandler.cachedEUt),
-                                FormattingUtil.formatNumbers(hpcaHandler.getMaxEUt()),
+                                FormattingUtil.formatNumberCompact(hpcaHandler.cachedEUt, "gtceu.unit.eu_per_tick"),
+                                FormattingUtil.formatNumberCompact(hpcaHandler.getMaxEUt(), "gtceu.unit.eu_per_tick"),
                                 GTValues.VNF[GTUtil.getTierByVoltage(hpcaHandler.getMaxEUt())])
                                 .withStyle(ChatFormatting.GRAY));
 

@@ -49,9 +49,8 @@ public class ElectricContainerBlockProvider extends CapabilityBlockProvider<IEne
         var energy = new BigInteger(capData.getByteArray("Energy"));
         var maxEnergy = new BigInteger(capData.getByteArray("MaxEnergy"));
         if (maxEnergy.compareTo(BigInteger.ZERO) <= 0) return;
-        var threshold = BigInteger.valueOf((long) 1e12);
-        var energyStr = FormattingUtil.formatNumberOrSic(energy, threshold);
-        var maxEnergyStr = FormattingUtil.formatNumberOrSic(maxEnergy, threshold);
+        var energyText = FormattingUtil.formatNumberCompact(energy, "gtceu.unit.eu");
+        var maxEnergyText = FormattingUtil.formatNumberCompact(maxEnergy, "gtceu.unit.eu");
         var progress = getProgress(energy, maxEnergy);
 
         var helper = tooltip.getElementHelper();
@@ -59,7 +58,7 @@ public class ElectricContainerBlockProvider extends CapabilityBlockProvider<IEne
         tooltip.add(
                 helper.progress(
                         progress,
-                        Component.translatable("gtceu.jade.energy_stored", energyStr, maxEnergyStr),
+                        Component.translatable("gtceu.jade.energy_stored", energyText, maxEnergyText),
                         helper.progressStyle().color(0xFFEEE600, 0xFFEEE600).textColor(-1),
                         Util.make(BoxStyle.DEFAULT, style -> style.borderColor = 0xFF555555),
                         true));
