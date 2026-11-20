@@ -1,12 +1,16 @@
 package com.gregtechceu.gtceu.integration.ae2.machine;
 
+import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
+import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
+import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
+import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.list.AEListGridWidget;
 import com.gregtechceu.gtceu.integration.ae2.utils.KeyStorage;
@@ -19,11 +23,14 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 
 import appeng.api.config.Actionable;
 import appeng.api.stacks.AEItemKey;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +47,7 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             MEOutputBusPartMachine.class, MEBusPartMachine.MANAGED_FIELD_HOLDER);
 
+    @Getter
     @Persisted
     private KeyStorage internalBuffer; // Do not use KeyCounter, use our simple implementation
 
@@ -119,6 +127,11 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
             internalBuffer.setOnContentsChanged(this::onContentsChanged);
         }
 
+        private static boolean hasIngredientActions(GTRecipe recipe) {
+            return GTCEu.Mods.isKubeJSLoaded() && recipe.ingredientActions != null &&
+                    !recipe.ingredientActions.isEmpty();
+        }
+
         @Override
         public @NotNull List<Object> getContents() {
             return Collections.emptyList();
@@ -132,6 +145,51 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
         @Override
         public boolean isEmpty() {
             return true;
+        }
+
+        /// Insert straight into the buffer instead of allocating a full array of size
+        /// {@link ItemStackHandlerDelegate#getSlots()}
+        @Override
+        public @Nullable List<Ingredient> handleRecipeInner(IO io, GTRecipe recipe,
+                                                            List<Ingredient> left,
+                                                            boolean simulate) {
+            if (io != IO.OUT) return left;
+            if (hasIngredientActions(recipe)) return super.handleRecipeInner(io, recipe, left, simulate);
+
+            for (var it = left.iterator(); it.hasNext();) {
+                var ingredient = it.next();
+                if (ingredient.isEmpty()) {
+                    it.remove();
+                    continue;
+                }
+
+                ItemStack output;
+                if (ingredient instanceof IntProviderIngredient provider) {
+                    provider.setItemStacks(null);
+                    provider.setSampledCount(-1);
+                    if (simulate) {
+                        output = provider.getMaxSizeStack();
+                    } else {
+                        var items = provider.getItems();
+                        output = items.length == 0 ? ItemStack.EMPTY : items[0];
+                    }
+                } else {
+                    var items = ingredient.getItems();
+                    output = items.length == 0 ? ItemStack.EMPTY : items[0];
+                }
+                int amount = ingredient instanceof SizedIngredient si ? si.getAmount() : output.getCount();
+                if (output.isEmpty() || amount <= 0) {
+                    it.remove();
+                    continue;
+                }
+
+                // the delegate records the transaction undo itself
+                int remaining = storage.insertItem(0, output.copyWithCount(amount), simulate).getCount();
+                if (remaining <= 0) it.remove();
+                else if (ingredient instanceof SizedIngredient si) si.setAmount(remaining);
+                else output.setCount(remaining);
+            }
+            return left.isEmpty() ? null : left;
         }
     }
 
@@ -173,6 +231,7 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
                 if (!simulate) {
                     internalBuffer.storage.put(key, oldValue + changeValue);
                     internalBuffer.onChanged();
+                    // Take the items back out of the buffer if the recipe fails after this point
                     RecipeTransaction.record(() -> {
                         var current = internalBuffer.storage.getOrDefault(key, 0L) - changeValue;
                         if (current > 0) internalBuffer.storage.put(key, current);

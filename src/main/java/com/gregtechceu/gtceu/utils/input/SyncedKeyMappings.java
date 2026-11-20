@@ -13,17 +13,17 @@ public final class SyncedKeyMappings {
 
     // MC keymappings
     public static final SyncedKeyMapping VANILLA_JUMP = SyncedKeyMapping
-            .createFromMC(() -> () -> Minecraft.getInstance().options.keyJump);
+            .createFromMC("key.jump", () -> () -> Minecraft.getInstance().options.keyJump);
     public static final SyncedKeyMapping VANILLA_SNEAK = SyncedKeyMapping
-            .createFromMC(() -> () -> Minecraft.getInstance().options.keyShift);
+            .createFromMC("key.sneak", () -> () -> Minecraft.getInstance().options.keyShift);
     public static final SyncedKeyMapping VANILLA_FORWARD = SyncedKeyMapping
-            .createFromMC(() -> () -> Minecraft.getInstance().options.keyUp);
+            .createFromMC("key.forward", () -> () -> Minecraft.getInstance().options.keyUp);
     public static final SyncedKeyMapping VANILLA_BACKWARD = SyncedKeyMapping
-            .createFromMC(() -> () -> Minecraft.getInstance().options.keyDown);
+            .createFromMC("key.back", () -> () -> Minecraft.getInstance().options.keyDown);
     public static final SyncedKeyMapping VANILLA_LEFT = SyncedKeyMapping
-            .createFromMC(() -> () -> Minecraft.getInstance().options.keyLeft);
+            .createFromMC("key.left", () -> () -> Minecraft.getInstance().options.keyLeft);
     public static final SyncedKeyMapping VANILLA_RIGHT = SyncedKeyMapping
-            .createFromMC(() -> () -> Minecraft.getInstance().options.keyRight);
+            .createFromMC("key.right", () -> () -> Minecraft.getInstance().options.keyRight);
 
     // GT keymappings
     public static final SyncedKeyMapping ARMOR_MODE_SWITCH = SyncedKeyMapping.createConfigurable(

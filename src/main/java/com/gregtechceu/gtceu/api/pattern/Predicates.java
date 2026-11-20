@@ -21,6 +21,8 @@ import com.gregtechceu.gtceu.common.data.GTMaterialBlocks;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.PowerSubstationMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
+import com.lowdragmc.lowdraglib.utils.BlockInfo;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -28,7 +30,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.apache.commons.lang3.ArrayUtils;
@@ -105,12 +106,18 @@ public class Predicates {
     }
 
     public static TraceabilityPredicate abilities(PartAbility... abilities) {
-        return blocks(Arrays.stream(abilities).map(PartAbility::getAllBlocks).flatMap(Collection::stream)
-                .toArray(Block[]::new));
+        TraceabilityPredicate predicate = blocks(
+                Arrays.stream(abilities).map(PartAbility::getAllBlocks).flatMap(Collection::stream)
+                        .toArray(Block[]::new));
+        if (abilities.length == 1) {
+            predicate.setPartAbility(abilities[0]);
+        }
+        return predicate;
     }
 
     public static TraceabilityPredicate ability(PartAbility ability, int... tiers) {
-        return blocks((tiers.length == 0 ? ability.getAllBlocks() : ability.getBlocks(tiers)).toArray(Block[]::new));
+        return blocks((tiers.length == 0 ? ability.getAllBlocks() : ability.getBlocks(tiers)).toArray(Block[]::new))
+                .setPartAbility(ability);
     }
 
     public static TraceabilityPredicate autoAbilities(GTRecipeType... recipeType) {
@@ -216,6 +223,7 @@ public class Predicates {
                 .sorted(Comparator.comparingInt(value -> value.getKey().getTier()))
                 .map(coil -> BlockInfo.fromBlockState(coil.getValue().get().defaultBlockState()))
                 .toArray(BlockInfo[]::new))
+                .setPartAbility(PartAbility.HEATING_COILS)
                 .addTooltips(Component.translatable("gtceu.multiblock.pattern.error.coils"));
     }
 
@@ -237,6 +245,7 @@ public class Predicates {
         }, () -> GTCEuAPI.CLEANROOM_FILTERS.values().stream()
                 .map(blockSupplier -> BlockInfo.fromBlockState(blockSupplier.get().defaultBlockState()))
                 .toArray(BlockInfo[]::new))
+                .setPartAbility(PartAbility.CLEANROOM_FILTERS)
                 .addTooltips(Component.translatable("gtceu.multiblock.pattern.error.filters"));
     }
 
@@ -262,6 +271,7 @@ public class Predicates {
                 .sorted(Comparator.comparingInt(entry -> entry.getKey().getTier()))
                 .map(entry -> new BlockInfo(entry.getValue().get().defaultBlockState(), null))
                 .toArray(BlockInfo[]::new))
+                .setPartAbility(PartAbility.PSS_BATTERIES)
                 .addTooltips(Component.translatable("gtceu.multiblock.pattern.error.batteries"));
     }
 

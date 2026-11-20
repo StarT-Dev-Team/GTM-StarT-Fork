@@ -120,14 +120,7 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
         // Necessary for simulation since we don't actually modify the slot's contents
         // Doesn't hurt for execution, and definitely cheaper than copying the entire storage
         ItemStack[] visited = new ItemStack[storage.getSlots()];
-        ItemStack[] backup = simulate || !RecipeTransaction.isActive() ? null : new ItemStack[storage.getSlots()];
-        if (backup != null) {
-            RecipeTransaction.record(() -> {
-                for (int i = 0; i < backup.length; i++) {
-                    if (backup[i] != null) storage.setStackInSlot(i, backup[i]);
-                }
-            });
-        }
+        boolean recordUndo = !simulate && RecipeTransaction.isActive();
         for (var it = left.listIterator(); it.hasNext();) {
             var ingredient = it.next();
             if (ingredient.isEmpty()) {
@@ -154,15 +147,29 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
                     output = items[0];
                 }
                 amount = output.getCount();
-            } else {
-                items = ingredient.getItems();
-                if (items.length == 0 || items[0].isEmpty()) {
-                    it.remove();
-                    continue;
-                }
-                if (ingredient instanceof SizedIngredient si) amount = si.getAmount();
-                else amount = items[0].getCount();
-            }
+            } else if (io == IO.IN && ingredient instanceof SizedIngredient si &&
+                    !(si.getInner() instanceof IntProviderIngredient)) {
+                        // Reads the amount from the ingredient without building a stack array
+                        var innerItems = si.getInner().getItems();
+
+                        amount = si.getAmount();
+
+                        if (amount <= 0 || innerItems.length == 0 || innerItems[0].isEmpty()) {
+                            it.remove();
+
+                            continue;
+                        }
+
+                        items = null;
+                    } else {
+                        items = ingredient.getItems();
+                        if (items.length == 0 || items[0].isEmpty()) {
+                            it.remove();
+                            continue;
+                        }
+                        if (ingredient instanceof SizedIngredient si) amount = si.getAmount();
+                        else amount = items[0].getCount();
+                    }
 
             for (int slot = 0; slot < storage.getSlots(); ++slot) {
                 ItemStack current = visited[slot] == null ? storage.getStackInSlot(slot) : visited[slot];
@@ -171,7 +178,7 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
                 if (io == IO.IN) {
                     if (current.isEmpty()) continue;
                     if (ingredient.test(current)) {
-                        if (backup != null && backup[slot] == null) backup[slot] = storage.getStackInSlot(slot).copy();
+                        if (recordUndo && visited[slot] == null) recordSlotUndo(storage, slot);
                         var extracted = getActioned(storage, slot, recipe.ingredientActions);
                         if (extracted == null) extracted = storage.extractItem(slot, Math.min(count, amount), simulate);
                         if (!extracted.isEmpty()) {
@@ -185,8 +192,7 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
                     // Only try this slot if not visited or if visited with the same type of item
                     if (visited[slot] == null || GTUtil.isSameItemSameTags(visited[slot], output)) {
                         if (count < output.getMaxStackSize() && count < storage.getSlotLimit(slot)) {
-                            if (backup != null && backup[slot] == null)
-                                backup[slot] = storage.getStackInSlot(slot).copy();
+                            if (recordUndo && visited[slot] == null) recordSlotUndo(storage, slot);
                             var remainder = getActioned(storage, slot, recipe.ingredientActions);
                             if (remainder == null) remainder = storage.insertItem(slot, output, simulate);
                             if (remainder.getCount() < amount) {
@@ -217,6 +223,11 @@ public class NotifiableItemStackHandler extends NotifiableRecipeHandlerTrait<Ing
         if (changed && !simulate) listener.run();
 
         return left.isEmpty() ? null : left;
+    }
+
+    private static void recordSlotUndo(CustomItemStackHandler storage, int slot) {
+        var previous = storage.getStackInSlot(slot).copy();
+        RecipeTransaction.record(() -> storage.setStackInSlot(slot, previous));
     }
 
     private static @Nullable ItemStack getActioned(CustomItemStackHandler storage, int index, List<?> actions) {

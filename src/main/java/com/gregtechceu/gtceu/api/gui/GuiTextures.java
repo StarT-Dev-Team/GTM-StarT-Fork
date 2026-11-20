@@ -135,6 +135,10 @@ public class GuiTextures {
     public static final ResourceTexture BUTTON_LIST = new ResourceTexture(
             "gtceu:textures/gui/widget/button_list.png");
     public static final ResourceTexture BUTTON_RIGHT = new ResourceTexture("gtceu:textures/gui/widget/right.png");
+    public static final ResourceTexture BUTTON_PAGE_LEFT = new ResourceTexture(
+            "gtceu:textures/gui/widget/button_page_left.png");
+    public static final ResourceTexture BUTTON_PAGE_RIGHT = new ResourceTexture(
+            "gtceu:textures/gui/widget/button_page_right.png");
     public static final ResourceTexture BUTTON_SILK_TOUCH_MODE = new ResourceTexture(
             "gtceu:textures/gui/widget/button_silk_touch_mode.png");
     public static final ResourceTexture BUTTON_SWITCH_VIEW = new ResourceTexture(

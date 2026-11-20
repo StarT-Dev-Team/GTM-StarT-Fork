@@ -22,32 +22,57 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public final class ProxySlotRecipeHandler {
 
-    @Getter
-    private final List<RecipeHandlerList> proxySlotHandlers;
+    private final MEPatternBufferProxyPartMachine machine;
+    private final List<ProxyRHL> allHandlers = new ArrayList<>();
 
-    public ProxySlotRecipeHandler(MEPatternBufferProxyPartMachine machine, int slots) {
-        proxySlotHandlers = new ArrayList<>(slots);
-        for (int i = 0; i < slots; ++i) {
-            proxySlotHandlers.add(new ProxyRHL(machine));
-        }
+    private List<RecipeHandlerList> activeHandlers = List.of();
+
+    public ProxySlotRecipeHandler(MEPatternBufferProxyPartMachine machine) {
+        this.machine = machine;
     }
 
-    public void updateProxy(MEPatternBufferPartMachine patternBuffer) {
+    public List<RecipeHandlerList> getProxySlotHandlers() {
+        return this.activeHandlers;
+    }
+
+    public boolean updateProxy(MEPatternBufferPartMachine patternBuffer) {
         var slotHandlers = patternBuffer.getInternalRecipeHandler().getSlotHandlers();
-        for (int i = 0; i < proxySlotHandlers.size(); ++i) {
-            ProxyRHL proxyRHL = (ProxyRHL) proxySlotHandlers.get(i);
-            SlotRHL slotRHL = (SlotRHL) slotHandlers.get(i);
-            proxyRHL.setBuffer(patternBuffer, slotRHL);
+        int size = slotHandlers.size();
+
+        while (this.allHandlers.size() < size) {
+            this.allHandlers.add(new ProxyRHL(this.machine));
         }
+
+        for (int i = 0; i < this.allHandlers.size(); ++i) {
+            if (i < size) {
+                this.allHandlers.get(i).setBuffer(patternBuffer, (SlotRHL) slotHandlers.get(i));
+            } else {
+                this.allHandlers.get(i).clearBuffer();
+            }
+        }
+
+        // Reuses the handlers and rebuilds the active list when the slot count changes
+        boolean changed = this.activeHandlers.size() != size;
+
+        if (changed) this.activeHandlers = List.copyOf(this.allHandlers.subList(0, size));
+
+        return changed;
     }
 
-    public void clearProxy() {
-        for (var slotHandler : proxySlotHandlers) {
-            ((ProxyRHL) slotHandler).clearBuffer();
+    public boolean clearProxy() {
+        for (var handler : this.allHandlers) {
+            handler.clearBuffer();
         }
+
+        boolean changed = !this.activeHandlers.isEmpty();
+
+        this.activeHandlers = List.of();
+
+        return changed;
     }
 
     private static class ProxyRHL extends RecipeHandlerList {
@@ -57,6 +82,7 @@ public final class ProxySlotRecipeHandler {
         private final ProxyItemRecipeHandler slotItem;
         private final ProxyFluidRecipeHandler sharedFluid;
         private final ProxyFluidRecipeHandler slotFluid;
+        private SlotRHL slotRHL;
 
         public ProxyRHL(MEPatternBufferProxyPartMachine machine) {
             super(IO.IN);
@@ -69,7 +95,24 @@ public final class ProxySlotRecipeHandler {
             this.setGroup(RecipeHandlerGroupDistinctness.BUS_DISTINCT);
         }
 
+        // Asks the linked buffer slot
+        @Override
+        public boolean cannotSupplyItems(List<Object> itemIngredients, Map<Object, Object> memo) {
+            var handler = this.slotRHL;
+
+            return handler != null && handler.cannotSupplyItems(itemIngredients, memo);
+        }
+
+        @Override
+        public boolean cannotSupplyFluids(List<Object> fluidIngredients, Map<Object, Object> memo) {
+            var handler = this.slotRHL;
+
+            return handler != null && handler.cannotSupplyFluids(fluidIngredients, memo);
+        }
+
         public void setBuffer(MEPatternBufferPartMachine buffer, SlotRHL slotRHL) {
+            this.slotRHL = slotRHL;
+
             circuit.setProxy(buffer.getCircuitInventory());
             sharedItem.setProxy(buffer.getShareInventory());
             sharedFluid.setProxy(buffer.getShareTank());
@@ -78,6 +121,8 @@ public final class ProxySlotRecipeHandler {
         }
 
         public void clearBuffer() {
+            this.slotRHL = null;
+
             circuit.setProxy(null);
             sharedItem.setProxy(null);
             sharedFluid.setProxy(null);

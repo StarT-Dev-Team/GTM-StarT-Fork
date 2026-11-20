@@ -1,8 +1,7 @@
 package com.gregtechceu.gtceu.integration.jei.multipage;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
-import com.gregtechceu.gtceu.api.registry.GTRegistries;
+import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
 import com.gregtechceu.gtceu.common.data.machines.GTMultiMachines;
 
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
@@ -43,15 +42,13 @@ public class MultiblockInfoCategory extends ModularUIRecipeCategory<MultiblockIn
 
     public MultiblockInfoCategory(IJeiHelpers helpers) {
         IGuiHelper guiHelper = helpers.getGuiHelper();
-        this.background = guiHelper.createBlankDrawable(160, 160);
+        this.background = guiHelper.createBlankDrawable(PatternPreviewWidget.WIDGET_WIDTH,
+                PatternPreviewWidget.WIDGET_HEIGHT);
         this.icon = helpers.getGuiHelper().createDrawableItemStack(GTMultiMachines.ELECTRIC_BLAST_FURNACE.asStack());
     }
 
     public static void registerRecipes(IRecipeRegistration registry) {
-        registry.addRecipes(RECIPE_TYPE, GTRegistries.MACHINES.values().stream()
-                .filter(MultiblockMachineDefinition.class::isInstance)
-                .map(MultiblockMachineDefinition.class::cast)
-                .filter(MultiblockMachineDefinition::isRenderXEIPreview)
+        registry.addRecipes(RECIPE_TYPE, PatternPreviewWidget.getMultiblockPreviews().stream()
                 .map(MultiblockInfoWrapper::new)
                 .toList());
     }

@@ -108,7 +108,6 @@ public class CommonProxy {
         }
 
         KeyBind.init();
-        SyncedKeyMappings.init();
 
         GTValueProviderTypes.init(eventBus);
         GTRegistries.init(eventBus);
@@ -121,6 +120,7 @@ public class CommonProxy {
     public static void init() {
         GTCEu.LOGGER.info("GTCEu common proxy init!");
         GTNetwork.init();
+        SyncedKeyMappings.init();
         UIFactory.register(MachineUIFactory.INSTANCE);
         UIFactory.register(CoverUIFactory.INSTANCE);
         UIFactory.register(GTUIEditorFactory.INSTANCE);
