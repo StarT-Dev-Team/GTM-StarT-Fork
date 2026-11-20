@@ -1,15 +1,18 @@
 package com.gregtechceu.gtceu.common.item.armor;
 
 import com.gregtechceu.gtceu.GTCEu;
+import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.item.armor.ArmorComponentItem;
 import com.gregtechceu.gtceu.api.item.armor.ArmorUtils;
 import com.gregtechceu.gtceu.api.item.armor.IArmorLogic;
 import com.gregtechceu.gtceu.api.item.component.*;
 import com.gregtechceu.gtceu.api.item.component.forge.IComponentCapability;
+import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.utils.GradientUtil;
-import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
@@ -20,6 +23,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -40,67 +44,62 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class PowerlessJetpack implements IArmorLogic, IJetpack, IItemHUDProvider {
+public class PowerlessJetpackLogic implements IArmorLogic, IJetpack, IItemHUDProvider {
 
     // Map of FluidIngredient -> burn time
     public static final AbstractObject2IntMap<FluidIngredient> FUELS = new Object2IntOpenHashMap<>();
-    public static final int tankCapacity = 16000;
+    public static final int DEFAULT_TANK_CAPACITY = 16000;
 
-    private FluidIngredient currentFuel = FluidIngredient.EMPTY;
-    private FluidIngredient previousFuel = FluidIngredient.EMPTY;
-    private int burnTimer = 0;
+    private static final String TAG_BURN_TIMER = "burnTimer";
+
+    private final int tankCapacity;
+    private final JetpackStats stats;
+    private final ResourceLocation texture;
 
     @OnlyIn(Dist.CLIENT)
     private ArmorUtils.ModularHUD HUD;
 
-    public PowerlessJetpack() {
+    public PowerlessJetpackLogic() {
+        this(DEFAULT_TANK_CAPACITY, JetpackStats.DEFAULT, GTCEu.id("textures/armor/liquid_fuel_jetpack.png"));
+    }
+
+    public PowerlessJetpackLogic(int tankCapacity, JetpackStats stats, ResourceLocation texture) {
+        this.tankCapacity = tankCapacity;
+        this.stats = stats;
+        this.texture = texture;
         if (GTCEu.isClientSide())
             HUD = new ArmorUtils.ModularHUD();
+    }
+
+    public static void registerFuel(FluidIngredient fuel, int burnTime) {
+        FUELS.putIfAbsent(fuel, burnTime);
+    }
+
+    public static void registerFuel(GTRecipe recipe) {
+        Content content = recipe.getInputContents(FluidRecipeCapability.CAP).get(0);
+        registerFuel(FluidRecipeCapability.CAP.of(content.content), recipe.duration);
+    }
+
+    public static void reloadFuels(RecipeManager manager) {
+        clearFuels();
+        for (GTRecipe recipe : manager.getAllRecipesFor(GTRecipeTypes.COMBUSTION_GENERATOR_FUELS)) {
+            registerFuel(recipe);
+        }
+    }
+
+    public static void clearFuels() {
+        FUELS.clear();
+    }
+
+    @Override
+    public JetpackStats getJetpackStats() {
+        return stats;
     }
 
     @Override
     public void onArmorTick(Level world, Player player, @NotNull ItemStack stack) {
         if (!FluidUtil.getFluidHandler(stack).isPresent()) return;
-
-        CompoundTag data = stack.getOrCreateTag();
-
-        if (data.contains("burnTimer")) burnTimer = data.getShort("burnTimer");
-        if (!data.contains("enabled")) {
-            data.putBoolean("enabled", true);
-            data.putBoolean("hover", false);
-            data.putByte("toggleTimer", (byte) 0);
-        }
-
-        boolean jetpackEnabled = data.getBoolean("enabled");
-        boolean hoverMode = data.getBoolean("hover");
-        byte toggleTimer = data.getByte("toggleTimer");
-
-        String messageKey = null;
-        if (toggleTimer == 0) {
-            if (SyncedKeyMappings.JETPACK_ENABLE.isKeyDown(player)) {
-                jetpackEnabled = !jetpackEnabled;
-                messageKey = "metaarmor.jetpack.flight." + (jetpackEnabled ? "enable" : "disable");
-                data.putBoolean("enabled", jetpackEnabled);
-            } else if (SyncedKeyMappings.ARMOR_HOVER.isKeyDown(player)) {
-                hoverMode = !hoverMode;
-                messageKey = "metaarmor.jetpack.hover." + (hoverMode ? "enable" : "disable");
-                data.putBoolean("hover", hoverMode);
-            }
-
-            if (messageKey != null) {
-                toggleTimer = 5;
-                if (!world.isClientSide) player.displayClientMessage(Component.translatable(messageKey), true);
-            }
-        }
-
-        if (toggleTimer > 0) toggleTimer--;
-        data.putByte("toggleTimer", toggleTimer);
-
-        if (currentFuel.isEmpty())
-            findNewRecipe(stack);
-
-        performFlying(player, jetpackEnabled, hoverMode, stack);
-        data.putShort("burnTimer", (short) burnTimer);
+        tickJetpack(world, player, stack, null);
     }
 
     @Override
@@ -120,7 +119,7 @@ public class PowerlessJetpack implements IArmorLogic, IJetpack, IItemHUDProvider
 
     @Override
     public ResourceLocation getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
-        return GTCEu.id("textures/armor/liquid_fuel_jetpack.png");
+        return texture;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -132,24 +131,7 @@ public class PowerlessJetpack implements IArmorLogic, IJetpack, IItemHUDProvider
             String formated = String.format("%.1f",
                     (tank.getFluidInTank(0).getAmount() * 100.0F / tank.getTankCapacity(0)));
             this.HUD.newString(Component.translatable("metaarmor.hud.fuel_lvl", formated + "%"));
-            CompoundTag data = item.getTag();
-
-            if (data != null) {
-                if (data.contains("enabled")) {
-                    Component status = (data.getBoolean("enabled") ?
-                            Component.translatable("metaarmor.hud.status.enabled") :
-                            Component.translatable("metaarmor.hud.status.disabled"));
-                    Component result = Component.translatable("metaarmor.hud.engine_enabled", status);
-                    this.HUD.newString(result);
-                }
-                if (data.contains("hover")) {
-                    Component status = (data.getBoolean("hover") ?
-                            Component.translatable("metaarmor.hud.status.enabled") :
-                            Component.translatable("metaarmor.hud.status.disabled"));
-                    Component result = Component.translatable("metaarmor.hud.hover_mode", status);
-                    this.HUD.newString(result);
-                }
-            }
+            JetpackHelper.addStatusHUD(this.HUD, item.getTag());
         }
         this.HUD.draw(guiGraphics);
         this.HUD.reset();
@@ -162,58 +144,44 @@ public class PowerlessJetpack implements IArmorLogic, IJetpack, IItemHUDProvider
 
     @Override
     public boolean canUseEnergy(ItemStack stack, int amount) {
-        if (currentFuel.isEmpty()) return false;
-        if (burnTimer > 0) return true;
-        var ret = FluidUtil.getFluidHandler(stack)
-                .map(h -> h.drain(Integer.MAX_VALUE, FluidAction.SIMULATE))
-                .map(drained -> drained.getAmount() >= currentFuel.getAmount())
-                .orElse(Boolean.FALSE);
-        if (!ret) currentFuel = FluidIngredient.EMPTY;
-        return ret;
+        if (getBurnTimer(stack) > 0) return true;
+        return findFuel(stack) != null;
     }
 
     @Override
     public void drainEnergy(ItemStack stack, int amount) {
-        if (burnTimer == 0) {
+        int burnTimer = getBurnTimer(stack);
+        if (burnTimer <= 0) {
+            FluidIngredient fuel = findFuel(stack);
+            if (fuel == null) return;
             FluidUtil.getFluidHandler(stack)
-                    .ifPresent(h -> h.drain(currentFuel.getAmount(), FluidAction.EXECUTE));
-            burnTimer = FUELS.getInt(currentFuel);
+                    .ifPresent(h -> h.drain(fuel.getAmount(), FluidAction.EXECUTE));
+            burnTimer = FUELS.getInt(fuel);
         }
-        burnTimer -= amount;
+        stack.getOrCreateTag().putInt(TAG_BURN_TIMER, burnTimer - amount);
     }
 
     @Override
     public boolean hasEnergy(ItemStack stack) {
-        return burnTimer > 0 || !currentFuel.isEmpty();
+        return getBurnTimer(stack) > 0 || findFuel(stack) != null;
     }
 
-    public void findNewRecipe(@NotNull ItemStack stack) {
-        FluidUtil.getFluidContained(stack).ifPresentOrElse(fluid -> {
-            if (!previousFuel.isEmpty() && previousFuel.test(fluid) &&
-                    fluid.getAmount() >= previousFuel.getAmount()) {
-                currentFuel = previousFuel;
-                return;
-            }
-
-            for (var fuel : FUELS.keySet()) {
-                if (fuel.test(fluid) && fluid.getAmount() >= fuel.getAmount()) {
-                    previousFuel = currentFuel = fuel;
-                }
-            }
-        }, () -> currentFuel = FluidIngredient.EMPTY);
+    private static int getBurnTimer(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        return tag == null ? 0 : tag.getInt(TAG_BURN_TIMER);
     }
 
-    /*
-     * @Override
-     * public ISpecialArmor.ArmorProperties getProperties(EntityLivingBase player, @NotNull ItemStack armor,
-     * 
-     * @NotNull DamageSource source, double damage,
-     * EntityEquipmentSlot equipmentSlot) {
-     * int damageLimit = (int) Math.min(Integer.MAX_VALUE, burnTimer * 1.0 / 32 * 25.0);
-     * if (source.isUnblockable()) return new ISpecialArmor.ArmorProperties(0, 0.0, 0);
-     * return new ISpecialArmor.ArmorProperties(0, 0, damageLimit);
-     * }
-     */
+    @Nullable
+    private static FluidIngredient findFuel(ItemStack stack) {
+        FluidStack fluid = FluidUtil.getFluidContained(stack).orElse(FluidStack.EMPTY);
+        if (fluid.isEmpty()) return null;
+        for (var fuel : FUELS.keySet()) {
+            if (fuel.test(fluid) && fluid.getAmount() >= fuel.getAmount()) {
+                return fuel;
+            }
+        }
+        return null;
+    }
 
     public static class Behaviour implements IDurabilityBar, IItemComponent, ISubItemHandler, IAddInformation,
                                   IInteractionItem, IComponentCapability {
@@ -257,17 +225,7 @@ public class PowerlessJetpack implements IArmorLogic, IJetpack, IItemHUDProvider
         @Override
         public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltipComponents,
                                     TooltipFlag isAdvanced) {
-            CompoundTag data = stack.getOrCreateTag();
-            Component state;
-            boolean enabled = !data.contains("enabled") || data.getBoolean("enabled");
-            state = enabled ? Component.translatable("metaarmor.hud.status.enabled") :
-                    Component.translatable("metaarmor.hud.status.disabled");
-            tooltipComponents.add(Component.translatable("metaarmor.hud.engine_enabled", state));
-
-            boolean hover = data.contains("hover") && data.getBoolean("hover");
-            state = hover ? Component.translatable("metaarmor.hud.status.enabled") :
-                    Component.translatable("metaarmor.hud.status.disabled");
-            tooltipComponents.add(Component.translatable("metaarmor.hud.hover_mode", state));
+            JetpackHelper.addTooltip(tooltipComponents, stack.getOrCreateTag());
         }
 
         @Override
@@ -275,7 +233,7 @@ public class PowerlessJetpack implements IArmorLogic, IJetpack, IItemHUDProvider
             ItemStack copy = item.getDefaultInstance();
             IFluidHandler fluidHandlerItem = FluidUtil.getFluidHandler(copy).resolve().orElse(null);
             if (fluidHandlerItem != null) {
-                fluidHandlerItem.fill(GTMaterials.Diesel.getFluid(tankCapacity), IFluidHandler.FluidAction.SIMULATE);
+                fluidHandlerItem.fill(GTMaterials.Diesel.getFluid(maxCapacity), IFluidHandler.FluidAction.SIMULATE);
                 items.add(copy);
             } else {
                 items.add(copy);
