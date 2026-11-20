@@ -4,7 +4,6 @@ import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.common.data.GTFluids;
 import com.gregtechceu.gtceu.core.mixins.forge.StrictNBTIngredientAccessor;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
-import com.gregtechceu.gtceu.utils.GTMath;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -31,8 +30,6 @@ import net.minecraftforge.fluids.FluidType;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -183,25 +180,7 @@ public class PotionFluidHelper {
         if (effect.isInfiniteDuration()) {
             return Component.translatable("effect.duration.infinite");
         } else {
-            int time = effect.getDuration();
-            Instant start = Instant.now();
-            Instant max = Instant.now().plusSeconds(time / 20);
-            Duration durationMax = Duration.between(start, max);
-
-            Component unit;
-
-            if (durationMax.getSeconds() <= 60) {
-                time = GTMath.saturatedCast(durationMax.getSeconds());
-                unit = Component.translatable("item.gtceu.battery.charge_unit.second");
-            } else if (durationMax.toMinutes() <= 60) {
-                time = GTMath.saturatedCast(durationMax.toMinutes());
-                unit = Component.translatable("item.gtceu.battery.charge_unit.minute");
-            } else {
-                time = GTMath.saturatedCast(durationMax.toHours());
-                unit = Component.translatable("item.gtceu.battery.charge_unit.hour");
-            }
-
-            return Component.literal(FormattingUtil.formatNumbers(time)).append(unit);
+            return FormattingUtil.formatDurationLong(effect.getDuration());
         }
     }
 }

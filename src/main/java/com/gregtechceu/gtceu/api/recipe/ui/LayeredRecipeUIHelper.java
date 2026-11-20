@@ -270,11 +270,11 @@ public class LayeredRecipeUIHelper {
 
             result.add(Component.translatable("gtceu.recipe.layered.step", Integer.toString(recipeStep + 1)));
             result.add(Component.translatable("gtceu.recipe.duration",
-                    FormattingUtil.formatNumbers(stepInfo.duration / 20f)));
+                    FormattingUtil.formatDurationShort(stepInfo.duration, Long.MAX_VALUE)));
             result.add(Component.translatable("gtceu.recipe.total", FormattingUtil.formatNumbers(stepInfo.euTotal)));
             if (stepInfo.timeout > 0) {
                 result.add(Component.translatable("gtceu.recipe.layered.timeout",
-                        FormattingUtil.formatNumbers(stepInfo.timeout / 20f)));
+                        FormattingUtil.formatDurationShort(stepInfo.timeout, Long.MAX_VALUE)));
             }
             return result;
         }

@@ -55,8 +55,8 @@ public class WorkableBlockProvider extends CapabilityBlockProvider<IWorkable> {
 
         // show as total computation instead
         if (capData.getBoolean("Research")) {
-            String current = FormattingUtil.formatNumberReadable(currentProgress);
-            String max = FormattingUtil.formatNumberReadable(maxProgress);
+            Component current = FormattingUtil.formatNumberReadable(currentProgress);
+            Component max = FormattingUtil.formatNumberReadable(maxProgress);
             text = Component.translatable("gtceu.jade.progress_computation", current, max);
 
             tooltip.add(
@@ -69,12 +69,10 @@ public class WorkableBlockProvider extends CapabilityBlockProvider<IWorkable> {
             return;
         }
 
-        if (maxProgress < 20) {
-            text = Component.translatable("gtceu.jade.progress_tick", currentProgress, maxProgress);
-        } else {
-            text = Component.translatable("gtceu.jade.progress_sec", Math.round(currentProgress / 20.0F),
-                    Math.round(maxProgress / 20.0F));
-        }
+        text = Component.empty()
+                .append(FormattingUtil.formatDurationShort(currentProgress, maxProgress))
+                .append(" / ")
+                .append(FormattingUtil.formatDurationShort(maxProgress));
 
         if (maxProgress > 0) {
             int color = capData.getBoolean("WorkingEnabled") ? 0xFF4CBB17 : 0xFFBB1C28;

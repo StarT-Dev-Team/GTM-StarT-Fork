@@ -298,7 +298,7 @@ public class FusionReactorMachine extends WorkableElectricMultiblockMachine impl
         int tier = Math.max(MINIMUM_TIER, Math.max(recipeTier, fusionTier));
         group.addWidget(new LabelWidget(-8, group.getSizeHeight() - 10,
                 LocalizationUtils.format("gtceu.recipe.eu_to_start",
-                        FormattingUtil.formatNumberReadable2F(euToStart, false),
+                        FormattingUtil.formatNumberReadable2F(euToStart, false).getString(),
                         FUSION_NAMES.get(tier))));
     }
 

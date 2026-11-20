@@ -10,6 +10,7 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.LayeredRecipeHelper;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.utils.FluidStackHashStrategy;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
@@ -112,12 +113,10 @@ public class LayeredRecipeLogic extends RecipeLogic {
     @Override
     public @Nullable Component getCustomProgressLine() {
         var currentProgress = (int) (getProgressPercent() * 100);
-        var currentInSec = progress / 20.0;
-        var maxInSec = duration / 20.0;
 
         return Component.translatable("gtceu.multiblock.layered.step_progress",
-                String.format("%.2f", (float) currentInSec),
-                String.format("%.2f", (float) maxInSec), currentProgress);
+                FormattingUtil.formatDurationShortFixed(progress, duration),
+                FormattingUtil.formatDurationShortFixed(duration), currentProgress);
     }
 
     @Override

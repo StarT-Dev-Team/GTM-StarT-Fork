@@ -108,7 +108,7 @@ public class MEPatternBufferProvider implements IBlockComponentProvider, IServer
             if (!stack.isEmpty() && amount > 0) {
                 iTooltip.add(GTElementHelper.smallFluid(JadeFluidObject.of(stack.getFluid())));
                 Component text = Component.literal(" ")
-                        .append(Component.literal(FormattingUtil.formatBuckets(amount)))
+                        .append(FormattingUtil.formatBuckets(amount))
                         .withStyle(ChatFormatting.DARK_PURPLE)
                         .append(Component.literal(" ").withStyle(ChatFormatting.WHITE))
                         .append(stack.getDisplayName().copy().withStyle(ChatFormatting.DARK_AQUA));

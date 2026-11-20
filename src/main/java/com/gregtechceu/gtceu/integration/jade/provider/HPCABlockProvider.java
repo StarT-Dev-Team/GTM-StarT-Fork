@@ -73,11 +73,11 @@ public class HPCABlockProvider implements IBlockComponentProvider, IServerDataPr
     }
 
     private static MutableComponent getEnergyUsage(long energyUsage) {
-        String energyFormatted = FormattingUtil.formatNumbers(energyUsage);
+        Component energyText = FormattingUtil.formatNumberCompact(energyUsage, "gtceu.unit.eu_per_tick");
         Component voltageName = Component.literal(GTValues.VNF[GTUtil.getTierByVoltage(energyUsage)]);
         return Component.translatable(
                 "gtceu.multiblock.energy_consumption",
-                energyFormatted,
+                energyText,
                 voltageName);
     }
 

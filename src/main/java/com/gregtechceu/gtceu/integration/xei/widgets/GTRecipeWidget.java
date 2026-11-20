@@ -15,6 +15,7 @@ import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.EnergyStack;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.FusionReactorMachine;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
@@ -34,7 +35,6 @@ import com.google.common.collect.Tables;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import lombok.Getter;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -174,13 +174,21 @@ public class GTRecipeWidget extends WidgetGroup {
         if (!recipe.data.getBoolean("hide_duration")) {
             textsY += 10;
 
-            recipeDurationText = new LabelWidget(3 - xOffset, textsY,
-                    Component.translatable(LayeredRecipeHelper.hasLayeredSteps(recipe) ? "gtceu.recipe.total_duration" :
-                            "gtceu.recipe.duration", FormattingUtil.formatNumbers(duration / 20f))
-                            .withStyle(ChatFormatting.UNDERLINE))
-                    .setTextColor(-1)
-                    .setDropShadow(true);
-            recipeDurationText.setHoverTooltips(getRecipeDurationTexts(duration));
+            var durationComponent = Component.translatable(
+                    LayeredRecipeHelper.hasLayeredSteps(recipe) ? "gtceu.recipe.total_duration" :
+                            "gtceu.recipe.duration",
+                    FormattingUtil.formatDurationShort(duration, Long.MAX_VALUE));
+
+            if (ConfigHolder.INSTANCE.client.compactFormatting) {
+                recipeDurationText = new LabelWidget(3 - xOffset, textsY, durationComponent);
+            } else {
+                recipeDurationText = new LabelWidget(3 - xOffset, textsY,
+                        durationComponent.withStyle(ChatFormatting.UNDERLINE))
+                        .setTextColor(-1)
+                        .setDropShadow(true);
+
+                recipeDurationText.setHoverTooltips(FormattingUtil.formatDurationLongParts(duration));
+            }
 
             if (recipeDurationText != null) addWidget(recipeDurationText);
         }
@@ -273,7 +281,7 @@ public class GTRecipeWidget extends WidgetGroup {
         List<Component> texts = new ArrayList<>();
 
         texts.add(Component.translatable("gtceu.recipe.oc.duration.base",
-                FormattingUtil.formatNumbers(recipe.duration / 20f)));
+                FormattingUtil.formatDurationShort(recipe.duration, Long.MAX_VALUE)));
 
         if (ocs > perfectOCs) {
             texts.add(Component.translatable("gtceu.recipe.oc.duration.normal", ocs - perfectOCs,
@@ -337,25 +345,6 @@ public class GTRecipeWidget extends WidgetGroup {
     }
 
     protected void onRecipeOverclockWidgetUpdated() {}
-
-    @NotNull
-    private static List<Component> getRecipeDurationTexts(int duration) {
-        int hours = duration / 72000;
-        int minutes = (duration % 72000) / 1200;
-        float seconds = (duration % 1200) / 20f;
-
-        List<Component> texts = new ArrayList<>();
-
-        if (hours > 0)
-            texts.add(Component.translatable("gtceu.recipe.duration.hour" + (hours > 1 ? "s" : ""), hours));
-        if (minutes > 0)
-            texts.add(Component.translatable("gtceu.recipe.duration.minute" + (minutes > 1 ? "s" : ""), minutes));
-        if (seconds > 0)
-            texts.add(Component.translatable("gtceu.recipe.duration.second" + (seconds > 1 ? "s" : ""),
-                    FormattingUtil.formatNumbers(seconds)));
-
-        return texts;
-    }
 
     private void addButtons() {
         // add a recipe id getter, btw all the things can only click within the WidgetGroup while using EMI
@@ -455,15 +444,27 @@ public class GTRecipeWidget extends WidgetGroup {
         float minAmperage = (float) euTotal / GTValues.V[minVoltageTier];
 
         if (recipeDurationText != null) {
-            recipeDurationText.setComponent(
-                    Component.translatable(
-                            LayeredRecipeHelper.hasLayeredSteps(recipe) ?
-                                    "gtceu.recipe.total_duration" : "gtceu.recipe.duration",
-                            FormattingUtil.formatNumbers(duration / 20f)).withStyle(ChatFormatting.UNDERLINE));
+            var durationComponent = Component.translatable(
+                    LayeredRecipeHelper.hasLayeredSteps(recipe) ? "gtceu.recipe.total_duration" :
+                            "gtceu.recipe.duration",
+                    FormattingUtil.formatDurationShort(duration, Long.MAX_VALUE));
+            List<Component> durationTexts = new ArrayList<>();
 
-            List<Component> durationTexts = new ArrayList<>(getRecipeDurationTexts(duration));
+            if (!ConfigHolder.INSTANCE.client.compactFormatting) {
+                durationTexts.addAll(FormattingUtil.formatDurationLongParts(duration));
+            }
 
             durationTexts.addAll(ocDurationTexts);
+
+            if (durationTexts.isEmpty()) {
+                recipeDurationText.setComponent(durationComponent);
+            } else {
+                recipeDurationText.setComponent(durationComponent.withStyle(ChatFormatting.UNDERLINE));
+                recipeDurationText
+                        .setTextColor(-1)
+                        .setDropShadow(true);
+            }
+
             recipeDurationText.setHoverTooltips(durationTexts);
         }
 

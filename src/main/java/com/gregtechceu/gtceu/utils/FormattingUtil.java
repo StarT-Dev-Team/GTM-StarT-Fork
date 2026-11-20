@@ -1,18 +1,22 @@
 package com.gregtechceu.gtceu.utils;
 
+import com.gregtechceu.gtceu.config.ConfigHolder;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
@@ -21,12 +25,12 @@ import static net.minecraft.ChatFormatting.YELLOW;
 @SuppressWarnings("UnnecessaryUnicodeEscape")
 public class FormattingUtil {
 
+    private static final String[] SI_PREFIX_NAMES = { "kilo", "mega", "giga", "tera", "peta", "exa", "zetta" };
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.ROOT);
     public static final DecimalFormat DECIMAL_FORMAT_0F = new DecimalFormat(",###");
     public static final DecimalFormat DECIMAL_FORMAT_1F = new DecimalFormat("#,##0.#");
     public static final DecimalFormat DECIMAL_FORMAT_2F = new DecimalFormat("#,##0.##");
-    public static final DecimalFormat DECIMAL_FORMAT_SIC = new DecimalFormat("0E00");
-    public static final DecimalFormat DECIMAL_FORMAT_SIC_2F = new DecimalFormat("0.00E00");
+    private static final DecimalFormat DECIMAL_FORMAT_2F_FIXED = new DecimalFormat("#,##0.00");
 
     private static final int SMALL_DOWN_NUMBER_BASE = '\u2080';
     private static final int SMALL_UP_NUMBER_BASE = '\u2070';
@@ -196,60 +200,122 @@ public class FormattingUtil {
         return NUMBER_FORMAT.format(number);
     }
 
-    public static String formatNumberReadable(long number) {
+    public static MutableComponent formatNumberReadable(long number) {
         return formatNumberReadable(number, false);
     }
 
-    public static String formatNumberReadable(long number, boolean milli) {
-        return formatNumberReadable(number, milli, DECIMAL_FORMAT_1F, null);
+    public static MutableComponent formatNumberReadable(long number, boolean milli) {
+        return formatNumberReadable(number, milli, DECIMAL_FORMAT_1F, "gtceu.unit.number");
     }
 
-    public static String formatNumberReadable2F(double number, boolean milli) {
-        return formatNumberReadable(number, milli, DECIMAL_FORMAT_2F, null);
+    public static MutableComponent formatNumberReadable2F(double number, boolean milli) {
+        return formatNumberReadable(number, milli, DECIMAL_FORMAT_2F, "gtceu.unit.number");
+    }
+
+    public static MutableComponent formatNumberReadable(double number, boolean milli, NumberFormat fmt,
+                                                        String unitKey) {
+        return formatNumberReadable(number, milli, fmt, unitKey, Style.EMPTY);
     }
 
     /**
      * Format number in engineering notation with SI prefixes [m, k, M, G, T, P, E, Z]
      *
-     * @param number Number to format
-     * @param milli  Whether the passed number is already in millis (e.g., mB)
-     * @param fmt    Formatter to use for compacted number
-     * @param unit   Optional unit to append
+     * @param number      Number to format
+     * @param milli       Whether the passed number is already in millis (e.g., mB)
+     * @param fmt         Formatter to use for compacted number
+     * @param unitKey     Lang key of the unit, which takes the number and the SI prefix as its two arguments
+     * @param numberStyle Style of the number, the SI prefix and the unit keep the style of the surrounding text
      * @return Compacted number with SI prefix
      */
-    public static String formatNumberReadable(double number, boolean milli, NumberFormat fmt, @Nullable String unit) {
-        StringBuilder sb = new StringBuilder();
-        if (number < 0) {
-            number = -number;
-            sb.append('-');
+    public static MutableComponent formatNumberReadable(double number, boolean milli, NumberFormat fmt, String unitKey,
+                                                        Style numberStyle) {
+        double limit = 1e3 - 0.5 / Math.pow(10, fmt.getMaximumFractionDigits());
+        double abs = Math.abs(number);
+        int exp = milli ? -1 : 0;
+
+        while (exp < SI_PREFIX_NAMES.length && abs >= limit) {
+            abs /= 1e3;
+            exp++;
         }
 
-        if (milli && number >= 1e3) {
-            milli = false;
-            number /= 1e3;
-        }
+        String text = (number < 0 ? "-" : "") + fmt.format(abs);
+        Component prefix = exp == 0 || exp < 0 && abs == 0 ? Component.empty() :
+                Component.translatable("gtceu.unit.prefix." + (exp < 0 ? "milli" : SI_PREFIX_NAMES[exp - 1]));
 
-        int exp = 0;
-        if (number >= 1e3) {
-            exp = (int) Math.log10(number) / 3;
-            if (exp > 7) exp = 7;
-            if (exp > 0) number /= Math.pow(1e3, exp);
-        }
-
-        sb.append(fmt.format(number));
-        if (exp > 0) sb.append("kMGTPEZ".charAt(exp - 1));
-        else if (milli && number != 0) sb.append('m');
-
-        if (unit != null) sb.append(unit);
-        return sb.toString();
+        return Component.translatable(unitKey, Component.literal(text).setStyle(numberStyle), prefix);
     }
 
-    public static String formatNumberOrSic(BigInteger number, BigInteger threshold) {
-        return number.compareTo(threshold) > 0 ? DECIMAL_FORMAT_SIC_2F.format(number) : formatNumbers(number);
+    public static MutableComponent formatNumberCompact(Number number, String unitKey) {
+        return formatNumberCompact(number, unitKey, Style.EMPTY);
     }
 
-    public static String formatBuckets(long mB) {
-        return formatNumberReadable(mB, true, DECIMAL_FORMAT_2F, "B");
+    public static MutableComponent formatNumberCompact(Number number, String unitKey, Style numberStyle) {
+        if (ConfigHolder.INSTANCE.client.compactFormatting)
+            return formatNumberReadable(number.doubleValue(), false, DECIMAL_FORMAT_2F, unitKey, numberStyle);
+
+        return Component.translatable(unitKey, Component.literal(formatNumbers(number)).setStyle(numberStyle),
+                Component.empty());
+    }
+
+    public static MutableComponent formatBuckets(long mB) {
+        return formatNumberReadable(mB, true, DECIMAL_FORMAT_2F, "gtceu.unit.bucket");
+    }
+
+    public static Component formatDurationShort(long ticks) {
+        return formatDurationShort(ticks, ticks);
+    }
+
+    public static Component formatDurationShort(long ticks, long reference) {
+        return formatDurationShort(ticks, reference, false);
+    }
+
+    public static Component formatDurationShortFixed(long ticks) {
+        return formatDurationShortFixed(ticks, ticks);
+    }
+
+    public static Component formatDurationShortFixed(long ticks, long reference) {
+        return formatDurationShort(ticks, reference, true);
+    }
+
+    public static Component formatDurationLong(long ticks) {
+        return ComponentUtils.formatList(formatDurationLongParts(ticks), Component.literal(" "));
+    }
+
+    public static List<Component> formatDurationLongParts(long ticks) {
+        return formatDurationParts(ticks, false, DECIMAL_FORMAT_2F);
+    }
+
+    private static Component formatDurationShort(long ticks, long reference, boolean fixed) {
+        if (reference < 20) return Component.translatable("gtceu.duration.short.tick", ticks);
+
+        return ComponentUtils.formatList(
+                formatDurationParts(ticks, true, fixed ? DECIMAL_FORMAT_2F_FIXED : DECIMAL_FORMAT_2F),
+                Component.literal(" "));
+    }
+
+    private static List<Component> formatDurationParts(long ticks, boolean shortUnits, DecimalFormat secondFormat) {
+        String[] units = { "year", "day", "hour", "minute", "second" };
+        List<Component> parts = new ArrayList<>(units.length);
+
+        long days = ticks / 1_728_000;
+        long[] amounts = shortUnits && !ConfigHolder.INSTANCE.client.compactFormatting ?
+                new long[] { 0, 0, 0, 0, ticks } :
+                new long[] { days / 365, days % 365, ticks % 1_728_000 / 72_000, ticks % 72_000 / 1200, ticks % 1200 };
+
+        for (int i = 0; i < units.length; i++) {
+            boolean isSeconds = i == units.length - 1;
+
+            if (amounts[i] <= 0 && !(isSeconds && parts.isEmpty())) continue;
+
+            double amount = isSeconds ? amounts[i] / 20.0 : amounts[i];
+
+            String key = shortUnits ? "gtceu.duration.short." + units[i] :
+                    "gtceu.duration.long." + units[i] + (amount == 1 ? "" : "s");
+
+            parts.add(Component.translatable(key, isSeconds ? secondFormat.format(amount) : formatNumbers(amount)));
+        }
+
+        return parts;
     }
 
     @NotNull

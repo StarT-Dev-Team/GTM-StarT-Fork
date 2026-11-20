@@ -4,6 +4,7 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.capability.IWorkable;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -15,6 +16,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 import mcjty.theoneprobe.api.IProbeHitData;
 import mcjty.theoneprobe.api.IProbeInfo;
+import mcjty.theoneprobe.api.NumberFormat;
 import org.jetbrains.annotations.Nullable;
 
 public class WorkableInfoProvider extends CapabilityInfoProvider<IWorkable> {
@@ -37,7 +39,6 @@ public class WorkableInfoProvider extends CapabilityInfoProvider<IWorkable> {
 
         int currentProgress = capability.getProgress();
         int maxProgress = capability.getMaxProgress();
-        Component text;
 
         if (capability instanceof RecipeLogic logic &&
                 logic.getLastRecipe() != null &&
@@ -52,18 +53,13 @@ public class WorkableInfoProvider extends CapabilityInfoProvider<IWorkable> {
             return;
         }
 
-        if (maxProgress < 20) {
-            text = Component.translatable("gtceu.top.progress_tick", maxProgress);
-        } else {
-            currentProgress = Math.round(currentProgress / 20.0F);
-            maxProgress = Math.round(maxProgress / 20.0F);
-            text = Component.translatable("gtceu.top.progress_sec", maxProgress);
-        }
-
         if (maxProgress > 0) {
             int color = capability.isWorkingEnabled() ? 0xFF4CBB17 : 0xFFBB1C28;
+
             probeInfo.progress(currentProgress, maxProgress, probeInfo.defaultProgressStyle()
-                    .suffix(text)
+                    .numberFormat(NumberFormat.NONE)
+                    .prefix(FormattingUtil.formatDurationShort(currentProgress, maxProgress))
+                    .suffix(Component.literal(" / ").append(FormattingUtil.formatDurationShort(maxProgress)))
                     .filledColor(color)
                     .alternateFilledColor(color)
                     .borderColor(0xFF555555));

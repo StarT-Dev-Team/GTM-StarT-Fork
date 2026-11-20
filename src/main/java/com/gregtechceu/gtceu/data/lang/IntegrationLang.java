@@ -96,10 +96,8 @@ public class IntegrationLang {
         provider.add("gtceu.top.buffer_bound_pos", "Bound To - X: %s, Y: %s, Z: %s");
         provider.add("gtceu.top.proxies_bound", "Buffer Proxies Bound: %s");
 
-        provider.add("gtceu.jade.energy_stored", "%d / %d EU");
+        provider.add("gtceu.jade.energy_stored", "%s / %s");
         provider.add("gtceu.jade.progress_computation", "%s / %s CWU");
-        provider.add("gtceu.jade.progress_sec", "%s / %s s");
-        provider.add("gtceu.jade.progress_tick", "%s / %s t");
         provider.add("gtceu.jade.cleaned_this_second", "Cleaned hazard: %s/s");
         provider.add("gtceu.jade.fluid_use", "%s mB/t");
         provider.add("gtceu.jade.voltage_use", "%s EU/t");
@@ -107,18 +105,11 @@ public class IntegrationLang {
         provider.add("gtceu.jade.at", " @ ");
         provider.add("gtceu.jade.remaining_charge_time", "Until charged: %s");
         provider.add("gtceu.jade.remaining_discharge_time", "Until empty: %s");
-        provider.add("gtceu.jade.changes_eu_sec", "%s EU/s");
-        provider.add("gtceu.jade.seconds", "%s seconds");
-        provider.add("gtceu.jade.minutes", "%s minutes");
-        provider.add("gtceu.jade.hours", "%s hours");
-        provider.add("gtceu.jade.days", "%s days");
-        provider.add("gtceu.jade.years", "%s years");
+        provider.add("gtceu.jade.changes_eu_sec", "%s");
         provider.add("gtceu.jade.hatch_locked", "Locked");
 
         provider.add("gtceu.top.energy_stored", " / %d EU");
         provider.add("gtceu.top.progress_computation", " / %s CWU");
-        provider.add("gtceu.top.progress_sec", " / %s s");
-        provider.add("gtceu.top.progress_tick", " / %s t");
 
         provider.add("gtceu.top.ldp_endpoint.is_formed", "§aPipeline Formed§r");
         provider.add("gtceu.top.ldp_endpoint.not_formed", "§cPipeline Incomplete§r");

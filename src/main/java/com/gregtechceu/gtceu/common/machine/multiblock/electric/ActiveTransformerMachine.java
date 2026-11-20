@@ -175,18 +175,22 @@ public class ActiveTransformerMachine extends WorkableElectricMultiblockMachine
                 textList.add(Component.translatable("gtceu.multiblock.running"));
                 textList.add(Component
                         .translatable("gtceu.multiblock.active_transformer.max_input",
-                                FormattingUtil.formatNumbers(
-                                        Math.abs(powerInput.getInputVoltage() * powerInput.getInputAmperage()))));
+                                FormattingUtil.formatNumberCompact(
+                                        Math.abs(powerInput.getInputVoltage() * powerInput.getInputAmperage()),
+                                        "gtceu.unit.eu_per_tick")));
                 textList.add(Component
                         .translatable("gtceu.multiblock.active_transformer.max_output",
-                                FormattingUtil.formatNumbers(
-                                        Math.abs(powerOutput.getOutputVoltage() * powerOutput.getOutputAmperage()))));
+                                FormattingUtil.formatNumberCompact(
+                                        Math.abs(powerOutput.getOutputVoltage() * powerOutput.getOutputAmperage()),
+                                        "gtceu.unit.eu_per_tick")));
                 textList.add(Component
                         .translatable("gtceu.multiblock.active_transformer.average_in",
-                                FormattingUtil.formatNumbers(Math.abs(powerInput.getInputPerSec() / 20))));
+                                FormattingUtil.formatNumberCompact(Math.abs(powerInput.getInputPerSec() / 20),
+                                        "gtceu.unit.eu_per_tick")));
                 textList.add(Component
                         .translatable("gtceu.multiblock.active_transformer.average_out",
-                                FormattingUtil.formatNumbers(Math.abs(powerOutput.getOutputPerSec() / 20))));
+                                FormattingUtil.formatNumberCompact(Math.abs(powerOutput.getOutputPerSec() / 20),
+                                        "gtceu.unit.eu_per_tick")));
                 if (!ConfigHolder.INSTANCE.machines.harmlessActiveTransformers) {
                     textList.add(Component
                             .translatable("gtceu.multiblock.active_transformer.danger_enabled"));

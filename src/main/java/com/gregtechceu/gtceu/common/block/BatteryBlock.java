@@ -39,7 +39,7 @@ public class BatteryBlock extends Block {
             tooltip.add(Component.translatable("block.gtceu.substation_capacitor.tooltip_empty"));
         } else {
             tooltip.add(Component.translatable("block.gtceu.substation_capacitor.tooltip_filled",
-                    FormattingUtil.formatNumbers(this.data.getCapacity())));
+                    FormattingUtil.formatNumberCompact(this.data.getCapacity(), "gtceu.unit.eu")));
         }
     }
 

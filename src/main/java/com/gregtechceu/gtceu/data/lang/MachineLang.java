@@ -436,8 +436,8 @@ public class MachineLang {
         provider.add("gtceu.machine.hpca.advanced_computation_component.damaged.tooltip",
                 "It only cost an arm and a leg");
 
-        provider.add("gtceu.machine.hpca.component_general.upkeep_eut", "§eUpkeep Energy: §f%d EU/t");
-        provider.add("gtceu.machine.hpca.component_general.max_eut", "§6Max Energy: §f%d EU/t");
+        provider.add("gtceu.machine.hpca.component_general.upkeep_eut", "§eUpkeep Energy: §f%s");
+        provider.add("gtceu.machine.hpca.component_general.max_eut", "§6Max Energy: §f%s");
         provider.add("gtceu.machine.hpca.component_type.cooler_passive", "§bCooler Type: §fPassive");
         provider.add("gtceu.machine.hpca.component_type.cooler_active", "§bCooler Type: §fActive");
         provider.add("gtceu.machine.hpca.component_type.cooler_cooling", "§aProvides: §f%d Cooling");
@@ -479,7 +479,7 @@ public class MachineLang {
         provider.add("gtceu.machine.miner.minez", "mZ: %d");
         provider.add("gtceu.machine.miner.radius", "Radius: %d");
         provider.add("gtceu.machine.miner.chunkradius", "Chunk Radius: %d");
-        provider.add("gtceu.machine.miner.progress", "Progress: %d/%d");
+        provider.add("gtceu.machine.miner.progress", "Progress: %s/%s");
 
         provider.add("gtceu.machine.fluid_drilling_rig.description",
                 "§7Drills fluids from veins under bedrock.");
@@ -884,7 +884,7 @@ public class MachineLang {
         provider.add("gtceu.multiblock.turbine.rotor_speed", "Rotor Speed: %s/%s RPM");
         provider.add("gtceu.multiblock.turbine.rotor_durability", "Rotor Durability: %s%%");
         provider.add("gtceu.multiblock.turbine.efficiency", "Turbine Efficiency: %s%%");
-        provider.add("gtceu.multiblock.turbine.energy_per_tick", "Energy Output: %s/%s EU/t");
+        provider.add("gtceu.multiblock.turbine.energy_per_tick", "Energy Output: %s/%s");
         provider.add("gtceu.multiblock.turbine.energy_per_tick_maxed", "Energy Output: %s EU/t");
         provider.add("gtceu.multiblock.turbine.obstructed", "Turbine Face Obstructed");
         provider.add("gtceu.multiblock.turbine.efficiency_tooltip",
@@ -901,7 +901,7 @@ public class MachineLang {
         provider.add("gtceu.multiblock.large_boiler.throttle_modify", "Modify Throttle:");
         provider.add("gtceu.multiblock.large_boiler.rate_tooltip",
                 "§7Produces §f%d L §7of Steam with §f1 Coal");
-        provider.add("gtceu.multiblock.large_boiler.heat_time_tooltip", "§7Takes §f%d seconds §7to boiling up");
+        provider.add("gtceu.multiblock.large_boiler.heat_time_tooltip", "§7Takes §f%s §7to boiling up");
         provider.add("gtceu.multiblock.large_boiler.explosion_tooltip",
                 "Will explode if provided Fuel with no Water");
         provider.add("gtceu.multiblock.large_miner.done", "Done!");
@@ -925,35 +925,30 @@ public class MachineLang {
         provider.add("gtceu.multiblock.cracking_unit.energy", "Energy Usage: %s%%");
         provider.add("gtceu.multiblock.chemical_reactor.speed", "Processing Speed: %s%%");
         provider.add("gtceu.multiblock.chemical_reactor.energy", "Energy Usage: %s%%");
-        provider.add("gtceu.multiblock.power_substation.stored", "§7Stored: %s §7EU");
-        provider.add("gtceu.multiblock.power_substation.capacity", "§7Capacity: %s §7EU");
-        provider.add("gtceu.multiblock.power_substation.passive_drain", "§7Passive Drain: %s §7EU/t");
-        provider.add("gtceu.multiblock.power_substation.average_in", "§7Avg. Input: %s §7EU/t");
+        provider.add("gtceu.multiblock.power_substation.stored", "§7Stored: %s");
+        provider.add("gtceu.multiblock.power_substation.capacity", "§7Capacity: %s");
+        provider.add("gtceu.multiblock.power_substation.passive_drain", "§7Passive Drain: %s");
+        provider.add("gtceu.multiblock.power_substation.average_in", "§7Avg. Input: %s");
         provider.add("gtceu.multiblock.power_substation.average_in_hover",
                 "The average inserted EU into the Power Substation's internal energy bank");
-        provider.add("gtceu.multiblock.power_substation.average_out", "§7Avg. Output: %s §7EU/t");
+        provider.add("gtceu.multiblock.power_substation.average_out", "§7Avg. Output: %s");
         provider.add("gtceu.multiblock.power_substation.average_out_hover",
                 "The average extracted EU out of the Power Substation's internal energy bank");
         provider.add("gtceu.multiblock.power_substation.time_to_fill", "§7Time to fill: %s");
         provider.add("gtceu.multiblock.power_substation.time_to_drain", "§7Time to drain: %s");
-        provider.add("gtceu.multiblock.power_substation.time_seconds", "%s Seconds");
-        provider.add("gtceu.multiblock.power_substation.time_minutes", "%s Minutes");
-        provider.add("gtceu.multiblock.power_substation.time_hours", "%s Hours");
-        provider.add("gtceu.multiblock.power_substation.time_days", "%s Days");
-        provider.add("gtceu.multiblock.power_substation.time_years", "%s Years");
         provider.add("gtceu.multiblock.power_substation.time_forever", "Forever");
         provider.add("gtceu.multiblock.power_substation.under_one_hour_left",
                 "Less than 1 hour until fully drained!");
         provider.add("gtceu.multiblock.power_substation.empty_battery",
                 "All capacitors are empty! At least one filled capacitor is required!");
-        provider.add("gtceu.multiblock.active_transformer.average_in", "§bAvg. Input: §f%s EU/t");
-        provider.add("gtceu.multiblock.active_transformer.average_out", "§bAvg. Output: §f%s EU/t");
-        provider.add("gtceu.multiblock.active_transformer.max_input", "§aMax Input: §f%s EU/t");
-        provider.add("gtceu.multiblock.active_transformer.max_output", "§cMax Output: §f%s EU/t");
+        provider.add("gtceu.multiblock.active_transformer.average_in", "§bAvg. Input: §f%s");
+        provider.add("gtceu.multiblock.active_transformer.average_out", "§bAvg. Output: §f%s");
+        provider.add("gtceu.multiblock.active_transformer.max_input", "§aMax Input: §f%s");
+        provider.add("gtceu.multiblock.active_transformer.max_output", "§cMax Output: §f%s");
         provider.add("gtceu.multiblock.active_transformer.danger_enabled", "§c§bDANGER: Explosive");
         provider.add("gtceu.multiblock.data_bank.providing", "Providing data.");
         provider.add("gtceu.multiblock.hpca.computation", "Providing: %s");
-        provider.add("gtceu.multiblock.hpca.energy", "Using: %s / %s EU/t (%s)");
+        provider.add("gtceu.multiblock.hpca.energy", "Using: %s / %s (%s)");
         provider.add("gtceu.multiblock.hpca.temperature", "Temperature: %s");
         provider.add("gtceu.multiblock.hpca.hover_for_info", "Hover for details");
         provider.add("gtceu.multiblock.hpca.error_damaged", "Damaged component in structure!");
