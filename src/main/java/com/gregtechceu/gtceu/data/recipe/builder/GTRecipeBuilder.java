@@ -21,11 +21,11 @@ import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.*;
 import com.gregtechceu.gtceu.api.recipe.ingredient.nbtpredicate.NBTPredicate;
+import com.gregtechceu.gtceu.api.recipe.loot.LootTableOutputs;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.common.recipe.condition.*;
-import com.gregtechceu.gtceu.common.valueprovider.distribution.Distributions;
 import com.gregtechceu.gtceu.common.valueprovider.distribution.IntDistribution;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
@@ -1055,6 +1055,30 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder chancedFluidOutputLogic(ChanceLogic logic) {
         return chancedOutputLogic(FluidRecipeCapability.CAP, logic);
+    }
+
+    public GTRecipeBuilder outputLootTable(ResourceLocation lootTable) {
+        if (perTick) {
+            GTCEu.LOGGER.error("Loot table outputs cannot be per tick, id: {}", id);
+            return this;
+        }
+        // each loot table takes one item output slot in recipe viewers
+        warnTooManyIngredients(ItemRecipeCapability.CAP, false, output,
+                data.getList(LootTableOutputs.DATA_KEY, Tag.TAG_COMPOUND).size() + 1);
+        LootTableOutputs.addTo(data, lootTable, tierChanceBoost);
+        return this;
+    }
+
+    public GTRecipeBuilder outputLootTable(ResourceLocation lootTable, ChanceLogic logic) {
+        return outputLootTable(lootTable, logic, tierChanceBoost);
+    }
+
+    public GTRecipeBuilder outputLootTable(ResourceLocation lootTable, ChanceLogic logic, int tierChanceBoost) {
+        int lastTierChanceBoost = this.tierChanceBoost;
+        this.tierChanceBoost = tierChanceBoost;
+        outputLootTable(lootTable);
+        this.tierChanceBoost = lastTierChanceBoost;
+        return chancedItemOutputLogic(logic);
     }
 
     public GTRecipeBuilder chancedInputLogic(RecipeCapability<?> cap, ChanceLogic logic) {

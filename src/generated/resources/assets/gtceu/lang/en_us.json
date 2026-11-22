@@ -2547,6 +2547,7 @@
   "gtceu.gui.content.chance_tier_boost_plus": "Bonus Chance: +%s%%/tier",
   "gtceu.gui.content.count_range": "%s-%sx",
   "gtceu.gui.content.fluid_range": "%s-%smB",
+  "gtceu.gui.content.loot_table": "Loot Table: %s",
   "gtceu.gui.content.odds_hold_shift": "§7Hold §d[SHIFT]§7 to show Odds Info",
   "gtceu.gui.content.odds_line": "%sx: %s%%",
   "gtceu.gui.content.odds_most_likely": "Most Likely: %sx (%s%%)",
