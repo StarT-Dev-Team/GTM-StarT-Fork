@@ -37,17 +37,17 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 
 import it.unimi.dsi.fastutil.ints.IntIntPair;
-import it.unimi.dsi.fastutil.objects.AbstractObject2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PowerlessJetpackLogic implements IArmorLogic, IJetpack, IItemHUDProvider {
 
     // Map of FluidIngredient -> burn time
-    public static final AbstractObject2IntMap<FluidIngredient> FUELS = new Object2IntOpenHashMap<>();
+    public static final Map<FluidIngredient, Integer> FUELS = new ConcurrentHashMap<>();
     public static final int DEFAULT_TANK_CAPACITY = 16000;
 
     private static final String TAG_BURN_TIMER = "burnTimer";
@@ -156,7 +156,7 @@ public class PowerlessJetpackLogic implements IArmorLogic, IJetpack, IItemHUDPro
             if (fuel == null) return;
             FluidUtil.getFluidHandler(stack)
                     .ifPresent(h -> h.drain(fuel.getAmount(), FluidAction.EXECUTE));
-            burnTimer = FUELS.getInt(fuel);
+            burnTimer = FUELS.getOrDefault(fuel, 0);
         }
         stack.getOrCreateTag().putInt(TAG_BURN_TIMER, burnTimer - amount);
     }
