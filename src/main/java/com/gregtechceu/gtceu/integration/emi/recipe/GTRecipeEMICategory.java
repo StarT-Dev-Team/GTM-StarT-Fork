@@ -13,6 +13,7 @@ import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 
 import dev.emi.emi.api.EmiRegistry;
+import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.recipe.VanillaEmiRecipeCategories;
 import dev.emi.emi.api.stack.EmiStack;
@@ -48,7 +49,7 @@ public class GTRecipeEMICategory extends EmiRecipeCategory {
             EmiRecipeCategory emiCategory = CATEGORIES.apply(category);
             type.getRecipesInCategory(category).stream()
                     .map(recipe -> new GTEmiRecipe(recipe, emiCategory))
-                    .forEach(registry::addRecipe);
+                    .forEach(recipe -> addSafely(registry, recipe));
         }
         // run subcategories
         for (var subCategory : subCategories) {
@@ -57,7 +58,15 @@ public class GTRecipeEMICategory extends EmiRecipeCategory {
             EmiRecipeCategory emiCategory = CATEGORIES.apply(subCategory);
             type.getRecipesInCategory(subCategory).stream()
                     .map(recipe -> new GTEmiRecipe(recipe, emiCategory))
-                    .forEach(registry::addRecipe);
+                    .forEach(recipe -> addSafely(registry, recipe));
+        }
+    }
+
+    public static void addSafely(EmiRegistry registry, EmiRecipe recipe) {
+        try {
+            registry.addRecipe(recipe);
+        } catch (RuntimeException e) {
+            GTCEu.LOGGER.error("Failed to add EMI recipe {}", recipe.getId(), e);
         }
     }
 

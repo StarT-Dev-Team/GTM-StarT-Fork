@@ -8,7 +8,6 @@ import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.WidgetUtils;
-import com.gregtechceu.gtceu.api.gui.widget.PredicatedButton;
 import com.gregtechceu.gtceu.api.recipe.*;
 import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
@@ -388,10 +387,12 @@ public class GTRecipeWidget extends UIElement {
     protected void onRecipeOverclockWidgetUpdated() {}
 
     private void addButtons() {
+        if (FMLLoader.isProduction()) return;
         // add a recipe id getter, btw all the things can only click within the WidgetGroup while using EMI
         int x = widgetWidth - xOffset - 18;
         int y = widgetHeight - 30;
-        var button = new PredicatedButton(() -> !FMLLoader.isProduction());
+        var button = new Button();
+        button.noText();
         button.buttonStyle(style -> style.baseTexture(IGuiTexture.group(GuiTextures.BUTTON, new TextTexture("ID"))));
         button.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(x).top(y).width(15).height(15));
         button.setOnClick(event -> Minecraft.getInstance().keyboardHandler
