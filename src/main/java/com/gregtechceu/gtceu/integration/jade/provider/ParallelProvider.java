@@ -1,8 +1,8 @@
 package com.gregtechceu.gtceu.integration.jade.provider;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.IParallelHatch;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeSerializer;
@@ -72,7 +72,7 @@ public class ParallelProvider implements IBlockComponentProvider, IServerDataPro
 
     @Override
     public void appendServerData(CompoundTag tag, BlockAccessor blockAccessor) {
-        if (blockAccessor.getBlockEntity() instanceof MetaMachineBlockEntity blockEntity) {
+        if (blockAccessor.getBlockEntity() instanceof IMachineBlockEntity blockEntity) {
             if (blockEntity.getMetaMachine() instanceof IParallelHatch parallelHatch) {
                 tag.putInt("hatchParallel", parallelHatch.getCurrentParallel());
                 tag.putInt("hatchMinParallel", parallelHatch.getMinimumParallel());

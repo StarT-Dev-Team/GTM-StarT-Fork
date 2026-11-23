@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.api.blockentity;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.*;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
@@ -13,21 +12,12 @@ import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
 import com.gregtechceu.gtceu.api.misc.EnergyInfoProviderList;
 import com.gregtechceu.gtceu.api.misc.LaserContainerList;
-import com.gregtechceu.gtceu.client.model.IBlockEntityRendererBakedModel;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
-import com.gregtechceu.gtceu.common.datafixers.TagFixer;
-import com.gregtechceu.gtceu.syncdata.LegacyManagedData;
 
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
 import com.lowdragmc.lowdraglib2.syncdata.storage.MultiManagedStorage;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -54,88 +44,96 @@ import java.util.*;
 
 public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlockEntity {
 
-    public final MultiManagedStorage managedStorage = new MultiManagedStorage();
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
-    @Getter
-    public final MetaMachine metaMachine;
-    @Getter
-    @Persisted
-    @DescSynced
-    @RequireRerender
-    private MachineRenderState renderState;
-    private final long offset = GTValues.RNG.nextInt(20);
+
+    private final MetaMachineBlockEntityHelper helper;
 
     public MetaMachineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
-        this.renderState = getDefinition().defaultRenderState();
-        this.metaMachine = getDefinition().createMetaMachine(this);
-
-        this.getRootStorage().attach(getSyncStorage());
+        this.helper = new MetaMachineBlockEntityHelper(this);
     }
 
     @Override
     public MultiManagedStorage getRootStorage() {
-        return managedStorage;
+        return helper.getRootStorage();
     }
 
     @Override
     public boolean triggerEvent(int id, int para) {
-        if (id == 1) { // chunk re render
-            if (level != null && level.isClientSide) {
-                scheduleRenderUpdate();
-            }
-            return true;
-        }
-        return false;
+        return helper.triggerEvent(id, para);
+    }
+
+    @Override
+    public MachineRenderState getRenderState() {
+        return helper.getRenderState();
     }
 
     @Override
     public void setRenderState(MachineRenderState state) {
-        this.renderState = state;
-        scheduleRenderUpdate();
+        helper.setRenderState(state);
+    }
+
+    @Override
+    public MetaMachine getMetaMachine() {
+        return helper.getMetaMachine();
     }
 
     @Override
     public long getOffset() {
-        return offset;
+        return helper.getOffset();
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
-        metaMachine.onUnload();
+        helper.setRemoved();
     }
 
     @Override
     public void onLoad() {
         super.onLoad();
-        metaMachine.onLoad();
+        helper.onLoad();
     }
 
     @Override
     public boolean shouldRenderGrid(Player player, BlockPos pos, BlockState state, ItemStack held,
                                     Set<GTToolType> toolTypes) {
-        return metaMachine.shouldRenderGrid(player, pos, state, held, toolTypes);
+        return helper.shouldRenderGrid(player, pos, state, held, toolTypes);
     }
 
     @Override
     public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
                                             Direction side) {
-        return metaMachine.sideTips(player, pos, state, toolTypes, side);
+        return helper.sideTips(player, pos, state, toolTypes, side);
     }
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        var result = getCapability(getMetaMachine(), cap, side);
+        var result = helper.getCapability(cap, side);
         return result.isPresent() ? result : super.getCapability(cap, side);
     }
 
     @Override
     public void setChanged() {
-        if (getLevel() != null) {
-            getLevel().blockEntityChanged(getBlockPos());
-        }
+        helper.setChanged();
+    }
+
+    /**
+     * Why, Forge, Why?
+     * Why must you make me add a method for no good reason?
+     */
+    @SuppressWarnings("unchecked")
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public AABB getRenderBoundingBox() {
+        return helper.getRenderBoundingBox();
+    }
+
+    @Override
+    public void load(CompoundTag tag) {
+        helper.load(tag);
+        super.load(tag);
     }
 
     public static <T> LazyOptional<T> getCapability(MetaMachine machine, @NotNull Capability<T> cap,
@@ -288,33 +286,6 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
             }
         }
         return list;
-    }
-
-    /**
-     * Why, Forge, Why?
-     * Why must you make me add a method for no good reason?
-     */
-    @SuppressWarnings("unchecked")
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public AABB getRenderBoundingBox() {
-        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-        BakedModel model = blockRenderDispatcher.getBlockModel(this.getBlockState());
-
-        if (model instanceof IBlockEntityRendererBakedModel<?> modelWithBER) {
-            if (modelWithBER.getBlockEntityType() == this.getType()) {
-                return ((IBlockEntityRendererBakedModel<MetaMachineBlockEntity>) modelWithBER)
-                        .getRenderBoundingBox(this);
-            }
-        }
-        return new AABB(worldPosition.offset(-1, 0, -1), worldPosition.offset(2, 2, 2));
-    }
-
-    @Override
-    public void load(CompoundTag tag) {
-        TagFixer.fixFluidTags(tag);
-        LegacyManagedData.upgradeBlockEntityTag(getRootStorage(), tag, getSyncTag());
-        super.load(tag);
     }
 
     public static class AE2CallWrapper {

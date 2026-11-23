@@ -1,7 +1,7 @@
 package com.gregtechceu.gtceu.integration.top.provider;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 
@@ -29,7 +29,7 @@ public class MachineModeProvider implements IProbeInfoProvider {
     @Override
     public void addProbeInfo(ProbeMode probeMode, IProbeInfo iProbeInfo, Player player, Level level,
                              BlockState blockState, IProbeHitData iProbeHitData) {
-        if (level.getBlockEntity(iProbeHitData.getPos()) instanceof MetaMachineBlockEntity blockEntity) {
+        if (level.getBlockEntity(iProbeHitData.getPos()) instanceof IMachineBlockEntity blockEntity) {
             GTRecipeType[] recipeTypes = blockEntity.getMetaMachine().getDefinition().getRecipeTypes();
             if (recipeTypes.length > 1) {
                 if (blockEntity.getMetaMachine() instanceof IRecipeLogicMachine recipeLogicMachine) {

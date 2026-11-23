@@ -2,7 +2,7 @@ package com.gregtechceu.gtceu.common.cover;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMachines;
@@ -23,7 +23,7 @@ public class SolarPanelTest {
 
     private static BatteryBufferMachine makeBatteryBuffer(GameTestHelper helper, int tier) {
         helper.setBlock(new BlockPos(0, 1, 0), GTMachines.BATTERY_BUFFER_4[tier].getBlock());
-        return (BatteryBufferMachine) ((MetaMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
+        return (BatteryBufferMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
                 .getMetaMachine();
     }
 

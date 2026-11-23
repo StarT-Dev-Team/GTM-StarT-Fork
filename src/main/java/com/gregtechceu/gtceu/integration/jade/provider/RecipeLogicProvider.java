@@ -2,8 +2,8 @@ package com.gregtechceu.gtceu.integration.jade.provider;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.SimpleGeneratorMachine;
 import com.gregtechceu.gtceu.api.machine.SimpleTieredMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
@@ -94,7 +94,7 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                 boolean isSteam = false;
 
                 if (EUt > 0) {
-                    if (blockEntity instanceof MetaMachineBlockEntity mbe) {
+                    if (blockEntity instanceof IMachineBlockEntity mbe) {
                         var machine = mbe.getMetaMachine();
                         if (machine instanceof SimpleSteamMachine ssm) {
                             EUt = (long) Math.ceil(EUt * ssm.getConversionRate());
@@ -154,8 +154,8 @@ public class RecipeLogicProvider extends CapabilityBlockProvider<RecipeLogic> {
                 }
             }
         } else {
-            if (blockEntity instanceof MetaMachineBlockEntity mbe &&
-                    mbe.metaMachine instanceof IRecipeLogicMachine rlm) {
+            if (blockEntity instanceof IMachineBlockEntity mbe &&
+                    mbe.getMetaMachine() instanceof IRecipeLogicMachine rlm) {
                 var logic = rlm.getRecipeLogic();
 
                 if (logic.showFancyTooltip() && logic.isWorkingEnabled()) {

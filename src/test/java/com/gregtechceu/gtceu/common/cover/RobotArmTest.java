@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.common.cover;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.common.cover.data.TransferMode;
 import com.gregtechceu.gtceu.common.data.GTItems;
@@ -33,9 +32,9 @@ public class RobotArmTest {
     @GameTest(template = "empty_5x5", batch = "coverTests")
     public static void robotArmKeepExactTest(GameTestHelper helper) {
         setupCrates(helper);
-        CrateMachine crate1 = (CrateMachine) ((MetaMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
+        CrateMachine crate1 = (CrateMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
                 .getMetaMachine();
-        CrateMachine crate2 = (CrateMachine) ((MetaMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
+        CrateMachine crate2 = (CrateMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
                 .getMetaMachine();
         crate1.inventory.setStackInSlot(0, new ItemStack(Items.FLINT, 16));
         // LV Cover
@@ -58,9 +57,9 @@ public class RobotArmTest {
     @GameTest(template = "empty_5x5", batch = "coverTests")
     public static void robotArmTransferExactTest(GameTestHelper helper) {
         setupCrates(helper);
-        CrateMachine crate1 = (CrateMachine) ((MetaMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
+        CrateMachine crate1 = (CrateMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
                 .getMetaMachine();
-        CrateMachine crate2 = (CrateMachine) ((MetaMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
+        CrateMachine crate2 = (CrateMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
                 .getMetaMachine();
         crate1.inventory.setStackInSlot(0, new ItemStack(Items.FLINT, 16));
         // LV Cover
@@ -83,9 +82,9 @@ public class RobotArmTest {
     @GameTest(template = "empty_5x5", batch = "coverTests")
     public static void robotArmTransferAnyTest(GameTestHelper helper) {
         setupCrates(helper);
-        CrateMachine crate1 = (CrateMachine) ((MetaMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
+        CrateMachine crate1 = (CrateMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
                 .getMetaMachine();
-        CrateMachine crate2 = (CrateMachine) ((MetaMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
+        CrateMachine crate2 = (CrateMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
                 .getMetaMachine();
         crate1.inventory.setStackInSlot(0, new ItemStack(Items.FLINT, 16));
         // LV Cover
