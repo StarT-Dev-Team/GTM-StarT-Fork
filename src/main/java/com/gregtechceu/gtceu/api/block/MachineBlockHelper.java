@@ -60,7 +60,7 @@ public class MachineBlockHelper {
     public MachineBlockHelper(IMachineBlock block) {
         this.machineBlock = block;
         this.block = block.self();
-        this.definition = block.getDefinition();
+        this.definition = MachineDefinition.getBuilt();
     }
 
     public BlockState prepareDefaultState() {

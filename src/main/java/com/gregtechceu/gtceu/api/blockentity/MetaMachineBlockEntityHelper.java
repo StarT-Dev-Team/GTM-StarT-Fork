@@ -44,12 +44,12 @@ public class MetaMachineBlockEntityHelper implements IBlockEntityManaged {
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
 
-    private IMachineBlockEntity machineBlockEntity;
+    private final IMachineBlockEntity machineBlockEntity;
 
-    private BlockEntity blockEntity;
+    private final BlockEntity blockEntity;
 
     @Getter
-    private final MetaMachine metaMachine;
+    private MetaMachine metaMachine;
 
     @Getter
     public final MultiManagedStorage rootStorage = new MultiManagedStorage();
@@ -66,10 +66,12 @@ public class MetaMachineBlockEntityHelper implements IBlockEntityManaged {
     public MetaMachineBlockEntityHelper(IMachineBlockEntity be) {
         machineBlockEntity = be;
         blockEntity = be.self();
-        metaMachine = be.getDefinition().createMetaMachine(be);
-        renderState = be.getDefinition().defaultRenderState();
+    }
 
-        rootStorage.attach(be.getSyncStorage());
+    public void init() {
+        metaMachine = machineBlockEntity.getDefinition().createMetaMachine(machineBlockEntity);
+        renderState = machineBlockEntity.getDefinition().defaultRenderState();
+        rootStorage.attach(machineBlockEntity.getSyncStorage());
         rootStorage.attach(getSyncStorage());
     }
 

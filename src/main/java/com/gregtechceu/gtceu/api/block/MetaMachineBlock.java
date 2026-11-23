@@ -49,55 +49,60 @@ public class MetaMachineBlock extends Block implements IMachineBlock, BlockUIMen
     @Getter
     public final MachineDefinition definition;
 
-    private final MachineBlockHelper helper = new MachineBlockHelper(this);
+    private MachineBlockHelper helper;
 
     public MetaMachineBlock(Properties properties, MachineDefinition definition) {
         super(properties);
         this.definition = definition;
 
-        var defaultBlockState = helper.prepareDefaultState();
+        var defaultBlockState = getHelper().prepareDefaultState();
         if (defaultBlockState != null) {
             registerDefaultState(defaultBlockState);
         }
     }
 
+    private MachineBlockHelper getHelper() {
+        if (helper == null) helper = new MachineBlockHelper(this);
+        return helper;
+    }
+
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        helper.createBlockStateDefinition(builder);
+        getHelper().createBlockStateDefinition(builder);
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return helper.getShape(state);
+        return getHelper().getShape(state);
     }
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return helper.getRenderShape();
+        return getHelper().getRenderShape();
     }
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         super.animateTick(state, level, pos, random);
-        helper.animateTick(level, pos, random);
+        getHelper().animateTick(level, pos, random);
     }
 
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity player,
                             ItemStack stack) {
-        helper.setPlacedBy(level, pos, player, stack);
+        getHelper().setPlacedBy(level, pos, player, stack);
     }
 
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
-        helper.onPlace(level, pos);
+        getHelper().onPlace(level, pos);
     }
 
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return helper.getStateForPlacement(context);
+        return getHelper().getStateForPlacement(context);
     }
 
     @Override
@@ -113,70 +118,70 @@ public class MetaMachineBlock extends Block implements IMachineBlock, BlockUIMen
     @Override
     public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
         ItemStack itemStack = super.getCloneItemStack(level, pos, state);
-        return helper.getCloneItemStack(itemStack, level, pos);
+        return getHelper().getCloneItemStack(itemStack, level, pos);
     }
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip,
                                 TooltipFlag flag) {
-        helper.appendHoverText(stack, tooltip);
+        getHelper().appendHoverText(stack, tooltip);
     }
 
     @Override
     public boolean triggerEvent(BlockState state, Level level, BlockPos pos, int pId, int param) {
-        return helper.triggerEvent(level, pos, pId, param);
+        return getHelper().triggerEvent(level, pos, pId, param);
     }
 
     @Override
     public BlockState rotate(BlockState state, Rotation rotation) {
-        return helper.rotate(state, rotation);
+        return getHelper().rotate(state, rotation);
     }
 
     @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
         var drops = super.getDrops(state, builder);
-        return helper.getDrops(drops, builder);
+        return getHelper().getDrops(drops, builder);
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        helper.onRemove(state, level, pos, newState);
+        getHelper().onRemove(state, level, pos, newState);
     }
 
     @Override
     public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand,
                                  BlockHitResult hit) {
-        return helper.use(state, world, pos, player, hand, hit);
+        return getHelper().use(state, world, pos, player, hand, hit);
     }
 
     @Override
     @SuppressWarnings("deprecation") // This is fine to override, just not to be called.
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        return helper.getSignal(state, level, pos, direction);
+        return getHelper().getSignal(state, level, pos, direction);
     }
 
     @Override
     @SuppressWarnings("deprecation") // This is fine to override, just not to be called.
     public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        return helper.getDirectSignal(state, level, pos, direction);
+        return getHelper().getDirectSignal(state, level, pos, direction);
     }
 
     @Override
     @SuppressWarnings("deprecation") // This is fine to override, just not to be called.
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        return helper.getAnalogOutputSignal(state, level, pos);
+        return getHelper().getAnalogOutputSignal(state, level, pos);
     }
 
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos,
                                 boolean isMoving) {
-        helper.neighborChanged(level, pos, block, fromPos, isMoving);
+        getHelper().neighborChanged(level, pos, block, fromPos, isMoving);
     }
 
     @Override
     public BlockState getAppearance(BlockState state, BlockAndTintGetter level, BlockPos pos, Direction side,
                                     @Nullable BlockState sourceState, @Nullable BlockPos sourcePos) {
-        var appearance = helper.getAppearance(state, level, pos, side, sourceState, sourcePos);
+        var appearance = getHelper().getAppearance(state, level, pos, side, sourceState, sourcePos);
         if (appearance != null) {
             return appearance;
         }
@@ -186,6 +191,6 @@ public class MetaMachineBlock extends Block implements IMachineBlock, BlockUIMen
     @Override
     public boolean isValidSpawn(BlockState state, BlockGetter level, BlockPos pos, SpawnPlacements.Type type,
                                 EntityType<?> entityType) {
-        return helper.isValidSpawn(state, level, pos, type, entityType);
+        return getHelper().isValidSpawn(state, level, pos, type, entityType);
     }
 }

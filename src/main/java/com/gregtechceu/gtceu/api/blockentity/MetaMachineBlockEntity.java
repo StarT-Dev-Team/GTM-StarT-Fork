@@ -51,7 +51,8 @@ public class MetaMachineBlockEntity extends BlockEntity implements IMachineBlock
 
     public MetaMachineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
-        this.helper = new MetaMachineBlockEntityHelper(this);
+        helper = new MetaMachineBlockEntityHelper(this);
+        helper.init();
     }
 
     @Override
