@@ -15,7 +15,6 @@ import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Selector;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -191,7 +190,7 @@ public class CreativeEnergyContainerMachine extends TieredMachine implements ILa
 
         var voltageInput = new LongInput(() -> voltage, value -> {
             voltage = value;
-            setTier = GTUtil.getTierByVoltage(voltage);
+            setTier = GTUtil.getOCTierByVoltage(voltage);
         });
         voltageInput.setMin(0L);
         voltageInput.setMax(Long.MAX_VALUE);
@@ -202,25 +201,11 @@ public class CreativeEnergyContainerMachine extends TieredMachine implements ILa
         amperageLabel.setText(Component.translatable("gtceu.creative.energy.amperage"));
         amperageLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(74));
 
-        var minus = new Button();
-        minus.setText("-", false);
-        minus.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(87).width(20).height(20));
-        minus.setOnServerClick(event -> amps = --amps == -1 ? 0 : amps);
-
         var ampsInput = new IntInput(() -> amps, value -> amps = value);
         ampsInput.setMin(0);
         ampsInput.setMax(Integer.MAX_VALUE);
-        ampsInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(31).top(89).width(114)
+        ampsInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(9).top(89).width(152)
                 .height(16));
-
-        var plus = new Button();
-        plus.setText("+", false);
-        plus.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(149).top(87).width(20).height(20));
-        plus.setOnServerClick(event -> {
-            if (amps < Integer.MAX_VALUE) {
-                amps++;
-            }
-        });
 
         var average = new Label();
         average.bind(DataBindingBuilder.componentS2C(() -> Component.literal(
@@ -254,10 +239,10 @@ public class CreativeEnergyContainerMachine extends TieredMachine implements ILa
             setTier = ArrayUtils.indexOf(GTValues.VNF, tier);
             voltage = GTValues.VEX[setTier];
         }).build());
-        tierSelector.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(7).width(50)
+        tierSelector.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(7).width(65)
                 .height(20));
 
-        root.addChildren(voltageLabel, voltageInput, amperageLabel, minus, ampsInput, plus, average, activity,
+        root.addChildren(voltageLabel, voltageInput, amperageLabel, ampsInput, average, activity,
                 sourceToggle, tierSelector);
         return UITemplate.modularUI(root, entityPlayer);
     }

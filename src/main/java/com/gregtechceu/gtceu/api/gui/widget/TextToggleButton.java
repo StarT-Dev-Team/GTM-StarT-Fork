@@ -18,4 +18,9 @@ public class TextToggleButton extends Button {
         addChild(new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(state::getAsBoolean)
                 .remoteSetter(value -> setText(Component.translatable(value ? onKey : offKey))).build()));
     }
+
+    @Override
+    public String name() {
+        return "button";
+    }
 }
