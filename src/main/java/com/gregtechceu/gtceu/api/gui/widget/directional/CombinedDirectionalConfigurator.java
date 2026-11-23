@@ -108,7 +108,7 @@ public class CombinedDirectionalConfigurator extends UIElement {
         var player = Minecraft.getInstance().player;
         if (player != null) {
             var playerRotation = player.getRotationVector();
-            scene.setCameraYawAndPitch(playerRotation.x, playerRotation.y - 90);
+            scene.setCameraYawAndPitch(playerRotation.y - 90, playerRotation.x);
         }
         scene.style(style -> style.backgroundTexture(ColorPattern.BLACK.rectTexture()));
 
