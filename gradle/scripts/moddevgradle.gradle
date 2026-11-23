@@ -54,6 +54,8 @@ legacyForge {
             sourceSet = sourceSets.clientExtra
             ideName = "Client 1"
 
+            // arg will work on jbr jdk's, ignored on any others
+            jvmArguments.addAll("-XX:+IgnoreUnrecognizedVMOptions", "-XX:+AllowEnhancedClassRedefinition")
             systemProperty('forge.enabledGameTestNamespaces', project.mod_id)
         }
 
