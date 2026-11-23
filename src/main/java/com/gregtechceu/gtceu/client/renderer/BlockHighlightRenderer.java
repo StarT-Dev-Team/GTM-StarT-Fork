@@ -15,7 +15,7 @@ import com.gregtechceu.gtceu.client.util.RenderUtil;
 import com.gregtechceu.gtceu.common.item.CoverPlaceBehavior;
 import com.gregtechceu.gtceu.common.item.tool.rotation.CustomBlockRotations;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -78,8 +78,8 @@ public class BlockHighlightRenderer {
                         gridHighlight = new IToolGridHighlight() {
 
                             @Override
-                            public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state,
-                                                                      Set<GTToolType> toolTypes, Direction side) {
+                            public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state,
+                                                                    Set<GTToolType> toolTypes, Direction side) {
                                 return behavior.showSideTip(state, side) ? GuiTextures.TOOL_FRONT_FACING_ROTATION :
                                         null;
                             }
@@ -160,7 +160,7 @@ public class BlockHighlightRenderer {
     private static float bColour;
 
     private static void drawGridOverlays(PoseStack poseStack, MultiBufferSource bufferSource, Vec3 cameraPos,
-                                         BlockHitResult blockHitResult, Function<Direction, ResourceTexture> texture) {
+                                         BlockHitResult blockHitResult, Function<Direction, SpriteTexture> texture) {
         rColour = gColour = 0.2F + (float) Math.sin((System.currentTimeMillis() % (Mth.PI * 800)) / 800) / 2;
         bColour = 1f;
         BlockPos blockPos = blockHitResult.getBlockPos();
@@ -199,12 +199,12 @@ public class BlockHighlightRenderer {
         shiftX.rotate(rotation);
         shiftY.rotate(rotation);
 
-        ResourceTexture leftBlocked = texture.apply(left);
-        ResourceTexture rightBlocked = texture.apply(right);
-        ResourceTexture topBlocked = texture.apply(top);
-        ResourceTexture bottomBlocked = texture.apply(bottom);
-        ResourceTexture frontBlocked = texture.apply(front);
-        ResourceTexture backBlocked = texture.apply(back);
+        SpriteTexture leftBlocked = texture.apply(left);
+        SpriteTexture rightBlocked = texture.apply(right);
+        SpriteTexture topBlocked = texture.apply(top);
+        SpriteTexture bottomBlocked = texture.apply(bottom);
+        SpriteTexture frontBlocked = texture.apply(front);
+        SpriteTexture backBlocked = texture.apply(back);
 
         topRight.add(cubeCenter);
         bottomRight.add(cubeCenter);
@@ -287,12 +287,19 @@ public class BlockHighlightRenderer {
     }
 
     private static void drawResourceTexture(PoseStack poseStack, MultiBufferSource bufferSource,
-                                            ResourceTexture texture, int color,
+                                            SpriteTexture texture, int color,
                                             float x, float y, float w, float h) {
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.text(texture.imageLocation));
+        VertexConsumer consumer = bufferSource.getBuffer(RenderType.text(texture.getImageLocation()));
         var pose = poseStack.last().pose();
-        float u0 = texture.offsetX, v0 = texture.offsetY;
-        float u1 = texture.imageWidth, v1 = texture.imageHeight;
+        var imageSize = texture.getImageSize();
+        var spriteSize = texture.spriteSize;
+        if (spriteSize.getWidth() <= 0 || spriteSize.getHeight() <= 0) {
+            spriteSize = imageSize;
+        }
+        float u0 = texture.spritePosition.getX() * 1f / imageSize.getWidth();
+        float v0 = texture.spritePosition.getY() * 1f / imageSize.getHeight();
+        float u1 = spriteSize.getWidth() * 1f / imageSize.getWidth();
+        float v1 = spriteSize.getHeight() * 1f / imageSize.getHeight();
         // spotless:off
         consumer.vertex(pose, x, y + h, 0).color(color).uv(u0, v0 + v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
         consumer.vertex(pose, x + w, y + h, 0).color(color).uv(u0 + u1, v0 + v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
@@ -302,7 +309,7 @@ public class BlockHighlightRenderer {
     }
 
     private static void drawResourceTextureWithMargin(PoseStack poseStack, MultiBufferSource bufferSource,
-                                                      ResourceTexture texture, int color,
+                                                      SpriteTexture texture, int color,
                                                       float x, float y, float w, float h, float m) {
         drawResourceTexture(poseStack, bufferSource, texture, color,
                 x + m, y + m, w - 2 * m, h - 2 * m);

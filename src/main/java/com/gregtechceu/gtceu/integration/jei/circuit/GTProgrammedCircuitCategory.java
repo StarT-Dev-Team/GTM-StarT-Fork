@@ -2,10 +2,11 @@ package com.gregtechceu.gtceu.integration.jei.circuit;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.common.data.GTItems;
+import com.gregtechceu.gtceu.integration.xei.GTXEIUI;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTProgrammedCircuitWidget;
 
-import com.lowdragmc.lowdraglib.jei.ModularUIRecipeCategory;
-import com.lowdragmc.lowdraglib.jei.ModularWrapper;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.integration.xei.jei.ModularUIRecipeCategory;
 
 import net.minecraft.network.chat.Component;
 
@@ -24,6 +25,7 @@ public class GTProgrammedCircuitCategory extends
     private final IDrawable icon;
 
     public GTProgrammedCircuitCategory(IJeiHelpers helpers) {
+        super(GTProgrammedCircuitWrapper::createModularUI);
         background = helpers.getGuiHelper().createBlankDrawable(150, 80);
         icon = helpers.getGuiHelper().createDrawableItemStack(GTItems.PROGRAMMED_CIRCUIT.asStack());
     }
@@ -48,10 +50,20 @@ public class GTProgrammedCircuitCategory extends
         return icon;
     }
 
-    public static class GTProgrammedCircuitWrapper extends ModularWrapper<GTProgrammedCircuitWidget> {
+    @Override
+    public int getWidth() {
+        return 150;
+    }
 
-        public GTProgrammedCircuitWrapper() {
-            super(new GTProgrammedCircuitWidget());
+    @Override
+    public int getHeight() {
+        return 80;
+    }
+
+    public static class GTProgrammedCircuitWrapper {
+
+        public ModularUI createModularUI() {
+            return GTXEIUI.of(new GTProgrammedCircuitWidget());
         }
     }
 }

@@ -5,7 +5,7 @@ import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.IUICover;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IDataStickInteractable;
 import com.gregtechceu.gtceu.api.placeholder.IPlaceholderInfoProviderCover;
@@ -20,11 +20,13 @@ import com.gregtechceu.gtceu.integration.create.GTCreateIntegration;
 import com.gregtechceu.gtceu.utils.GTStringUtils;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceBorderTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
@@ -39,9 +41,10 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -51,10 +54,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class ComputerMonitorCover extends CoverBehavior
-        implements IUICover, IDataStickInteractable, IPlaceholderInfoProviderCover {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(ComputerMonitorCover.class,
-            CoverBehavior.MANAGED_FIELD_HOLDER);
+                                  implements IUICover, IDataStickInteractable, IPlaceholderInfoProviderCover {
 
     private TickableSubscription subscription;
     private final CoverTextRenderer renderer;
@@ -129,89 +129,75 @@ public class ComputerMonitorCover extends CoverBehavior
     }
 
     @Override
-    public @NotNull ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
+    public UIElement createUIWidget() {
+        var group = new UIElement().layout(layout -> layout.minWidth(2 * 160 + 3 * 10).paddingAll(5).gapAll(3));
+        var mainPage = new UIElement().layout(layout -> layout.gapAll(2));
+        var formatStringArgsPage = new UIElement().layout(layout -> layout.gapAll(2));
+        formatStringArgsPage.setDisplay(false);
 
-    @Override
-    public Widget createUIWidget() {
-        int textFieldWidth = 160, horizontalPadding = 10, verticalPadding = 2;
-        final WidgetGroup group = new WidgetGroup(0, 0, 2 * textFieldWidth + 3 * horizontalPadding, 150);
-        final WidgetGroup mainPage = new WidgetGroup(0, 0, 2 * textFieldWidth + 3 * horizontalPadding, 150);
-        final WidgetGroup formatStringArgsPage = new WidgetGroup(0, 0, 2 * textFieldWidth + 3 * horizontalPadding, 150);
         for (int i = 0; i < 8; i++) {
-            TextFieldWidget formatStringInput = new TextFieldWidget();
-            formatStringInput.setSize(textFieldWidth, 15);
-            formatStringInput.setSelfPosition(horizontalPadding + textFieldWidth / 2,
-                    10 + verticalPadding + i * (15 + verticalPadding));
-            formatStringInput.setHoverTooltips(GTStringUtils.toImmutable(
-                    LangHandler.getMultiLang("gtceu.gui.computer_monitor_cover.main_textbox_tooltip", i + 1)));
             int finalI = i;
             if (i >= formatStringLines.size()) formatStringLines.add("");
-            formatStringInput.setCurrentString(formatStringLines.get(i));
-            formatStringInput.setTextResponder((s) -> formatStringLines.set(finalI, s));
-            mainPage.addWidget(formatStringInput);
-            SlotWidget slot = new com.gregtechceu.gtceu.api.gui.widget.SlotWidget(
-                    itemStackHandler,
-                    i,
-                    horizontalPadding + 50,
-                    20 * i);
-            slot.setBackgroundTexture(SlotWidget.ITEM_SLOT_TEXTURE);
-            slot.setHoverTooltips(GTStringUtils
-                    .toImmutable(LangHandler.getMultiLang("gtceu.gui.computer_monitor_cover.slot_tooltip", i + 1)));
-            mainPage.addWidget(slot);
+            var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                    .alignItems(AlignItems.CENTER));
+            var formatStringInput = new TextField().setAnyString();
+            formatStringInput.layout(layout -> layout.width(160).height(15));
+            formatStringInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
+                    "gtceu.gui.computer_monitor_cover.main_textbox_tooltip", finalI + 1))));
+            formatStringInput.bind(DataBindingBuilder.string(() -> formatStringLines.get(finalI),
+                    s -> formatStringLines.set(finalI, s)).build());
+            var slot = new ItemSlot().bind(itemStackHandler, i);
+            slot.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
+                    "gtceu.gui.computer_monitor_cover.slot_tooltip", finalI + 1))));
+            row.addChildren(formatStringInput, slot);
+            mainPage.addChild(row);
         }
         for (int i = 0; i < 8; i++) {
-            TextFieldWidget formatStringArgsInput = new TextFieldWidget();
-            formatStringArgsInput.setSize(textFieldWidth, 15);
-            formatStringArgsInput.setSelfPosition(textFieldWidth / 2 + horizontalPadding,
-                    10 + verticalPadding + i * (15 + verticalPadding));
-            formatStringArgsInput.setHoverTooltips(GTStringUtils.toImmutable(
-                    LangHandler.getMultiLang("gtceu.gui.computer_monitor_cover.second_page_textbox_tooltip",
-                            GTStringUtils.getIntOrderingSuffix(i + 1))));
-
             int finalI = i;
             if (i >= formatStringArgs.size()) formatStringArgs.add("");
-            formatStringArgsInput.setCurrentString(formatStringArgs.get(i));
-            formatStringArgsInput.setTextResponder((s) -> formatStringArgs.set(finalI, s));
-            formatStringArgsPage.addWidget(formatStringArgsInput);
+            var formatStringArgsInput = new TextField().setAnyString();
+            formatStringArgsInput.layout(layout -> layout.width(160).height(15));
+            formatStringArgsInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
+                    "gtceu.gui.computer_monitor_cover.second_page_textbox_tooltip",
+                    GTStringUtils.getIntOrderingSuffix(finalI + 1)))));
+            formatStringArgsInput.bind(DataBindingBuilder.string(() -> formatStringArgs.get(finalI),
+                    s -> formatStringArgs.set(finalI, s)).build());
+            formatStringArgsPage.addChild(formatStringArgsInput);
         }
-        ButtonWidget switchToFormatStringArgsPageButton = new ButtonWidget(
-                horizontalPadding + 50,
-                10 * (15 + verticalPadding) + verticalPadding,
-                20, 20,
-                new ResourceBorderTexture(),
-                clickData -> {
-                    group.clearAllWidgets();
-                    group.addWidget(formatStringArgsPage);
-                });
-        ButtonWidget switchBack = new ButtonWidget(
-                horizontalPadding + 50,
-                10 * (15 + verticalPadding) + verticalPadding,
-                20, 20,
-                new ResourceBorderTexture(),
-                clickData -> {
-                    group.clearAllWidgets();
-                    group.addWidget(mainPage);
-                });
-        mainPage.addWidget(PlaceholderHandler.getPlaceholderHandlerUI(""));
-        // TextFieldWidget searchBox = new TextFieldWidget(280, 0, 80, 15, null, onSearch);
-        // searchBox.setHoverTooltips("Search");
-        // mainPage.addWidget(searchBox);
-        IntInputWidget updateIntervalInput = new IntInputWidget(0, 0, 60, 20, this::getUpdateInterval,
-                this::setUpdateInterval);
+
+        var switchToFormatStringArgsPageButton = new Button().noText();
+        switchToFormatStringArgsPageButton.layout(layout -> layout.width(20).height(20));
+        switchToFormatStringArgsPageButton.style(style -> style
+                .tooltips("gtceu.gui.computer_monitor_cover.edit_blank_placeholders"));
+        switchToFormatStringArgsPageButton.setOnClick(event -> {
+            mainPage.setDisplay(false);
+            formatStringArgsPage.setDisplay(true);
+        });
+        var switchBack = new Button().noText();
+        switchBack.layout(layout -> layout.width(20).height(20));
+        switchBack.style(style -> style.tooltips("gtceu.gui.computer_monitor_cover.edit_displayed_text"));
+        switchBack.setOnClick(event -> {
+            formatStringArgsPage.setDisplay(false);
+            mainPage.setDisplay(true);
+        });
+
+        var updateIntervalInput = new IntInput(this::getUpdateInterval, this::setUpdateInterval);
         updateIntervalInput.setMin(1);
         updateIntervalInput.setMax(60 * 20);
-        updateIntervalInput
-                .setHoverTooltips(Component.translatable("gtceu.gui.computer_monitor_cover.update_interval"));
-        mainPage.addWidget(updateIntervalInput);
-        switchToFormatStringArgsPageButton
-                .setHoverTooltips(Component.translatable("gtceu.gui.computer_monitor_cover.edit_blank_placeholders"));
-        switchBack.setHoverTooltips(Component.translatable("gtceu.gui.computer_monitor_cover.edit_displayed_text"));
-        mainPage.addWidget(switchToFormatStringArgsPageButton);
-        formatStringArgsPage.addWidget(switchBack);
-        group.addWidget(mainPage);
+        updateIntervalInput.setTooltips("gtceu.gui.computer_monitor_cover.update_interval");
+        updateIntervalInput.layout(layout -> layout.width(60).height(20));
+
+        var controls = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3));
+        controls.addChildren(updateIntervalInput, switchToFormatStringArgsPageButton);
+        mainPage.addChild(controls);
+        mainPage.addChild(PlaceholderHandler.getPlaceholderHandlerUI(""));
+        formatStringArgsPage.addChild(switchBack);
+        group.addChildren(mainPage, formatStringArgsPage);
         return group;
+    }
+
+    private static Component[] toTooltips(List<MutableComponent> components) {
+        return components.toArray(new Component[0]);
     }
 
     @Override

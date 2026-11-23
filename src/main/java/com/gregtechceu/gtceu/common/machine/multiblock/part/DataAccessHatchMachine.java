@@ -6,13 +6,11 @@ import com.gregtechceu.gtceu.api.capability.IDataAccessHatch;
 import com.gregtechceu.gtceu.api.capability.IMonitorComponent;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.texture.UVSpriteTexture;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IDataInfoProvider;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
-import com.gregtechceu.gtceu.api.machine.multiblock.part.MultiblockPartMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.part.TieredPartMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
@@ -23,12 +21,11 @@ import com.gregtechceu.gtceu.common.recipe.condition.ResearchCondition;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 import com.gregtechceu.gtceu.utils.ResearchManager;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
@@ -38,6 +35,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.items.IItemHandler;
 
+import dev.vfyjxf.taffy.style.FlexDirection;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.Getter;
@@ -51,9 +49,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class DataAccessHatchMachine extends TieredPartMachine
                                     implements IMachineLife, IDataAccessHatch, IDataInfoProvider, IMonitorComponent {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            DataAccessHatchMachine.class, MultiblockPartMachine.MANAGED_FIELD_HOLDER);
 
     private final Set<GTRecipe> recipes;
     @Getter
@@ -91,18 +86,16 @@ public class DataAccessHatchMachine extends TieredPartMachine
     }
 
     @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         int rowSize = (int) Math.sqrt(getInventorySize());
-        int xOffset = 18 * rowSize / 2;
-        WidgetGroup group = new WidgetGroup(0, 0, 18 * rowSize, 18 * rowSize);
-
+        var group = new UIElement();
         for (int y = 0; y < rowSize; y++) {
+            var row = new UIElement();
+            row.layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < rowSize; x++) {
-                int index = y * rowSize + x;
-                group.addWidget(new SlotWidget(importItems, index,
-                        rowSize * 9 + x * 18 - xOffset, y * 18, true, true)
-                        .setBackgroundTexture(GuiTextures.SLOT));
+                row.addChild(new ItemSlot().bind(importItems, y * rowSize + x));
             }
+            group.addChild(row);
         }
         return group;
     }
@@ -192,13 +185,8 @@ public class DataAccessHatchMachine extends TieredPartMachine
     }
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
-    @Override
     public IGuiTexture getComponentIcon() {
-        return new ResourceTexture(GTCEu.id("textures/item/data_module.png")).getSubTexture(0, 0, 1, 1 / 13f);
+        return UVSpriteTexture.of(SpriteTexture.of(GTCEu.id("textures/item/data_module.png")), 0, 0, 1, 1 / 13f);
     }
 
     @Override

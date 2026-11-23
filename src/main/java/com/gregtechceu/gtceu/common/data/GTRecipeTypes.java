@@ -7,7 +7,6 @@ import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.recipe.*;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
@@ -30,7 +29,8 @@ import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
 import com.gregtechceu.gtceu.utils.ResearchManager;
 
-import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.utils.LocalizationUtils;
 
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -43,11 +43,13 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fml.ModLoader;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.lowdragmc.lowdraglib.gui.texture.ProgressTexture.FillDirection.*;
+import static com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection.*;
 
 public class GTRecipeTypes {
 
@@ -454,11 +456,16 @@ public class GTRecipeTypes {
                         continue;
                     }
                     List<FluidEntryList> slots = Collections.singletonList(FluidHolderSetList.of(set, 1000, null));
-                    TankWidget tank = new TankWidget(new CycleFluidEntryHandler(slots),
-                            widgetGroup.getSize().width - 30 - xOffset, widgetGroup.getSize().height - 30 + yOffset,
-                            false, false)
-                            .setBackground(GuiTextures.FLUID_SLOT).setShowAmount(false);
-                    widgetGroup.addWidget(tank);
+                    var jeiSize = recipe.recipeType.getRecipeUI().getJEISize();
+                    var tankLeft = jeiSize.width - 30 - xOffset;
+                    var tankTop = jeiSize.height - 30 + yOffset;
+                    var tank = new FluidSlot().bind(new CycleFluidEntryHandler(slots), 0);
+                    tank.setAllowClickFilled(false);
+                    tank.setAllowClickDrained(false);
+                    tank.amountLabel.setDisplay(false);
+                    tank.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(tankLeft).top(tankTop));
+                    tank.style(st -> st.backgroundTexture(GuiTextures.FLUID_SLOT));
+                    widgetGroup.addChild(tank);
 
                     i++;
                     xOffset = 20 * (2 - (i % 3)) - 5;

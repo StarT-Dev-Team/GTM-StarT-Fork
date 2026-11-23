@@ -980,7 +980,7 @@ public class GTPlaceholders {
                     CompoundTag coverTag = compoundTag.getCompound("cover");
                     if (coverTag.contains(ctx.side().getName())) {
                         CompoundTag cover = coverTag.getCompound(ctx.side().getName()).getCompound("payload")
-                            .getCompound("d");
+                                .getCompound("d");
                         cover.putString("text", "[REMOVED]");
                     }
                 }

@@ -7,13 +7,10 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
-import com.gregtechceu.gtceu.core.mixins.ldlib.ModularUIRecipeCategoryMixin;
+import com.gregtechceu.gtceu.integration.jei.JEIIcons;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
-import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
-import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.jei.IGui2IDrawable;
-import com.lowdragmc.lowdraglib.jei.ModularUIRecipeCategory;
+import com.lowdragmc.lowdraglib2.integration.xei.jei.ModularUIRecipeCategory;
 
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
@@ -21,18 +18,12 @@ import net.minecraft.resources.ResourceLocation;
 
 import lombok.Getter;
 import mezz.jei.api.constants.RecipeTypes;
-import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
-import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.helpers.IJeiHelpers;
-import mezz.jei.api.recipe.IFocusGroup;
-import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.runtime.IClickableIngredient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,16 +41,20 @@ public class GTRecipeJEICategory extends ModularUIRecipeCategory<GTRecipe> {
     private final IDrawable background;
     @Getter
     private final IDrawable icon;
+    private final int width;
+    private final int height;
 
     public GTRecipeJEICategory(IJeiHelpers helpers,
                                @NotNull GTRecipeCategory category) {
-        super(GTRecipeWrapper::new);
+        super(GTRecipeWidget::createModularUI);
         this.category = category;
         var recipeType = category.getRecipeType();
         IGuiHelper guiHelper = helpers.getGuiHelper();
         var size = recipeType.getRecipeUI().getJEISize();
+        this.width = size.width;
+        this.height = size.height;
         this.background = guiHelper.createBlankDrawable(size.width, size.height);
-        this.icon = IGui2IDrawable.toDrawable(category.getIcon(), 16, 16);
+        this.icon = JEIIcons.of(category.getIcon(), 16, 16);
     }
 
     public static void registerRecipes(IRecipeRegistration registration) {
@@ -122,74 +117,12 @@ public class GTRecipeJEICategory extends ModularUIRecipeCategory<GTRecipe> {
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, GTRecipe recipe, IFocusGroup focuses) {
-        @SuppressWarnings("unchecked")
-        var wrapper = ((ModularUIRecipeCategoryMixin<GTRecipe>) this).gtceu$getModularWrapper(recipe);
-
-        wrapper.setRecipeWidget(0, 0);
-        List<Widget> flatVisibleWidgetCollection = wrapper.modularUI.getFlatWidgetCollection();
-        for (int i = 0; i < flatVisibleWidgetCollection.size(); i++) {
-            var widget = flatVisibleWidgetCollection.get(i);
-            if (widget instanceof IRecipeIngredientSlot slot) {
-                if (widget.getParent() instanceof DraggableScrollableWidgetGroup draggable &&
-                        draggable.isUseScissor()) {
-                    // don't add the JEI widget at all if we have a draggable group, let the draggable widget handle it
-                    // instead.
-                    continue;
-                }
-
-                var role = mapToRole(slot.getIngredientIO());
-                if (role == null) { // both
-                    ModularUIRecipeCategoryMixin.gtceu$addJEISlot(builder, slot, RecipeIngredientRole.INPUT, i);
-                    ModularUIRecipeCategoryMixin.gtceu$addJEISlot(builder, slot, RecipeIngredientRole.OUTPUT, i);
-                } else {
-                    ModularUIRecipeCategoryMixin.gtceu$addJEISlot(builder, slot, role, i);
-                }
-            }
-        }
+    public int getWidth() {
+        return width;
     }
 
     @Override
-    public void getTooltip(ITooltipBuilder tooltip, GTRecipe recipe, IRecipeSlotsView recipeSlotsView, double mouseX,
-                           double mouseY) {
-        @SuppressWarnings("unchecked")
-        var wrapper = ((ModularUIRecipeCategoryMixin<GTRecipe>) this).gtceu$getModularWrapper(recipe);
-
-        if (wrapper.tooltipTexts == null || wrapper.tooltipTexts.isEmpty()) {
-            super.getTooltip(tooltip, recipe, recipeSlotsView, mouseX, mouseY);
-            return;
-        }
-
-        var hovered = wrapper.modularUI.mainGroup.getHoverElement(mouseX + wrapper.getLeft(),
-                mouseY + wrapper.getTop());
-        if (hovered instanceof IRecipeIngredientSlot hoveredSlot) {
-            if (!(hovered.getParent() instanceof DraggableScrollableWidgetGroup draggable &&
-                    draggable.isUseScissor())) {
-                super.getTooltip(tooltip, recipe, recipeSlotsView, mouseX, mouseY);
-                return;
-            }
-
-            for (Object ingredient : hoveredSlot.getXEIIngredients()) {
-                if (ingredient instanceof IClickableIngredient<?> clickableIngredient) {
-                    // noinspection removal
-                    tooltip.setIngredient(clickableIngredient.getTypedIngredient());
-                    break;
-                }
-            }
-            // if (tooltip instanceof JeiTooltip jeiTooltip) {
-            // try {
-            // var field = JeiTooltip.class.getDeclaredField("lines");
-            // field.setAccessible(true);
-            // ((List<?>)field.get(jeiTooltip)).clear();
-            // } catch (IllegalAccessException | NoSuchFieldException ignored) {
-            // }
-            // }
-            // tooltip.addAll(hoveredSlot.getFullTooltipTexts());
-        }
-
-        tooltip.addAll(wrapper.tooltipTexts);
-        if (wrapper.tooltipComponent != null) {
-            tooltip.add(wrapper.tooltipComponent);
-        }
+    public int getHeight() {
+        return height;
     }
 }

@@ -4,17 +4,17 @@ import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.filter.FluidFilter;
 import com.gregtechceu.gtceu.api.cover.filter.SimpleFluidFilter;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.NumberInputWidget;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.NumberInput;
 import com.gregtechceu.gtceu.api.transfer.fluid.IFluidHandlerModifiable;
 import com.gregtechceu.gtceu.common.cover.data.BucketMode;
 import com.gregtechceu.gtceu.common.cover.data.TransferMode;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
@@ -30,9 +30,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FluidRegulatorCover extends PumpCover {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(FluidRegulatorCover.class,
-            PumpCover.MANAGED_FIELD_HOLDER);
 
     private static final int MAX_STACK_SIZE = 2_048_000_000; // Capacity of quantum tank IX
 
@@ -51,8 +48,10 @@ public class FluidRegulatorCover extends PumpCover {
     protected int globalTransferLimit;
     protected int fluidTransferBuffered = 0;
 
-    private NumberInputWidget<Integer> transferSizeInput;
-    private EnumSelectorWidget<BucketMode> transferBucketModeInput;
+    private NumberInput<Integer> transferSizeInput;
+    private EnumSelector<BucketMode> transferBucketModeInput;
+    private TransferMode appliedMode;
+    private BucketMode appliedBucketMode;
 
     public FluidRegulatorCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide, int tier,
                                int maxTransferRate) {
@@ -61,11 +60,6 @@ public class FluidRegulatorCover extends PumpCover {
 
     public FluidRegulatorCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide, int tier) {
         this(definition, coverHolder, attachedSide, tier, PUMP_SCALING.applyAsInt(tier));
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     //////////////////////////////////////
@@ -214,19 +208,29 @@ public class FluidRegulatorCover extends PumpCover {
     }
 
     @Override
-    protected void buildAdditionalUI(WidgetGroup group) {
-        group.addWidget(
-                new EnumSelectorWidget<>(146, 45, 20, 20, TransferMode.values(), transferMode, this::setTransferMode));
+    protected void buildAdditionalUI(UIElement group) {
+        this.transferSizeInput = new IntInput(this::getCurrentBucketModeTransferSize,
+                this::setCurrentBucketModeTransferSize);
+        this.transferSizeInput.setMin(0);
+        this.transferSizeInput.setMax(Integer.MAX_VALUE);
+        this.transferSizeInput.layout(layout -> layout.flex(1).height(20));
+        this.transferSizeInput.addEventListener(UIEvents.TICK, event -> {
+            if (appliedMode != transferMode) {
+                configureTransferSizeInput();
+            }
+            if (appliedBucketMode != transferBucketMode) {
+                appliedBucketMode = transferBucketMode;
+                transferSizeInput.setMax(MAX_STACK_SIZE / transferBucketMode.multiplier);
+            }
+        });
 
-        this.transferSizeInput = new IntInputWidget(35, 45, 84, 20,
-                this::getCurrentBucketModeTransferSize, this::setCurrentBucketModeTransferSize).setMin(0)
-                .setMax(Integer.MAX_VALUE);
+        this.transferBucketModeInput = new EnumSelector<>(BucketMode.values(), () -> transferBucketMode,
+                this::setTransferBucketMode);
         configureTransferSizeInput();
-        group.addWidget(this.transferSizeInput);
 
-        this.transferBucketModeInput = new EnumSelectorWidget<>(121, 45, 20, 20, BucketMode.values(),
-                transferBucketMode, this::setTransferBucketMode);
-        group.addWidget(this.transferBucketModeInput);
+        group.addChild(this.transferSizeInput);
+        group.addChild(this.transferBucketModeInput);
+        group.addChild(new EnumSelector<>(TransferMode.values(), () -> transferMode, this::setTransferMode));
     }
 
     private int getCurrentBucketModeTransferSize() {
@@ -242,8 +246,9 @@ public class FluidRegulatorCover extends PumpCover {
         if (this.transferSizeInput == null || transferBucketModeInput == null)
             return;
 
-        this.transferSizeInput.setVisible(shouldShowTransferSize());
-        this.transferBucketModeInput.setVisible(shouldShowTransferSize());
+        this.appliedMode = this.transferMode;
+        this.transferSizeInput.setDisplay(shouldShowTransferSize());
+        this.transferBucketModeInput.setDisplay(shouldShowTransferSize());
     }
 
     private boolean shouldShowTransferSize() {

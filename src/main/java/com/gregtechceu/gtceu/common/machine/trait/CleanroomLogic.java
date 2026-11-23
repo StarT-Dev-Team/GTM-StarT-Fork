@@ -9,9 +9,7 @@ import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.common.capability.EnvironmentalHazardSavedData;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.CleanroomMachine;
 
-import com.gregtechceu.gtceu.config.ConfigHolder;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -23,8 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class CleanroomLogic extends RecipeLogic implements IWorkable {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(CleanroomLogic.class,
-            RecipeLogic.MANAGED_FIELD_HOLDER);
     public static final int BASE_CLEAN_AMOUNT = 2;
     @Setter
     @Nullable
@@ -47,11 +43,6 @@ public class CleanroomLogic extends RecipeLogic implements IWorkable {
     @Override
     public CleanroomMachine getMachine() {
         return (CleanroomMachine) machine;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     /**

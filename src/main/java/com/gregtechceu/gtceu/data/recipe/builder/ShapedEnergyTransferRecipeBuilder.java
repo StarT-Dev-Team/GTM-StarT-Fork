@@ -3,12 +3,10 @@ package com.gregtechceu.gtceu.data.recipe.builder;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.recipe.ShapedEnergyTransferRecipe;
 
-import com.lowdragmc.lowdraglib.utils.Builder;
-import com.lowdragmc.lowdraglib.utils.NBTToJsonConverter;
-
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -20,11 +18,20 @@ import net.minecraftforge.common.crafting.StrictNBTIngredient;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.JsonOps;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
-public class ShapedEnergyTransferRecipeBuilder extends Builder<Ingredient, ShapedEnergyTransferRecipeBuilder> {
+public class ShapedEnergyTransferRecipeBuilder {
+
+    protected List<String[]> shape = new ArrayList<>();
+    protected Map<Character, Ingredient> symbolMap = new LinkedHashMap<>();
 
     protected ItemStack output = ItemStack.EMPTY;
     protected Ingredient chargeIngredient = Ingredient.EMPTY;
@@ -43,6 +50,16 @@ public class ShapedEnergyTransferRecipeBuilder extends Builder<Ingredient, Shape
 
     public ShapedEnergyTransferRecipeBuilder pattern(String slice) {
         return aisle(slice);
+    }
+
+    public ShapedEnergyTransferRecipeBuilder aisle(String... data) {
+        this.shape.add(data);
+        return this;
+    }
+
+    public ShapedEnergyTransferRecipeBuilder where(char symbol, Ingredient value) {
+        this.symbolMap.put(symbol, value);
+        return this;
     }
 
     public ShapedEnergyTransferRecipeBuilder define(char cha, TagKey<Item> itemStack) {
@@ -109,9 +126,10 @@ public class ShapedEnergyTransferRecipeBuilder extends Builder<Ingredient, Shape
         return this;
     }
 
-    @Override
     public ShapedEnergyTransferRecipeBuilder shallowCopy() {
-        var builder = super.shallowCopy();
+        var builder = new ShapedEnergyTransferRecipeBuilder();
+        builder.shape = new ArrayList<>(shape);
+        builder.symbolMap = new HashMap<>(symbolMap);
         builder.output = output.copy();
         return builder;
     }
@@ -155,7 +173,7 @@ public class ShapedEnergyTransferRecipeBuilder extends Builder<Ingredient, Shape
                 result.addProperty("count", output.getCount());
             }
             if (output.hasTag() && output.getTag() != null) {
-                result.add("nbt", NBTToJsonConverter.getObject(output.getTag()));
+                result.add("nbt", NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, output.getTag()));
             }
             json.add("result", result);
         }

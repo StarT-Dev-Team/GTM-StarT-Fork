@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.api.machine.fancyconfigurator;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.WidgetUtils;
 import com.gregtechceu.gtceu.api.gui.fancy.FancyMachineUIWidget;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyUIProvider;
 import com.gregtechceu.gtceu.api.gui.widget.directional.CombinedDirectionalConfigurator;
@@ -13,9 +12,8 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputFluid;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputItem;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
@@ -44,12 +42,9 @@ public class CombinedDirectionalFancyConfigurator implements IFancyUIProvider {
     }
 
     @Override
-    public Widget createMainPage(FancyMachineUIWidget widget) {
-        Size parentSize = widget.getSize();
+    public UIElement createMainPage(FancyMachineUIWidget widget) {
         return new CombinedDirectionalConfigurator(
-                widget, configs.stream().map(Supplier::get).toArray(IDirectionalConfigHandler[]::new), machine,
-                parentSize.width - 8,
-                parentSize.height - WidgetUtils.getInventoryHeight(true));
+                widget, configs.stream().map(Supplier::get).toArray(IDirectionalConfigHandler[]::new), machine);
     }
 
     @Override

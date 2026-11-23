@@ -11,9 +11,8 @@ import com.gregtechceu.gtceu.api.machine.trait.IRecipeHandlerTrait;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.UpdateListener;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.UpdateListener;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -39,9 +38,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MultiblockPartMachine.class,
-            MetaMachine.MANAGED_FIELD_HOLDER);
-
     @DescSynced
     @UpdateListener(methodName = "onControllersUpdated")
     protected final Set<BlockPos> controllerPositions = new ObjectOpenHashSet<>(8);
@@ -58,11 +54,6 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
     //////////////////////////////////////
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
-    @Override
     public boolean hasController(BlockPos controllerPos) {
         return controllerPositions.contains(controllerPos);
     }
@@ -74,7 +65,7 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
 
     // Not sure if necessary, but added to match the Controller class
     @SuppressWarnings("unused")
-    public void onControllersUpdated(Set<BlockPos> newPositions, Set<BlockPos> old) {
+    public void onControllersUpdated(Set<BlockPos> old, Set<BlockPos> newPositions) {
         synchronized (controllers) {
             controllers.clear();
             for (BlockPos blockPos : newPositions) {
@@ -91,7 +82,7 @@ public class MultiblockPartMachine extends MetaMachine implements IMultiPart {
         synchronized (controllers) {
             // Necessary to rebuild the set of controllers on client-side
             if (controllers.size() != controllerPositions.size()) {
-                onControllersUpdated(controllerPositions, Collections.emptySet());
+                onControllersUpdated(Collections.emptySet(), controllerPositions);
             }
             return Collections.unmodifiableSortedSet(new ReferenceLinkedOpenHashSet<>(controllers));
         }

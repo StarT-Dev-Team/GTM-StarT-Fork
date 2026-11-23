@@ -1,0 +1,34 @@
+.gt-panel {
+  padding-all: 4;
+  gap-all: 2;
+  align-items: center;
+}
+
+.gt-display {
+  background: sprite(gtceu:textures/gui/base/display.png);
+  padding-all: 4;
+  gap-all: 1;
+}
+
+.gt-row {
+  flex-direction: row;
+  align-items: center;
+  gap-all: 2;
+}
+
+.gt-text-dark {
+  text-color: #404040;
+  text-shadow: false;
+}
+
+item-slot, .item-slot_bg {
+  background: sprite(gtceu:textures/gui/base/slot.png, 0, 0, 18, 18, 1, 1, 1, 1);
+}
+
+fluid-slot, .fluid-slot_bg {
+  background: sprite(gtceu:textures/gui/base/fluid_slot.png, 0, 0, 18, 18, 1, 1, 1, 1);
+}
+
+.gt-player-inventory {
+  align-self: center;
+}

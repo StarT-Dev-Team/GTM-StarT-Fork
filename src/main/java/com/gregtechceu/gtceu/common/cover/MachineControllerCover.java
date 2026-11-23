@@ -7,33 +7,35 @@ import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.IUICover;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.PhantomSlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.api.machine.MachineCoverContainer;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.cover.data.ControllerMode;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.jetbrains.annotations.Nullable;
@@ -48,15 +50,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MachineControllerCover extends CoverBehavior implements IUICover {
 
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MachineControllerCover.class,
-            CoverBehavior.MANAGED_FIELD_HOLDER);
     private CustomItemStackHandler sideCoverSlot;
-    private ButtonWidget modeButton;
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
+    private Button modeButton;
 
     @Persisted
     @Getter
@@ -204,43 +199,48 @@ public class MachineControllerCover extends CoverBehavior implements IUICover {
     // *********** GUI ***********//
     //////////////////////////////////////
 
-    @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         if (controllerMode != null && getControllable(controllerMode.side) == null) {
             setControllerMode(null);
         }
-        WidgetGroup group = new WidgetGroup(0, 0, 176, 95);
+        var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
 
-        group.addWidget(new LabelWidget(10, 5, "cover.machine_controller.title"));
-        group.addWidget(new IntInputWidget(10, 20, 131, 20,
-                this::getMinRedstoneStrength, this::setMinRedstoneStrength).setMin(1).setMax(15));
+        group.addChild(new Label().setText(Component.translatable("cover.machine_controller.title")));
 
-        modeButton = new ButtonWidget(10, 45, 131, 20,
-                new GuiTextureGroup(GuiTextures.VANILLA_BUTTON),
-                cd -> selectNextMode());
-        group.addWidget(modeButton);
-
-        // Inverted Mode Toggle:
-        group.addWidget(new ToggleButtonWidget(
-                146, 20, 20, 20,
+        var strengthRow = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3));
+        var strength = new IntInput(this::getMinRedstoneStrength, this::setMinRedstoneStrength);
+        strength.setMin(1);
+        strength.setMax(15);
+        strength.layout(layout -> layout.flex(1).height(20));
+        strengthRow.addChildren(strength, new ToggleButton(
                 GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
                 .isMultiLang()
-                .setTooltipText("cover.machine_controller.invert"));
+                .setTooltipText("cover.machine_controller.invert")
+                .layout(layout -> layout.width(20).height(20)));
+        group.addChild(strengthRow);
 
-        group.addWidget(new LabelWidget(10, 72, "cover.machine_controller.suspend_powerfail"));
-        group.addWidget(new ToggleButtonWidget(147, 68, 18, 18, GuiTextures.BUTTON_POWER,
-                this::preventPowerFail, (data) -> {
-                    preventPowerFail = data;
-                }));
+        var modeRow = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3));
+        modeButton = new Button().noText();
+        modeButton.layout(layout -> layout.flex(1).height(20));
+        var modeTexture = DynamicTexture.of(() -> new GuiTextureGroup(
+                GuiTextures.VANILLA_BUTTON,
+                new TextTexture(controllerMode != null ? controllerMode.localeName : ControllerMode.nullLocaleName)));
+        modeButton.buttonStyle(style -> style.baseTexture(modeTexture).hoverTexture(modeTexture)
+                .pressedTexture(modeTexture));
+        modeButton.setOnServerClick(event -> selectNextMode());
 
         sideCoverSlot = new CustomItemStackHandler(1);
-        group.addWidget(new PhantomSlotWidget(sideCoverSlot, 0, 147, 46) {
+        var coverSlot = new ItemSlot().bind(new ItemHandlerSlot(sideCoverSlot, 0).setCanTake(player -> false)
+                .setCanPlace(stack -> false));
+        modeRow.addChildren(modeButton, coverSlot);
+        group.addChild(modeRow);
 
-            @Override
-            public ItemStack slotClickPhantom(Slot slot, int mouseButton, ClickType clickTypeIn, ItemStack stackHeld) {
-                return sideCoverSlot.getStackInSlot(0);
-            }
-        });
+        var powerRow = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER).justifyContent(AlignContent.SPACE_BETWEEN));
+        powerRow.addChildren(
+                new Label().setText(Component.translatable("cover.machine_controller.suspend_powerfail")),
+                new ToggleButton(GuiTextures.BUTTON_POWER, this::preventPowerFail, data -> preventPowerFail = data));
+        group.addChild(powerRow);
 
         updateUI();
 
@@ -260,18 +260,7 @@ public class MachineControllerCover extends CoverBehavior implements IUICover {
     }
 
     private void updateUI() {
-        updateModeButton();
         updateCoverSlot();
-    }
-
-    private void updateModeButton() {
-        if (modeButton == null) {
-            return;
-        }
-
-        modeButton.setButtonTexture(new GuiTextureGroup(
-                GuiTextures.VANILLA_BUTTON,
-                new TextTexture(controllerMode != null ? controllerMode.localeName : ControllerMode.nullLocaleName)));
     }
 
     private void updateCoverSlot() {

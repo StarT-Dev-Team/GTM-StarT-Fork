@@ -6,14 +6,17 @@ import com.gregtechceu.gtceu.api.gui.fancy.IFancyUIProvider;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.common.data.GTItems;
 
-import com.lowdragmc.lowdraglib.gui.editor.ColorPattern;
-import com.lowdragmc.lowdraglib.gui.texture.*;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ColorPattern;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -38,20 +41,27 @@ public class MachineModeFancyConfigurator implements IFancyUIProvider {
     }
 
     @Override
-    public Widget createMainPage(FancyMachineUIWidget widget) {
-        var group = new MachineModeConfigurator(0, 0, 140, 20 * machine.getRecipeTypes().length + 4);
-        group.setBackground(GuiTextures.BACKGROUND_INVERSE);
+    public UIElement createMainPage(FancyMachineUIWidget widget) {
+        var group = new UIElement().layout(layout -> layout.width(140).paddingAll(2));
+        group.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
+        group.addChild(new BindableValue<Integer>().bind(DataBindingBuilder
+                .intValS2C(machine::getActiveRecipeType)
+                .remoteSetter(machine::setActiveRecipeType)
+                .build()));
         for (int i = 0; i < machine.getRecipeTypes().length; i++) {
             int finalI = i;
-            group.addWidget(new ButtonWidget(2, 2 + i * 20, 136, 20, IGuiTexture.EMPTY,
-                    cd -> setActiveRecipeTypeAndUpdateTickSubs(finalI)));
-            group.addWidget(new ImageWidget(2, 2 + i * 20, 136, 20,
-                    () -> new GuiTextureGroup(
-                            ResourceBorderTexture.BUTTON_COMMON.copy()
-                                    .setColor(machine.getActiveRecipeType() == finalI ? ColorPattern.CYAN.color : -1),
-                            new TextTexture(machine.getRecipeTypes()[finalI].registryName.toLanguageKey()).setWidth(136)
-                                    .setType(TextTexture.TextType.ROLL))));
-
+            var button = new Button().noText();
+            button.layout(layout -> layout.width(136).height(20));
+            button.buttonStyle(style -> {
+                var texture = DynamicTexture.of(() -> new GuiTextureGroup(
+                        GuiTextures.VANILLA_BUTTON.copy()
+                                .setColor(machine.getActiveRecipeType() == finalI ? ColorPattern.CYAN.color : -1),
+                        new TextTexture(machine.getRecipeTypes()[finalI].registryName.toLanguageKey())
+                                .setWidth(136).setType(TextTexture.TextType.ROLL)));
+                style.baseTexture(texture).hoverTexture(texture).pressedTexture(texture);
+            });
+            button.setOnServerClick(event -> setActiveRecipeTypeAndUpdateTickSubs(finalI));
+            group.addChild(button);
         }
         return group;
     }
@@ -74,35 +84,6 @@ public class MachineModeFancyConfigurator implements IFancyUIProvider {
 
             if (needUpdateTickSubs) {
                 machine.getRecipeLogic().updateTickSubscription();
-            }
-        }
-    }
-
-    public class MachineModeConfigurator extends WidgetGroup {
-
-        public MachineModeConfigurator(int x, int y, int width, int height) {
-            super(x, y, width, height);
-        }
-
-        @Override
-        public void writeInitialData(FriendlyByteBuf buffer) {
-            buffer.writeVarInt(machine.getActiveRecipeType());
-        }
-
-        @Override
-        public void readInitialData(FriendlyByteBuf buffer) {
-            machine.setActiveRecipeType(buffer.readVarInt());
-        }
-
-        @Override
-        public void detectAndSendChanges() {
-            this.writeUpdateInfo(0, buf -> buf.writeVarInt(machine.getActiveRecipeType()));
-        }
-
-        @Override
-        public void readUpdateInfo(int id, FriendlyByteBuf buffer) {
-            if (id == 0) {
-                machine.setActiveRecipeType(buffer.readVarInt());
             }
         }
     }

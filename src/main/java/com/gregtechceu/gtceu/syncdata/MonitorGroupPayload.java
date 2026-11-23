@@ -3,7 +3,8 @@ package com.gregtechceu.gtceu.syncdata;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.monitor.MonitorGroup;
 
-import com.lowdragmc.lowdraglib.syncdata.payload.ObjectTypedPayload;
+import com.lowdragmc.lowdraglib2.compat.network.ByteBufCodecs;
+import com.lowdragmc.lowdraglib2.compat.network.StreamCodec;
 
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -11,52 +12,55 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 
-import org.jetbrains.annotations.Nullable;
+import com.mojang.serialization.Codec;
+import io.netty.buffer.ByteBuf;
 
-public class MonitorGroupPayload extends ObjectTypedPayload<MonitorGroup> {
+public final class MonitorGroupPayload {
 
-    @Override
-    public @Nullable Tag serializeNBT() {
+    public static final Codec<MonitorGroup> CODEC = CompoundTag.CODEC.xmap(MonitorGroupPayload::read,
+            MonitorGroupPayload::write);
+
+    public static final StreamCodec<ByteBuf, MonitorGroup> STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+
+    private MonitorGroupPayload() {}
+
+    public static CompoundTag write(MonitorGroup group) {
         CompoundTag tag = new CompoundTag();
-        tag.putString("name", payload.getName());
+        tag.putString("name", group.getName());
         ListTag list = new ListTag();
-        payload.getMonitorPositions().forEach(pos -> {
-            list.add(NbtUtils.writeBlockPos(pos));
-        });
-        if (payload.getTargetRaw() != null) {
-            tag.put("targetPos", NbtUtils.writeBlockPos(payload.getTargetRaw()));
-            if (payload.getTargetCoverSide() != null) {
-                tag.putString("targetSide", payload.getTargetCoverSide().getSerializedName());
+        group.getMonitorPositions().forEach(pos -> list.add(NbtUtils.writeBlockPos(pos)));
+        if (group.getTargetRaw() != null) {
+            tag.put("targetPos", NbtUtils.writeBlockPos(group.getTargetRaw()));
+            if (group.getTargetCoverSide() != null) {
+                tag.putString("targetSide", group.getTargetCoverSide().getSerializedName());
             }
         }
         tag.put("positions", list);
-        tag.putInt("dataSlot", payload.getDataSlot());
-        tag.put("items", payload.getItemStackHandler().serializeNBT());
-        tag.put("placeholderSlots", payload.getPlaceholderSlotsHandler().serializeNBT());
+        tag.putInt("dataSlot", group.getDataSlot());
+        tag.put("items", group.getItemStackHandler().serializeNBT());
+        tag.put("placeholderSlots", group.getPlaceholderSlotsHandler().serializeNBT());
         return tag;
     }
 
-    @Override
-    public void deserializeNBT(Tag tag) {
-        if (tag instanceof CompoundTag compoundTag) {
-            CustomItemStackHandler handler = new CustomItemStackHandler(),
-                    placeholderSlotsHandler = new CustomItemStackHandler();
-            handler.deserializeNBT(compoundTag.getCompound("items"));
-            placeholderSlotsHandler.deserializeNBT(compoundTag.getCompound("placeholderSlots"));
-            payload = new MonitorGroup(compoundTag.getString("name"), handler, placeholderSlotsHandler);
-            ListTag list = compoundTag.getList("positions", Tag.TAG_COMPOUND);
-            for (int i = 0; i < list.size(); i++) {
-                payload.add(NbtUtils.readBlockPos(list.getCompound(i)));
+    public static MonitorGroup read(CompoundTag tag) {
+        var handler = new CustomItemStackHandler();
+        var placeholderSlotsHandler = new CustomItemStackHandler();
+        handler.deserializeNBT(tag.getCompound("items"));
+        placeholderSlotsHandler.deserializeNBT(tag.getCompound("placeholderSlots"));
+        var group = new MonitorGroup(tag.getString("name"), handler, placeholderSlotsHandler);
+        ListTag list = tag.getList("positions", Tag.TAG_COMPOUND);
+        for (int i = 0; i < list.size(); i++) {
+            group.add(NbtUtils.readBlockPos(list.getCompound(i)));
+        }
+        if (tag.contains("targetPos", Tag.TAG_COMPOUND)) {
+            group.setTarget(NbtUtils.readBlockPos(tag.getCompound("targetPos")));
+            if (tag.contains("targetSide", Tag.TAG_STRING)) {
+                group.setTargetCoverSide(Direction.byName(tag.getString("targetSide")));
             }
-            if (compoundTag.contains("targetPos", Tag.TAG_COMPOUND)) {
-                payload.setTarget(NbtUtils.readBlockPos(compoundTag.getCompound("targetPos")));
-                if (compoundTag.contains("targetSide", Tag.TAG_STRING)) {
-                    payload.setTargetCoverSide(Direction.byName(compoundTag.getString("targetSide")));
-                }
-                if (compoundTag.contains("dataSlot", Tag.TAG_INT)) {
-                    payload.setDataSlot(compoundTag.getInt("dataSlot"));
-                }
+            if (tag.contains("dataSlot", Tag.TAG_INT)) {
+                group.setDataSlot(tag.getInt("dataSlot"));
             }
         }
+        return group;
     }
 }

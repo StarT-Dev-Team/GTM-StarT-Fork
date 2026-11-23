@@ -23,17 +23,17 @@ import com.gregtechceu.gtceu.common.block.FusionCasingBlock;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.utils.LocalizationUtils;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2IntAVLTreeMap;
@@ -56,9 +56,6 @@ import static com.gregtechceu.gtceu.common.data.GTBlocks.*;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FusionReactorMachine extends WorkableElectricMultiblockMachine implements ITieredMachine {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(FusionReactorMachine.class,
-            WorkableElectricMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     // Standard OC used for Fusion
     public static final OverclockingLogic FUSION_OC = OverclockingLogic.create(PERFECT_HALF_DURATION_FACTOR,
@@ -94,11 +91,6 @@ public class FusionReactorMachine extends WorkableElectricMultiblockMachine impl
     //////////////////////////////////////
     // ***** Initialization ******//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     public NotifiableEnergyContainer createEnergyContainer() {
         // create an internal energy container for temp storage. its capacity is decided when the structure formed.
         // it doesn't provide any capability of all sides, but null for the goggles mod to check it storages.
@@ -290,16 +282,18 @@ public class FusionReactorMachine extends WorkableElectricMultiblockMachine impl
         }
     }
 
-    public static void addEUToStartLabel(GTRecipe recipe, WidgetGroup group) {
+    public static void addEUToStartLabel(GTRecipe recipe, UIElement group) {
         long euToStart = recipe.data.getLong("eu_to_start");
         if (euToStart <= 0) return;
         int recipeTier = RecipeHelper.getPreOCRecipeEuTier(recipe);
         int fusionTier = findCeilingTier(euToStart);
         int tier = Math.max(MINIMUM_TIER, Math.max(recipeTier, fusionTier));
-        group.addWidget(new LabelWidget(-8, group.getSizeHeight() - 10,
-                LocalizationUtils.format("gtceu.recipe.eu_to_start",
-                        FormattingUtil.formatNumberReadable2F(euToStart, false).getString(),
-                        FUSION_NAMES.get(tier))));
+        var label = new Label();
+        label.setText(Component.literal(LocalizationUtils.format("gtceu.recipe.eu_to_start",
+                FormattingUtil.formatNumberReadable2F(euToStart, false).getString(),
+                FUSION_NAMES.get(tier))));
+        label.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(-8).topPercent(100).marginTop(-10));
+        group.addChild(label);
     }
 
     //////////////////////////////////////

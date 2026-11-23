@@ -47,7 +47,7 @@ public interface IGridConnectedMachine extends IMachineFeature, IGridConnectedBl
 
     @Override
     default void saveChanges() {
-        self().onChanged();
+        self().notifyPersistence();
     }
 
     @Override

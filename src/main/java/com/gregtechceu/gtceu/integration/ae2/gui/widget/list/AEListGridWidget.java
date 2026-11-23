@@ -2,255 +2,117 @@ package com.gregtechceu.gtceu.integration.ae2.gui.widget.list;
 
 import com.gregtechceu.gtceu.integration.ae2.utils.KeyStorage;
 
-import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
-import appeng.api.stacks.AEFluidKey;
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
-/**
- * A display only widget for {@link KeyStorage}
- */
-public abstract class AEListGridWidget extends DraggableScrollableWidgetGroup {
+public class AEListGridWidget extends UIElement {
 
     protected final KeyStorage list;
     private final int slotAmountY;
-    private int slotRowsAmount;
-    protected final static int ROW_CHANGE_ID = 2;
-    protected final static int CONTENT_CHANGE_ID = 3;
-
-    protected final Object2LongMap<AEKey> changeMap = new Object2LongOpenHashMap<>();
-    protected final KeyStorage cached = new KeyStorage();
+    private final Object2LongMap<AEKey> cached = new Object2LongOpenHashMap<>();
+    private ListTag cachedTag = new ListTag();
     protected final List<GenericStack> displayList = new ArrayList<>();
+    private final ScrollerView scroller = new ScrollerView();
+    private final List<AEGenericDisplayWidget> rows = new ArrayList<>();
 
-    public AEListGridWidget(int x, int y, int slotsY, KeyStorage internalList) {
-        super(x, y, 18 + 140, slotsY * 18);
+    public AEListGridWidget(int slotsY, KeyStorage internalList) {
         this.list = internalList;
         this.slotAmountY = slotsY;
+
+        layout(layout -> layout.width(18 + 140 + 8).height(slotsY * 18));
+        scroller.layout(layout -> layout.widthPercent(100).heightPercent(100));
+        addChild(scroller);
+        addChild(new BindableValue<Tag>().bind(DataBindingBuilder.tagS2C(this::collect)
+                .remoteSetter(this::receive).build()));
+        updateRows();
     }
 
     public GenericStack getAt(int index) {
         return index >= 0 && index < displayList.size() ? displayList.get(index) : null;
     }
 
-    private void addSlotRows(int amount) {
-        for (int i = 0; i < amount; i++) {
-            int widgetAmount = this.widgets.size();
-            Widget widget = createDisplayWidget(0, i * 18, widgetAmount);
-            this.addWidget(widget);
+    private Tag collect() {
+        if (list == null) return cachedTag;
+        if (!cached.equals(list.storage)) {
+            cached.clear();
+            cached.putAll(list.storage);
+            cachedTag = list.serializeNBT();
         }
+        return cachedTag;
     }
 
-    private void removeSlotRows(int amount) {
-        for (int i = 0; i < amount; i++) {
-            Widget slotWidget = this.widgets.remove(this.widgets.size() - 1);
-            removeWidget(slotWidget);
-        }
-    }
-
-    private void modifySlotRows(int delta) {
-        if (delta > 0) {
-            addSlotRows(delta);
-        } else {
-            removeSlotRows(delta);
-        }
-    }
-
-    protected void writeListChange(FriendlyByteBuf buffer) {
-        this.changeMap.clear();
-
-        // Remove
-        var cachedIt = cached.storage.object2LongEntrySet().iterator();
-        while (cachedIt.hasNext()) {
-            var entry = cachedIt.next();
-            var cachedKey = entry.getKey();
-            if (!list.storage.containsKey(cachedKey)) {
-                this.changeMap.put(cachedKey, -entry.getLongValue());
-                cachedIt.remove();
-            }
-        }
-
-        // Change/Add
-        for (var entry : list.storage.object2LongEntrySet()) {
-            var key = entry.getKey();
-            long value = entry.getLongValue();
-            long cacheValue = cached.storage.getOrDefault(key, 0);
-            if (cacheValue == 0) {
-                // Add
-                this.changeMap.put(key, value);
-                this.cached.storage.put(key, value);
-            } else {
-                // Change
-                if (cacheValue != value) {
-                    this.changeMap.put(key, value - cacheValue);
-                    this.cached.storage.put(key, value);
+    private void receive(Tag tag) {
+        var incoming = new LinkedHashMap<AEKey, Long>();
+        if (tag instanceof ListTag entries) {
+            for (int i = 0; i < entries.size(); i++) {
+                var entry = entries.getCompound(i);
+                var key = AEKey.fromTagGeneric(entry.getCompound("key"));
+                var amount = entry.getLong("value");
+                if (key != null && amount > 0) {
+                    incoming.put(key, amount);
                 }
             }
         }
-
-        buffer.writeVarInt(this.changeMap.size());
-        for (var entry : this.changeMap.object2LongEntrySet()) {
-            toPacket(buffer, entry.getKey());
-
-            buffer.writeVarLong(entry.getLongValue());
-        }
-    }
-
-    protected void readListChange(FriendlyByteBuf buffer) {
-        int size = buffer.readVarInt();
-        for (int i = 0; i < size; i++) {
-            var key = fromPacket(buffer);
-            long delta = buffer.readVarLong();
-
-            boolean found = false;
-            var li = displayList.listIterator();
-            while (li.hasNext()) {
-                var stack = li.next();
-                if (stack.what().equals(key)) {
-                    long newAmount = stack.amount() + delta;
-                    if (newAmount > 0) {
-                        li.set(new GenericStack(key, newAmount));
-                    } else {
-                        li.remove();
-                    }
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                displayList.add(new GenericStack(key, delta));
+        var result = new ArrayList<GenericStack>();
+        for (var old : displayList) {
+            var amount = incoming.remove(old.what());
+            if (amount != null) {
+                result.add(new GenericStack(old.what(), amount));
             }
         }
+        incoming.forEach((key, amount) -> result.add(new GenericStack(key, amount)));
+        displayList.clear();
+        displayList.addAll(result);
+        updateRows();
     }
 
-    protected abstract void toPacket(FriendlyByteBuf buffer, AEKey key);
-
-    protected abstract AEKey fromPacket(FriendlyByteBuf buffer);
-
-    protected abstract Widget createDisplayWidget(int x, int y, int index);
-
-    @Override
-    public void detectAndSendChanges() {
-        super.detectAndSendChanges();
-        if (this.list == null) return;
-        int slotRowsRequired = Math.max(this.slotAmountY, list.storage.size());
-        if (this.slotRowsAmount != slotRowsRequired) {
-            int slotsToAdd = slotRowsRequired - this.slotRowsAmount;
-            this.slotRowsAmount = slotRowsRequired;
-            this.writeUpdateInfo(ROW_CHANGE_ID, buf -> buf.writeVarInt(slotsToAdd));
-            this.modifySlotRows(slotsToAdd);
+    private void updateRows() {
+        var required = Math.max(slotAmountY, displayList.size());
+        while (rows.size() < required) {
+            var row = new AEGenericDisplayWidget();
+            rows.add(row);
+            scroller.addScrollViewChild(row);
         }
-        this.writeUpdateInfo(CONTENT_CHANGE_ID, this::writeListChange);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void readUpdateInfo(int id, FriendlyByteBuf buffer) {
-        super.readUpdateInfo(id, buffer);
-        if (id == ROW_CHANGE_ID) {
-            int slotsToAdd = buffer.readVarInt();
-            this.modifySlotRows(slotsToAdd);
+        while (rows.size() > required) {
+            scroller.removeScrollViewChild(rows.remove(rows.size() - 1));
         }
-        if (id == CONTENT_CHANGE_ID) {
-            this.readListChange(buffer);
+        for (int i = 0; i < rows.size(); i++) {
+            rows.get(i).update(getAt(i));
         }
-    }
-
-    @Override
-    public void writeInitialData(FriendlyByteBuf buffer) {
-        super.writeInitialData(buffer);
-        if (this.list == null) return;
-        int slotRowsRequired = Math.max(this.slotAmountY, list.storage.size());
-        int slotsToAdd = slotRowsRequired - this.slotRowsAmount;
-        this.slotRowsAmount = slotRowsRequired;
-        this.modifySlotRows(slotsToAdd);
-        buffer.writeVarInt(slotsToAdd);
-        this.writeListChange(buffer);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void readInitialData(FriendlyByteBuf buffer) {
-        super.readInitialData(buffer);
-        if (this.list == null) return;
-        this.modifySlotRows(buffer.readVarInt());
-        this.readListChange(buffer);
     }
 
     public static class Item extends AEListGridWidget {
 
-        public Item(int x, int y, int slotsY, KeyStorage internalList) {
-            super(x, y, slotsY, internalList);
-        }
-
-        @Override
-        protected void toPacket(FriendlyByteBuf buffer, AEKey key) {
-            key.writeToPacket(buffer);
-        }
-
-        @Override
-        protected AEKey fromPacket(FriendlyByteBuf buffer) {
-            return AEItemKey.fromPacket(buffer);
-        }
-
-        @Override
-        protected Widget createDisplayWidget(int x, int y, int index) {
-            return new AEItemDisplayWidget(x, y, this, index);
+        public Item(int slotsY, KeyStorage internalList) {
+            super(slotsY, internalList);
         }
     }
 
     public static class Fluid extends AEListGridWidget {
 
-        public Fluid(int x, int y, int slotsY, KeyStorage internalList) {
-            super(x, y, slotsY, internalList);
-        }
-
-        @Override
-        protected void toPacket(FriendlyByteBuf buffer, AEKey key) {
-            key.writeToPacket(buffer);
-        }
-
-        @Override
-        protected AEKey fromPacket(FriendlyByteBuf buffer) {
-            return AEFluidKey.fromPacket(buffer);
-        }
-
-        @Override
-        protected Widget createDisplayWidget(int x, int y, int index) {
-            return new AEFluidDisplayWidget(x, y, this, index);
+        public Fluid(int slotsY, KeyStorage internalList) {
+            super(slotsY, internalList);
         }
     }
 
     public static class Generic extends AEListGridWidget {
 
-        public Generic(int x, int y, int slotsY, KeyStorage internalList) {
-            super(x, y, slotsY, internalList);
-        }
-
-        @Override
-        protected void toPacket(FriendlyByteBuf buffer, AEKey key) {
-            AEKey.writeKey(buffer, key);
-        }
-
-        @Override
-        protected AEKey fromPacket(FriendlyByteBuf buffer) {
-            return AEKey.readKey(buffer);
-        }
-
-        @Override
-        protected Widget createDisplayWidget(int x, int y, int index) {
-            return new AEGenericDisplayWidget(x, y, this, index);
+        public Generic(int slotsY, KeyStorage internalList) {
+            super(slotsY, internalList);
         }
     }
 }

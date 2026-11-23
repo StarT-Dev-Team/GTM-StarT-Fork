@@ -15,13 +15,12 @@ import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DropSaved;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DropSaved;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,9 +50,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class DrumMachine extends MetaMachine implements IAutoOutputFluid, IDropSaveMachine, IInteractedMachine {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(DrumMachine.class,
-            MetaMachine.MANAGED_FIELD_HOLDER);
 
     @Getter
     @Persisted
@@ -88,11 +84,6 @@ public class DrumMachine extends MetaMachine implements IAutoOutputFluid, IDropS
     //////////////////////////////////////
     // ***** Initialization *****//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     protected NotifiableFluidTank createCacheFluidHandler(Object... args) {
         return new NotifiableFluidTank(this, 1, maxStoredFluids, IO.BOTH)
                 .setFilter(material.getProperty(PropertyKey.FLUID_PIPE));
@@ -134,9 +125,19 @@ public class DrumMachine extends MetaMachine implements IAutoOutputFluid, IDropS
     //////////////////////////////////////
 
     @Override
+    public void saveToItem(CompoundTag tag) {
+        IDropSaveMachine.super.saveToItem(tag);
+        if (!stored.isEmpty()) {
+            tag.put("Fluid", stored.writeToNBT(new CompoundTag()));
+        }
+    }
+
+    @Override
     public void loadFromItem(CompoundTag tag) {
         IDropSaveMachine.super.loadFromItem(tag);
-        if (!tag.contains("Fluid")) {
+        if (tag.contains("Fluid")) {
+            stored = FluidStack.loadFluidStackFromNBT(tag.getCompound("Fluid"));
+        } else {
             stored = FluidStack.EMPTY;
         }
         // "stored" may not be same as cache (due to item's fluid cap). we should update it.
@@ -270,8 +271,8 @@ public class DrumMachine extends MetaMachine implements IAutoOutputFluid, IDropS
     }
 
     @Override
-    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
-                                              Direction side) {
+    public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                            Direction side) {
         if (toolTypes.contains(GTToolType.SOFT_MALLET) ||
                 (!canInputFluidsFromOutputSide() && toolTypes.contains(GTToolType.SCREWDRIVER))) {
             if (side == getOutputFacingFluids()) {

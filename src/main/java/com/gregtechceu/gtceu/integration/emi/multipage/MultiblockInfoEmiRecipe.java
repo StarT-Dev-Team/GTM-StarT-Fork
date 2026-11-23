@@ -3,9 +3,9 @@ package com.gregtechceu.gtceu.integration.emi.multipage;
 import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
 import com.gregtechceu.gtceu.api.gui.widget.preview.MBPattern;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
+import com.gregtechceu.gtceu.integration.xei.GTXEIUI;
 
-import com.lowdragmc.lowdraglib.emi.ModularEmiRecipe;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.integration.xei.emi.ModularUIEMIRecipe;
 
 import net.minecraft.resources.ResourceLocation;
 
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class MultiblockInfoEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
+public class MultiblockInfoEmiRecipe extends ModularUIEMIRecipe {
 
     private final MultiblockMachineDefinition definition;
     private SlotWidget slotWidget;
@@ -26,13 +26,22 @@ public class MultiblockInfoEmiRecipe extends ModularEmiRecipe<WidgetGroup> {
     private PatternPreviewWidget activeWidget;
 
     public MultiblockInfoEmiRecipe(MultiblockMachineDefinition definition) {
-        super(() -> PatternPreviewWidget.getPatternWidget(definition));
+        super(recipe -> {
+            var widget = PatternPreviewWidget.getPatternWidget(definition);
+            ((MultiblockInfoEmiRecipe) recipe).activeWidget = widget;
+            return GTXEIUI.of(widget);
+        });
         this.definition = definition;
-        this.widget = () -> {
-            PatternPreviewWidget widget = PatternPreviewWidget.getPatternWidget(definition);
-            this.activeWidget = widget;
-            return widget;
-        };
+    }
+
+    @Override
+    public int getDisplayWidth() {
+        return PatternPreviewWidget.WIDGET_WIDTH;
+    }
+
+    @Override
+    public int getDisplayHeight() {
+        return PatternPreviewWidget.WIDGET_HEIGHT;
     }
 
     @Override

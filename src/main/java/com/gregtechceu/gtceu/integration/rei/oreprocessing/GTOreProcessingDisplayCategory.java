@@ -5,11 +5,11 @@ import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlags;
+import com.gregtechceu.gtceu.integration.rei.REIIcons;
 
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.rei.IGui2Renderer;
-import com.lowdragmc.lowdraglib.rei.ModularUIDisplayCategory;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplayCategory;
+import com.lowdragmc.lowdraglib2.math.Size;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Items;
@@ -36,8 +36,9 @@ public class GTOreProcessingDisplayCategory extends ModularUIDisplayCategory<GTO
     private final Size size;
 
     public GTOreProcessingDisplayCategory() {
-        this.icon = IGui2Renderer.toDrawable(new ItemStackTexture(Items.RAW_IRON));
-        this.size = new Size(176, 166);
+        super(GTOreProcessingDisplay::createModularUI);
+        this.icon = REIIcons.of(new ItemStackTexture(Items.RAW_IRON));
+        this.size = Size.of(176, 166);
     }
 
     @Override

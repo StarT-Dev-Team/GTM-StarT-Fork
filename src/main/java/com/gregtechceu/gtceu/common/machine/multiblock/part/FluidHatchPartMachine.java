@@ -5,10 +5,9 @@ import com.gregtechceu.gtceu.api.capability.ILockableHatch;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
-import com.gregtechceu.gtceu.api.gui.widget.BlockableTankWidget;
-import com.gregtechceu.gtceu.api.gui.widget.PhantomFluidWidget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableFluidSlot;
+import com.gregtechceu.gtceu.api.gui.widget.PhantomFluidSlot;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
@@ -24,14 +23,12 @@ import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -49,6 +46,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidType;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -59,9 +59,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class FluidHatchPartMachine extends TieredIOPartMachine
                                    implements IMachineLife, IHasCircuitSlot, IPaintable, ILockableHatch {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(FluidHatchPartMachine.class,
-            TieredIOPartMachine.MANAGED_FIELD_HOLDER);
 
     public static final int INITIAL_TANK_CAPACITY_1X = 8 * FluidType.BUCKET_VOLUME;
     public static final int INITIAL_TANK_CAPACITY_4X = 2 * FluidType.BUCKET_VOLUME;
@@ -107,11 +104,6 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
     //////////////////////////////////////
     // ***** Initialization ******//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     protected NotifiableFluidTank createTank(int initialCapacity, int slots, Object... args) {
         return new NotifiableFluidTank(this, slots, getTankCapacity(initialCapacity, getTier()), io);
     }
@@ -310,7 +302,7 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
     }
 
     @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         if (slots == 1) {
             return createSingleSlotGUI();
         } else {
@@ -318,68 +310,81 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
         }
     }
 
-    protected Widget createSingleSlotGUI() {
-        var group = new WidgetGroup(0, 0, 89, 63);
-        group.addWidget(new ImageWidget(4, 4, 81, 55, GuiTextures.DISPLAY));
-        TankWidget tankWidget;
+    protected UIElement createSingleSlotGUI() {
+        var group = new UIElement();
+        group.layout(layout -> layout.width(89).height(63));
+        group.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
 
-        // Add input/output-specific widgets
+        var display = new UIElement();
+        display.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(4).top(4).width(81).height(55));
+        display.style(style -> style.backgroundTexture(GuiTextures.DISPLAY));
+        group.addChild(display);
+
         if (this.io == IO.OUT) {
-            // if this is an output hatch, assign tankWidget to the phantom widget displaying the locked fluid...
-            group.addWidget(tankWidget = new PhantomFluidWidget(this.tank.getLockedFluid(), 0, 67, 40, 18, 18,
-                    () -> this.tank.getLockedFluid().getFluid(), f -> {
-                        if (!this.tank.getFluidInTank(0).isEmpty()) {
-                            return;
-                        }
-                        if (f == null || f.isEmpty()) {
-                            this.tank.setLocked(false);
-                        } else {
-                            FluidStack newFluid = f.copy();
-                            newFluid.setAmount(1);
-                            this.tank.setLocked(true, newFluid);
-                        }
-                    }).setShowAmount(false).setDrawHoverTips(true).setBackground(GuiTextures.FLUID_SLOT));
+            var locked = new PhantomFluidSlot(() -> this.tank.getLockedFluid().getFluid(), f -> {
+                if (!this.tank.getFluidInTank(0).isEmpty()) {
+                    return;
+                }
+                if (f == null || f.isEmpty()) {
+                    this.tank.setLocked(false);
+                } else {
+                    var newFluid = f.copy();
+                    newFluid.setAmount(1);
+                    this.tank.setLocked(true, newFluid);
+                }
+            });
+            locked.amountLabel.setDisplay(false);
+            locked.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(67).top(40));
+            locked.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+            group.addChild(locked);
 
-            group.addWidget(new ToggleButtonWidget(7, 40, 18, 18,
-                    GuiTextures.BUTTON_LOCK, this.tank::isLocked, this.tank::setLocked)
+            var lockButton = new ToggleButton(GuiTextures.BUTTON_LOCK, this.tank::isLocked, this.tank::setLocked)
                     .setTooltipText("gtceu.gui.fluid_lock.tooltip")
-                    .setShouldUseBaseBackground());
-
-            // ...and add the actual tank widget separately.
-            group.addWidget(new BlockableTankWidget(tank.getStorages()[0], 67, 22, 18, 18, true, io.support(IO.IN))
-                    .setIsBlocked(this::isLocked)
-                    .setShowAmount(true).setDrawHoverTips(true).setBackground(GuiTextures.FLUID_SLOT));
-        } else {
-            group.addWidget(
-                    tankWidget = new BlockableTankWidget(tank.getStorages()[0], 67, 22, 18, 18, true, io.support(IO.IN))
-                            .setIsBlocked(this::isLocked)
-                            .setShowAmount(true).setDrawHoverTips(true).setBackground(GuiTextures.FLUID_SLOT));
+                    .setShouldUseBaseBackground();
+            lockButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(40));
+            group.addChild(lockButton);
         }
 
-        group.addWidget(new LabelWidget(8, 8, "gtceu.gui.fluid_amount"))
-                .addWidget(new LabelWidget(8, 18, () -> getFluidAmountText(tankWidget)))
-                .addWidget(new LabelWidget(8, 28, () -> getFluidNameText(tankWidget).getString()));
+        var tankSlot = new BlockableFluidSlot();
+        tankSlot.setIsBlocked(this::isLocked);
+        tankSlot.bind(tank.getStorages()[0], 0);
+        tankSlot.setAllowClickFilled(io.support(IO.IN));
+        tankSlot.setAllowClickDrained(true);
+        tankSlot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(67).top(22));
+        tankSlot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+        group.addChild(tankSlot);
 
-        group.setBackground(GuiTextures.BACKGROUND_INVERSE);
+        var amountTitle = new Label();
+        amountTitle.setText(Component.translatable("gtceu.gui.fluid_amount"));
+        amountTitle.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(8).top(8));
+
+        var amount = new Label();
+        amount.bind(DataBindingBuilder.componentS2C(() -> Component.literal(getFluidAmountText())).build());
+        amount.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(8).top(18));
+
+        var name = new Label();
+        name.bind(DataBindingBuilder.componentS2C(this::getFluidNameText).build());
+        name.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(8).top(28).width(56));
+
+        group.addChildren(amountTitle, amount, name);
         return group;
     }
 
-    private Component getFluidNameText(TankWidget tankWidget) {
+    private Component getFluidNameText() {
         Component translation;
-        if (!tank.getFluidInTank(tankWidget.getTank()).isEmpty()) {
-            translation = tank.getFluidInTank(tankWidget.getTank()).getDisplayName();
+        if (!tank.getFluidInTank(0).isEmpty()) {
+            translation = tank.getFluidInTank(0).getDisplayName();
         } else {
             translation = this.tank.getLockedFluid().getFluid().getDisplayName();
         }
         return translation;
     }
 
-    private String getFluidAmountText(TankWidget tankWidget) {
+    private String getFluidAmountText() {
         String fluidAmount = "";
-        if (!tank.getFluidInTank(tankWidget.getTank()).isEmpty()) {
-            fluidAmount = getFormattedFluidAmount(tank.getFluidInTank(tankWidget.getTank()));
+        if (!tank.getFluidInTank(0).isEmpty()) {
+            fluidAmount = getFormattedFluidAmount(tank.getFluidInTank(0));
         } else {
-            // Display Zero to show information about the locked fluid
             if (!this.tank.getLockedFluid().getFluid().isEmpty()) {
                 fluidAmount = "0";
             }
@@ -391,7 +396,7 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
         return String.format("%,d", fluidStack.isEmpty() ? 0 : fluidStack.getAmount());
     }
 
-    protected Widget createMultiSlotGUI() {
+    protected UIElement createMultiSlotGUI() {
         int rowSize = (int) Math.sqrt(slots);
         int colSize = rowSize;
         if (slots == 8) {
@@ -399,23 +404,29 @@ public class FluidHatchPartMachine extends TieredIOPartMachine
             colSize = 2;
         }
 
-        var group = new WidgetGroup(0, 0, 18 * rowSize + 16, 18 * colSize + 16);
-        var container = new WidgetGroup(4, 4, 18 * rowSize + 8, 18 * colSize + 8);
+        var container = new UIElement();
+        container.layout(layout -> layout.paddingAll(4));
+        container.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
 
         int index = 0;
         for (int y = 0; y < colSize; y++) {
+            var row = new UIElement();
+            row.layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < rowSize; x++) {
-                container.addWidget(
-                        new BlockableTankWidget(tank.getStorages()[index++], 4 + x * 18, 4 + y * 18, true,
-                                io.support(IO.IN))
-                                .setIsBlocked(this::isLocked)
-                                .setBackground(GuiTextures.FLUID_SLOT));
+                var slot = new BlockableFluidSlot();
+                slot.setIsBlocked(this::isLocked);
+                slot.bind(tank.getStorages()[index++], 0);
+                slot.setAllowClickFilled(io.support(IO.IN));
+                slot.setAllowClickDrained(true);
+                slot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+                row.addChild(slot);
             }
+            container.addChild(row);
         }
 
-        container.setBackground(GuiTextures.BACKGROUND_INVERSE);
-        group.addWidget(container);
-
+        var group = new UIElement();
+        group.layout(layout -> layout.alignItems(AlignItems.CENTER).paddingAll(4));
+        group.addChild(container);
         return group;
     }
 }

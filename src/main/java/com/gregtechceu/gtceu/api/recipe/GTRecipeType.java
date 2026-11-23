@@ -15,11 +15,11 @@ import com.gregtechceu.gtceu.integration.xei.widgets.GTCoilRecipeWidget;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -177,18 +177,18 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
         return this;
     }
 
-    public GTRecipeType setProgressBar(ResourceTexture progressBar, ProgressTexture.FillDirection moveType) {
+    public GTRecipeType setProgressBar(SpriteTexture progressBar, FillDirection moveType) {
         this.recipeUI.setProgressBar(progressBar, moveType);
         return this;
     }
 
-    public GTRecipeType setSteamProgressBar(SteamTexture progressBar, ProgressTexture.FillDirection moveType) {
+    public GTRecipeType setSteamProgressBar(SteamTexture progressBar, FillDirection moveType) {
         this.recipeUI.setSteamProgressBarTexture(progressBar);
         this.recipeUI.setSteamMoveType(moveType);
         return this;
     }
 
-    public GTRecipeType setUiBuilder(BiConsumer<GTRecipe, WidgetGroup> uiBuilder) {
+    public GTRecipeType setUiBuilder(BiConsumer<GTRecipe, UIElement> uiBuilder) {
         this.recipeUI.setUiBuilder(uiBuilder);
         return this;
     }
@@ -412,5 +412,5 @@ public class GTRecipeType implements RecipeType<GTRecipe> {
 
     public record CustomDataInfoConfiguration(GTRecipe recipe) {}
 
-    public record CustomDataInfoResult(Component label, @Nullable BiConsumer<LabelWidget, GTRecipeWidget> consumer) {}
+    public record CustomDataInfoResult(Component label, @Nullable BiConsumer<Label, GTRecipeWidget> consumer) {}
 }

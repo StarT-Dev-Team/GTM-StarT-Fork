@@ -3,9 +3,9 @@ package com.gregtechceu.gtceu.api.gui.widget.preview;
 import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
-import com.lowdragmc.lowdraglib.utils.ItemStackKey;
-import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
+import com.lowdragmc.lowdraglib2.utils.data.BlockInfo;
+import com.lowdragmc.lowdraglib2.utils.data.ItemStackKey;
+import com.lowdragmc.lowdraglib2.utils.virtuallevel.TrackedDummyWorld;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
@@ -55,7 +55,7 @@ public class PartInfo {
                 itemStack = fluid.getBucket().getDefaultInstance();
             }
 
-            ItemStackKey itemStackKey = new ItemStackKey(itemStack);
+            ItemStackKey itemStackKey = ItemStackKey.of(itemStack);
             partsMap.computeIfAbsent(itemStackKey, key -> new PartInfo(key, entry.getValue())).amount++;
         }
         return partsMap;

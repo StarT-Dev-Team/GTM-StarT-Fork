@@ -7,43 +7,32 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.editor.IEditableUI;
-import com.gregtechceu.gtceu.api.gui.widget.LabelWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ProgressTextureBar;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.LayeredRecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
-import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
-import com.gregtechceu.gtceu.integration.emi.recipe.GTRecipeEMICategory;
-import com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeJEICategory;
-import com.gregtechceu.gtceu.integration.rei.recipe.GTRecipeREICategory;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.ColorRectTexture;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.gui.widget.layout.Align;
-import com.lowdragmc.lowdraglib.jei.JEIPlugin;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.network.chat.Component;
 
 import com.google.common.collect.Tables;
-import dev.emi.emi.api.EmiApi;
-import me.shedaniel.rei.api.client.view.ViewSearchBuilder;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static com.lowdragmc.lowdraglib.gui.texture.ProgressTexture.FillDirection.LEFT_TO_RIGHT;
 
 public class LayeredRecipeUIHelper {
 
@@ -54,10 +43,16 @@ public class LayeredRecipeUIHelper {
         var ui = new GTRecipeTypeUI(recipeType) {
 
             @Override
-            public IEditableUI<WidgetGroup, RecipeHolder> createEditableUITemplate(boolean isSteam,
-                                                                                   boolean isHighPressure) {
-                return new IEditableUI.Normal<>(
-                        () -> new WidgetGroup(0, 0, LAYERED_GUI_WIDTH, LAYERED_GUI_HEIGHT),
+            protected RecipeUILayout buildLayout(boolean isSteam, boolean isHighPressure) {
+                var root = new UIElement();
+                root.layout(layout -> layout.width(LAYERED_GUI_WIDTH).height(LAYERED_GUI_HEIGHT));
+                return new RecipeUILayout(root, LAYERED_GUI_WIDTH, LAYERED_GUI_HEIGHT);
+            }
+
+            @Override
+            public IEditableUI<UIElement, RecipeHolder> createEditableUITemplate(boolean isSteam,
+                                                                                 boolean isHighPressure) {
+                return new IEditableUI.Normal<>(() -> buildLayout(isSteam, isHighPressure).root(),
                         (container, recipeHolder) -> {});
             }
         };
@@ -65,12 +60,17 @@ public class LayeredRecipeUIHelper {
         return ui;
     }
 
-    public static void buildLayeredUI(GTRecipe rootRecipe, WidgetGroup widgetGroup) {
-        var recipeWidget = (GTRecipeWidget) widgetGroup;
+    private static UIElement place(UIElement element, float x, float y, float width, float height) {
+        return element.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(x).top(y).width(width)
+                .height(height));
+    }
 
-        var group = (WidgetGroup) recipeWidget.getFirstWidgetById(GTRecipeWidget.RECIPE_CONTENT_GROUP_ID_REGEX);
+    public static void buildLayeredUI(GTRecipe rootRecipe, UIElement root) {
+        var recipeWidget = (GTRecipeWidget) root;
+
+        var group = recipeWidget.selectId(GTRecipeWidget.RECIPE_CONTENT_GROUP_ID).findFirst().orElse(null);
         assert group != null;
-        group.clearAllWidgets();
+        group.clearAllChildren();
 
         new UIBuilder(recipeWidget, group, rootRecipe).build();
     }
@@ -78,11 +78,11 @@ public class LayeredRecipeUIHelper {
     private static class UIBuilder {
 
         private final GTRecipeWidget recipeWidget;
-        private final WidgetGroup group;
+        private final UIElement group;
         private final GTRecipe rootRecipe;
         private final GTRecipeTypeUI recipeUI;
 
-        UIBuilder(GTRecipeWidget recipeWidget, WidgetGroup group, GTRecipe rootRecipe) {
+        UIBuilder(GTRecipeWidget recipeWidget, UIElement group, GTRecipe rootRecipe) {
             this.recipeWidget = recipeWidget;
             this.group = group;
             this.rootRecipe = rootRecipe;
@@ -108,39 +108,17 @@ public class LayeredRecipeUIHelper {
 
             var bottomY = inputsHeight + 2;
 
-            var progressBarTexture = new ProgressTexture(GuiTextures.PROGRESS_BAR_ARROW.getSubTexture(0, 0, 1, 0.5),
-                    GuiTextures.PROGRESS_BAR_ARROW.getSubTexture(0, 0.5, 1, 0.5))
-                    .setFillDirection(LEFT_TO_RIGHT);
-            progressBarTexture.rotate(90f);
             var outputsEndX = centerX + (steps.size() / 2f) * sliceWidth + 1f;
-            var progressWidget = new ProgressWidget(ProgressWidget.JEIProgress,
-                    (int) (outputsEndX - 21f), bottomY, 20, 20, progressBarTexture);
-            group.addWidget(progressWidget);
+            var progressWidget = ProgressTextureBar.of(GuiTextures.PROGRESS_BAR_ARROW, FillDirection.LEFT_TO_RIGHT, 20,
+                    20);
+            progressWidget.transform(transform -> transform.rotation(90f));
+            place(progressWidget, (int) (outputsEndX - 21f), bottomY, 20, 20);
+            progressWidget.bindDataSource(SupplierDataSource.of(
+                    () -> (float) GTRecipeTypeUI.XEI_PROGRESS.getAsDouble()));
+            group.addChild(progressWidget);
 
-            progressWidget.setProgressSupplier(ProgressWidget.JEIProgress);
             if (GTCEu.Mods.isREILoaded() || GTCEu.Mods.isJEILoaded() || GTCEu.Mods.isEMILoaded()) {
-                group.addWidget(new ButtonWidget(progressWidget.getPosition().x, progressWidget.getPosition().y,
-                        progressWidget.getSize().width, progressWidget.getSize().height, IGuiTexture.EMPTY, cd -> {
-                            if (cd.isRemote) {
-                                if (GTCEu.Mods.isREILoaded()) {
-                                    ViewSearchBuilder.builder().addCategories(
-                                            rootRecipe.getType().getCategories().stream()
-                                                    .filter(GTRecipeCategory::isXEIVisible)
-                                                    .map(GTRecipeREICategory::machineCategory)
-                                                    .collect(Collectors.toList()))
-                                            .open();
-                                } else if (GTCEu.Mods.isJEILoaded()) {
-                                    JEIPlugin.jeiRuntime.getRecipesGui().showTypes(
-                                            rootRecipe.getType().getCategories().stream()
-                                                    .filter(GTRecipeCategory::isXEIVisible)
-                                                    .map(GTRecipeJEICategory::machineType)
-                                                    .collect(Collectors.toList()));
-                                } else if (GTCEu.Mods.isEMILoaded()) {
-                                    EmiApi.displayRecipeCategory(
-                                            GTRecipeEMICategory.machineCategory(rootRecipe.getType().getCategory()));
-                                }
-                            }
-                        }).setHoverTooltips("gtceu.recipe_type.show_recipes"));
+                progressWidget.addChild(GTRecipeTypeUI.createShowRecipesButton(rootRecipe.getType()));
             }
 
             var recipe = steps.get(steps.size() - 1);
@@ -156,13 +134,13 @@ public class LayeredRecipeUIHelper {
                     LinkedHashMap<RecipeCapability<?>, List<Content>>::new);
             recipeWidget.collectStorage(storages, extraStorages, recipe);
 
-            return new GTRecipeTypeUI.RecipeHolder(ProgressWidget.JEIProgress, storages, recipe.data,
+            return new GTRecipeTypeUI.RecipeHolder(GTRecipeTypeUI.XEI_PROGRESS, storages, recipe.data,
                     recipe.conditions, false, false);
         }
 
         private void buildStepOutput(float outputsEndX, int posY, GTRecipeTypeUI.RecipeHolder recipeHolder,
                                      GTRecipe recipe) {
-            var slots = new ArrayList<Widget>();
+            var slots = new ArrayList<UIElement>();
 
             for (var entry : recipeHolder.storages().row(IO.OUT).entrySet()) {
                 var cap = entry.getKey();
@@ -190,8 +168,8 @@ public class LayeredRecipeUIHelper {
             for (var slotIndex = 0; slotIndex < slots.size(); slotIndex++) {
                 var posX = startX + slotIndex * slotWidth;
                 var slot = slots.get(slotIndex);
-                slot.setSelfPosition((int) posX, posY);
-                group.addWidget(slot);
+                place(slot, (int) posX, posY, 18, 18);
+                group.addChild(slot);
             }
         }
 
@@ -202,12 +180,14 @@ public class LayeredRecipeUIHelper {
             var slotSize = 18;
             var posY = 2;
 
-            group.addWidget(new Widget(posX, posY, slotSize, 11).setBackground(new ColorRectTexture(0xffa8a8a8)));
-            group.addWidget(new LabelWidget(posX, posY + 2, slotSize, 9,
-                    Component.literal(FormattingUtil.toRomanNumeral(recipeStep + 1)))
-                    .setTextAlign(Align.CENTER)
-                    .setDropShadow(true)
-                    .setHoverTooltips(getLayerInfoTooltips(recipeStep, stepInfo)));
+            group.addChild(place(new UIElement(), posX, posY, slotSize, 11)
+                    .style(style -> style.backgroundTexture(new ColorRectTexture(0xffa8a8a8))));
+            var stepLabel = new Label().setText(Component.literal(FormattingUtil.toRomanNumeral(recipeStep + 1)));
+            stepLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER).textShadow(true));
+            stepLabel.style(style -> style.tooltips(
+                    getLayerInfoTooltips(recipeStep, stepInfo).toArray(Component[]::new)));
+            place(stepLabel, posX, posY + 2, slotSize, 9);
+            group.addChild(stepLabel);
 
             posY += 11 + 2;
 
@@ -221,8 +201,8 @@ public class LayeredRecipeUIHelper {
                 for (var index = 0; index < contents.size(); index++) {
                     var isLast = index == contents.size() - 1;
                     var slot = buildSlot(IO.IN, recipe, recipeHolder, cap, object, index, contents.get(index), isLast);
-                    slot.setSelfPosition(posX, posY);
-                    group.addWidget(slot);
+                    place(slot, posX, posY, slotSize, slotSize);
+                    group.addChild(slot);
                     posY += slotSize;
                 }
                 var tickContents = recipe.getTickInputContents(cap);
@@ -230,8 +210,8 @@ public class LayeredRecipeUIHelper {
                     var index = i + contents.size();
                     var isLast = i == tickContents.size() - 1;
                     var slot = buildSlot(IO.IN, recipe, recipeHolder, cap, object, index, tickContents.get(i), isLast);
-                    slot.setSelfPosition(posX, posY);
-                    group.addWidget(slot);
+                    place(slot, posX, posY, slotSize, slotSize);
+                    group.addChild(slot);
                     posY += slotSize;
                 }
             }
@@ -244,22 +224,24 @@ public class LayeredRecipeUIHelper {
             byte overlayKey = (byte) ((isOutput ? 2 : 0) + (capability == FluidRecipeCapability.CAP ? 1 : 0) +
                     (isLast ? 4 : 0));
             if (recipeUI.getSlotOverlays().containsKey(overlayKey)) {
-                return new GuiTextureGroup(base, recipeUI.getSlotOverlays().get(overlayKey));
+                return IGuiTexture.group(base, recipeUI.getSlotOverlays().get(overlayKey));
             }
             return base;
         }
 
-        private Widget buildSlot(IO io, GTRecipe recipe, GTRecipeTypeUI.RecipeHolder recipeHolder,
-                                 RecipeCapability<?> cap, Object storage,
-                                 int storageIndex, Content recipeInput, boolean isLast) {
+        private UIElement buildSlot(IO io, GTRecipe recipe, GTRecipeTypeUI.RecipeHolder recipeHolder,
+                                    RecipeCapability<?> cap, Object storage,
+                                    int storageIndex, Content recipeInput, boolean isLast) {
             var slot = cap.createWidget();
             assert slot != null;
-            slot.setBackground(getOverlaysForSlot(recipeUI, io == IO.OUT, cap, isLast));
+            var background = getOverlaysForSlot(recipeUI, io == IO.OUT, cap, isLast);
+            slot.style(style -> style.backgroundTexture(background));
             cap.applyWidgetInfo(slot, storageIndex, true, io, recipeHolder, recipe.getType(), recipe, recipeInput,
                     storage,
                     recipeWidget.getMinTier(), recipeWidget.getTier());
-            slot.setOverlay(recipeInput.createOverlay(false, recipeWidget.getMinTier(), recipeWidget.getTier(), true,
-                    recipe.getType().getChanceFunction()));
+            var overlay = recipeInput.createOverlay(false, recipeWidget.getMinTier(), recipeWidget.getTier(), true,
+                    recipe.getType().getChanceFunction());
+            slot.style(style -> style.overlay(overlay));
             return slot;
         }
 

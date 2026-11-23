@@ -5,23 +5,24 @@ import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.IUICover;
 import com.gregtechceu.gtceu.api.cover.filter.FluidFilter;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
 import com.gregtechceu.gtceu.api.transfer.fluid.FluidHandlerDelegate;
 import com.gregtechceu.gtceu.api.transfer.fluid.IFluidHandlerModifiable;
 import com.gregtechceu.gtceu.common.cover.data.FilterMode;
 import com.gregtechceu.gtceu.common.cover.data.ManualIOMode;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.fluids.FluidStack;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -32,8 +33,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class FluidFilterCover extends CoverBehavior implements IUICover {
 
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(FluidFilterCover.class,
-            CoverBehavior.MANAGED_FIELD_HOLDER);
     protected FluidFilter fluidFilter;
     @Persisted
     @DescSynced
@@ -80,19 +79,20 @@ public class FluidFilterCover extends CoverBehavior implements IUICover {
     }
 
     @Override
-    public Widget createUIWidget() {
-        final var group = new WidgetGroup(0, 0, 178, 85);
-        group.addWidget(new LabelWidget(60, 5, attachItem.getDescriptionId()));
-        group.addWidget(new EnumSelectorWidget<>(35, 25, 18, 18,
-                FilterMode.VALUES, filterMode, this::setFilterMode));
-        group.addWidget(new EnumSelectorWidget<>(35, 45, 18, 18, ManualIOMode.VALUES, allowFlow, this::setAllowFlow));
-        group.addWidget(getFluidFilter().openConfigurator(62, 25));
-        return group;
-    }
+    public UIElement createUIWidget() {
+        var group = new UIElement().layout(layout -> layout.minWidth(168).paddingAll(4).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        group.addChild(new Label().setText(Component.translatable(attachItem.getDescriptionId())));
 
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
+        var body = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(8));
+        var selectors = new UIElement().layout(layout -> layout.gapAll(2));
+        selectors.addChild(new EnumSelector<>(FilterMode.VALUES, () -> filterMode, this::setFilterMode)
+                .layout(layout -> layout.width(18).height(18)));
+        selectors.addChild(new EnumSelector<>(ManualIOMode.VALUES, () -> allowFlow, this::setAllowFlow)
+                .layout(layout -> layout.width(18).height(18)));
+        body.addChildren(selectors, getFluidFilter().openConfigurator());
+        group.addChild(body);
+        return group;
     }
 
     private class FilteredFluidHandlerWrapper extends FluidHandlerDelegate {

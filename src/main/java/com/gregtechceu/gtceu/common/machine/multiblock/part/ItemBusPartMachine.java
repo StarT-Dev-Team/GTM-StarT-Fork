@@ -8,7 +8,7 @@ import com.gregtechceu.gtceu.api.cover.filter.FilterHandlers;
 import com.gregtechceu.gtceu.api.cover.filter.ItemFilter;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
-import com.gregtechceu.gtceu.api.gui.widget.BlockableSlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableItemSlot;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
@@ -24,13 +24,12 @@ import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -46,6 +45,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,8 +60,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class ItemBusPartMachine extends TieredIOPartMachine
                                 implements IDistinctPart, IMachineLife, IHasCircuitSlot, IPaintable, ILockableHatch {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(ItemBusPartMachine.class,
-            TieredIOPartMachine.MANAGED_FIELD_HOLDER);
     @Getter
     @Persisted
     private final NotifiableItemStackHandler inventory;
@@ -108,11 +107,6 @@ public class ItemBusPartMachine extends TieredIOPartMachine
     //////////////////////////////////////
     // ***** Initialization ******//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     protected int getInventorySize() {
         int sizeRoot = 1 + Math.min(9, getTier());
         return sizeRoot * sizeRoot;
@@ -349,36 +343,42 @@ public class ItemBusPartMachine extends TieredIOPartMachine
     }
 
     @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         int rowSize = (int) Math.sqrt(getInventorySize());
         int colSize = rowSize;
         if (getInventorySize() == 8) {
             rowSize = 4;
             colSize = 2;
         }
-        // Longer than 8 slots may place the slot on the ui due to UI increasing in width
-        int offset = 0;
-        if (rowSize > 8) offset -= 7; // UV output bus fix
-        if (rowSize > 9) offset -= 9; // UHV+ output bus fix
-        var group = new WidgetGroup(0, 0, 18 * rowSize + 16, 18 * colSize + 16);
-        var container = new WidgetGroup(4, 4, 18 * rowSize + 8, 18 * colSize + 8);
-        var filterSlot = new WidgetGroup(-104 + offset + (18 * rowSize) / 2, 27 + 11 * rowSize, 24, 24);
+        var filterBox = new UIElement();
+        filterBox.layout(layout -> layout.paddingAll(3));
+        filterBox.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND));
+        filterBox.addChild(filterHandler.createFilterSlotUI());
+
+        var container = new UIElement();
+        container.layout(layout -> layout.paddingAll(4));
+        container.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
+        boolean canPut = io.support(IO.IN);
         int index = 0;
-        filterSlot.addWidget(filterHandler.createFilterSlotUI(3, 3)).setBackground(GuiTextures.BACKGROUND);
         for (int y = 0; y < colSize; y++) {
+            var row = new UIElement();
+            row.layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < rowSize; x++) {
-                container.addWidget(
-                        new BlockableSlotWidget(getInventory().storage, index++, 4 + x * 18, 4 + y * 18, true,
-                                io.support(IO.IN))
-                                .setIsBlocked(this::isLocked)
-                                .setBackgroundTexture(GuiTextures.SLOT)
-                                .setIngredientIO(this.io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT));
+                var slot = new BlockableItemSlot();
+                slot.setIsBlocked(this::isLocked);
+                slot.bind(new ItemHandlerSlot(getInventory().storage, index++)
+                        .setCanPlace(stack -> canPut && !isLocked())
+                        .setCanTake(player -> !isLocked()));
+                slot.xeiRecipeIngredient(this.io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT);
+                row.addChild(slot);
             }
+            container.addChild(row);
         }
 
-        container.setBackground(GuiTextures.BACKGROUND_INVERSE);
-        group.addWidget(container);
-        group.addWidget(filterSlot);
+        var group = new UIElement();
+        group.layout(layout -> layout.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER).gapAll(2)
+                .paddingAll(4));
+        group.addChildren(filterBox, container);
         return group;
     }
 }

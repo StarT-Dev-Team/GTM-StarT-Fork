@@ -1,13 +1,13 @@
 package com.gregtechceu.gtceu.api.cover.filter;
 
-import com.lowdragmc.lowdraglib.syncdata.IEnhancedManaged;
+import com.lowdragmc.lowdraglib2.syncdata.IManaged;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 public interface FilterHandlers {
 
-    static FilterHandler<ItemStack, ItemFilter> item(IEnhancedManaged container) {
+    static FilterHandler<ItemStack, ItemFilter> item(IManaged container) {
         return new FilterHandler<>(container) {
 
             @Override
@@ -27,7 +27,7 @@ public interface FilterHandlers {
         };
     }
 
-    static FilterHandler<FluidStack, FluidFilter> fluid(IEnhancedManaged container) {
+    static FilterHandler<FluidStack, FluidFilter> fluid(IManaged container) {
         return new FilterHandler<>(container) {
 
             @Override

@@ -148,7 +148,7 @@ public class FactoryBlockPattern {
                 throw new IllegalArgumentException(
                         "whereDict: value for key '" + symbol +
                                 "' must be a String block ID or TraceabilityPredicate, got: " +
-                            valueKind);
+                                valueKind);
             }
         }
         return this;

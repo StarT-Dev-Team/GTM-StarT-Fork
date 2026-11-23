@@ -5,10 +5,11 @@ import com.gregtechceu.gtceu.api.capability.IElectricItem;
 import com.gregtechceu.gtceu.api.item.capability.ElectricItem;
 import com.gregtechceu.gtceu.api.item.component.*;
 
-import com.lowdragmc.lowdraglib.client.renderer.IItemRendererProvider;
-import com.lowdragmc.lowdraglib.client.renderer.IRenderer;
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib2.client.renderer.IItemRendererProvider;
+import com.lowdragmc.lowdraglib2.client.renderer.IRenderer;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -49,7 +50,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ComponentItem extends Item
-                           implements HeldItemUIFactory.IHeldItemUIHolder, IItemRendererProvider, IComponentItem {
+                           implements HeldItemUIMenuType.HeldItemUI, IItemRendererProvider, IComponentItem {
 
     protected int burnTime = -1;
 
@@ -295,14 +296,13 @@ public class ComponentItem extends Item
     }
 
     @Override
-    @Nullable
-    public ModularUI createUI(Player entityPlayer, HeldItemUIFactory.HeldItemHolder holder) {
+    public ModularUI createUI(HeldItemUIMenuType.HeldItemUIHolder holder) {
         for (IItemComponent component : components) {
             if (component instanceof IItemUIFactory uiFactory) {
-                return uiFactory.createUI(holder, entityPlayer);
+                return uiFactory.createUI(holder, holder.player);
             }
         }
-        return null;
+        return new ModularUI(UI.empty(), holder.player);
     }
 
     @Nullable

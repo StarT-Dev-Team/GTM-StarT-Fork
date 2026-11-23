@@ -1,6 +1,5 @@
 package com.gregtechceu.gtceu.api.capability.recipe;
 
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroup;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupColor;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
@@ -26,9 +25,10 @@ import com.gregtechceu.gtceu.integration.xei.handlers.fluid.CycleFluidEntryHandl
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -44,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -372,21 +373,20 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
 
     @NotNull
     @Override
-    public Widget createWidget() {
-        TankWidget tank = new TankWidget();
-        tank.initTemplate();
-        tank.setFillDirection(ProgressTexture.FillDirection.ALWAYS_FULL);
+    public UIElement createWidget() {
+        var tank = new FluidSlot();
+        tank.slotStyle(style -> style.fillDirection(FillDirection.ALWAYS_FULL));
         return tank;
     }
 
     @NotNull
     @Override
-    public Class<? extends Widget> getWidgetClass() {
-        return TankWidget.class;
+    public Class<? extends UIElement> getWidgetClass() {
+        return FluidSlot.class;
     }
 
     @Override
-    public void applyWidgetInfo(@NotNull Widget widget,
+    public void applyWidgetInfo(@NotNull UIElement widget,
                                 int index,
                                 boolean isXEI,
                                 IO io,
@@ -395,49 +395,65 @@ public class FluidRecipeCapability extends RecipeCapability<FluidIngredient> {
                                 @UnknownNullability("null when content == null") GTRecipe recipe,
                                 @Nullable Content content,
                                 @Nullable Object storage, int recipeTier, int chanceTier) {
-        if (widget instanceof TankWidget tank) {
-            if (storage instanceof IFluidHandler fluidHandler) {
-                tank.setFluidTank(fluidHandler, index);
+        if (widget instanceof FluidSlot tank) {
+            if (storage instanceof IFluidHandler fluidHandler && index >= 0 && index < fluidHandler.getTanks()) {
+                if (isXEI) {
+                    tank.setCapacity(fluidHandler.getTankCapacity(index));
+                    tank.setFluid(fluidHandler.getFluidInTank(index), false);
+                } else {
+                    tank.bind(fluidHandler, index);
+                }
             }
-            tank.setIngredientIO(io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT);
+            var ingredientIO = io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT;
+            float chance = 1;
             tank.setAllowClickFilled(!isXEI);
             tank.setAllowClickDrained(!isXEI && io.support(IO.IN));
-            if (isXEI) tank.setShowAmount(false);
+            if (isXEI) tank.amountLabel.setDisplay(false);
             if (content != null) {
-                float chance = (float) recipeType.getChanceFunction()
+                chance = (float) recipeType.getChanceFunction()
                         .getBoostedChance(content, recipeTier, chanceTier) / content.maxChance;
-                tank.setXEIChance(chance);
 
                 int tooltipTierDiff = recipeType.getChanceFunction().getTierDiff(recipeTier, chanceTier);
 
-                tank.setOnAddedTooltips((w, tooltips) -> {
-                    FluidIngredient ingredient = FluidRecipeCapability.CAP.of(content.content);
-                    if (!isXEI && ingredient.getStacks().length > 0) {
-                        FluidStack stack = ingredient.getStacks()[0];
-                        TooltipsHandler.appendFluidTooltips(stack, tooltips::add, TooltipFlag.NORMAL);
-                    }
-                    if (ingredient instanceof IntProviderFluidIngredient provider) {
-                        IntProvider countProvider = provider.getCountProvider();
+                List<Component> tooltips = new ArrayList<>();
+                FluidIngredient ingredient = FluidRecipeCapability.CAP.of(content.content);
+                if (!isXEI && ingredient.getStacks().length > 0) {
+                    FluidStack stack = ingredient.getStacks()[0];
+                    TooltipsHandler.appendFluidTooltips(stack, tooltips::add, TooltipFlag.NORMAL);
+                }
+                if (ingredient instanceof IntProviderFluidIngredient provider) {
+                    IntProvider countProvider = provider.getCountProvider();
 
-                        tooltips.add(Component.translatable("gtceu.gui.content.fluid_range",
-                                countProvider.getMinValue(), countProvider.getMaxValue())
-                                .withStyle(ChatFormatting.GOLD));
-                        tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
-                    }
-                    GTRecipeWidget.setConsumedChance(io == IO.IN, content,
-                            recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
-                            tooltips, recipeTier, chanceTier, recipeType.getChanceFunction());
+                    tooltips.add(Component.translatable("gtceu.gui.content.fluid_range",
+                            countProvider.getMinValue(), countProvider.getMaxValue())
+                            .withStyle(ChatFormatting.GOLD));
+                    tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
+                }
+                GTRecipeWidget.setConsumedChance(io == IO.IN, content,
+                        recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
+                        tooltips, recipeTier, chanceTier, recipeType.getChanceFunction());
 
-                    if (isTickSlot(index, io, recipe)) {
-                        int period = recipe.getTickPeriod();
+                if (isTickSlot(index, io, recipe)) {
+                    int period = recipe.getTickPeriod();
 
-                        tooltips.add(period > 1 ?
-                                Component.translatable("gtceu.gui.content.per_n_ticks", period) :
-                                Component.translatable("gtceu.gui.content.per_tick"));
-                    }
-                });
+                    tooltips.add(period > 1 ?
+                            Component.translatable("gtceu.gui.content.per_n_ticks", period) :
+                            Component.translatable("gtceu.gui.content.per_tick"));
+                }
+                tank.style(style -> style.tooltips(tooltips.toArray(Component[]::new)));
                 if (io == IO.IN && (content.chance == 0)) {
-                    tank.setIngredientIO(IngredientIO.CATALYST);
+                    ingredientIO = IngredientIO.CATALYST;
+                }
+            }
+            if (isXEI) {
+                if (content != null) {
+                    FluidIngredient ingredient = FluidRecipeCapability.CAP.of(content.content);
+                    int amount = ingredient instanceof IntProviderFluidIngredient ? 1 : ingredient.getAmount();
+                    Supplier<Stream<FluidStack>> candidates = () -> Arrays.stream(ingredient.getStacks());
+                    tank.xeiRecipeIngredient(ingredientIO, candidates);
+                    tank.xeiRecipeSlot(ingredientIO, chance, amount, candidates);
+                } else {
+                    tank.xeiRecipeSlot(ingredientIO, chance);
                 }
             }
         }

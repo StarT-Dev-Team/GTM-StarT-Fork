@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 public class LayeredVeinGenerator extends VeinGenerator {
 
     public static final Codec<LayeredVeinGenerator> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                    GTLayerPattern.CODEC.listOf().fieldOf("layer_patterns")
-                            .forGetter(LayeredVeinGenerator::getLayerPatterns))
+            GTLayerPattern.CODEC.listOf().fieldOf("layer_patterns")
+                    .forGetter(LayeredVeinGenerator::getLayerPatterns))
             .apply(instance, LayeredVeinGenerator::new));
 
     private final List<NonNullSupplier<GTLayerPattern>> bakingLayerPatterns = new ArrayList<>();

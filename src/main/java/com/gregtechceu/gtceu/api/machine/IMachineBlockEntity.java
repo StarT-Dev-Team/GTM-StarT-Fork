@@ -6,13 +6,12 @@ import com.gregtechceu.gtceu.api.blockentity.IPaintable;
 import com.gregtechceu.gtceu.api.item.tool.IToolGridHighlight;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 
-import com.lowdragmc.lowdraglib.syncdata.blockentity.IAsyncAutoSyncBlockEntity;
-import com.lowdragmc.lowdraglib.syncdata.blockentity.IAutoPersistBlockEntity;
-import com.lowdragmc.lowdraglib.syncdata.blockentity.IRPCBlockEntity;
-import com.lowdragmc.lowdraglib.syncdata.managed.MultiManagedStorage;
+import com.lowdragmc.lowdraglib2.syncdata.holder.blockentity.ISyncPersistRPCBlockEntity;
+import com.lowdragmc.lowdraglib2.syncdata.storage.MultiManagedStorage;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
@@ -29,8 +28,8 @@ import org.jetbrains.annotations.NotNull;
  * <p/>
  * Also delivers most of the Information about TileEntities.
  */
-public interface IMachineBlockEntity extends IToolGridHighlight, IAsyncAutoSyncBlockEntity, IRPCBlockEntity,
-                                     IAutoPersistBlockEntity, IPaintable, IForgeBlockEntity {
+public interface IMachineBlockEntity extends IToolGridHighlight, ISyncPersistRPCBlockEntity, IPaintable,
+                                     IForgeBlockEntity {
 
     ModelProperty<BlockAndTintGetter> MODEL_DATA_LEVEL = new ModelProperty<>();
     ModelProperty<BlockPos> MODEL_DATA_POS = new ModelProperty<>();
@@ -64,6 +63,7 @@ public interface IMachineBlockEntity extends IToolGridHighlight, IAsyncAutoSyncB
         }
     }
 
+    @Override
     default void scheduleRenderUpdate() {
         var pos = pos();
         if (level() != null) {
@@ -110,17 +110,16 @@ public interface IMachineBlockEntity extends IToolGridHighlight, IAsyncAutoSyncB
 
     long getOffset();
 
+    @Override
     MultiManagedStorage getRootStorage();
 
     @Override
-    default void saveCustomPersistedData(CompoundTag tag, boolean forDrop) {
-        IAutoPersistBlockEntity.super.saveCustomPersistedData(tag, forDrop);
+    default void saveCustomPersistedData(HolderLookup.Provider provider, CompoundTag tag, boolean forDrop) {
         getMetaMachine().saveCustomPersistedData(tag, forDrop);
     }
 
     @Override
-    default void loadCustomPersistedData(CompoundTag tag) {
-        IAutoPersistBlockEntity.super.loadCustomPersistedData(tag);
+    default void loadCustomPersistedData(HolderLookup.Provider provider, CompoundTag tag) {
         getMetaMachine().loadCustomPersistedData(tag);
     }
 

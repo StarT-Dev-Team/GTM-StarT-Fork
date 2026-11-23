@@ -7,8 +7,9 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.pattern.BlockPattern;
 import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
+import com.gregtechceu.gtceu.utils.BlockInfoUtil;
 
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
+import com.lowdragmc.lowdraglib2.utils.data.BlockInfo;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -63,7 +64,7 @@ public final class PatternLoader {
                 BlockInfo[] column = aisle[y];
                 for (int z = 0; z < column.length; z++) {
                     BlockPos pos = multiPos.offset(x, y, z);
-                    if (column[z].getBlockEntity(pos) instanceof IMachineBlockEntity holder &&
+                    if (BlockInfoUtil.createBlockEntity(column[z], pos) instanceof IMachineBlockEntity holder &&
                             holder.getMetaMachine() instanceof IMultiController controller) {
                         holder.getSelf().setLevel(level);
                         controllerBase = controller;
@@ -78,7 +79,7 @@ public final class PatternLoader {
         MBPattern pattern = new MBPattern(shapeInfo, multiPos, controllerPatternPos, controllerBase);
         pattern.applyTransformation(definition.getRotationState().defaultDirection, Direction.NORTH, false);
 
-        level.setInnerBlockEntity(controllerBase.self().holder.getSelf());
+        level.setBlockEntity(controllerBase.self().holder.getSelf());
 
         loadControllerFormed(pattern.blockMap.keySet(), controllerBase, onFormed);
         Map<BlockPos, TraceabilityPredicate> predicates = controllerBase.getMultiblockState().getMatchContext()

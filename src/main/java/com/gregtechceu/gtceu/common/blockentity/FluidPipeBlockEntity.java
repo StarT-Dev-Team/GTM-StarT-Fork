@@ -30,6 +30,7 @@ import com.gregtechceu.gtceu.utils.GTUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -476,8 +477,8 @@ public class FluidPipeBlockEntity extends PipeBlockEntity<FluidPipeType, FluidPi
     }
 
     @Override
-    public void saveCustomPersistedData(CompoundTag tag, boolean forDrop) {
-        super.saveCustomPersistedData(tag, forDrop);
+    public void saveCustomPersistedData(HolderLookup.Provider provider, CompoundTag tag, boolean forDrop) {
+        super.saveCustomPersistedData(provider, tag, forDrop);
         ListTag list = new ListTag();
         for (int i = 0; i < getFluidTanks().length; i++) {
             FluidStack stack1 = getContainedFluid(i);
@@ -492,8 +493,8 @@ public class FluidPipeBlockEntity extends PipeBlockEntity<FluidPipeType, FluidPi
     }
 
     @Override
-    public void loadCustomPersistedData(CompoundTag nbt) {
-        super.loadCustomPersistedData(nbt);
+    public void loadCustomPersistedData(HolderLookup.Provider provider, CompoundTag nbt) {
+        super.loadCustomPersistedData(provider, nbt);
         ListTag list = nbt.getList("Fluids", Tag.TAG_COMPOUND);
         createTanksList();
         for (int i = 0; i < list.size(); i++) {

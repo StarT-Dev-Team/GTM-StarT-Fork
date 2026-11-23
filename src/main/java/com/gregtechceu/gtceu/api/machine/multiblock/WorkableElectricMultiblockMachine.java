@@ -6,7 +6,10 @@ import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.gui.fancy.*;
+import com.gregtechceu.gtceu.api.gui.texture.UVSpriteTexture;
+import com.gregtechceu.gtceu.api.gui.widget.ComponentPanel;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
@@ -20,12 +23,13 @@ import com.gregtechceu.gtceu.api.recipe.ParallelType;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -51,8 +55,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine implements IFancyUIMachine,
                                                IDisplayUIMachine, ITieredMachine, IOverclockMachine {
 
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            WorkableElectricMultiblockMachine.class, WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
     // runtime
     protected EnergyContainerList energyContainer;
     @Getter
@@ -64,11 +66,6 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
 
     public WorkableElectricMultiblockMachine(IMachineBlockEntity holder, Object... args) {
         super(holder, args);
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     //////////////////////////////////////
@@ -134,21 +131,30 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
     }
 
     @Override
-    public Widget createUIWidget() {
-        var group = new WidgetGroup(0, 0, 182 + 8, 117 + 8);
-        group.addWidget(new DraggableScrollableWidgetGroup(4, 4, 182, 117).setBackground(getScreenTexture())
-                .addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()))
-                .addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
-                        .textSupplier(this.getLevel().isClientSide ? null : this::addDisplayText)
-                        .setMaxWidthLimit(174)
-                        .clickHandler(this::handleDisplayClick)));
-        group.setBackground(GuiTextures.BACKGROUND_INVERSE);
+    public UIElement createUIWidget() {
+        var content = new UIElement();
+        content.layout(layout -> layout.paddingAll(4).gapAll(3));
+        var title = new Label();
+        title.setText(Component.translatable(self().getBlockState().getBlock().getDescriptionId()));
+        content.addChildren(title, new ComponentPanel(this::addDisplayText)
+                .setMaxWidthLimit(174)
+                .clickHandler(this::handleDisplayClick));
+
+        var screen = new ScrollerView();
+        screen.layout(layout -> layout.width(182).height(117));
+        screen.style(style -> style.background(getScreenTexture()));
+        screen.addScrollViewChild(content);
+
+        var group = new UIElement();
+        group.layout(layout -> layout.paddingAll(4));
+        group.style(style -> style.background(GuiTextures.BACKGROUND_INVERSE));
+        group.addChild(screen);
         return group;
     }
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(198, 208, this, entityPlayer).widget(new FancyMachineUIWidget(this, 198, 208));
+        return UITemplate.modularUI(new FancyMachineUIWidget(this, 198, 208), entityPlayer);
     }
 
     @Override
@@ -161,8 +167,8 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
         IVoidable.attachConfigurators(configuratorPanel, this);
         if (isBatchCapable()) {
             configuratorPanel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
-                    GuiTextures.BUTTON_BATCH.getSubTexture(0, 0, 1, 0.5),
-                    GuiTextures.BUTTON_BATCH.getSubTexture(0, 0.5, 1, 0.5),
+                    UVSpriteTexture.of(GuiTextures.BUTTON_BATCH, 0, 0, 1, 0.5f),
+                    UVSpriteTexture.of(GuiTextures.BUTTON_BATCH, 0, 0.5f, 1, 0.5f),
                     this::isBatchEnabled,
                     (cd, p) -> setBatchEnabled(p))
                     .setTooltipsSupplier(
@@ -196,9 +202,9 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
     }
 
     @Override
-    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
-                                              Direction side) {
-        ResourceTexture tips = super.sideTips(player, pos, state, toolTypes, side);
+    public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                            Direction side) {
+        SpriteTexture tips = super.sideTips(player, pos, state, toolTypes, side);
 
         if (tips != null) return tips;
 

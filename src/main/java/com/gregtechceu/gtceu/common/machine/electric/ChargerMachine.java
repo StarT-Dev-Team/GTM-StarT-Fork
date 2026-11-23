@@ -4,7 +4,6 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.*;
 import com.gregtechceu.gtceu.api.capability.compat.FeCompat;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TieredEnergyMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
@@ -15,14 +14,11 @@ import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
@@ -30,6 +26,9 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraftforge.energy.IEnergyStorage;
 
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -44,9 +43,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class ChargerMachine extends TieredEnergyMachine implements IControllable, IFancyUIMachine, IMachineLife {
 
     public static final long AMPS_PER_ITEM = 4L;
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(ChargerMachine.class,
-            TieredEnergyMachine.MANAGED_FIELD_HOLDER);
 
     public enum State implements StringRepresentable {
 
@@ -91,11 +87,6 @@ public class ChargerMachine extends TieredEnergyMachine implements IControllable
     // ***** Initialization ******//
     //////////////////////////////////////
     @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
-    @Override
     protected NotifiableEnergyContainer createEnergyContainer(Object... args) {
         return new EnergyBatteryTrait((int) args[0]);
     }
@@ -132,37 +123,35 @@ public class ChargerMachine extends TieredEnergyMachine implements IControllable
     //////////////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         int rowSize = (int) Math.sqrt(inventorySize);
         int colSize = rowSize;
         if (inventorySize == 8) {
             rowSize = 4;
             colSize = 2;
         }
-        var template = new WidgetGroup(0, 0, 18 * rowSize + 8, 18 * colSize + 8);
-        template.setBackground(GuiTextures.BACKGROUND_INVERSE);
+        var template = new UIElement();
+        template.layout(layout -> layout.paddingAll(4));
+        template.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
         int index = 0;
         for (int y = 0; y < colSize; y++) {
+            var row = new UIElement();
+            row.layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < rowSize; x++) {
-                template.addWidget(new SlotWidget(chargerInventory, index++, 4 + x * 18, 4 + y * 18, true, true)
-                        .setBackgroundTexture(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.CHARGER_OVERLAY)));
+                var slot = new ItemSlot().bind(chargerInventory, index++);
+                slot.slotStyle(style -> style.slotOverlay(GuiTextures.CHARGER_OVERLAY));
+                row.addChild(slot);
             }
+            template.addChild(row);
         }
 
         var editableUI = createEnergyBar();
         var energyBar = editableUI.createDefault();
 
-        var group = new WidgetGroup(0, 0,
-                Math.max(energyBar.getSize().width + template.getSize().width + 4 + 8, 172),
-                Math.max(template.getSize().height + 8, energyBar.getSize().height + 8));
-        var size = group.getSize();
-        energyBar.setSelfPosition(new Position(3, (size.height - energyBar.getSize().height) / 2));
-        template.setSelfPosition(new Position(
-                (size.width - energyBar.getSize().width - 4 - template.getSize().width) / 2 + 2 +
-                        energyBar.getSize().width + 2,
-                (size.height - template.getSize().height) / 2));
-        group.addWidget(energyBar);
-        group.addWidget(template);
+        var group = new UIElement();
+        group.layout(layout -> layout.minWidth(172).flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER)
+                .justifyContent(AlignContent.CENTER).gapAll(4).paddingAll(4));
+        group.addChildren(energyBar, template);
         editableUI.setupUI(group, this);
         return group;
     }

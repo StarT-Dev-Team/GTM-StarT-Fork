@@ -10,8 +10,7 @@ import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.AbstractMapIngredient;
 import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -174,7 +173,7 @@ public abstract class RecipeCapability<T> {
         return isRecipeSearchFilter();
     }
 
-    public void addXEIInfo(WidgetGroup group, int xOffset, GTRecipe recipe, List<Content> contents, boolean perTick,
+    public void addXEIInfo(UIElement group, int xOffset, GTRecipe recipe, List<Content> contents, boolean perTick,
                            boolean isInput, MutableInt yOffset, int minTier, int currentTier) {}
 
     @NotNull
@@ -188,7 +187,7 @@ public abstract class RecipeCapability<T> {
     }
 
     @Nullable("null when getWidgetClass() == null")
-    public Widget createWidget() {
+    public UIElement createWidget() {
         return null;
     }
 
@@ -196,11 +195,11 @@ public abstract class RecipeCapability<T> {
      * Return the class of the supported widget that should be used to display this capability.
      */
     @Nullable
-    public Class<? extends Widget> getWidgetClass() {
+    public Class<? extends UIElement> getWidgetClass() {
         return null;
     }
 
-    public void applyWidgetInfo(@NotNull Widget widget,
+    public void applyWidgetInfo(@NotNull UIElement widget,
                                 int index,
                                 boolean isXEI,
                                 IO io,

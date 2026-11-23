@@ -13,9 +13,8 @@ import com.gregtechceu.gtceu.utils.FluidStackHashStrategy;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -46,16 +45,8 @@ public class LayeredRecipeLogic extends RecipeLogic {
     @Persisted
     protected GTRecipe lastOriginLayeredRecipe;
 
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(LayeredRecipeLogic.class,
-            RecipeLogic.MANAGED_FIELD_HOLDER);
-
     public LayeredRecipeLogic(IRecipeLogicMachine machine) {
         super(machine);
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     public @Nullable GTRecipe getFirstLayer() {

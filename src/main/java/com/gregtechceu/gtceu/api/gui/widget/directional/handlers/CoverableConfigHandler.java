@@ -7,22 +7,17 @@ import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.gui.fancy.FancyMachineUIWidget;
 import com.gregtechceu.gtceu.api.gui.widget.CoverConfigurator;
-import com.gregtechceu.gtceu.api.gui.widget.PredicatedButtonWidget;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.PredicatedButton;
 import com.gregtechceu.gtceu.api.gui.widget.directional.IDirectionalConfigHandler;
 import com.gregtechceu.gtceu.api.item.IComponentItem;
 import com.gregtechceu.gtceu.api.item.component.IItemComponent;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.item.CoverPlaceBehavior;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.SceneWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -31,23 +26,29 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.FlexDirection;
+import org.jetbrains.annotations.Nullable;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class CoverableConfigHandler implements IDirectionalConfigHandler {
 
-    private static final IGuiTexture CONFIG_BTN_TEXTURE = new GuiTextureGroup(GuiTextures.IO_CONFIG_COVER_SETTINGS);
+    private static final String TOGGLE_TAB_MESSAGE = "gtceu:cover_config_toggle";
+    private static final IGuiTexture CONFIG_BTN_TEXTURE = IGuiTexture.group(GuiTextures.VANILLA_BUTTON,
+            GuiTextures.IO_CONFIG_COVER_SETTINGS);
 
     private final ICoverable machine;
-    private CustomItemStackHandler handler;
-    private Direction side;
+    private final CustomItemStackHandler handler;
+    private @Nullable Direction side;
 
     private ConfiguratorPanel panel;
-    private ConfiguratorPanel.FloatingTab coverConfigurator;
+    private @Nullable ConfiguratorPanel.FloatingTab coverConfigurator;
 
-    private SlotWidget slotWidget;
-    private CoverBehavior coverBehavior;
+    private FancyMachineUIWidget machineUI;
+    private ItemSlot slotWidget;
+    private @Nullable CoverBehavior coverBehavior;
 
     public CoverableConfigHandler(ICoverable machine) {
         this.machine = machine;
@@ -74,33 +75,41 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
     }
 
     @Override
-    public Widget getSideSelectorWidget(SceneWidget scene, FancyMachineUIWidget machineUI) {
-        WidgetGroup group = new WidgetGroup(0, 0, (18 * 2) + 1, 18);
+    public UIElement getSideSelectorWidget(FancyMachineUIWidget machineUI) {
+        var group = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(1));
+        this.machineUI = machineUI;
         this.panel = machineUI.getConfiguratorPanel();
 
-        group.addWidget(slotWidget = new SlotWidget(handler, 0, 19, 0) {
+        var button = new PredicatedButton(
+                () -> side != null && coverBehavior != null && machine.getCoverAtSide(side) instanceof IUICover);
+        button.layout(layout -> layout.width(18).height(18));
+        button.buttonStyle(style -> style.baseTexture(CONFIG_BTN_TEXTURE).hoverTexture(CONFIG_BTN_TEXTURE)
+                .pressedTexture(CONFIG_BTN_TEXTURE));
+        button.setOnClick(event -> {
+            toggleConfigTab();
+            group.sendMessage(TOGGLE_TAB_MESSAGE);
+        });
+        group.onMessage(TOGGLE_TAB_MESSAGE, tag -> toggleConfigTab());
 
-            @Override
-            public boolean canPutStack(ItemStack stack) {
-                return super.canPutStack(stack) && CoverPlaceBehavior.isCoverBehaviorItem(stack, () -> false,
-                        def -> def.createCoverBehavior(machine, side).canAttach());
-            }
-        }
-                .setChangeListener(this::coverItemChanged)
-                .setBackgroundTexture(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.IO_CONFIG_COVER_SLOT_OVERLAY)));
-        group.addWidget(new PredicatedButtonWidget(0, 0, 18, 18, CONFIG_BTN_TEXTURE, this::toggleConfigTab,
-                () -> side != null && coverBehavior != null && machine.getCoverAtSide(side) instanceof IUICover));
+        var slotHandler = new ItemHandlerSlot(handler, 0).setCanPlace(stack -> side != null &&
+                CoverPlaceBehavior.isCoverBehaviorItem(stack, () -> false,
+                        def -> def.createCoverBehavior(machine, side).canAttach()));
+        slotHandler.addChangeListener(this::coverItemChanged);
+        slotWidget = new ItemSlot().bind(slotHandler);
+        slotWidget.style(style -> style.backgroundTexture(
+                IGuiTexture.group(GuiTextures.SLOT, GuiTextures.IO_CONFIG_COVER_SLOT_OVERLAY)));
+
+        group.addChildren(button, slotWidget);
 
         checkCoverBehaviour();
 
         return group;
     }
 
-    // FIXME: This gets called twice in a single tick, causing two covers to exist simultaneously
     private void coverItemChanged() {
         closeConfigTab();
 
-        if (!(panel.getGui().entityPlayer instanceof ServerPlayer serverPlayer) || side == null)
+        if (!(machineUI.getPlayer() instanceof ServerPlayer serverPlayer) || side == null)
             return;
 
         var item = handler.getStackInSlot(0);
@@ -130,9 +139,9 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
     }
 
     private void updateWidgetVisibility() {
-        var sideSelected = this.side != null;
-        slotWidget.setVisible(sideSelected);
-        slotWidget.setActive(sideSelected);
+        if (slotWidget == null) return;
+        slotWidget.setDisplay(this.side != null);
+        slotWidget.setActive(this.side != null);
     }
 
     public void checkCoverBehaviour() {
@@ -151,7 +160,7 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
         updateWidgetVisibility();
     }
 
-    private void toggleConfigTab(ClickData cd) {
+    private void toggleConfigTab() {
         if (this.coverConfigurator == null)
             openConfigTab();
         else
@@ -159,11 +168,12 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
     }
 
     private void openConfigTab() {
-        CoverConfigurator configurator = new CoverConfigurator(this.machine, this.side, this.coverBehavior) {
+        if (side == null || panel == null) return;
+
+        var configurator = new CoverConfigurator(this.machine, this.side, this.coverBehavior) {
 
             @Override
             public Component getTitle() {
-                // Uses the widget's own title
                 return Component.empty();
             }
 
@@ -173,40 +183,29 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
             }
 
             @Override
-            public Widget createConfigurator() {
-                WidgetGroup group = new WidgetGroup(new Position(0, 0));
+            public UIElement createConfigurator() {
+                var group = new UIElement().layout(layout -> layout.minWidth(120).minHeight(80));
 
                 if (side == null || !(coverable.getCoverAtSide(side) instanceof IUICover iuiCover))
                     return group;
 
-                Widget coverConfigurator = iuiCover.createUIWidget();
-                coverConfigurator.addSelfPosition(-1, -20);
-
-                group.addWidget(coverConfigurator);
-                group.setSize(new Size(
-                        Math.max(120, coverConfigurator.getSize().width),
-                        Math.max(80, coverConfigurator.getSize().height - 20)));
-
+                var coverUI = iuiCover.createUIWidget();
+                coverUI.layout(layout -> layout.marginLeft(-1).marginTop(-20));
+                group.addChild(coverUI);
                 return group;
             }
         };
 
-        this.coverConfigurator = this.panel.createFloatingTab(configurator);
-        this.coverConfigurator.setGui(this.panel.getGui());
-        this.panel.addWidget(this.coverConfigurator);
-        this.panel.expandTab(this.coverConfigurator);
+        var tab = this.panel.createFloatingTab(configurator);
+        this.coverConfigurator = tab;
+        this.panel.addChild(tab);
+        this.panel.expandTab(tab);
 
-        coverConfigurator.onClose(() -> {
-            if (coverConfigurator != null) {
-                this.panel.removeWidget(this.coverConfigurator);
-            }
-
-            this.coverConfigurator = null;
-        });
+        tab.onClose(() -> this.coverConfigurator = null);
     }
 
     private void closeConfigTab() {
-        if (this.coverConfigurator != null) {
+        if (this.coverConfigurator != null && this.panel != null) {
             this.panel.collapseTab();
         }
     }

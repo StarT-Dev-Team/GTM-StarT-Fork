@@ -1,25 +1,24 @@
 package com.gregtechceu.gtceu.common.machine.storage;
 
 import com.gregtechceu.gtceu.api.capability.IOpticalComputationProvider;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.TextToggleButton;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceBorderTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.SwitchWidget;
-import com.lowdragmc.lowdraglib.gui.widget.TextFieldWidget;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,9 +31,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CreativeComputationProviderMachine extends MetaMachine
                                                 implements IUIMachine, IOpticalComputationProvider {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            CreativeComputationProviderMachine.class, MetaMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
     private int maxCWUt;
@@ -104,23 +100,33 @@ public class CreativeComputationProviderMachine extends MetaMachine
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(140, 95, this, entityPlayer)
-                .background(GuiTextures.BACKGROUND)
-                .widget(new LabelWidget(7, 7, "CWUt"))
-                .widget(new TextFieldWidget(9, 20, 122, 16, () -> String.valueOf(maxCWUt),
-                        value -> maxCWUt = Integer.parseInt(value)).setNumbersOnly(0, Integer.MAX_VALUE))
-                .widget(new LabelWidget(7, 42, "gtceu.creative.computation.average"))
-                .widget(new LabelWidget(7, 54, () -> String.valueOf(lastRequestedCWUt)))
-                .widget(new SwitchWidget(9, 66, 122, 20, (clickData, value) -> setActive(value))
-                        .setSupplier(this::isActive)
-                        .setTexture(new GuiTextureGroup(ResourceBorderTexture.BUTTON_COMMON,
-                                new TextTexture("gtceu.creative.activity.off")),
-                                new GuiTextureGroup(ResourceBorderTexture.BUTTON_COMMON,
-                                        new TextTexture("gtceu.creative.activity.on"))));
-    }
+        var root = UITemplate.panel();
+        root.layout(layout -> layout.width(140).height(95).paddingAll(0));
 
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
+        var title = new Label();
+        title.setText("CWUt");
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(7));
+
+        var input = new IntInput(() -> maxCWUt, value -> maxCWUt = value);
+        input.setMin(0);
+        input.setMax(Integer.MAX_VALUE);
+        input.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(9).top(20).width(122).height(16));
+
+        var averageLabel = new Label();
+        averageLabel.setText(Component.translatable("gtceu.creative.computation.average"));
+        averageLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(42));
+
+        var requested = new Label();
+        requested.bind(DataBindingBuilder.componentS2C(
+                () -> Component.literal(String.valueOf(lastRequestedCWUt))).build());
+        requested.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(54));
+
+        var activity = new TextToggleButton("gtceu.creative.activity.on", "gtceu.creative.activity.off",
+                this::isActive, this::setActive);
+        activity.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(9).top(66).width(122)
+                .height(20));
+
+        root.addChildren(title, input, averageLabel, requested, activity);
+        return UITemplate.modularUI(root, entityPlayer);
     }
 }

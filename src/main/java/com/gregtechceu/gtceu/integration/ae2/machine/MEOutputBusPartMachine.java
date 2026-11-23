@@ -12,16 +12,16 @@ import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.api.recipe.ingredient.IntProviderIngredient;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
+import com.gregtechceu.gtceu.integration.ae2.gui.widget.MEStatusLabel;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.list.AEListGridWidget;
 import com.gregtechceu.gtceu.integration.ae2.utils.KeyStorage;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 
@@ -43,9 +43,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachineLife, IInteractedMachine {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            MEOutputBusPartMachine.class, MEBusPartMachine.MANAGED_FIELD_HOLDER);
 
     @Getter
     @Persisted
@@ -76,11 +73,6 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
         }
     }
 
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     /////////////////////////////////
     // ********** Sync ME *********//
     /////////////////////////////////
@@ -107,16 +99,14 @@ public class MEOutputBusPartMachine extends MEBusPartMachine implements IMachine
     ///////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(0, 0, 170, 65);
-        // ME Network status
-        group.addWidget(new LabelWidget(5, 0, () -> this.isOnline ?
-                "gtceu.gui.me_network.online" :
-                "gtceu.gui.me_network.offline"));
-        group.addWidget(new LabelWidget(5, 10, "gtceu.gui.waiting_list"));
-        // display list
-        group.addWidget(new AEListGridWidget.Item(5, 20, 3, this.internalBuffer));
-
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.width(170).paddingHorizontal(5).gapAll(1));
+        var waiting = new Label();
+        waiting.setText(Component.translatable("gtceu.gui.waiting_list"));
+        waiting.textStyle(style -> style.textColor(0xFF404040).textShadow(false));
+        group.addChildren(new MEStatusLabel(() -> this.isOnline), waiting,
+                new AEListGridWidget.Item(3, this.internalBuffer));
         return group;
     }
 

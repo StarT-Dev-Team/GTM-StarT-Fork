@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfigurator;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfiguratorButton;
+import com.gregtechceu.gtceu.api.gui.texture.UVSpriteTexture;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.CircuitFancyConfigurator;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputBoth;
@@ -15,14 +16,13 @@ import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -47,9 +47,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SimpleMachine extends WorkableMachine implements IAutoOutputBoth, IFancyUIMachine, IHasCircuitSlot {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(SimpleMachine.class,
-            WorkableMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
     @DescSynced
@@ -108,11 +105,6 @@ public class SimpleMachine extends WorkableMachine implements IAutoOutputBoth, I
     //////////////////////////////////////
     // ***** Initialization ******//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     protected NotifiableItemStackHandler createCircuitItemHandler(Object... args) {
         return new NotifiableItemStackHandler(this, 1, IO.IN, IO.NONE)
                 .setFilter(IntCircuitBehaviour::isIntegratedCircuit);
@@ -306,17 +298,17 @@ public class SimpleMachine extends WorkableMachine implements IAutoOutputBoth, I
                 (cd, nextState) -> this.setAutoOutputItems(nextState));
     }
 
-    private IFancyConfigurator createAutoOutputConfigurator(ResourceTexture modesButtonTexture,
+    private IFancyConfigurator createAutoOutputConfigurator(SpriteTexture modesButtonTexture,
                                                             String tooltipBaseLangKey,
                                                             BooleanSupplier stateSupplier,
-                                                            BiConsumer<ClickData, Boolean> onToggle) {
+                                                            BiConsumer<UIEvent, Boolean> onToggle) {
         var toggle = new IFancyConfiguratorButton.Toggle(
                 new GuiTextureGroup(
-                        GuiTextures.TOGGLE_BUTTON_BACK.getSubTexture(0, 0, 1, 0.5),
-                        modesButtonTexture.getSubTexture(0, 1 / 3f, 1, 1 / 3f)),
+                        UVSpriteTexture.of(GuiTextures.TOGGLE_BUTTON_BACK, 0, 0, 1, 0.5f),
+                        UVSpriteTexture.of(modesButtonTexture, 0, 1 / 3f, 1, 1 / 3f)),
                 new GuiTextureGroup(
-                        GuiTextures.TOGGLE_BUTTON_BACK.getSubTexture(0, 0.5, 1, 0.5),
-                        modesButtonTexture.getSubTexture(0, 2 / 3f, 1, 1 / 3f)),
+                        UVSpriteTexture.of(GuiTextures.TOGGLE_BUTTON_BACK, 0, 0.5f, 1, 0.5f),
+                        UVSpriteTexture.of(modesButtonTexture, 0, 2 / 3f, 1, 1 / 3f)),
                 stateSupplier,
                 onToggle);
 
@@ -332,8 +324,8 @@ public class SimpleMachine extends WorkableMachine implements IAutoOutputBoth, I
     // ******* Rendering ********//
     //////////////////////////////////////
     @Override
-    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
-                                              Direction side) {
+    public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                            Direction side) {
         if (toolTypes.contains(GTToolType.WRENCH)) {
             if (!player.isShiftKeyDown()) {
                 if (!hasFrontFacing() || side != getFrontFacing()) {

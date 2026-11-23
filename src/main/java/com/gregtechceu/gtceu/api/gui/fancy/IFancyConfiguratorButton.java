@@ -1,10 +1,11 @@
 package com.gregtechceu.gtceu.api.gui.fancy;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 
 import lombok.Setter;
@@ -15,12 +16,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public interface IFancyConfiguratorButton extends IFancyConfigurator {
 
-    void onClick(ClickData clickData);
+    void onClick(UIEvent event);
 
     @Override
     default Component getTitle() {
@@ -28,7 +28,7 @@ public interface IFancyConfiguratorButton extends IFancyConfigurator {
     }
 
     @Override
-    default Widget createConfigurator() {
+    default UIElement createConfigurator() {
         throw new NotImplementedException();
     }
 
@@ -37,14 +37,14 @@ public interface IFancyConfiguratorButton extends IFancyConfigurator {
 
         IGuiTexture base;
         IGuiTexture pressed;
-        BiConsumer<ClickData, Boolean> onClick;
+        BiConsumer<UIEvent, Boolean> onClick;
         BooleanSupplier booleanSupplier;
         boolean isPressed;
         @Setter
         Function<Boolean, List<Component>> tooltipsSupplier = isPressed -> Collections.emptyList();
 
         public Toggle(IGuiTexture base, IGuiTexture pressed, BooleanSupplier booleanSupplier,
-                      BiConsumer<ClickData, Boolean> onClick) {
+                      BiConsumer<UIEvent, Boolean> onClick) {
             this.base = base;
             this.pressed = pressed;
             this.booleanSupplier = booleanSupplier;
@@ -57,30 +57,11 @@ public interface IFancyConfiguratorButton extends IFancyConfigurator {
         }
 
         @Override
-        public void detectAndSendChange(BiConsumer<Integer, Consumer<FriendlyByteBuf>> sender) {
-            var newIsPressed = booleanSupplier.getAsBoolean();
-            if (newIsPressed != isPressed) {
-                isPressed = newIsPressed;
-                sender.accept(0, buf -> buf.writeBoolean(isPressed));
-            }
-        }
-
-        @Override
-        public void readUpdateInfo(int id, FriendlyByteBuf buf) {
-            if (id == 0) {
-                isPressed = buf.readBoolean();
-            }
-        }
-
-        @Override
-        public void writeInitialData(FriendlyByteBuf buffer) {
-            this.isPressed = booleanSupplier.getAsBoolean();
-            buffer.writeBoolean(this.isPressed);
-        }
-
-        @Override
-        public void readInitialData(FriendlyByteBuf buffer) {
-            this.isPressed = buffer.readBoolean();
+        public void bindTab(UIElement tab) {
+            isPressed = booleanSupplier.getAsBoolean();
+            tab.addChild(new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(booleanSupplier::getAsBoolean)
+                    .remoteSetter(value -> isPressed = value)
+                    .build()));
         }
 
         @Override
@@ -89,8 +70,9 @@ public interface IFancyConfiguratorButton extends IFancyConfigurator {
         }
 
         @Override
-        public void onClick(ClickData clickData) {
-            onClick.accept(clickData, !isPressed);
+        public void onClick(UIEvent event) {
+            isPressed = booleanSupplier.getAsBoolean();
+            onClick.accept(event, !isPressed);
         }
     }
 }

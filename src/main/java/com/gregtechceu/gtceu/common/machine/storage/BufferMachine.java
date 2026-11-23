@@ -2,11 +2,8 @@ package com.gregtechceu.gtceu.common.machine.storage;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.TieredMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputBoth;
@@ -16,14 +13,14 @@ import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -34,6 +31,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -45,9 +44,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BufferMachine extends TieredMachine implements IMachineLife, IAutoOutputBoth, IFancyUIMachine {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(BufferMachine.class,
-            MetaMachine.MANAGED_FIELD_HOLDER);
 
     public static final int TANK_SIZE = 64000;
 
@@ -103,11 +99,6 @@ public class BufferMachine extends TieredMachine implements IMachineLife, IAutoO
     ////////////////////////////////
     // ***** Initialization ******//
     ////////////////////////////////
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 
     public static int getInventorySize(int tier) {
         return (int) Math.pow(tier + 2, 2);
@@ -214,29 +205,36 @@ public class BufferMachine extends TieredMachine implements IMachineLife, IAutoO
     ////////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         int invTier = getTankSize(tier);
-        var group = new WidgetGroup(0, 0, 18 * (invTier + 1) + 16, 18 * invTier + 16);
-        var container = new WidgetGroup(4, 4, 18 * (invTier + 1) + 8, 18 * invTier + 8);
+        var container = new UIElement();
+        container.layout(layout -> layout.flexDirection(FlexDirection.ROW).paddingAll(4));
+        container.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
 
+        var slots = new UIElement();
         int index = 0;
         for (int y = 0; y < invTier; y++) {
+            var row = new UIElement();
+            row.layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < invTier; x++) {
-                container.addWidget(new SlotWidget(
-                        getInventory().storage, index++, 4 + x * 18, 4 + y * 18, true, true)
-                        .setBackgroundTexture(GuiTextures.SLOT));
+                row.addChild(new ItemSlot().bind(getInventory().storage, index++));
             }
+            slots.addChild(row);
         }
 
-        index = 0;
-        for (int y = 0; y < invTier; y++) {
-            container.addWidget(new TankWidget(
-                    tank.getStorages()[index++], 4 + invTier * 18, 4 + y * 18, true, true)
-                    .setBackground(GuiTextures.FLUID_SLOT));
+        var tanks = new UIElement();
+        for (int i = 0; i < invTier; i++) {
+            var slot = new FluidSlot().bind(tank.getStorages()[i], 0);
+            slot.setAllowClickFilled(true);
+            slot.setAllowClickDrained(true);
+            slot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+            tanks.addChild(slot);
         }
 
-        container.setBackground(GuiTextures.BACKGROUND_INVERSE);
-        group.addWidget(container);
+        container.addChildren(slots, tanks);
+        var group = new UIElement();
+        group.layout(layout -> layout.alignItems(AlignItems.CENTER).paddingAll(4));
+        group.addChild(container);
         return group;
     }
 
@@ -244,8 +242,8 @@ public class BufferMachine extends TieredMachine implements IMachineLife, IAutoO
     // ******* Rendering ********//
     ///////////////////////////////
     @Override
-    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
-                                              Direction side) {
+    public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                            Direction side) {
         if (toolTypes.contains(GTToolType.SCREWDRIVER)) {
             if (side == getOutputFacingItems() || side == getOutputFacingFluids()) {
                 return GuiTextures.TOOL_ALLOW_INPUT;

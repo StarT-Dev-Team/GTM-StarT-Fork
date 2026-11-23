@@ -1,19 +1,27 @@
 package com.gregtechceu.gtceu.common.item.tool.behavior;
 
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.item.tool.aoe.AoESymmetrical;
 import com.gregtechceu.gtceu.api.item.tool.behavior.IToolUIBehavior;
 
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.function.Supplier;
 
 import static com.gregtechceu.gtceu.api.item.tool.ToolHelper.getBehaviorsTag;
 import static com.gregtechceu.gtceu.api.item.tool.ToolHelper.getMaxAoEDefinition;
@@ -28,44 +36,48 @@ public class AOEConfigUIBehavior implements IToolUIBehavior {
     }
 
     @Override
-    public ModularUI createUI(Player player, HeldItemUIFactory.HeldItemHolder holder) {
-        var tag = getBehaviorsTag(holder.getHeld());
-        var defaultDefinition = getMaxAoEDefinition(holder.getHeld());
-        return new ModularUI(120, 80, holder, player).background(GuiTextures.BACKGROUND)
-                .widget(new LabelWidget(6, 10, "item.gtceu.tool.aoe.columns"))
-                .widget(new LabelWidget(49, 10, "item.gtceu.tool.aoe.rows"))
-                .widget(new LabelWidget(79, 10, "item.gtceu.tool.aoe.layers"))
-                .widget(new ButtonWidget(15, 24, 20, 20, new TextTexture("+"), (data) -> {
-                    AoESymmetrical.increaseColumn(tag, defaultDefinition);
-                    holder.markAsDirty();
-                }))
-                .widget(new ButtonWidget(15, 44, 20, 20, new TextTexture("-"), (data) -> {
-                    AoESymmetrical.decreaseColumn(tag, defaultDefinition);
-                    holder.markAsDirty();
-                }))
-                .widget(new ButtonWidget(50, 24, 20, 20, new TextTexture("+"), (data) -> {
-                    AoESymmetrical.increaseRow(tag, defaultDefinition);
-                    holder.markAsDirty();
-                }))
-                .widget(new ButtonWidget(50, 44, 20, 20, new TextTexture("-"), (data) -> {
-                    AoESymmetrical.decreaseRow(tag, defaultDefinition);
-                    holder.markAsDirty();
-                }))
-                .widget(new ButtonWidget(85, 24, 20, 20, new TextTexture("+"), (data) -> {
-                    AoESymmetrical.increaseLayer(tag, defaultDefinition);
-                    holder.markAsDirty();
-                }))
-                .widget(new ButtonWidget(85, 44, 20, 20, new TextTexture("-"), (data) -> {
-                    AoESymmetrical.decreaseLayer(tag, defaultDefinition);
-                    holder.markAsDirty();
-                }))
-                .widget(new LabelWidget(23, 65,
-                        () -> Integer.toString(1 +
-                                2 * AoESymmetrical.getColumn(getBehaviorsTag(holder.getHeld()), defaultDefinition))))
-                .widget(new LabelWidget(58, 65,
-                        () -> Integer.toString(
-                                1 + 2 * AoESymmetrical.getRow(getBehaviorsTag(holder.getHeld()), defaultDefinition))))
-                .widget(new LabelWidget(93, 65, () -> Integer
-                        .toString(1 + AoESymmetrical.getLayer(getBehaviorsTag(holder.getHeld()), defaultDefinition))));
+    public ModularUI createUI(Player player, HeldItemUIMenuType.HeldItemUIHolder holder) {
+        Supplier<ItemStack> held = () -> player.getItemInHand(holder.hand);
+        var defaultDefinition = getMaxAoEDefinition(holder.itemStack);
+        var root = UITemplate.panel();
+        root.layout(layout -> layout.width(120).paddingAll(6).gapAll(4));
+
+        var columns = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW)
+                .justifyContent(AlignContent.SPACE_AROUND));
+        columns.addChild(column("item.gtceu.tool.aoe.columns",
+                () -> Integer.toString(1 + 2 * AoESymmetrical.getColumn(getBehaviorsTag(held.get()),
+                        defaultDefinition)),
+                () -> AoESymmetrical.increaseColumn(getBehaviorsTag(held.get()), defaultDefinition),
+                () -> AoESymmetrical.decreaseColumn(getBehaviorsTag(held.get()), defaultDefinition)));
+        columns.addChild(column("item.gtceu.tool.aoe.rows",
+                () -> Integer.toString(1 + 2 * AoESymmetrical.getRow(getBehaviorsTag(held.get()),
+                        defaultDefinition)),
+                () -> AoESymmetrical.increaseRow(getBehaviorsTag(held.get()), defaultDefinition),
+                () -> AoESymmetrical.decreaseRow(getBehaviorsTag(held.get()), defaultDefinition)));
+        columns.addChild(column("item.gtceu.tool.aoe.layers",
+                () -> Integer.toString(1 + AoESymmetrical.getLayer(getBehaviorsTag(held.get()),
+                        defaultDefinition)),
+                () -> AoESymmetrical.increaseLayer(getBehaviorsTag(held.get()), defaultDefinition),
+                () -> AoESymmetrical.decreaseLayer(getBehaviorsTag(held.get()), defaultDefinition)));
+        root.addChild(columns);
+        return UITemplate.modularUI(root, player);
+    }
+
+    private static UIElement column(String titleKey, Supplier<String> value, Runnable increase, Runnable decrease) {
+        var column = new UIElement().layout(layout -> layout.alignItems(AlignItems.CENTER).gapAll(2));
+        column.addChild(new Label().setText(Component.translatable(titleKey)));
+        column.addChild(button("+", increase));
+        column.addChild(button("-", decrease));
+        var label = new Label();
+        label.bindDataSource(SupplierDataSource.of(() -> (Component) Component.literal(value.get())));
+        column.addChild(label);
+        return column;
+    }
+
+    private static Button button(String text, Runnable action) {
+        var button = new Button().setText(text, false);
+        button.layout(layout -> layout.width(20).height(20));
+        button.setOnServerClick(event -> action.run());
+        return button;
     }
 }

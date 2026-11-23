@@ -1,25 +1,26 @@
 package com.gregtechceu.gtceu.integration.rei.orevein;
 
 import com.gregtechceu.gtceu.api.data.worldgen.GTOreDefinition;
+import com.gregtechceu.gtceu.integration.xei.GTXEIUI;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTOreVeinWidget;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.rei.ModularDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplay;
 
 import net.minecraft.world.item.ItemStack;
 
+import me.shedaniel.rei.api.common.category.CategoryIdentifier;
 import me.shedaniel.rei.api.common.entry.EntryIngredient;
 import me.shedaniel.rei.api.common.util.EntryIngredients;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class GTOreVeinDisplay extends ModularDisplay<WidgetGroup> {
+public class GTOreVeinDisplay implements ModularUIDisplay {
 
     private final GTOreDefinition oreDefinition;
 
     public GTOreVeinDisplay(GTOreDefinition oreDefinition) {
-        super(() -> new GTOreVeinWidget(oreDefinition), GTOreVeinDisplayCategory.CATEGORY);
         this.oreDefinition = oreDefinition;
     }
 
@@ -30,5 +31,14 @@ public class GTOreVeinDisplay extends ModularDisplay<WidgetGroup> {
             ingredients.add(EntryIngredients.of(output));
         }
         return ingredients;
+    }
+
+    @Override
+    public CategoryIdentifier<?> getCategoryIdentifier() {
+        return GTOreVeinDisplayCategory.CATEGORY;
+    }
+
+    public ModularUI createModularUI() {
+        return GTXEIUI.of(new GTOreVeinWidget(oreDefinition));
     }
 }

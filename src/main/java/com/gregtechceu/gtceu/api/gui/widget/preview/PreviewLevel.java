@@ -2,7 +2,7 @@ package com.gregtechceu.gtceu.api.gui.widget.preview;
 
 import com.gregtechceu.gtceu.GTCEu;
 
-import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
+import com.lowdragmc.lowdraglib2.utils.virtuallevel.TrackedDummyWorld;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;

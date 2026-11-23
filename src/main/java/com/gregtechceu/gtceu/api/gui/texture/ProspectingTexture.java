@@ -4,11 +4,11 @@ import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.misc.PacketProspecting;
 import com.gregtechceu.gtceu.api.gui.misc.ProspectorMode;
 
-import com.lowdragmc.lowdraglib.gui.editor.ColorPattern;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TransformTexture;
-import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
-import com.lowdragmc.lowdraglib.utils.ColorUtils;
+import com.lowdragmc.lowdraglib2.gui.ColorPattern;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.TransformTexture;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
+import com.lowdragmc.lowdraglib2.utils.ColorUtils;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiGraphics;
@@ -41,7 +41,7 @@ import static com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_TEX_COLOR;
 public class ProspectingTexture extends AbstractTexture {
 
     public static final String SELECTED_ALL = "[all]";
-    private static final ResourceTexture ARROW = GuiTextures.UP.copy().setColor(ColorPattern.RED.color);
+    private static final SpriteTexture ARROW = GuiTextures.UP.copy().setColor(ColorPattern.RED.color);
 
     @Getter
     private String selected = SELECTED_ALL;
@@ -174,7 +174,7 @@ public class ProspectingTexture extends AbstractTexture {
             }
         }
         TransformTexture arrow = ARROW.rotate(this.direction / 2);
-        arrow.draw(graphics, 0, 0, x + playerXGui - 20, y + playerYGui - 20, 40, 40);
+        arrow.draw(graphics, 0, 0, x + playerXGui - 20, y + playerYGui - 20, 40, 40, 0);
 
         // draw red vertical line
         if (playerXGui % 16 > 7 || playerXGui % 16 == 0) {

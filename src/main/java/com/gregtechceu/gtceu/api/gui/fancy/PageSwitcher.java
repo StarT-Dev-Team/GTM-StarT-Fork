@@ -2,15 +2,21 @@ package com.gregtechceu.gtceu.api.gui.fancy;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 
-import org.apache.commons.lang3.mutable.MutableInt;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.FlexWrap;
 
 import java.util.Comparator;
 import java.util.List;
@@ -27,7 +33,6 @@ public class PageSwitcher implements IFancyUIProvider {
     private final Consumer<IFancyUIProvider> onPageSwitched;
 
     private List<IFancyUIProvider> pages = List.of();
-    private IFancyUIProvider currentPage = null;
 
     public PageSwitcher(Consumer<IFancyUIProvider> onPageSwitched) {
         this.onPageSwitched = onPageSwitched;
@@ -35,52 +40,49 @@ public class PageSwitcher implements IFancyUIProvider {
 
     public void setPageList(List<IFancyUIProvider> allPages, IFancyUIProvider currentPage) {
         this.pages = allPages;
-        this.currentPage = currentPage;
     }
 
     @Override
-    public Widget createMainPage(FancyMachineUIWidget widget) {
-        var container = new WidgetGroup(0, 0, 176, 166);
-
-        var scrollableGroup = new DraggableScrollableWidgetGroup(10, 10, 156, 146);
-        scrollableGroup.setYScrollBarWidth(8);
-        scrollableGroup.setYBarStyle(GuiTextures.SLIDER_BACKGROUND_VERTICAL, GuiTextures.BUTTON);
-        container.addWidget(scrollableGroup);
+    public UIElement createMainPage(FancyMachineUIWidget widget) {
+        var scroller = new ScrollerView();
+        scroller.layout(l -> l.width(156).height(146));
 
         var groupedPages = pages.stream().collect(Collectors.groupingBy(
                 page -> Objects.requireNonNullElse(page.getPageGroupingData(), new PageGroupingData(null, -1))));
 
-        final MutableInt currentY = new MutableInt(0);
         groupedPages.keySet().stream()
                 .sorted(Comparator.comparingInt(PageGroupingData::groupPositionWeight))
                 .forEachOrdered(group -> {
                     if (group.groupKey() != null) {
-                        scrollableGroup.addWidget(
-                                new LabelWidget(0, currentY.getAndAdd(12), group.groupKey()).setDropShadow(false));
+                        var label = new Label();
+                        label.setText(Component.translatable(group.groupKey()));
+                        label.textStyle(t -> t.textShadow(false).textColor(0xFF404040));
+                        scroller.addScrollViewChild(label);
                     }
-
-                    final var currentPage = new MutableInt(0);
-                    currentY.subtract(30); // To account for adding it back on the first page inside this group
-
-                    groupedPages.get(group).forEach(page -> {
-                        var index = currentPage.getAndIncrement();
-                        var y = currentY.addAndGet(index % 5 == 0 ? 30 : 0); // Jump to the next row every 5 parts
-
-                        var pageWidget = new WidgetGroup((index % 5) * 30, y, 25, 25);
-                        pageWidget.addWidget(new ButtonWidget(0, 0, 25, 25, GuiTextures.BACKGROUND,
-                                clickData -> onPageSwitched.accept(page)));
-                        pageWidget.addWidget(new ImageWidget(4, 4, 17, 17, page.getTabIcon()));
-                        // For some reason, this doesn't work in any other way:
-                        pageWidget.widgets.get(0).setHoverTooltips(page.getTitle().getString());
-                        scrollableGroup.addWidget(pageWidget);
-                    });
-
-                    if (!groupedPages.get(group).isEmpty()) {
-                        currentY.add(30);
+                    var row = new UIElement();
+                    row.layout(l -> l.flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP).gapAll(5)
+                            .marginBottom(5));
+                    for (var page : groupedPages.get(group)) {
+                        var button = new Button();
+                        button.noText();
+                        button.layout(l -> l.width(25).height(25).paddingAll(4).alignItems(AlignItems.CENTER)
+                                .justifyContent(AlignContent.CENTER));
+                        button.buttonStyle(s -> s.baseTexture(GuiTextures.BACKGROUND)
+                                .hoverTexture(GuiTextures.BACKGROUND.copy().setColor(0xFFDDDDDD))
+                                .pressedTexture(GuiTextures.BACKGROUND.copy().setColor(0xFFBBBBBB)));
+                        var icon = new UIElement();
+                        icon.layout(l -> l.width(17).height(17));
+                        icon.style(s -> s.background(page.getTabIcon()));
+                        icon.setAllowHitTest(false);
+                        button.addChild(icon);
+                        button.style(s -> s.tooltips(page.getTitle()));
+                        button.setOnClick(e -> onPageSwitched.accept(page));
+                        row.addChild(button);
                     }
+                    scroller.addScrollViewChild(row);
                 });
 
-        return container;
+        return scroller;
     }
 
     @Override

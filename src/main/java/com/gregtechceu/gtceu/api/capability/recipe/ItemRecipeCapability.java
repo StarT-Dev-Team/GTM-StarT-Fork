@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.api.capability.recipe;
 
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroup;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerGroupColor;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
@@ -37,8 +36,10 @@ import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemStackHandler
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 import com.gregtechceu.gtceu.utils.*;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -54,6 +55,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -437,20 +439,18 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
 
     @NotNull
     @Override
-    public Widget createWidget() {
-        SlotWidget slot = new SlotWidget();
-        slot.initTemplate();
-        return slot;
+    public UIElement createWidget() {
+        return new ItemSlot();
     }
 
     @NotNull
     @Override
-    public Class<? extends Widget> getWidgetClass() {
-        return SlotWidget.class;
+    public Class<? extends UIElement> getWidgetClass() {
+        return ItemSlot.class;
     }
 
     @Override
-    public void applyWidgetInfo(@NotNull Widget widget,
+    public void applyWidgetInfo(@NotNull UIElement widget,
                                 int index,
                                 boolean isXEI,
                                 IO io,
@@ -459,13 +459,14 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
                                 @UnknownNullability("null when content == null") GTRecipe recipe,
                                 @Nullable Content content,
                                 @Nullable Object storage, int recipeTier, int chanceTier) {
-        if (widget instanceof SlotWidget slot) {
+        if (widget instanceof ItemSlot slot) {
+            var ingredientIO = io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT;
+            float chance = 1;
             if (storage instanceof IItemHandlerModifiable items) {
                 if (index >= 0 && index < items.getSlots()) {
-                    slot.setHandlerSlot(items, index);
-                    slot.setIngredientIO(io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT);
-                    slot.setCanTakeItems(!isXEI);
-                    slot.setCanPutItems(!isXEI && io.support(IO.IN));
+                    slot.bind(new ItemHandlerSlot(items, index)
+                            .setCanTake(player -> !isXEI)
+                            .setCanPlace(stack -> !isXEI && io.support(IO.IN)));
                 }
                 // 1 over container size.
                 // If in a recipe viewer and a research slot can be added, add it.
@@ -483,10 +484,10 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
                                 dataItems.add(dataStick);
                             }
                             CycleItemStackHandler handler = new CycleItemStackHandler(List.of(dataItems));
-                            slot.setHandlerSlot(handler, 0);
-                            slot.setIngredientIO(IngredientIO.CATALYST);
-                            slot.setCanTakeItems(false);
-                            slot.setCanPutItems(false);
+                            slot.bind(new ItemHandlerSlot(handler, 0)
+                                    .setCanTake(player -> false)
+                                    .setCanPlace(stack -> false));
+                            ingredientIO = IngredientIO.CATALYST;
                         }
                     }
                 }
@@ -497,51 +498,61 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
                         content.chance < content.maxChance;
                 int boostedChance = hideOC ? 0 :
                         recipeType.getChanceFunction().getBoostedChance(content, recipeTier, chanceTier);
-                float chance = (float) boostedChance / content.maxChance;
+                chance = (float) boostedChance / content.maxChance;
                 int tooltipTierDiff = hideOC ? 0 : recipeType.getChanceFunction().getTierDiff(recipeTier, chanceTier);
 
-                slot.setXEIChance(chance);
-                slot.setOnAddedTooltips((w, tooltips) -> {
-                    Content shown = content;
-                    if (content instanceof LootTableOutputs.LootTableContent loot) {
-                        tooltips.add(Component.translatable("gtceu.gui.content.loot_table", loot.table.toString())
-                                .withStyle(ChatFormatting.GRAY));
-                        shown = loot.entryFor(w.getItem());
-                        if (shown == null) return;
-                    }
-                    GTRecipeWidget.setConsumedChance(io == IO.IN, shown,
-                            recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
-                            tooltips, recipeTier, chanceTier,
-                            hideOC ? ChanceBoostFunction.fixed(boostedChance) : recipeType.getChanceFunction());
+                Content shown = content;
+                if (content instanceof LootTableOutputs.LootTableContent loot) {
+                    tooltips.add(Component.translatable("gtceu.gui.content.loot_table", loot.table.toString())
+                        .withStyle(ChatFormatting.GRAY));
+                    shown = loot.entryFor(w.getItem());
+                }
+
+                List<Component> tooltips = new ArrayList<>();
+                GTRecipeWidget.setConsumedChance(io == IO.IN, shown,
+                        recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
+                        tooltips, recipeTier, chanceTier,
+                        hideOC ? ChanceBoostFunction.fixed(boostedChance) : recipeType.getChanceFunction());
 
                     // spotless:off
-                    if (this.of(shown.content) instanceof IntProviderIngredient ingredient) {
+                    if (this.of(content.content) instanceof IntProviderIngredient ingredient) {
                         IntProvider countProvider = ingredient.getCountProvider();
 
-                        tooltips.add(Component.translatable("gtceu.gui.content.count_range",
-                                countProvider.getMinValue(), countProvider.getMaxValue())
-                                .withStyle(ChatFormatting.GOLD));
-                        tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
-                    } else if (this.of(shown.content) instanceof SizedIngredient sizedIngredient &&
-                            sizedIngredient.getInner() instanceof IntProviderIngredient ingredient) {
-                        IntProvider countProvider = ingredient.getCountProvider();
+                    tooltips.add(Component.translatable("gtceu.gui.content.count_range",
+                            countProvider.getMinValue(), countProvider.getMaxValue())
+                            .withStyle(ChatFormatting.GOLD));
+                    tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
+                } else if (this.of(content.content) instanceof SizedIngredient sizedIngredient &&
+                        sizedIngredient.getInner() instanceof IntProviderIngredient ingredient) {
+                    IntProvider countProvider = ingredient.getCountProvider();
 
-                        tooltips.add(Component.translatable("gtceu.gui.content.count_range",
-                                countProvider.getMinValue(), countProvider.getMaxValue())
-                                .withStyle(ChatFormatting.GOLD));
-                        tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
-                    }
-                    // spotless:on
-                    if (isTickSlot(index, io, recipe)) {
-                        int period = recipe.getTickPeriod();
+                    tooltips.add(Component.translatable("gtceu.gui.content.count_range",
+                            countProvider.getMinValue(), countProvider.getMaxValue())
+                            .withStyle(ChatFormatting.GOLD));
+                    tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
+                }
+                // spotless:on
+                if (isTickSlot(index, io, recipe)) {
+                    int period = recipe.getTickPeriod();
 
-                        tooltips.add(period > 1 ?
-                                Component.translatable("gtceu.gui.content.per_n_ticks", period) :
-                                Component.translatable("gtceu.gui.content.per_tick"));
-                    }
-                });
+                    tooltips.add(period > 1 ?
+                            Component.translatable("gtceu.gui.content.per_n_ticks", period) :
+                            Component.translatable("gtceu.gui.content.per_tick"));
+                }
+                slot.style(style -> style.tooltips(tooltips.toArray(Component[]::new)));
                 if (io == IO.IN && (content.chance == 0 || this.of(content.content) instanceof IntCircuitIngredient)) {
-                    slot.setIngredientIO(IngredientIO.CATALYST);
+                    ingredientIO = IngredientIO.CATALYST;
+                }
+            }
+            if (isXEI) {
+                if (content != null) {
+                    Ingredient ingredient = this.of(content.content);
+                    int amount = ingredient instanceof SizedIngredient sized ? sized.getAmount() : 1;
+                    Supplier<Stream<ItemStack>> candidates = () -> Arrays.stream(ingredient.getItems());
+                    slot.xeiRecipeIngredient(ingredientIO, candidates);
+                    slot.xeiRecipeSlot(ingredientIO, chance, amount, candidates);
+                } else {
+                    slot.xeiRecipeSlot(ingredientIO, chance);
                 }
             }
         }

@@ -1,18 +1,17 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.TextFieldWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 
 import net.minecraft.network.chat.Component;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -20,72 +19,53 @@ import lombok.experimental.Accessors;
 import java.util.function.Consumer;
 
 @Accessors(chain = true)
-public class AETextInputButtonWidget extends WidgetGroup {
+public class AETextInputButtonWidget extends UIElement {
 
     @Setter
-    private Consumer<String> onConfirm;
+    private Consumer<String> onConfirm = text -> {};
 
     @Getter
     @Setter
     private String text = "";
 
-    private Component[] hoverTexts = new Component[0];
-
     @Getter
     private boolean isInputting;
 
-    private Widget textField;
+    private final TextField textField = new TextField();
+    private final Button toggle = new Button();
 
-    public AETextInputButtonWidget() {}
+    public AETextInputButtonWidget() {
+        layout(layout -> layout.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER).gapAll(2));
 
-    public AETextInputButtonWidget(int x, int y, int width, int height) {
-        super(x, y, width, height);
-    }
+        textField.layout(layout -> layout.flex(1).heightPercent(100));
+        textField.setAnyString();
+        textField.bind(DataBindingBuilder.string(() -> text, value -> text = value).build());
+        textField.setDisplay(false);
 
-    public AETextInputButtonWidget(Position position) {
-        super(position);
-    }
+        toggle.layout(layout -> layout.aspectRatio(1).heightPercent(100));
+        applyInputting(false);
+        toggle.setOnServerClick(event -> toggleInputting());
 
-    public AETextInputButtonWidget(Position position, Size size) {
-        super(position, size);
+        addChildren(textField, toggle);
+        addChild(new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(() -> isInputting)
+                .remoteSetter(this::applyInputting).build()));
     }
 
     public AETextInputButtonWidget setButtonTooltips(Component... tooltipTexts) {
-        this.hoverTexts = tooltipTexts;
+        toggle.style(style -> style.tooltips(tooltipTexts));
         return this;
     }
 
-    @Override
-    public void initWidget() {
-        super.initWidget();
-        this.textField = new TextFieldWidget(
-                0,
-                0,
-                getSizeWidth() - getSizeHeight() - 2,
-                getSizeHeight(),
-                this::getText,
-                this::setText).setActive(false).setVisible(false);
-        this.addWidget(new ToggleButtonWidget(
-                getSizeWidth() - getSizeHeight(),
-                0,
-                getSizeHeight(),
-                getSizeHeight(),
-                this::isInputting,
-                pressed -> {
-                    isInputting = pressed;
-                    if (pressed) {
-                        textField.setActive(true);
-                        textField.setVisible(true);
-                    } else {
-                        onConfirm.accept(text);
-                        textField.setActive(false);
-                        textField.setVisible(false);
-                    }
-                })
-                .setTexture(
-                        new GuiTextureGroup(GuiTextures.VANILLA_BUTTON, new TextTexture("✎")),
-                        new GuiTextureGroup(GuiTextures.VANILLA_BUTTON, new TextTexture("✔")))
-                .setHoverTooltips(hoverTexts));
-        this.addWidget(textField);
+    private void toggleInputting() {
+        isInputting = !isInputting;
+        if (!isInputting) {
+            onConfirm.accept(text);
+        }
+    }
+
+    private void applyInputting(boolean inputting) {
+        textField.setDisplay(inputting);
+        toggle.buttonStyle(style -> style.baseTexture(GuiTextures.VANILLA_BUTTON));
+        toggle.text.setText(inputting ? "✔" : "✎", false);
     }
 }

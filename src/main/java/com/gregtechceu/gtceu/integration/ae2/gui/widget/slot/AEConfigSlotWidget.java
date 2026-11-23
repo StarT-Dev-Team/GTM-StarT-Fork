@@ -1,37 +1,38 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.slot;
 
-import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.gui.misc.IGhostFluidTarget;
-import com.gregtechceu.gtceu.api.gui.misc.IGhostItemTarget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
+import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.widget.PhantomFluidSlot;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.AEAmountDialog;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.ConfigWidget;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEFluidSlot;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAESlot;
-import com.gregtechceu.gtceu.integration.ae2.slot.IConfigurableSlot;
 import com.gregtechceu.gtceu.integration.ae2.utils.AEUtil;
 import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
-import com.lowdragmc.lowdraglib.gui.ingredient.Target;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.jei.JEIPlugin;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.LDLib2;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.sync.rpc.RPCEmitter;
+import com.lowdragmc.lowdraglib2.gui.sync.rpc.RPCEventBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.SoundActions;
 import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidStack;
@@ -40,106 +41,63 @@ import net.minecraftforge.fluids.FluidUtil;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
-import com.mojang.blaze3d.systems.RenderSystem;
-import dev.emi.emi.api.forge.ForgeEmiStack;
-import dev.emi.emi.api.stack.EmiStack;
-import me.shedaniel.rei.api.common.util.EntryStacks;
-import org.jetbrains.annotations.NotNull;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
-import static com.gregtechceu.gtceu.api.gui.widget.PhantomFluidWidget.drainFrom;
-import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawGradientRect;
-
-public class AEConfigSlotWidget extends Widget
-                                implements IGhostItemTarget, IGhostFluidTarget, IRecipeIngredientSlot {
-
-    protected static final int REMOVE_ID = 1000;
-    protected static final int UPDATE_ID = 1001;
-    protected static final int AMOUNT_CHANGE_ID = 1002;
-    protected static final int PICK_UP_ID = 1003;
-
-    private static final byte KIND_ITEM = 0;
-    private static final byte KIND_FLUID = 1;
+public class AEConfigSlotWidget extends UIElement {
 
     protected final ConfigWidget parentWidget;
     protected final int index;
 
-    public AEConfigSlotWidget(int x, int y, ConfigWidget parentWidget, int index) {
-        super(new Position(x, y), new Size(18, 18 * 2));
+    private final StackCell configCell = new StackCell();
+    private final StackCell stockCell = new StackCell();
+    private final RPCEmitter removeEvent;
+    private final RPCEmitter itemEvent;
+    private final RPCEmitter fluidEvent;
+    private final RPCEmitter amountEvent;
+    private final RPCEmitter pickUpEvent;
 
+    @Nullable
+    private GenericStack syncedConfig;
+    @Nullable
+    private GenericStack syncedStock;
+    private Tag syncedTag = new CompoundTag();
+    @Nullable
+    private Boolean lastAutoPull;
+    private IGuiTexture configBackground = IGuiTexture.EMPTY;
+
+    public AEConfigSlotWidget(ConfigWidget parentWidget, int index) {
         this.parentWidget = parentWidget;
         this.index = index;
+
+        layout(layout -> layout.width(18).height(36));
+        addChildren(configCell, stockCell);
+
+        removeEvent = addRPCEvent(RPCEventBuilder.simple(this::serverRemove));
+        itemEvent = addRPCEvent(RPCEventBuilder.simple(ItemStack.class, this::serverSetItem));
+        fluidEvent = addRPCEvent(RPCEventBuilder.simple(FluidStack.class, this::serverSetFluid));
+        amountEvent = addRPCEvent(RPCEventBuilder.simple(Long.class, this::serverSetAmount));
+        pickUpEvent = addRPCEvent(RPCEventBuilder.simple(Boolean.class, this::serverPickUp));
+
+        addChild(new BindableValue<Tag>().bind(DataBindingBuilder.tagS2C(this::collect)
+                .remoteSetter(this::receive).build()));
+
+        configCell.addEventListener(UIEvents.MOUSE_DOWN, this::onConfigMouseDown, true);
+        configCell.addEventListener(UIEvents.MOUSE_WHEEL, this::onConfigWheel);
+        configCell.addEventListener(UIEvents.HOVER_TOOLTIPS, this::onConfigTooltips);
+        stockCell.addEventListener(UIEvents.MOUSE_DOWN, this::onStockMouseDown, true);
+
+        configCell.itemSlot.xeiPhantom();
+        configCell.fluidSlot.xeiPhantom();
+        configCell.itemSlot.registerValueListener(this::onGhostItem);
+        configCell.fluidSlot.registerValueListener(this::onGhostFluid);
+
+        addEventListener(UIEvents.TICK, event -> refresh());
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public void drawInForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.drawInForeground(graphics, mouseX, mouseY, partialTicks);
-
-        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
-
-        if (slot.getConfig() == null) {
-            if (mouseOverConfig(mouseX, mouseY)) {
-                List<Component> hoverStringList = new ArrayList<>();
-
-                hoverStringList.add(Component.translatable("gtceu.gui.config_slot"));
-
-                if (this.parentWidget.isAutoPull()) {
-                    hoverStringList.add(Component.translatable("gtceu.gui.config_slot.auto_pull_managed"));
-                } else {
-                    if (!this.parentWidget.isStocking()) {
-                        hoverStringList.add(Component.translatable("gtceu.gui.config_slot.set"));
-                        hoverStringList.add(Component.translatable("gtceu.gui.config_slot.scroll"));
-                    } else {
-                        hoverStringList.add(Component.translatable("gtceu.gui.config_slot.set_only"));
-                    }
-
-                    hoverStringList.add(Component.translatable("gtceu.gui.config_slot.remove"));
-                }
-
-                graphics.renderTooltip(Minecraft.getInstance().font, hoverStringList, Optional.empty(), mouseX, mouseY);
-            }
-        } else {
-            GenericStack stack = null;
-
-            if (mouseOverConfig(mouseX, mouseY)) {
-                stack = slot.getConfig();
-            } else if (mouseOverStock(mouseX, mouseY)) {
-                stack = slot.getStock();
-            }
-
-            if (stack != null) {
-                graphics.renderTooltip(Minecraft.getInstance().font, GenericStack.wrapInItemStack(stack), mouseX,
-                        mouseY);
-            }
-        }
-    }
-
-    protected boolean mouseOverConfig(double mouseX, double mouseY) {
-        Position position = getPosition();
-        return isMouseOver(position.x, position.y, 18, 18, mouseX, mouseY);
-    }
-
-    protected boolean mouseOverStock(double mouseX, double mouseY) {
-        Position position = getPosition();
-        return isMouseOver(position.x, position.y + 18, 18, 18, mouseX, mouseY);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static void drawSelectionOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
-        RenderSystem.disableDepthTest();
-        RenderSystem.colorMask(true, true, true, false);
-        drawGradientRect(graphics, x, y, width, height, -2130706433, -2130706433);
-        RenderSystem.colorMask(true, true, true, true);
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableBlend();
-    }
-
-    protected boolean isStackValidForSlot(GenericStack stack) {
+    private boolean isStackValidForSlot(@Nullable GenericStack stack) {
         if (stack == null || stack.amount() < 0) return true;
         if (!this.parentWidget.acceptsKey(stack.what())) return false;
         if (!this.parentWidget.isStocking()) return true;
@@ -147,220 +105,294 @@ public class AEConfigSlotWidget extends Widget
         return !this.parentWidget.hasStackInConfig(stack);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (mouseOverConfig(mouseX, mouseY)) {
-            if (this.parentWidget.isAutoPull()) return false;
+    private static boolean areAEStackCountsNotEqual(@Nullable GenericStack first, @Nullable GenericStack second) {
+        if (second == first) return false;
+        if (first != null && second != null) return first.amount() != second.amount() || !first.what().matches(second);
 
-            if (button == 1) {
-                writeClientAction(REMOVE_ID, buf -> {});
-            } else if (button == 0) {
-                ItemStack held = this.gui.getModularUIContainer().getCarried();
-
-                if (!held.isEmpty()) {
-                    FluidStack contained = getContainedFluid(held);
-
-                    if (!contained.isEmpty()) {
-                        acceptFluid(contained);
-                    } else {
-                        acceptItem(held);
-                    }
-                } else {
-                    GenericStack config = this.parentWidget.getDisplay(this.index).getConfig();
-
-                    if (config != null) {
-                        new AEAmountDialog(this.gui.mainGroup, config.what(), config.amount(), this::sendAmount);
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        if (mouseOverStock(mouseX, mouseY) && button == 0) {
-            if (this.parentWidget.isStocking()) return false;
-
-            if (this.parentWidget.getDisplay(this.index).getStock() != null) {
-                writeClientAction(PICK_UP_ID, buf -> buf.writeBoolean(isShiftDown()));
-            }
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
-    private FluidStack getContainedFluid(ItemStack held) {
+    private Tag collect() {
+        var slot = this.parentWidget.getConfig(this.index);
+        var newConfig = slot.getConfig();
+        var newStock = slot.getStock();
+
+        if (areAEStackCountsNotEqual(newConfig, this.syncedConfig) ||
+                areAEStackCountsNotEqual(newStock, this.syncedStock)) {
+            this.syncedConfig = newConfig;
+            this.syncedStock = newStock;
+
+            var tag = new CompoundTag();
+
+            if (newConfig != null) {
+                tag.put("config", GenericStack.writeTag(newConfig));
+            }
+
+            if (newStock != null) {
+                tag.put("stock", GenericStack.writeTag(newStock));
+            }
+
+            this.syncedTag = tag;
+        }
+
+        return this.syncedTag;
+    }
+
+    private void receive(Tag tag) {
+        var slot = this.parentWidget.getDisplay(this.index);
+
+        if (tag instanceof CompoundTag compound) {
+            slot.setConfig(compound.contains("config") ? GenericStack.readTag(compound.getCompound("config")) : null);
+            slot.setStock(compound.contains("stock") ? GenericStack.readTag(compound.getCompound("stock")) : null);
+        }
+
+        refresh();
+    }
+
+    private void refresh() {
+        if (!LDLib2.isRemote()) return;
+
+        var slot = this.parentWidget.getDisplay(this.index);
+        var autoPull = this.parentWidget.isAutoPull();
+
+        if (this.lastAutoPull == null || this.lastAutoPull != autoPull) {
+            this.lastAutoPull = autoPull;
+            this.configBackground = IGuiTexture.group(
+                    autoPull ? GuiTextures.SLOT_DARK : GuiTextures.SLOT,
+                    autoPull ? GuiTextures.CONFIG_ARROW : GuiTextures.CONFIG_ARROW_DARK);
+        }
+
+        this.configCell.update(slot.getConfig(), !this.parentWidget.isStocking(), this.configBackground,
+                this.parentWidget.acceptsItems(), this.parentWidget.acceptsFluids());
+        this.stockCell.update(slot.getStock(), true, GuiTextures.SLOT_DARK, true, false);
+    }
+
+    @Nullable
+    private AbstractContainerMenu menu() {
+        var modularUI = getModularUI();
+
+        return modularUI == null ? null : modularUI.getMenu();
+    }
+
+    private ItemStack carried() {
+        var menu = menu();
+
+        return menu == null ? ItemStack.EMPTY : menu.getCarried();
+    }
+
+    private void onConfigTooltips(UIEvent event) {
+        var slot = this.parentWidget.getDisplay(this.index);
+
+        if (slot.getConfig() != null) return;
+
+        var tooltips = new ArrayList<Component>();
+
+        tooltips.add(Component.translatable("gtceu.gui.config_slot"));
+
+        if (this.parentWidget.isAutoPull()) {
+            tooltips.add(Component.translatable("gtceu.gui.config_slot.auto_pull_managed"));
+        } else {
+            if (!this.parentWidget.isStocking()) {
+                tooltips.add(Component.translatable("gtceu.gui.config_slot.set"));
+                tooltips.add(Component.translatable("gtceu.gui.config_slot.scroll"));
+            } else {
+                tooltips.add(Component.translatable("gtceu.gui.config_slot.set_only"));
+            }
+
+            tooltips.add(Component.translatable("gtceu.gui.config_slot.remove"));
+        }
+
+        event.hoverTooltips = new HoverTooltips(tooltips, null, null, null);
+    }
+
+    private void onConfigMouseDown(UIEvent event) {
+        event.stopPropagation();
+
+        if (this.parentWidget.isAutoPull()) return;
+
+        if (event.button == 1) {
+            this.removeEvent.send();
+        } else if (event.button == 0) {
+            var held = carried();
+
+            if (!held.isEmpty()) {
+                var contained = getContainedFluid(held, event.isShiftDown());
+
+                if (!contained.isEmpty()) {
+                    acceptFluid(contained);
+                } else {
+                    acceptItem(held);
+                }
+            } else {
+                var config = this.parentWidget.getDisplay(this.index).getConfig();
+
+                if (config != null) {
+                    AEAmountDialog.open(this, config.what(), config.amount(), this::sendAmount);
+                }
+            }
+        }
+    }
+
+    private void onStockMouseDown(UIEvent event) {
+        event.stopPropagation();
+
+        if (event.button != 0 || this.parentWidget.isStocking()) return;
+
+        if (this.parentWidget.getDisplay(this.index).getStock() != null) {
+            this.pickUpEvent.send(event.isShiftDown());
+        }
+    }
+
+    private void onConfigWheel(UIEvent event) {
+        if (this.parentWidget.isStocking()) return;
+
+        var config = this.parentWidget.getDisplay(this.index).getConfig();
+
+        if (config == null || event.deltaY == 0) return;
+
+        long current = config.amount();
+        long amount;
+
+        if (event.isCtrlDown()) {
+            amount = event.deltaY > 0 ? current * 2L : current / 2L;
+        } else {
+            amount = event.deltaY > 0 ? current + 1L : current - 1L;
+        }
+
+        if (amount > 0 && amount < Integer.MAX_VALUE + 1L) {
+            this.amountEvent.send(amount);
+
+            event.stopPropagation();
+        }
+    }
+
+    private FluidStack getContainedFluid(ItemStack held, boolean shift) {
         if (!this.parentWidget.acceptsFluids()) return FluidStack.EMPTY;
-        if (this.parentWidget.acceptsItems() && isShiftDown()) return FluidStack.EMPTY;
+        if (this.parentWidget.acceptsItems() && shift) return FluidStack.EMPTY;
 
         return FluidUtil.getFluidContained(held).orElse(FluidStack.EMPTY);
     }
 
-    @Override
-    public void handleClientAction(int id, FriendlyByteBuf buffer) {
-        super.handleClientAction(id, buffer);
+    private void onGhostItem(ItemStack stack) {
+        if (!stack.isEmpty()) {
+            var drained = PhantomFluidSlot.drainFrom(stack);
 
+            if (!this.parentWidget.acceptsItems() && !drained.isEmpty()) {
+                acceptFluid(drained);
+            } else {
+                acceptItem(stack);
+            }
+        }
+
+        refresh();
+    }
+
+    private void onGhostFluid(FluidStack stack) {
+        if (!stack.isEmpty()) {
+            acceptFluid(stack);
+        }
+
+        refresh();
+    }
+
+    private void acceptItem(ItemStack itemStack) {
+        if (!this.parentWidget.acceptsItems() || itemStack.isEmpty()) return;
+
+        this.itemEvent.send(itemStack.copy());
+    }
+
+    private void acceptFluid(FluidStack fluidStack) {
+        if (!this.parentWidget.acceptsFluids()) return;
+
+        var stack = fluidStack.copy();
+
+        if (stack.getFluid() != Fluids.EMPTY && stack.getAmount() <= 0) {
+            stack.setAmount(1000);
+        }
+
+        if (!stack.isEmpty()) {
+            this.fluidEvent.send(stack);
+        }
+    }
+
+    private void sendAmount(long amount) {
+        this.amountEvent.send(amount);
+    }
+
+    private void serverRemove() {
         if (this.parentWidget.isAutoPull()) return;
 
-        IConfigurableSlot slot = this.parentWidget.getConfig(this.index);
+        this.parentWidget.getConfig(this.index).setConfig(null);
+    }
 
-        if (id == REMOVE_ID) {
-            slot.setConfig(null);
+    private void serverSetItem(ItemStack item) {
+        if (this.parentWidget.isAutoPull()) return;
 
-            writeUpdateInfo(REMOVE_ID, buf -> {});
-        }
+        var stack = GenericStack.fromItemStack(item);
 
-        if (id == UPDATE_ID) {
-            byte kind = buffer.readByte();
+        if (!isStackValidForSlot(stack)) return;
 
-            GenericStack stack;
+        this.parentWidget.getConfig(this.index).setConfig(stack);
+    }
 
-            if (kind == KIND_FLUID) {
-                FluidStack fluid = FluidStack.readFromPacket(buffer);
+    private void serverSetFluid(FluidStack fluid) {
+        if (this.parentWidget.isAutoPull()) return;
 
-                stack = AEUtil.fromFluidStack(fluid);
+        var stack = AEUtil.fromFluidStack(fluid);
 
-                if (!isStackValidForSlot(stack)) return;
+        if (!isStackValidForSlot(stack)) return;
 
-                slot.setConfig(stack);
+        this.parentWidget.getConfig(this.index).setConfig(stack);
+    }
 
-                if (!fluid.isEmpty()) {
-                    writeUpdateInfo(UPDATE_ID, buf -> {
-                        buf.writeByte(KIND_FLUID);
+    private void serverSetAmount(Long amount) {
+        if (this.parentWidget.isAutoPull()) return;
 
-                        fluid.writeToPacket(buf);
-                    });
-                }
-            } else {
-                ItemStack item = buffer.readItem();
+        var slot = this.parentWidget.getConfig(this.index);
 
-                stack = GenericStack.fromItemStack(item);
-
-                if (!isStackValidForSlot(stack)) return;
-
-                slot.setConfig(stack);
-
-                if (!item.isEmpty()) {
-                    writeUpdateInfo(UPDATE_ID, buf -> {
-                        buf.writeByte(KIND_ITEM);
-                        buf.writeItem(item);
-                    });
-                }
-            }
-        }
-
-        if (id == AMOUNT_CHANGE_ID) {
-            long amount = buffer.readVarLong();
-
-            if (slot.getConfig() != null && amount >= 1 && amount <= Integer.MAX_VALUE) {
-                slot.setConfig(new GenericStack(slot.getConfig().what(), amount));
-
-                writeUpdateInfo(AMOUNT_CHANGE_ID, buf -> buf.writeVarLong(amount));
-            }
-        }
-
-        if (id == PICK_UP_ID) {
-            boolean shift = buffer.readBoolean();
-            GenericStack stock = slot.getStock();
-
-            if (stock == null) return;
-
-            if (stock.what() instanceof AEItemKey key) {
-                if (!this.gui.getModularUIContainer().getCarried().isEmpty()) return;
-
-                pickUpItem(slot, key, stock);
-
-                writeUpdateInfo(PICK_UP_ID, buf -> buf.writeByte(KIND_ITEM));
-            } else if (stock.what() instanceof AEFluidKey) {
-                int clickResult = tryClickContainer(shift);
-
-                if (clickResult >= 0) {
-                    writeUpdateInfo(PICK_UP_ID, buf -> {
-                        buf.writeByte(KIND_FLUID);
-                        buf.writeVarInt(clickResult);
-                    });
-                }
-            }
+        if (slot.getConfig() != null && amount >= 1 && amount <= Integer.MAX_VALUE) {
+            slot.setConfig(new GenericStack(slot.getConfig().what(), amount));
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public void readUpdateInfo(int id, FriendlyByteBuf buffer) {
-        super.readUpdateInfo(id, buffer);
+    private void serverPickUp(Boolean shift) {
+        if (this.parentWidget.isAutoPull()) return;
 
-        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
+        var menu = menu();
+        var modularUI = getModularUI();
 
-        if (id == REMOVE_ID) {
-            slot.setConfig(null);
-        }
+        if (menu == null || modularUI == null) return;
 
-        if (id == UPDATE_ID) {
-            if (buffer.readByte() == KIND_FLUID) {
-                FluidStack fluid = FluidStack.readFromPacket(buffer);
+        var slot = this.parentWidget.getConfig(this.index);
+        var stock = slot.getStock();
 
-                slot.setConfig(new GenericStack(AEFluidKey.of(fluid.getFluid(), fluid.getTag()), fluid.getAmount()));
-            } else {
-                ItemStack item = buffer.readItem();
+        if (stock == null) return;
 
-                slot.setConfig(new GenericStack(AEItemKey.of(item.getItem(), item.getTag()), item.getCount()));
-            }
-        }
+        if (stock.what() instanceof AEItemKey key) {
+            if (!menu.getCarried().isEmpty()) return;
 
-        if (id == AMOUNT_CHANGE_ID) {
-            long amount = buffer.readVarLong();
+            var stack = key.toStack(Math.min(GTMath.saturatedCast(stock.amount()), key.getItem().getMaxStackSize()));
 
-            if (slot.getConfig() != null) {
-                slot.setConfig(new GenericStack(slot.getConfig().what(), amount));
-            }
-        }
+            menu.setCarried(stack);
 
-        if (id == PICK_UP_ID) {
-            byte kind = buffer.readByte();
-            GenericStack stock = slot.getStock();
+            var remaining = ExportOnlyAESlot.copy(stock, Math.max(0, stock.amount() - stack.getCount()));
 
-            if (stock == null) return;
-
-            if (kind == KIND_ITEM && stock.what() instanceof AEItemKey key) {
-                pickUpItem(slot, key, stock);
-            } else if (kind == KIND_FLUID && stock.what() instanceof AEFluidKey key) {
-                ItemStack carried = this.gui.getModularUIContainer().getCarried();
-
-                carried.setCount(buffer.readVarInt());
-
-                this.gui.getModularUIContainer().setCarried(carried);
-
-                int taken = GTMath.saturatedCast(stock.amount());
-                GenericStack remaining = ExportOnlyAESlot.copy(stock, Math.max(0, stock.amount() - taken));
-
-                slot.setStock(remaining.amount() == 0 ? null : remaining);
-            }
+            slot.setStock(remaining.amount() == 0 ? null : remaining);
+        } else if (stock.what() instanceof AEFluidKey) {
+            tryClickContainer(modularUI.player, menu, shift);
         }
     }
 
-    private void pickUpItem(IConfigurableSlot slot, AEItemKey key, GenericStack stock) {
-        ItemStack stack = key.toStack(Math.min(GTMath.saturatedCast(stock.amount()), key.getItem().getMaxStackSize()));
-
-        this.gui.getModularUIContainer().setCarried(stack);
-
-        GenericStack remaining = ExportOnlyAESlot.copy(stock, Math.max(0, stock.amount() - stack.getCount()));
-
-        slot.setStock(remaining.amount() == 0 ? null : remaining);
-    }
-
-    private int tryClickContainer(boolean isShiftKeyDown) {
-        ExportOnlyAEFluidSlot fluidTank = this.parentWidget
+    private void tryClickContainer(Player player, AbstractContainerMenu menu, boolean isShiftKeyDown) {
+        var fluidTank = this.parentWidget
                 .getConfig(this.index) instanceof ExportOnlyAEFluidSlot fluid ? fluid : null;
 
-        if (fluidTank == null) return -1;
+        if (fluidTank == null || player == null) return;
 
-        Player player = this.gui.entityPlayer;
-        ItemStack currentStack = this.gui.getModularUIContainer().getCarried();
+        ItemStack currentStack = menu.getCarried();
         var handler = FluidUtil.getFluidHandler(currentStack).resolve().orElse(null);
 
-        if (handler == null) return -1;
+        if (handler == null) return;
 
         int maxAttempts = isShiftKeyDown ? currentStack.getCount() : 1;
 
@@ -397,190 +429,83 @@ public class AEConfigSlotWidget extends Widget
                             soundevent, SoundSource.BLOCKS, 1.0F, 1.0F);
                 }
 
-                this.gui.getModularUIContainer().setCarried(currentStack);
-
-                return currentStack.getCount();
+                menu.setCarried(currentStack);
             }
         }
-
-        return -1;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    private void sendAmount(long amount) {
-        writeClientAction(AMOUNT_CHANGE_ID, buf -> buf.writeVarLong(amount));
-    }
+    private static class StackCell extends UIElement {
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public Rect2i getRectangleBox() {
-        Rect2i rectangle = toRectangleBox();
+        private final ItemSlot itemSlot = new ItemSlot();
+        private final FluidSlot fluidSlot = new FluidSlot();
+        @Nullable
+        private IGuiTexture lastBackground;
+        private boolean lastItemShown = true;
+        private boolean lastFluidShown = true;
+        private boolean lastAmountShown = true;
+        private boolean lastFluidTooltips = true;
 
-        rectangle.setHeight(rectangle.getHeight() / 2);
+        StackCell() {
+            layout(layout -> layout.width(18).height(18));
 
-        return rectangle;
-    }
+            fluidSlot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0));
+            fluidSlot.slotStyle(style -> style.fillDirection(FillDirection.ALWAYS_FULL));
+            fluidSlot.setAllowClickFilled(false);
+            fluidSlot.setAllowClickDrained(false);
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public void acceptItem(ItemStack itemStack) {
-        if (!this.parentWidget.acceptsItems()) return;
-
-        writeClientAction(UPDATE_ID, buf -> {
-            buf.writeByte(KIND_ITEM);
-            buf.writeItem(itemStack);
-        });
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public void acceptFluid(FluidStack fluidStack) {
-        if (!this.parentWidget.acceptsFluids()) return;
-
-        if (fluidStack.getRawFluid() != Fluids.EMPTY && fluidStack.getAmount() <= 0L) {
-            fluidStack.setAmount(1000);
+            addChildren(itemSlot, fluidSlot);
         }
 
-        if (!fluidStack.isEmpty()) {
-            writeClientAction(UPDATE_ID, buf -> {
-                buf.writeByte(KIND_FLUID);
-                fluidStack.writeToPacket(buf);
-            });
-        }
-    }
+        void update(@Nullable GenericStack stack, boolean showAmount, IGuiTexture background, boolean acceptItems,
+                    boolean acceptFluids) {
+            boolean isFluid = stack != null && stack.what() instanceof AEFluidKey;
+            boolean isItem = stack != null && stack.what() instanceof AEItemKey;
+            boolean empty = stack == null;
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public Object convertIngredient(Object ingredient) {
-        return ingredient;
-    }
+            boolean showItem = isItem || (empty && acceptItems) || (empty && !acceptFluids);
+            boolean showFluid = isFluid || (empty && acceptFluids);
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public List<Target> getPhantomTargets(Object ingredient) {
-        List<Target> targets = new ArrayList<>();
-        Object itemIngredient = IGhostItemTarget.super.convertIngredient(ingredient);
-
-        if (this.parentWidget.acceptsItems() && itemIngredient instanceof ItemStack stack && !stack.isEmpty()) {
-            targets.add(createTarget(stack, true));
-        }
-
-        Object fluidIngredient = IGhostFluidTarget.super.convertIngredient(ingredient);
-        FluidStack fluid = fluidIngredient instanceof FluidStack fluidStack ? fluidStack : drainFrom(fluidIngredient);
-
-        if (this.parentWidget.acceptsFluids() && fluid != null && fluid.getRawFluid() != Fluids.EMPTY) {
-            targets.add(createTarget(fluid, false));
-        }
-
-        return targets;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private Target createTarget(Object ingredient, boolean item) {
-        final Rect2i area = getRectangleBox();
-
-        return new Target() {
-
-            @NotNull
-            @Override
-            public Rect2i getArea() {
-                return area;
+            if (this.lastItemShown != showItem) {
+                this.itemSlot.setDisplay(showItem);
             }
 
-            @Override
-            public void accept(@NotNull Object ignored) {
-                if (item) acceptItem((ItemStack) ingredient);
-                else acceptFluid((FluidStack) ingredient);
+            if (this.lastFluidShown != showFluid) {
+                this.lastFluidShown = showFluid;
+                this.fluidSlot.setDisplay(showFluid);
             }
-        };
-    }
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-        if (this.parentWidget.isStocking()) return false;
+            if (this.lastBackground != background || this.lastItemShown != showItem) {
+                this.lastBackground = background;
+                this.lastItemShown = showItem;
+                this.itemSlot.style(style -> style.backgroundTexture(background));
+                this.fluidSlot.style(style -> style.backgroundTexture(showItem ? IGuiTexture.EMPTY : background));
+            }
 
-        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
+            var displayedItem = ItemStack.EMPTY;
 
-        if (slot.getConfig() == null || wheelDelta == 0 || !getRectangleBox().contains((int) mouseX, (int) mouseY)) {
-            return false;
+            if (isItem && stack.what() instanceof AEItemKey key) {
+                displayedItem = key.toStack(showAmount ? Math.max(1, GTMath.saturatedCast(stack.amount())) : 1);
+            }
+
+            this.itemSlot.setItem(displayedItem, false);
+
+            var displayedFluid = isFluid ? AEUtil.toFluidStack(stack) : FluidStack.EMPTY;
+
+            this.fluidSlot.setValue(displayedFluid, false);
+
+            var showFluidAmount = showAmount && isFluid;
+
+            if (this.lastAmountShown != showFluidAmount) {
+                this.lastAmountShown = showFluidAmount;
+                this.fluidSlot.amountLabel.setDisplay(showFluidAmount);
+            }
+
+            var fluidTooltips = !displayedFluid.isEmpty();
+
+            if (this.lastFluidTooltips != fluidTooltips) {
+                this.lastFluidTooltips = fluidTooltips;
+                this.fluidSlot.slotStyle(style -> style.showFluidTooltips(fluidTooltips));
+            }
         }
-
-        long current = slot.getConfig().amount();
-        long amount;
-
-        if (isCtrlDown()) {
-            amount = wheelDelta > 0 ? current * 2L : current / 2L;
-        } else {
-            amount = wheelDelta > 0 ? current + 1L : current - 1L;
-        }
-
-        if (amount > 0 && amount < Integer.MAX_VALUE + 1L) {
-            writeClientAction(AMOUNT_CHANGE_ID, buf -> buf.writeVarLong(amount));
-
-            return true;
-        }
-
-        return false;
-    }
-
-    @Nullable
-    private Object getXEIStack(@Nullable GenericStack stack, Position position) {
-        if (stack == null) return null;
-
-        if (stack.what() instanceof AEItemKey key) {
-            ItemStack itemStack = key.toStack(GTMath.saturatedCast(stack.amount()));
-
-            if (itemStack.isEmpty()) return null;
-
-            return switch (GTCEu.Mods.loadedXEI()) {
-                case JEI -> JEIPlugin.getItemIngredient(itemStack, position.x, position.y, 18, 18);
-                case REI -> EntryStacks.of(itemStack);
-                case EMI -> EmiStack.of(itemStack);
-                default -> itemStack;
-            };
-        }
-
-        FluidStack fluidStack = AEUtil.toFluidStack(stack);
-
-        if (fluidStack.isEmpty()) return null;
-
-        return switch (GTCEu.Mods.loadedXEI()) {
-            case JEI -> TankWidget.JEICallWrapper.getJEIFluidClickable(fluidStack, position, new Size(18, 18));
-            case REI -> EntryStacks.of(TankWidget.REICallWrapper.toREIStack(fluidStack));
-            case EMI -> ForgeEmiStack.of(fluidStack);
-            default -> fluidStack;
-        };
-    }
-
-    @Override
-    public List<Object> getXEIIngredients() {
-        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
-        List<Object> ingredients = new ArrayList<>();
-        Position position = getPosition();
-        Object config = getXEIStack(slot.getConfig(), position);
-        Object stock = getXEIStack(slot.getStock(), new Position(position.x, position.y + 18));
-
-        if (config != null) ingredients.add(config);
-        if (stock != null) ingredients.add(stock);
-
-        return ingredients;
-    }
-
-    @Nullable
-    @Override
-    public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
-        IConfigurableSlot slot = this.parentWidget.getDisplay(this.index);
-        Position position = getPosition();
-
-        if (mouseOverConfig(mouseX, mouseY)) {
-            return getXEIStack(slot.getConfig(), position);
-        }
-
-        if (mouseOverStock(mouseX, mouseY)) {
-            return getXEIStack(slot.getStock(), new Position(position.x, position.y + 18));
-        }
-
-        return null;
     }
 }

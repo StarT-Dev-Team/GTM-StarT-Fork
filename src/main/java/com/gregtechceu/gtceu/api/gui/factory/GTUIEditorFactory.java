@@ -1,52 +1,17 @@
 package com.gregtechceu.gtceu.api.gui.factory;
 
-import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.gui.editor.GTUIEditor;
+import com.lowdragmc.lowdraglib2.gui.editor.UIEditor;
+import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 
-import com.lowdragmc.lowdraglib.LDLib;
-import com.lowdragmc.lowdraglib.gui.factory.UIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import net.minecraft.server.level.ServerPlayer;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
-
-public class GTUIEditorFactory extends UIFactory<GTUIEditorFactory> implements IUIHolder {
+public class GTUIEditorFactory {
 
     public static final GTUIEditorFactory INSTANCE = new GTUIEditorFactory();
 
-    private GTUIEditorFactory() {
-        super(LDLib.location("gt_ui_editor"));
+    private GTUIEditorFactory() {}
+
+    public boolean openUI(ServerPlayer player) {
+        return PlayerUIMenuType.openUI(player, UIEditor.WINDOW_ID);
     }
-
-    @Override
-    protected ModularUI createUITemplate(GTUIEditorFactory holder, Player entityPlayer) {
-        return createUI(entityPlayer);
-    }
-
-    @Override
-    protected GTUIEditorFactory readHolderFromSyncData(FriendlyByteBuf syncData) {
-        return this;
-    }
-
-    @Override
-    protected void writeHolderToSyncData(FriendlyByteBuf syncData, GTUIEditorFactory holder) {}
-
-    @Override
-    public ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(this, entityPlayer).widget(new GTUIEditor());
-    }
-
-    @Override
-    public boolean isInvalid() {
-        return false;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return GTCEu.isClientThread();
-    }
-
-    @Override
-    public void markAsDirty() {}
 }

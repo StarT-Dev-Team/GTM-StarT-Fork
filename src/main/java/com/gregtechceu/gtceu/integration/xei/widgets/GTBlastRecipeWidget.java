@@ -8,7 +8,7 @@ import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -19,7 +19,7 @@ import java.util.List;
 
 public class GTBlastRecipeWidget extends GTCoilRecipeWidget {
 
-    private LabelWidget recipeTemperatureText;
+    private Label recipeTemperatureText;
 
     public GTBlastRecipeWidget(GTRecipe recipe) {
         super(recipe);
@@ -82,7 +82,7 @@ public class GTBlastRecipeWidget extends GTCoilRecipeWidget {
         updateRecipeTemperatureText();
     }
 
-    public void setRecipeTemperatureText(LabelWidget text) {
+    public void setRecipeTemperatureText(Label text) {
         recipeTemperatureText = text;
 
         updateRecipeTemperatureText();
@@ -93,17 +93,17 @@ public class GTBlastRecipeWidget extends GTCoilRecipeWidget {
 
         int machineTemp = GTRecipeModifiers.ebfMachineTemp(getSelectedCoil(), getTier());
 
-        recipeTemperatureText.setComponent(Component.translatable("gtceu.recipe.temperature.value",
+        recipeTemperatureText.setText(Component.translatable("gtceu.recipe.temperature.value",
                 Component.literal(FormattingUtil.formatNumbers(machineTemp) + "K")
                         .withStyle(ChatFormatting.AQUA))
                 .append(Component.literal("/" + FormattingUtil.formatNumbers(recipe.data.getInt("ebf_temp")) + "K")));
-        recipeTemperatureText.setHoverTooltips(LangHandler.getMultiLang("gtceu.recipe.temperature.tooltip",
+        recipeTemperatureText.style(style -> style.tooltips(LangHandler.getMultiLang("gtceu.recipe.temperature.tooltip",
                 FormattingUtil.formatNumbers(getSelectedCoil().getCoilTemperature()), GTValues.VNF[getTier()],
                 Component
                         .literal("+" +
                                 FormattingUtil.formatNumbers(machineTemp - getSelectedCoil().getCoilTemperature()) +
                                 "K")
                         .withStyle(ChatFormatting.GREEN))
-                .toArray(Component[]::new));
+                .toArray(Component[]::new)));
     }
 }

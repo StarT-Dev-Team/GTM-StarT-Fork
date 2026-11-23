@@ -5,7 +5,7 @@ import com.gregtechceu.gtceu.api.capability.IHPCACoolantProvider;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 
@@ -26,7 +26,7 @@ public class HPCACoolerPartMachine extends HPCAComponentPartMachine implements I
     }
 
     @Override
-    public ResourceTexture getComponentIcon() {
+    public IGuiTexture getComponentIcon() {
         return advanced ? GuiTextures.HPCA_ICON_ACTIVE_COOLER_COMPONENT : GuiTextures.HPCA_ICON_HEAT_SINK_COMPONENT;
     }
 

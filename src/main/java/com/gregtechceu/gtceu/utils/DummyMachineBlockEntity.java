@@ -7,7 +7,8 @@ import com.gregtechceu.gtceu.api.machine.trait.RecipeHandlerList;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 
-import com.lowdragmc.lowdraglib.syncdata.managed.MultiManagedStorage;
+import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
+import com.lowdragmc.lowdraglib2.syncdata.storage.MultiManagedStorage;
 
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -34,6 +35,8 @@ public class DummyMachineBlockEntity implements IMachineBlockEntity {
     @Getter
     @Setter
     private MachineRenderState renderState;
+    @Getter
+    private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
 
     // TODO: Fix the proxy parameter
     public DummyMachineBlockEntity(int tier, GTRecipeType type, Int2IntFunction tankScalingFunction,

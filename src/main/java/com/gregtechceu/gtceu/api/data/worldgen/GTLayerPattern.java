@@ -84,18 +84,18 @@ public class GTLayerPattern {
     public static class Layer {
 
         public static final Codec<Layer> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                        Codec.list(Codec.either(TargetBlockState.CODEC.listOf(), GTCEuAPI.materialManager.codec()))
-                                .fieldOf("targets")
-                                .forGetter(layer -> layer.targets),
-                        Codec.intRange(0, Integer.MAX_VALUE)
-                                .fieldOf("min_size")
-                                .forGetter(layer -> layer.minSize),
-                        Codec.intRange(0, Integer.MAX_VALUE)
-                                .fieldOf("max_size")
-                                .forGetter(layer -> layer.maxSize),
-                        Codec.intRange(0, Integer.MAX_VALUE)
-                                .fieldOf("weight")
-                                .forGetter(layer -> layer.weight))
+                Codec.list(Codec.either(TargetBlockState.CODEC.listOf(), GTCEuAPI.materialManager.codec()))
+                        .fieldOf("targets")
+                        .forGetter(layer -> layer.targets),
+                Codec.intRange(0, Integer.MAX_VALUE)
+                        .fieldOf("min_size")
+                        .forGetter(layer -> layer.minSize),
+                Codec.intRange(0, Integer.MAX_VALUE)
+                        .fieldOf("max_size")
+                        .forGetter(layer -> layer.maxSize),
+                Codec.intRange(0, Integer.MAX_VALUE)
+                        .fieldOf("weight")
+                        .forGetter(layer -> layer.weight))
                 .apply(instance, Layer::new));
 
         public final List<Either<List<TargetBlockState>, Material>> targets;

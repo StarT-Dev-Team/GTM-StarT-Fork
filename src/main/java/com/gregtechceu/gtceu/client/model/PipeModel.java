@@ -3,13 +3,13 @@ package com.gregtechceu.gtceu.client.model;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.blockentity.PipeBlockEntity;
 import com.gregtechceu.gtceu.client.util.ModelUtils;
+import com.gregtechceu.gtceu.client.util.StaticFaceBakery;
 import com.gregtechceu.gtceu.common.data.models.GTModels;
 import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.memoization.GTMemoizer;
 import com.gregtechceu.gtceu.utils.memoization.MemoizedSupplier;
 
-import com.lowdragmc.lowdraglib.client.bakedpipeline.FaceQuad;
-import com.lowdragmc.lowdraglib.client.renderer.IItemRendererProvider;
+import com.lowdragmc.lowdraglib2.client.renderer.IItemRendererProvider;
 
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -248,30 +248,34 @@ public class PipeModel {
         if (side != null) {
             if (thickness == 1) { // full block
                 List<BakedQuad> quads = new LinkedList<>();
-                quads.add(FaceQuad.builder(side, sideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
+                quads.add(StaticFaceBakery.builder(side, sideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
                 if (secondarySideSprite != null) {
-                    quads.add(FaceQuad.builder(side, secondarySideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
+                    quads.add(StaticFaceBakery.builder(side, secondarySideSprite).cube(coreCube).cubeUV().tintIndex(0)
+                            .bake());
                 }
                 return quads;
             }
 
             if (PipeBlockEntity.isConnected(connections, side)) { // side connected
                 List<BakedQuad> quads = new LinkedList<>();
-                quads.add(FaceQuad.builder(side, endSprite).cube(sideCubes.get(side).inflate(-0.001)).cubeUV()
+                quads.add(StaticFaceBakery.builder(side, endSprite).cube(sideCubes.get(side).inflate(-0.001)).cubeUV()
                         .tintIndex(1).bake());
                 if (secondaryEndSprite != null) {
-                    quads.add(FaceQuad.builder(side, secondaryEndSprite).cube(sideCubes.get(side)).cubeUV().tintIndex(1)
+                    quads.add(StaticFaceBakery.builder(side, secondaryEndSprite).cube(sideCubes.get(side)).cubeUV()
+                            .tintIndex(1)
                             .bake());
                 }
                 if (endOverlaySprite != null) {
-                    quads.add(FaceQuad.builder(side, endOverlaySprite).cube(sideCubes.get(side)).cubeUV().tintIndex(0)
+                    quads.add(StaticFaceBakery.builder(side, endOverlaySprite).cube(sideCubes.get(side)).cubeUV()
+                            .tintIndex(0)
                             .bake());
                 }
                 if (sideOverlaySprite != null) {
                     for (Direction face : GTUtil.DIRECTIONS) {
                         if (face.getAxis() != side.getAxis()) {
-                            quads.add(FaceQuad.builder(face, sideOverlaySprite).cube(sideCubes.get(side)).cubeUV()
-                                    .tintIndex(2).bake());
+                            quads.add(
+                                    StaticFaceBakery.builder(face, sideOverlaySprite).cube(sideCubes.get(side)).cubeUV()
+                                            .tintIndex(2).bake());
                         }
                     }
                 }
@@ -279,7 +283,7 @@ public class PipeModel {
                 if (borderMask != 0) {
                     var restrictorSprite = getRestrictorSprite(borderMask);
                     if (restrictorSprite != null) {
-                        quads.add(FaceQuad.builder(side, restrictorSprite).cube(sideCubes.get(side)).cubeUV()
+                        quads.add(StaticFaceBakery.builder(side, restrictorSprite).cube(sideCubes.get(side)).cubeUV()
                                 .bake());
                     }
                 }
@@ -300,23 +304,24 @@ public class PipeModel {
                 for (Direction facing : GTUtil.DIRECTIONS) {
                     if (facing.getAxis() != face.getAxis()) {
                         if (PipeBlockEntity.isConnected(connections, facing)) {
-                            quads.add(FaceQuad.builder(face, sideSprite).cube(sideCubes.get(facing)).cubeUV()
+                            quads.add(StaticFaceBakery.builder(face, sideSprite).cube(sideCubes.get(facing)).cubeUV()
                                     .tintIndex(0).bake());
                             if (secondarySideSprite != null) {
-                                quads.add(FaceQuad.builder(face, secondarySideSprite).cube(sideCubes.get(facing))
-                                        .cubeUV().tintIndex(0).bake());
+                                quads.add(
+                                        StaticFaceBakery.builder(face, secondarySideSprite).cube(sideCubes.get(facing))
+                                                .cubeUV().tintIndex(0).bake());
                             }
                             if (sideOverlaySprite != null) {
-                                quads.add(FaceQuad.builder(face, sideOverlaySprite)
+                                quads.add(StaticFaceBakery.builder(face, sideOverlaySprite)
                                         .cube(sideCubes.get(facing).inflate(0.001)).cubeUV().tintIndex(2).bake());
                             }
                             int borderMask = computeBorderMask(blockedConnections, connections, face);
                             if (borderMask != 0) {
                                 var restrictorSprite = getRestrictorSprite(borderMask);
                                 if (restrictorSprite != null) {
-                                    quads.add(FaceQuad.builder(face, restrictorSprite)
+                                    quads.add(StaticFaceBakery.builder(face, restrictorSprite)
                                             .cube(coreCube).cubeUV().bake());
-                                    quads.add(FaceQuad.builder(face, restrictorSprite)
+                                    quads.add(StaticFaceBakery.builder(face, restrictorSprite)
                                             .cube(sideCubes.get(facing)).cubeUV().bake());
                                 }
                             }
@@ -330,12 +335,12 @@ public class PipeModel {
 
     @OnlyIn(Dist.CLIENT)
     protected void bakeCoreFace(List<BakedQuad> quads, Direction face, int connections) {
-        quads.add(FaceQuad.builder(face, getSideSprite()).cube(coreCube).cubeUV().tintIndex(0).bake());
+        quads.add(StaticFaceBakery.builder(face, getSideSprite()).cube(coreCube).cubeUV().tintIndex(0).bake());
 
         var secondarySideSprite = getSecondarySideSprite();
 
         if (secondarySideSprite != null) {
-            quads.add(FaceQuad.builder(face, secondarySideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
+            quads.add(StaticFaceBakery.builder(face, secondarySideSprite).cube(coreCube).cubeUV().tintIndex(0).bake());
         }
     }
 

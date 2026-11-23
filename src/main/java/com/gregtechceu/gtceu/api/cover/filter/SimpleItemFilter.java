@@ -1,12 +1,12 @@
 package com.gregtechceu.gtceu.api.cover.filter;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.PhantomSlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
-import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
+import com.gregtechceu.gtceu.api.gui.widget.PhantomItemSlot;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +14,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -97,41 +98,28 @@ public class SimpleItemFilter implements ItemFilter {
         onUpdated.accept(this);
     }
 
-    public WidgetGroup openConfigurator(int x, int y) {
-        WidgetGroup group = new WidgetGroup(x, y, 18 * 3 + 25, 18 * 3); // 80 55
+    public UIElement openConfigurator() {
+        var group = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(5));
+        var grid = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW));
         for (int i = 0; i < 3; i++) {
+            var column = new UIElement();
             for (int j = 0; j < 3; j++) {
                 final int index = i * 3 + j;
-
-                var handler = new CustomItemStackHandler(matches[index]);
-
-                var slot = new PhantomSlotWidget(handler, 0, i * 18, j * 18) {
-
-                    @Override
-                    public void updateScreen() {
-                        super.updateScreen();
-                        setMaxStackSize(maxStackSize);
-                    }
-
-                    @Override
-                    public void detectAndSendChanges() {
-                        super.detectAndSendChanges();
-                        setMaxStackSize(maxStackSize);
-                    }
-                };
-
-                slot.setChangeListener(() -> {
-                    matches[index] = handler.getStackInSlot(0);
+                var slot = new PhantomItemSlot(() -> matches[index], stack -> {
+                    matches[index] = stack;
                     onUpdated.accept(this);
-                }).setBackground(GuiTextures.SLOT);
-
-                group.addWidget(slot);
+                });
+                slot.addEventListener(UIEvents.TICK, event -> slot.setMaxStackSize(maxStackSize));
+                slot.style(style -> style.backgroundTexture(GuiTextures.SLOT));
+                column.addChild(slot);
             }
+            grid.addChild(column);
         }
-        group.addWidget(new ToggleButtonWidget(18 * 3 + 5, 0, 20, 20,
-                GuiTextures.BUTTON_BLACKLIST, this::isBlackList, this::setBlackList));
-        group.addWidget(new ToggleButtonWidget(18 * 3 + 5, 20, 20, 20,
-                GuiTextures.BUTTON_FILTER_NBT, this::isIgnoreNbt, this::setIgnoreNbt));
+        var buttons = new UIElement();
+        buttons.addChildren(
+                new ToggleButton(GuiTextures.BUTTON_BLACKLIST, this::isBlackList, this::setBlackList),
+                new ToggleButton(GuiTextures.BUTTON_FILTER_NBT, this::isIgnoreNbt, this::setIgnoreNbt));
+        group.addChildren(grid, buttons);
         return group;
     }
 

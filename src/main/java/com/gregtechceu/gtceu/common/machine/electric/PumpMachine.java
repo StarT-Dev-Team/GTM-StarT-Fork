@@ -4,8 +4,7 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TieredEnergyMachine;
@@ -15,21 +14,23 @@ import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DropSaved;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DropSaved;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
@@ -43,6 +44,7 @@ import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.wrappers.BucketPickupHandlerWrapper;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.Getter;
@@ -62,8 +64,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class PumpMachine extends TieredEnergyMachine implements IAutoOutputFluid, IUIMachine, IMachineLife {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(PumpMachine.class,
-            TieredEnergyMachine.MANAGED_FIELD_HOLDER);
     public static final int BASE_PUMP_RADIUS = 16;
     public static final int EXTRA_PUMP_RADIUS = 4;
     public static final int PUMP_SPEED_BASE = 80;
@@ -90,11 +90,6 @@ public class PumpMachine extends TieredEnergyMachine implements IAutoOutputFluid
     //////////////////////////////////////
     // ***** Initialization *****//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     protected NotifiableFluidTank createCacheFluidHandler(Object... args) {
         return new NotifiableFluidTank(this, 1, 16 * FluidType.BUCKET_VOLUME * Math.max(1, getTier()), IO.NONE, IO.OUT);
     }
@@ -569,28 +564,53 @@ public class PumpMachine extends TieredEnergyMachine implements IAutoOutputFluid
     //////////////////////////////////////
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(176, 166, this, entityPlayer)
-                .background(GuiTextures.BACKGROUND)
-                .widget(new ImageWidget(7, 16, 81, 55, GuiTextures.DISPLAY))
-                .widget(new LabelWidget(11, 20, "gtceu.gui.fluid_amount"))
-                .widget(new LabelWidget(11, 30, () -> cache.getFluidInTank(0).getAmount() + "").setTextColor(-1)
-                        .setDropShadow(true))
-                .widget(new LabelWidget(6, 6, getBlockState().getBlock().getDescriptionId()))
-                .widget(new TankWidget(cache.getStorages()[0], 90, 35, true, true)
-                        .setBackground(GuiTextures.FLUID_SLOT))
-                .widget(new ToggleButtonWidget(7, 53, 18, 18,
-                        GuiTextures.BUTTON_FLUID_OUTPUT, this::isAutoOutputFluids, this::setAutoOutputFluids)
-                        .setShouldUseBaseBackground()
-                        .setTooltipText("gtceu.gui.fluid_auto_output.tooltip"))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.SLOT, 7, 84, true));
+        var area = new UIElement();
+        area.layout(layout -> layout.height(82));
+
+        var display = new UIElement();
+        display.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(16).width(81).height(55));
+        display.style(style -> style.backgroundTexture(GuiTextures.DISPLAY));
+
+        var amountTitle = new Label();
+        amountTitle.setText(Component.translatable("gtceu.gui.fluid_amount"));
+        amountTitle.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(11).top(20));
+
+        var amount = new Label();
+        amount.textStyle(style -> style.textColor(-1).textShadow(true));
+        amount.bind(DataBindingBuilder.componentS2C(
+                () -> Component.literal(String.valueOf(cache.getFluidInTank(0).getAmount()))).build());
+        amount.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(11).top(30));
+
+        var title = new Label();
+        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(6).top(6));
+
+        var tank = new FluidSlot().bind(cache.getStorages()[0], 0);
+        tank.setAllowClickFilled(true);
+        tank.setAllowClickDrained(true);
+        tank.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(90).top(35));
+        tank.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+
+        var autoOutput = new ToggleButton(GuiTextures.BUTTON_FLUID_OUTPUT, this::isAutoOutputFluids,
+                this::setAutoOutputFluids)
+                .setShouldUseBaseBackground()
+                .setTooltipText("gtceu.gui.fluid_auto_output.tooltip");
+        autoOutput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(53));
+
+        area.addChildren(display, amountTitle, amount, title, tank, autoOutput);
+
+        var root = UITemplate.panel();
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(7));
+        root.addChildren(area, UITemplate.playerInventory());
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     //////////////////////////////////////
     // ******* Rendering ********//
     //////////////////////////////////////
     @Override
-    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
-                                              Direction side) {
+    public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                            Direction side) {
         if (toolTypes.contains(GTToolType.WRENCH)) {
             if (player.isShiftKeyDown()) {
                 if (hasFrontFacing() && side != this.getFrontFacing() && isFacingValid(side)) {

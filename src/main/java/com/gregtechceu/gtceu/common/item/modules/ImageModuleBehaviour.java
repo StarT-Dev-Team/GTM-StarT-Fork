@@ -9,10 +9,9 @@ import com.gregtechceu.gtceu.common.machine.multiblock.electric.monitor.MonitorG
 import com.gregtechceu.gtceu.common.network.GTNetwork;
 import com.gregtechceu.gtceu.common.network.packets.SCPacketMonitorGroupNBTChange;
 
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.TextFieldWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 
 import net.minecraft.world.item.ItemStack;
 
@@ -24,20 +23,20 @@ public class ImageModuleBehaviour implements IMonitorModuleItem {
     }
 
     @Override
-    public Widget createUIWidget(ItemStack stack, CentralMonitorMachine machine, MonitorGroup group) {
-        WidgetGroup builder = new WidgetGroup();
-        TextFieldWidget textField = new TextFieldWidget(0, 0, 100, 10, null, null);
-        textField.setCurrentString(getUrl(stack));
+    public UIElement createUIWidget(ItemStack stack, CentralMonitorMachine machine, MonitorGroup group) {
+        var builder = new UIElement().layout(layout -> layout.gapAll(3));
+        var textField = new TextField().setAnyString();
+        textField.layout(layout -> layout.width(100).height(10));
+        textField.setValue(getUrl(stack), false);
 
-        ButtonWidget saveButton = new ButtonWidget(-40, 22, 20, 20, click -> {
-            if (!click.isRemote) return;
-
-            setUrl(stack, textField.getCurrentString());
+        var saveButton = new Button().noText();
+        saveButton.layout(layout -> layout.width(20).height(20));
+        saveButton.buttonStyle(style -> style.baseTexture(GuiTextures.BUTTON_CHECK));
+        saveButton.setOnClick(event -> {
+            setUrl(stack, textField.getValue());
             GTNetwork.sendToServer(new SCPacketMonitorGroupNBTChange(stack, group, machine));
         });
-        saveButton.setButtonTexture(GuiTextures.BUTTON_CHECK);
-        builder.addWidget(textField);
-        builder.addWidget(saveButton);
+        builder.addChildren(textField, saveButton);
         return builder;
     }
 

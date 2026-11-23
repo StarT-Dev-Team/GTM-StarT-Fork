@@ -3,7 +3,7 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ComponentPanel;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.item.tool.ToolHelper;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
@@ -11,7 +11,6 @@ import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMaintenanceMachine;
-import com.gregtechceu.gtceu.api.machine.multiblock.part.MultiblockPartMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.part.TieredPartMachine;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
@@ -19,11 +18,12 @@ import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -42,6 +42,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
 
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -59,9 +60,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MaintenanceHatchPartMachine extends TieredPartMachine
                                          implements IMachineLife, IMaintenanceMachine, IInteractedMachine {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            MaintenanceHatchPartMachine.class, MultiblockPartMachine.MANAGED_FIELD_HOLDER);
 
     private static final float MAX_DURATION_MULTIPLIER = 1.1f;
     private static final float MIN_DURATION_MULTIPLIER = 0.9f;
@@ -101,11 +99,6 @@ public class MaintenanceHatchPartMachine extends TieredPartMachine
     //////////////////////////////////////
     protected NotifiableItemStackHandler createInventory() {
         return new NotifiableItemStackHandler(this, 1, IO.BOTH, IO.BOTH);
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -346,42 +339,59 @@ public class MaintenanceHatchPartMachine extends TieredPartMachine
     // ******** GUI *********//
     //////////////////////////////////////
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group;
-        if (isConfigurable) {
-            group = new WidgetGroup(0, 0, 150, 70);
-            group.addWidget(new DraggableScrollableWidgetGroup(4, 4, 150 - 8, 70 - 8).setBackground(GuiTextures.DISPLAY)
-                    .addWidget(new ComponentPanelWidget(4, 5, list -> {
-                        list.add(getTextWidgetText("duration", this::getDurationMultiplier));
-                        list.add(getTextWidgetText("time", this::getTimeMultiplier));
-                        var buttonText = Component.translatable("gtceu.maintenance.configurable_duration.modify");
-                        buttonText.append(" ");
-                        buttonText.append(ComponentPanelWidget.withButton(Component.literal("[-]"), "sub"));
-                        buttonText.append(" ");
-                        buttonText.append(ComponentPanelWidget.withButton(Component.literal("[+]"), "add"));
-                        list.add(buttonText);
-                    }).setMaxWidthLimit(150 - 8 - 8 - 4).clickHandler((componentData, clickData) -> {
-                        if (!clickData.isRemote) {
-                            if (componentData.equals("sub")) {
-                                durationMultiplier = Mth.clamp(durationMultiplier - DURATION_ACTION_AMOUNT,
-                                        MIN_DURATION_MULTIPLIER, MAX_DURATION_MULTIPLIER);
-                            } else if (componentData.equals("add")) {
-                                durationMultiplier = Mth.clamp(durationMultiplier + DURATION_ACTION_AMOUNT,
-                                        MIN_DURATION_MULTIPLIER, MAX_DURATION_MULTIPLIER);
-                            }
-                        }
-                    })));
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2).paddingAll(4));
+        group.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
 
-        } else {
-            group = new WidgetGroup(0, 0, 8 + 18, 8 + 20 + 18);
+        if (isConfigurable) {
+            var panel = new ComponentPanel(list -> {
+                list.add(getTextWidgetText("duration", this::getDurationMultiplier));
+                list.add(getTextWidgetText("time", this::getTimeMultiplier));
+                var buttonText = Component.translatable("gtceu.maintenance.configurable_duration.modify");
+                buttonText.append(" ");
+                buttonText.append(ComponentPanel.withButton(Component.literal("[-]"), "sub"));
+                buttonText.append(" ");
+                buttonText.append(ComponentPanel.withButton(Component.literal("[+]"), "add"));
+                list.add(buttonText);
+            }).setMaxWidthLimit(150 - 8 - 8 - 4).clickHandler((componentData, clickData) -> {
+                if (componentData.equals("sub")) {
+                    durationMultiplier = Mth.clamp(durationMultiplier - DURATION_ACTION_AMOUNT,
+                            MIN_DURATION_MULTIPLIER, MAX_DURATION_MULTIPLIER);
+                } else if (componentData.equals("add")) {
+                    durationMultiplier = Mth.clamp(durationMultiplier + DURATION_ACTION_AMOUNT,
+                            MIN_DURATION_MULTIPLIER, MAX_DURATION_MULTIPLIER);
+                }
+            });
+
+            var scroller = new ScrollerView();
+            scroller.layout(layout -> layout.width(142).height(62));
+            scroller.style(style -> style.backgroundTexture(GuiTextures.DISPLAY));
+            scroller.addScrollViewChild(panel);
+            group.addChild(scroller);
         }
-        group.addWidget(new SlotWidget(itemStackHandler, 0, group.getSize().width - 4 - 18, 4)
-                .setBackgroundTexture(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.DUCT_TAPE_OVERLAY))
-                .setHoverTooltips("gtceu.machine.maintenance_hatch_tape_slot.tooltip"));
-        group.addWidget(new ButtonWidget(group.getSize().width - 4 - 18, 4 + 20, 18, 18, GuiTextures.MAINTENANCE_BUTTON,
-                data -> fixMaintenanceProblems(group.getGui().entityPlayer))
-                .setHoverTooltips("gtceu.machine.maintenance_hatch_tool_slot.tooltip"));
-        group.setBackground(GuiTextures.BACKGROUND_INVERSE);
+
+        var slots = new UIElement();
+        slots.layout(layout -> layout.gapAll(2));
+        var tapeSlot = new ItemSlot().bind(itemStackHandler, 0);
+        tapeSlot.slotStyle(style -> style.slotOverlay(GuiTextures.DUCT_TAPE_OVERLAY));
+        tapeSlot.style(style -> style.tooltips(
+                Component.translatable("gtceu.machine.maintenance_hatch_tape_slot.tooltip")));
+
+        var fixButton = new Button();
+        fixButton.noText();
+        fixButton.layout(layout -> layout.width(18).height(18));
+        fixButton.buttonStyle(style -> style.baseTexture(GuiTextures.MAINTENANCE_BUTTON));
+        fixButton.style(style -> style.tooltips(
+                Component.translatable("gtceu.machine.maintenance_hatch_tool_slot.tooltip")));
+        fixButton.setOnServerClick(event -> {
+            var modularUI = fixButton.getModularUI();
+            if (modularUI != null) {
+                fixMaintenanceProblems(modularUI.player);
+            }
+        });
+        slots.addChildren(tapeSlot, fixButton);
+        group.addChild(slots);
         return group;
     }
 

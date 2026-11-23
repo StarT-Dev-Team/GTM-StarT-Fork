@@ -1,10 +1,8 @@
 package com.gregtechceu.gtceu.api.transfer.item;
 
-import com.lowdragmc.lowdraglib.syncdata.IContentChangeAware;
-import com.lowdragmc.lowdraglib.syncdata.ITagSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.IContentChangeAware;
 
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
@@ -15,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Predicate;
 
 public class CustomItemStackHandler extends ItemStackHandler
-                                    implements IContentChangeAware, ITagSerializable<CompoundTag> {
+                                    implements IContentChangeAware {
 
     @Getter
     @Setter

@@ -23,12 +23,10 @@ import com.gregtechceu.gtceu.common.cover.MachineControllerCover;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.syncdata.IEnhancedManaged;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.UpdateListener;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.UpdateListener;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -49,7 +47,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.*;
 
-public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWorkable, IFancyTooltip {
+public class RecipeLogic extends MachineTrait implements IWorkable, IFancyTooltip {
 
     public enum Status implements StringRepresentable {
 
@@ -58,17 +56,19 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
         WAITING("waiting"),
         SUSPEND("suspend");
 
-        @Getter
         private final String serializedName;
 
         Status(String name) {
             this.serializedName = name;
         }
+
+        @Override
+        public String getSerializedName() {
+            return serializedName;
+        }
     }
 
     public static final EnumProperty<RecipeLogic.Status> STATUS_PROPERTY = GTMachineModelProperties.RECIPE_LOGIC_STATUS;
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(RecipeLogic.class);
-
     public final IRecipeLogicMachine machine;
     public List<GTRecipe> lastFailedMatches;
 
@@ -149,13 +149,13 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
     }
 
     @SuppressWarnings("unused")
-    protected void onStatusSynced(Status newValue, Status oldValue) {
+    protected void onStatusSynced(Status oldValue, Status newValue) {
         scheduleRenderUpdate();
         updateSound();
     }
 
     @SuppressWarnings("unused")
-    protected void onActiveSynced(boolean newActive, boolean oldActive) {
+    protected void onActiveSynced(boolean oldActive, boolean newActive) {
         scheduleRenderUpdate();
     }
 
@@ -595,11 +595,6 @@ public class RecipeLogic extends MachineTrait implements IEnhancedManaged, IWork
 
     // Remains for legacy + for subclasses
     public void inValid() {}
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 
     //////////////////////////////////////
     // ******** MISC *********//

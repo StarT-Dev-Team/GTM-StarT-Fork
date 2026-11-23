@@ -8,20 +8,20 @@ import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.transfer.fluid.IFluidHandlerModifiable;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.syncdata.IEnhancedManaged;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.ReadOnlyManaged;
-import com.lowdragmc.lowdraglib.syncdata.annotation.UpdateListener;
-import com.lowdragmc.lowdraglib.syncdata.field.FieldManagedStorage;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.syncdata.managed.IRef;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.ReadOnlyManaged;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.UpdateListener;
+import com.lowdragmc.lowdraglib2.syncdata.holder.blockentity.IBlockEntityManaged;
+import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
@@ -30,19 +30,22 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
-public class MachineCoverContainer implements ICoverable, IEnhancedManaged {
+public class MachineCoverContainer implements ICoverable, IBlockEntityManaged {
 
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MachineCoverContainer.class);
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
+
+    @Override
+    public FieldManagedStorage getSyncStorage() {
+        return syncStorage;
+    }
+
     @Getter
     private final MetaMachine machine;
     @DescSynced
     @Persisted
     @UpdateListener(methodName = "onCoverSet")
-    @ReadOnlyManaged(onDirtyMethod = "onCoverDirty",
-                     serializeMethod = "serializeCoverUid",
-                     deserializeMethod = "deserializeCoverUid")
+    @ReadOnlyManaged(serializeMethod = "serializeCoverUid", deserializeMethod = "deserializeCoverUid")
     private CoverBehavior up, down, north, south, west, east;
 
     public MachineCoverContainer(MetaMachine machine) {
@@ -50,23 +53,20 @@ public class MachineCoverContainer implements ICoverable, IEnhancedManaged {
     }
 
     @SuppressWarnings("unused")
-    private void onCoverSet(CoverBehavior newValue, CoverBehavior oldValue) {
+    private void onCoverSet(CoverBehavior oldValue, CoverBehavior newValue) {
         if (newValue != oldValue && (newValue == null || oldValue == null)) {
             scheduleRenderUpdate();
         }
     }
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
+    public BlockEntity asBlockEntity() {
+        return machine.asBlockEntity();
     }
 
     @Override
-    public void onChanged() {
-        var level = getLevel();
-        if (level != null && !level.isClientSide && level.getServer() != null) {
-            level.getServer().execute(this::markDirty);
-        }
+    public void notifyPersistence() {
+        machine.notifyPersistence();
     }
 
     @Override
@@ -191,19 +191,7 @@ public class MachineCoverContainer implements ICoverable, IEnhancedManaged {
     }
 
     @SuppressWarnings("unused")
-    private boolean onCoverDirty(CoverBehavior coverBehavior) {
-        if (coverBehavior != null) {
-            for (IRef ref : coverBehavior.getSyncStorage().getNonLazyFields()) {
-                ref.update();
-            }
-            return coverBehavior.getSyncStorage().hasDirtySyncFields() ||
-                    coverBehavior.getSyncStorage().hasDirtyPersistedFields();
-        }
-        return false;
-    }
-
-    @SuppressWarnings("unused")
-    private CompoundTag serializeCoverUid(CoverBehavior coverBehavior) {
+    private Tag serializeCoverUid(CoverBehavior coverBehavior) {
         var uid = new CompoundTag();
         uid.putString("id", GTRegistries.COVERS.getKey(coverBehavior.coverDefinition).toString());
         uid.putInt("side", coverBehavior.attachedSide.ordinal());
@@ -211,7 +199,8 @@ public class MachineCoverContainer implements ICoverable, IEnhancedManaged {
     }
 
     @SuppressWarnings("unused")
-    private CoverBehavior deserializeCoverUid(CompoundTag uid) {
+    private CoverBehavior deserializeCoverUid(Tag tag) {
+        var uid = (CompoundTag) tag;
         var definitionId = new ResourceLocation(uid.getString("id"));
         var side = GTUtil.DIRECTIONS[uid.getInt("side")];
         var definition = GTRegistries.COVERS.get(definitionId);

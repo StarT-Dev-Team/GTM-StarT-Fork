@@ -3,36 +3,35 @@ package com.gregtechceu.gtceu.api.gui.fancy;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.gui.animation.Animation;
-import com.lowdragmc.lowdraglib.gui.animation.Transform;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
-import com.lowdragmc.lowdraglib.utils.interpolate.Eases;
+import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Transform2D;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.style.PropertyRegistry;
+import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
+import com.lowdragmc.lowdraglib2.gui.util.WindowDragHelper;
+import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-
-import com.mojang.blaze3d.systems.RenderSystem;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
+import it.unimi.dsi.fastutil.floats.FloatObjectPair;
 import lombok.Getter;
 import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-public class ConfiguratorPanel extends WidgetGroup {
+public class ConfiguratorPanel extends UIElement {
+
+    public static final int TAB_SIZE = 24;
 
     @Getter
     protected List<Tab> tabs = new ArrayList<>();
@@ -44,381 +43,215 @@ public class ConfiguratorPanel extends WidgetGroup {
     @Setter
     protected IGuiTexture texture = GuiTextures.BACKGROUND;
 
-    public ConfiguratorPanel(int x, int y) {
-        super(x, y, 24, 0);
+    public ConfiguratorPanel() {
+        addClass("gt-configurator-panel");
+        layout(l -> l.width(TAB_SIZE).gapAll(2).justifyContent(AlignContent.FLEX_END));
     }
 
     public void clear() {
-        clearAllWidgets();
+        collapseTab();
+        for (var tab : new ArrayList<>(getChildren())) {
+            removeChild(tab);
+        }
         tabs.clear();
-        expanded = null;
     }
 
     public int getTabSize() {
-        return getSize().width;
+        return TAB_SIZE;
     }
 
     public void attachConfigurators(IFancyConfigurator... fancyConfigurators) {
         for (IFancyConfigurator fancyConfigurator : fancyConfigurators) {
             var tab = new Tab(fancyConfigurator);
-            tab.setBackground(texture);
             tabs.add(tab);
-            addWidgetAnima(tab, new Transform()
-                    .scale(0)
-                    .duration(getAnimationTime())
-                    .ease(Eases.EaseQuadOut));
+            addChild(tab);
         }
-        setSize(new Size(getSize().width, Math.max(0, tabs.size() * (getTabSize() + 2) - 2)));
     }
 
     public void expandTab(Tab tab) {
-        tab.expand();
-        int i = 0;
-        for (Tab otherTab : tabs) {
-            if (otherTab != tab) {
-                otherTab.collapseTo(0, i++ * (getTabSize() + 2));
-            }
+        if (expanded != null && expanded != tab) {
+            var previous = expanded;
+            expanded = null;
+            previous.collapse();
         }
         expanded = tab;
+        tab.expand();
     }
 
     public void collapseTab() {
-        if (expanded != null) {
-            for (int i = 0; i < tabs.size(); i++) {
-                tabs.get(i).collapseTo(0, i * (getTabSize() + 2));
-            }
-            if (expanded instanceof FloatingTab) {
-                expanded.collapseTo(0, 0);
-            }
-        }
+        var tab = expanded;
         expanded = null;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    protected void drawWidgetsBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        for (Widget widget : widgets) {
-            if (widget.isVisible() && widget != expanded) {
-                RenderSystem.setShaderColor(1, 1, 1, 1);
-                RenderSystem.enableBlend();
-                if (widget.inAnimate()) {
-                    widget.getAnimation().drawInBackground(graphics, mouseX, mouseY, partialTicks);
-                } else {
-                    widget.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-                }
-            }
+        if (tab != null) {
+            tab.collapse();
         }
-        if (expanded != null && expanded.isVisible()) {
-            graphics.pose().pushPose();
-            graphics.pose().translate(0, 0, 300);
-            RenderSystem.setShaderColor(1, 1, 1, 1);
-            RenderSystem.enableBlend();
-            if (expanded.inAnimate()) {
-                expanded.getAnimation().drawInBackground(graphics, mouseX, mouseY, partialTicks);
-            } else {
-                expanded.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-            }
-            graphics.pose().popPose();
-        }
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-
-    protected void drawWidgetsForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // remove previous tooltip
-        if (isMouseOverElement(mouseX, mouseY)) {
-            gui.getModularUIGui().setHoverTooltip(Collections.emptyList(), ItemStack.EMPTY, null, null);
-        }
-        for (Widget widget : widgets) {
-            if (widget.isVisible() && widget != expanded) {
-                RenderSystem.setShaderColor(1, 1, 1, 1);
-                RenderSystem.enableBlend();
-                if (widget.inAnimate()) {
-                    widget.getAnimation().drawInForeground(graphics, mouseX, mouseY, partialTicks);
-                } else {
-                    widget.drawInForeground(graphics, mouseX, mouseY, partialTicks);
-                }
-            }
-        }
-        if (expanded != null && expanded.isVisible()) {
-            RenderSystem.setShaderColor(1, 1, 1, 1);
-            RenderSystem.enableBlend();
-            if (expanded.inAnimate()) {
-                expanded.getAnimation().drawInForeground(graphics, mouseX, mouseY, partialTicks);
-            } else {
-                expanded.drawInForeground(graphics, mouseX, mouseY, partialTicks);
-            }
-        }
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (expanded != null && expanded.isVisible() && expanded.isActive() &&
-                expanded.mouseClicked(mouseX, mouseY, button)) {
-            return true;
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     public FloatingTab createFloatingTab(IFancyConfigurator configurator) {
         return new FloatingTab(configurator);
     }
 
-    public class Tab extends WidgetGroup {
+    public class Tab extends UIElement {
 
+        @Getter
         protected final IFancyConfigurator configurator;
-        protected final ButtonWidget button;
+        @Getter
+        protected final UIElement button;
         @Nullable
-        protected final WidgetGroup view;
-        // dragging
-        protected double lastDeltaX, lastDeltaY;
-        protected int dragOffsetX, dragOffsetY;
-        protected boolean isDragging;
+        @Getter
+        protected final UIElement view;
 
         public Tab(IFancyConfigurator configurator) {
-            super(0, tabs.size() * (getTabSize() + 2), getTabSize(), getTabSize());
             this.configurator = configurator;
-            this.button = new ButtonWidget(0, 0, getTabSize(), getTabSize(), null, this::onClick) {
+            addClass("gt-configurator-tab");
+            layout(l -> l.width(getTabSize()).height(getTabSize()));
+            style(s -> s.background(texture));
 
-                @Override
-                public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-                    if (!(configurator instanceof IFancyCustomMouseWheelAction hasActions)) return false;
-                    if (isMouseOverElement(mouseX, mouseY))
-                        return hasActions.mouseWheelMove(this::writeClientAction, mouseX, mouseY, wheelDelta);
-                    return false;
-                }
+            this.button = createIcon();
+            addChild(button);
 
-                @Override
-                public void handleClientAction(int id, FriendlyByteBuf buffer) {
-                    if (configurator instanceof IFancyCustomClientActionHandler handler && id > 1)
-                        handler.handleClientAction(id, buffer);
-                    else
-                        super.handleClientAction(id, buffer);
-                }
-            };
-            if (configurator instanceof IFancyConfiguratorButton) {
+            if (configurator instanceof IFancyConfiguratorButton fancyButton) {
                 this.view = null;
-                this.addWidget(button);
-            } else {
-                var widget = configurator.createConfigurator();
-                widget.setSelfPosition(new Position(border, getTabSize()));
-
-                this.view = new WidgetGroup(0, 0, 0, 0) {
-
-                    @Override
-                    protected void onChildSizeUpdate(Widget child) {
-                        super.onChildSizeUpdate(child);
-                        if (widget == child) {
-                            this.setSize(new Size(widget.getSize().width + border * 2,
-                                    widget.getSize().height + getTabSize() + border));
-                        }
+                button.addEventListener(UIEvents.MOUSE_DOWN, e -> UISoundUtils.playButtonClickSound());
+                button.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
+                    if (e.button == 2 && configurator instanceof IFancyCustomMiddleClickAction middleAction) {
+                        middleAction.onMiddleClick();
+                    } else {
+                        fancyButton.onClick(e);
                     }
-                };
-
-                this.view.setVisible(false);
-                this.view.setActive(false);
-                this.view.setSize(new Size(widget.getSize().width + border * 2,
-                        widget.getSize().height + button.getSize().height + border));
-                this.view.addWidget(widget);
-                this.view.addWidget(new ImageWidget(border + 5, border, widget.getSize().width - getTabSize() - 5,
-                        getTabSize() - border,
-                        new TextTexture(configurator.getTitle().getString())
-                                .setType(TextTexture.TextType.LEFT_HIDE)
-                                .setWidth(widget.getSize().width - getTabSize())));
-                this.addWidget(button);
-                this.addWidget(view);
-            }
-        }
-
-        @Override
-        public void writeInitialData(FriendlyByteBuf buffer) {
-            super.writeInitialData(buffer);
-            configurator.writeInitialData(buffer);
-        }
-
-        @Override
-        public void readInitialData(FriendlyByteBuf buffer) {
-            super.readInitialData(buffer);
-            configurator.readInitialData(buffer);
-        }
-
-        @Override
-        public void detectAndSendChanges() {
-            super.detectAndSendChanges();
-            configurator.detectAndSendChange((id, sender) -> writeUpdateInfo(0, buf -> {
-                buf.writeVarInt(id);
-                sender.accept(buf);
-            }));
-        }
-
-        @Override
-        public void readUpdateInfo(int id, FriendlyByteBuf buffer) {
-            if (id == 0) {
-                configurator.readUpdateInfo(buffer.readVarInt(), buffer);
+                });
             } else {
-                super.readUpdateInfo(id, buffer);
-            }
-        }
-
-        @Override
-        protected void onChildSizeUpdate(Widget child) {
-            if (this.view != null && this.view == child) {
-                if (expanded == this) {
-                    var size = view.getSize();
-                    animation(new Animation()
-                            .duration(getAnimationTime())
-                            .position(new Position(dragOffsetX + (-size.width + (tabs.size() > 1 ? -2 : getTabSize())),
-                                    dragOffsetY))
-                            .size(size)
-                            .ease(Eases.EaseQuadOut)
-                            .onFinish(() -> {
-                                view.setVisible(true);
-                                view.setActive(true);
-                            }));
+                this.view = createView();
+                addChild(view);
+                button.addEventListener(UIEvents.MOUSE_DOWN, this::onIconClicked);
+                if (configurator instanceof IFancyCustomMiddleClickAction middleAction) {
+                    button.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
+                        if (e.button == 2) {
+                            middleAction.onMiddleClick();
+                        }
+                    });
                 }
             }
+
+            if (configurator instanceof IFancyCustomMouseWheelAction wheelAction) {
+                button.addEventListener(UIEvents.MOUSE_WHEEL, UIEvent::stopPropagation);
+                button.addServerEventListener(UIEvents.MOUSE_WHEEL, e -> wheelAction.mouseWheelMove(e.deltaY));
+            }
+
+            configurator.bindTab(this);
         }
 
-        private void onClick(ClickData clickData) {
-            if (clickData.button == 2 && configurator instanceof IFancyCustomMiddleClickAction middleAction) {
-                middleAction.onMiddleClick(this::writeClientAction);
-            } else if (configurator instanceof IFancyConfiguratorButton fancyButton) {
-                fancyButton.onClick(clickData);
+        protected UIElement createIcon() {
+            var icon = new UIElement();
+            icon.addClass("gt-configurator-tab-icon");
+            icon.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).right(4).top(4).width(16).height(16));
+            icon.style(s -> s.background(DynamicTexture.of(configurator::getIcon)));
+            icon.addEventListener(UIEvents.HOVER_TOOLTIPS,
+                    e -> e.hoverTooltips = new HoverTooltips(configurator.getTooltips(), null, null, null));
+            return icon;
+        }
+
+        protected UIElement createView() {
+            var content = configurator.createConfigurator();
+            var view = new UIElement();
+            view.addClass("gt-configurator-view");
+            view.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).top(0).right(viewOffset())
+                    .paddingAll(border).gapAll(2).minWidth(getTabSize() * 2));
+            view.style(s -> s.background(texture).zIndex(1));
+
+            var header = new UIElement();
+            header.addClass("gt-configurator-view-header");
+            header.layout(l -> l.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER).height(16).gapAll(2));
+            var title = new Label();
+            title.setText(configurator.getTitle());
+            title.textStyle(
+                    t -> t.textWrap(TextWrap.ROLL).adaptiveWidth(false).textShadow(false).textColor(0xFF404040));
+            title.layout(l -> l.flex(1).minWidth(0).paddingLeft(4));
+            title.setOverflowVisible(false);
+            var close = new UIElement();
+            close.layout(l -> l.width(16).height(16));
+            close.style(s -> s.background(DynamicTexture.of(configurator::getIcon)));
+            close.addEventListener(UIEvents.MOUSE_DOWN, this::onIconClicked);
+            close.addEventListener(UIEvents.HOVER_TOOLTIPS,
+                    e -> e.hoverTooltips = new HoverTooltips(configurator.getTooltips(), null, null, null));
+            header.addChildren(title, close);
+
+            view.addChildren(header, content);
+            view.setDisplay(false);
+            WindowDragHelper.setDragMove(title, view, null, null);
+            return view;
+        }
+
+        protected float viewOffset() {
+            return tabs.size() > 1 ? getTabSize() + 2 : 0;
+        }
+
+        protected void onIconClicked(UIEvent event) {
+            if (event.button != 0) return;
+            event.stopPropagation();
+            UISoundUtils.playButtonClickSound();
+            if (expanded == this) {
+                collapseTab();
             } else {
-                if (expanded == this) {
-                    collapseTab();
-                } else {
-                    expandTab(this);
-                }
+                expandTab(this);
             }
         }
 
-        @Override
-        public void setSize(Size size) {
-            super.setSize(size);
-            button.setSelfPosition(new Position(size.width - getTabSize(), 0));
-        }
-
-        private void expand() {
+        protected void expand() {
             if (view == null) return;
-            var size = view.getSize();
-            this.dragOffsetX = 0;
-            this.dragOffsetY = 0;
-            if (isRemote()) {
-                if (getParentPosition().x - size.width + (tabs.size() > 1 ? -2 : getTabSize()) < 0) {
-                    this.dragOffsetX -= (view.getParentPosition().x - size.width +
-                            (tabs.size() > 1 ? -2 : getTabSize()));
-                }
-                if (getParentPosition().y + size.height > gui.getScreenHeight()) {
-                    this.dragOffsetY -= view.getParentPosition().y + size.height - gui.getScreenHeight();
-                }
-            }
-            Position position = new Position(dragOffsetX - size.width + (tabs.size() > 1 ? -2 : getTabSize()),
-                    dragOffsetY);
-
-            animation(new Animation()
-                    .duration(getAnimationTime())
-                    .position(position)
-                    .size(size)
-                    .ease(Eases.EaseQuadOut)
-                    .onFinish(() -> {
-                        view.setVisible(true);
-                        view.setActive(true);
-                    }));
+            view.layout(l -> l.leftAuto().top(0).right(viewOffset()));
+            view.setDisplay(true);
+            style(s -> s.zIndex(10));
+            playViewAnimation(true, null);
         }
 
-        protected void collapseTo(int x, int y) {
+        protected void collapse() {
+            if (view == null) return;
+            style(s -> s.zIndex(0));
+            if (animationSeconds() <= 0 || !view.isDisplayed()) {
+                view.setDisplay(false);
+                return;
+            }
+            playViewAnimation(false, () -> {
+                if (expanded != this) {
+                    view.setDisplay(false);
+                }
+            });
+        }
+
+        protected void hideViewImmediately() {
             if (view != null) {
-                view.setVisible(false);
-                view.setActive(false);
-            }
-            animation(new Animation()
-                    .duration(getAnimationTime())
-                    .position(new Position(x, y))
-                    .size(new Size(getTabSize(), getTabSize()))
-                    .ease(Eases.EaseQuadOut));
-        }
-
-        @Override
-        @OnlyIn(Dist.CLIENT)
-        public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-            drawBackgroundTexture(graphics, mouseX, mouseY);
-            var position = getPosition();
-            var size = getSize();
-            if (inAnimate()) {
-                graphics.enableScissor(position.x + border - 1, position.y + border - 1,
-                        position.x + border - 1 + size.width - (border - 1) * 2,
-                        position.y + border - 1 + size.height - (border - 1) * 2);
-                drawWidgetsBackground(graphics, mouseX, mouseY, partialTicks);
-                graphics.disableScissor();
-            } else {
-                drawWidgetsBackground(graphics, mouseX, mouseY, partialTicks);
-            }
-            configurator.getIcon().draw(graphics, mouseX, mouseY, position.x + size.width - 20, position.y + 4, 16, 16);
-        }
-
-        @Override
-        @OnlyIn(Dist.CLIENT)
-        public void drawInForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-            super.drawInForeground(graphics, mouseX, mouseY, partialTicks);
-            if (isMouseOver(getPosition().x + getSize().width - 20, getPosition().y + 4, 16, 16, mouseX, mouseY) &&
-                    gui != null && gui.getModularUIGui() != null) {
-                gui.getModularUIGui().setHoverTooltip(configurator.getTooltips(), ItemStack.EMPTY, null, null);
+                view.setDisplay(false);
             }
         }
 
-        @Override
-        @OnlyIn(Dist.CLIENT)
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            this.lastDeltaX = 0;
-            this.lastDeltaY = 0;
-            this.isDragging = false;
-            if (expanded == this && isMouseOver(getPosition().x, getPosition().y, getSize().width - getTabSize(),
-                    getTabSize(), mouseX, mouseY)) {
-                isDragging = true;
-                return true;
+        protected void playViewAnimation(boolean opening, @Nullable Runnable onFinished) {
+            var seconds = animationSeconds();
+            if (view == null || seconds <= 0) {
+                if (onFinished != null) onFinished.run();
+                return;
             }
-            return super.mouseClicked(mouseX, mouseY, button) || isMouseOverElement(mouseX, mouseY);
-        }
-
-        @Override
-        @OnlyIn(Dist.CLIENT)
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-            double dx = dragX + lastDeltaX;
-            double dy = dragY + lastDeltaY;
-            dragX = (int) dx;
-            dragY = (int) dy;
-            lastDeltaX = dx - dragX;
-            lastDeltaY = dy - dragY;
-            if (isDragging) {
-                this.dragOffsetX += (int) dragX;
-                this.dragOffsetY += (int) dragY;
-                this.addSelfPosition((int) dragX, (int) dragY);
+            var hidden = Transform2D.identity().scale(0.6f).pivot(1f, 0f);
+            var shown = Transform2D.identity().pivot(1f, 0f);
+            var animation = view.animation();
+            animation.duration(seconds).ease(Eases.QUAD_OUT);
+            animation.style(PropertyRegistry.OPACITY,
+                    FloatObjectPair.of(0f, opening ? 0f : 1f), FloatObjectPair.of(1f, opening ? 1f : 0f));
+            animation.style(PropertyRegistry.TRANSFORM_2D,
+                    FloatObjectPair.of(0f, opening ? hidden : shown), FloatObjectPair.of(1f, opening ? shown : hidden));
+            if (onFinished != null) {
+                var done = new boolean[1];
+                animation.onFinished(e -> {
+                    if (!done[0]) {
+                        done[0] = true;
+                        onFinished.run();
+                    }
+                });
             }
-            return super.mouseDragged(mouseX, mouseY, button, dragX, dragY) || isMouseOverElement(mouseX, mouseY);
+            animation.start();
         }
 
-        @Override
-        @OnlyIn(Dist.CLIENT)
-        public boolean mouseReleased(double mouseX, double mouseY, int button) {
-            this.lastDeltaX = 0;
-            this.lastDeltaY = 0;
-            this.isDragging = false;
-            return super.mouseReleased(mouseX, mouseY, button) || isMouseOverElement(mouseX, mouseY);
-        }
-
-        @Override
-        @OnlyIn(Dist.CLIENT)
-        public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-            return super.mouseWheelMove(mouseX, mouseY, wheelDelta) || isMouseOverElement(mouseX, mouseY);
-        }
-
-        @Override
-        @OnlyIn(Dist.CLIENT)
-        public boolean mouseMoved(double mouseX, double mouseY) {
-            return super.mouseMoved(mouseX, mouseY) || isMouseOverElement(mouseX, mouseY);
+        protected float animationSeconds() {
+            return ConfigHolder.INSTANCE.client.animationTime / 1000f;
         }
     }
 
@@ -428,22 +261,26 @@ public class ConfiguratorPanel extends WidgetGroup {
 
         public FloatingTab(IFancyConfigurator configurator) {
             super(configurator);
-            this.view.setBackground(GuiTextures.BACKGROUND);
+            layout(l -> l.positionType(TaffyPosition.ABSOLUTE).top(0).right(0).width(0).height(0));
+            style(s -> s.background(IGuiTexture.EMPTY));
+            button.setDisplay(false);
         }
 
         @Override
-        public void collapseTo(int x, int y) {
-            super.collapseTo(x, y);
-            ConfiguratorPanel.this.removeWidget(this);
+        protected float viewOffset() {
+            return getTabSize() + 2;
+        }
+
+        @Override
+        protected void collapse() {
+            hideViewImmediately();
+            super.collapse();
+            removeSelf();
             closeCallback.run();
         }
 
         public void onClose(Runnable closeCallback) {
             this.closeCallback = closeCallback;
         }
-    }
-
-    private static int getAnimationTime() {
-        return ConfigHolder.INSTANCE.client.animationTime;
     }
 }

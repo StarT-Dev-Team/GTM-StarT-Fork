@@ -7,7 +7,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.util.TimedProgressSupplier;
-import com.gregtechceu.gtceu.api.gui.widget.ExtendedProgressWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ExtendedProgressBar;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
@@ -24,17 +24,16 @@ import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.IManaged;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.FieldManagedStorage;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.syncdata.IManaged;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -50,6 +49,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -82,7 +82,7 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     @Getter
     private final int componentGridSize;
     @Getter
-    private final ResourceTexture componentOutlineTexture;
+    private final SpriteTexture componentOutlineTexture;
 
     private boolean hasNotEnoughEnergy;
 
@@ -94,7 +94,7 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     @Nullable
     protected TickableSubscription tickSubs;
 
-    public HPCAMachine(IMachineBlockEntity holder, int componentGridSize, ResourceTexture componentOutlineTexture) {
+    public HPCAMachine(IMachineBlockEntity holder, int componentGridSize, SpriteTexture componentOutlineTexture) {
         super(holder);
         this.componentGridSize = componentGridSize;
         this.componentOutlineTexture = componentOutlineTexture;
@@ -262,10 +262,9 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     }
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup builder = (WidgetGroup) super.createUIWidget();
+    public UIElement createUIWidget() {
+        var builder = super.createUIWidget();
 
-        int centerX = builder.getSizeWidth() / 2;
         int cellSize = 13;
         int spacing = 1;
         int margin = 1;
@@ -273,20 +272,17 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
         int gridSize = hpcaHandler.getGridSize();
         int gridBoxSize = margin * 2 + gridSize * (cellSize + spacing * 2);
 
-        int outlineX = centerX - gridBoxSize / 2;
-        int outlineY = 44;
+        var progress = new ExtendedProgressBar(componentOutlineTexture, FillDirection.LEFT_TO_RIGHT, gridBoxSize,
+                gridBoxSize);
+        progress.bind(DataBindingBuilder.floatValS2C(
+                () -> hpcaHandler.getAllocatedCWUt() > 0 ? (float) progressSupplier.getAsDouble() : 0f).build());
+        progress.setServerTooltipSupplier(hpcaHandler::addInfo);
 
-        // Create the hover grid
-        builder.addWidget(new ExtendedProgressWidget(
-                () -> hpcaHandler.getAllocatedCWUt() > 0 ? progressSupplier.getAsDouble() : 0,
-                outlineX, outlineY, gridBoxSize, gridBoxSize, componentOutlineTexture)
-                .setServerTooltipSupplier(hpcaHandler::addInfo)
-                .setFillDirection(ProgressTexture.FillDirection.LEFT_TO_RIGHT));
+        var grid = new UIElement();
+        grid.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).leftPercent(50)
+                .marginLeft(-gridBoxSize / 2f).top(44).width(gridBoxSize).height(gridBoxSize));
+        grid.addChild(progress);
 
-        int startX = outlineX + margin + spacing;
-        int startY = outlineY + margin + spacing;
-
-        // we need to know what components we have on the client
         if (getLevel().isClientSide) {
             if (isFormed) {
                 hpcaHandler.tryGatherClientComponents(this.getLevel(), this.getPos(), this.getFrontFacing(),
@@ -300,12 +296,16 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
             for (int j = 0; j < gridSize; j++) {
                 final int index = i * gridSize + j;
                 Supplier<IGuiTexture> textureSupplier = () -> hpcaHandler.getComponentTexture(index);
-                builder.addWidget(new ImageWidget(
-                        startX + (cellSize + spacing * 2) * j,
-                        startY + (cellSize + spacing * 2) * i,
-                        cellSize, cellSize, textureSupplier));
+                int left = margin + spacing + (cellSize + spacing * 2) * j;
+                int top = margin + spacing + (cellSize + spacing * 2) * i;
+                var cell = new UIElement();
+                cell.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(left).top(top).width(cellSize)
+                        .height(cellSize));
+                cell.style(style -> style.backgroundTexture(DynamicTexture.of(textureSupplier)));
+                grid.addChild(cell);
             }
         }
+        builder.addChild(grid);
         return builder;
     }
 
@@ -429,7 +429,6 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
     // Handles the logic of this structure's specific HPCA component grid
     public static class HPCAGridHandler implements IManaged {
 
-        public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(HPCAGridHandler.class);
         @Getter
         private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
 
@@ -779,7 +778,7 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
             }
         }
 
-        public ResourceTexture getComponentTexture(int index) {
+        public IGuiTexture getComponentTexture(int index) {
             if (components.size() <= index) {
                 return GuiTextures.BLANK_TRANSPARENT;
             }
@@ -818,13 +817,8 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
         }
 
         @Override
-        public ManagedFieldHolder getFieldHolder() {
-            return MANAGED_FIELD_HOLDER;
-        }
-
-        @Override
-        public void onChanged() {
-            controller.onChanged();
+        public void notifyPersistence() {
+            if (controller != null) controller.notifyPersistence();
         }
     }
 }

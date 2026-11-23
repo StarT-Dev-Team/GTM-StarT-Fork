@@ -3,19 +3,23 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fluids.FluidType;
+
+import dev.vfyjxf.taffy.style.TaffyPosition;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -38,17 +42,40 @@ public class SteamHatchPartMachine extends FluidHatchPartMachine {
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(176, 166, this, entityPlayer)
-                .background(GuiTextures.BACKGROUND_STEAM.get(IS_STEEL))
-                .widget(new ImageWidget(7, 16, 81, 55, GuiTextures.DISPLAY_STEAM.get(IS_STEEL)))
-                .widget(new LabelWidget(11, 20, "gtceu.gui.fluid_amount"))
-                .widget(new LabelWidget(11, 30, () -> tank.getFluidInTank(0).getAmount() + "").setTextColor(-1)
-                        .setDropShadow(true))
-                .widget(new LabelWidget(6, 6, getBlockState().getBlock().getDescriptionId()))
-                .widget(new TankWidget(tank.getStorages()[0], 90, 35, true, true)
-                        .setBackground(GuiTextures.FLUID_SLOT))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(),
-                        GuiTextures.SLOT_STEAM.get(IS_STEEL), 7, 84, true));
+        var area = new UIElement();
+        area.layout(layout -> layout.height(82));
+
+        var display = new UIElement();
+        display.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(16).width(81).height(55));
+        display.style(style -> style.backgroundTexture(GuiTextures.DISPLAY_STEAM.get(IS_STEEL)));
+
+        var amountTitle = new Label();
+        amountTitle.setText(Component.translatable("gtceu.gui.fluid_amount"));
+        amountTitle.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(11).top(20));
+
+        var amount = new Label();
+        amount.textStyle(style -> style.textColor(-1).textShadow(true));
+        amount.bind(DataBindingBuilder.componentS2C(
+                () -> Component.literal(String.valueOf(tank.getFluidInTank(0).getAmount()))).build());
+        amount.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(11).top(30));
+
+        var title = new Label();
+        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(6).top(6));
+
+        var tankSlot = new FluidSlot().bind(tank.getStorages()[0], 0);
+        tankSlot.setAllowClickFilled(true);
+        tankSlot.setAllowClickDrained(true);
+        tankSlot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(90).top(35));
+        tankSlot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+
+        area.addChildren(display, amountTitle, amount, title, tankSlot);
+
+        var root = UITemplate.panel();
+        root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(IS_STEEL)));
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(7));
+        root.addChildren(area, UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(IS_STEEL)));
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     // By returning false here, we don't allow shift-clicking

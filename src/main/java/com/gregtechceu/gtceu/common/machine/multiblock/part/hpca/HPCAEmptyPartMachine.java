@@ -3,7 +3,7 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part.hpca;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 
@@ -23,7 +23,7 @@ public class HPCAEmptyPartMachine extends HPCAComponentPartMachine {
     }
 
     @Override
-    public ResourceTexture getComponentIcon() {
+    public IGuiTexture getComponentIcon() {
         return GuiTextures.HPCA_ICON_EMPTY_COMPONENT;
     }
 

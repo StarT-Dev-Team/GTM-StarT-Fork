@@ -8,11 +8,11 @@ import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
+import com.gregtechceu.gtceu.api.gui.widget.ComponentPanel;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IDataInfoProvider;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
-import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
 import com.gregtechceu.gtceu.api.transfer.fluid.FluidHandlerList;
@@ -23,9 +23,7 @@ import com.gregtechceu.gtceu.common.machine.trait.miner.LargeMinerLogic;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.util.ClickData;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -59,8 +57,6 @@ import static com.gregtechceu.gtceu.common.data.GTMaterials.DrillingFluid;
 public class LargeMinerMachine extends WorkableElectricMultiblockMachine
                                implements IMiner, IControllable, IDataInfoProvider {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(LargeMinerMachine.class,
-            WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
     public static final int CHUNK_LENGTH = 16;
     @Getter
     private final int tier;
@@ -88,11 +84,6 @@ public class LargeMinerMachine extends WorkableElectricMultiblockMachine
         }
         throw new IllegalArgumentException(
                 "MinerMachine need args [inventorySize, fortune, speed, maximumRadius] for initialization");
-    }
-
-    @Override
-    public @NotNull ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -220,13 +211,13 @@ public class LargeMinerMachine extends WorkableElectricMultiblockMachine
             textList.add(Component.translatable("gtceu.machine.miner.startz",
                     getRecipeLogic().getZ() == Integer.MAX_VALUE ? 0 : getRecipeLogic().getZ()));
             textList.add(Component.translatable("gtceu.universal.tooltip.silk_touch")
-                    .append(ComponentPanelWidget.withButton(Component.literal("[")
+                    .append(ComponentPanel.withButton(Component.literal("[")
                             .append(getRecipeLogic().isSilkTouchMode() ?
                                     Component.translatable("gtceu.creative.activity.on") :
                                     Component.translatable("gtceu.creative.activity.off"))
                             .append(Component.literal("]")), "silk_touch")));
             textList.add(Component.translatable("gtceu.universal.tooltip.chunk_mode")
-                    .append(ComponentPanelWidget.withButton(Component.literal("[")
+                    .append(ComponentPanel.withButton(Component.literal("[")
                             .append(getRecipeLogic().isChunkMode() ?
                                     Component.translatable("gtceu.creative.activity.on") :
                                     Component.translatable("gtceu.creative.activity.off"))

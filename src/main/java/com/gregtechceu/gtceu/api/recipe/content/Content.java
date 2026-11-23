@@ -11,8 +11,8 @@ import com.gregtechceu.gtceu.api.recipe.ingredient.RangedDisplay;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GradientUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.utils.LocalizationUtils;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -124,7 +124,10 @@ public class Content {
 
             @Override
             @OnlyIn(Dist.CLIENT)
-            public void draw(GuiGraphics graphics, int mouseX, int mouseY, float x, float y, int width, int height) {
+            public void draw(GuiGraphics graphics, float mouseX, float mouseY, float x, float y, float fWidth,
+                             float fHeight, float partialTicks) {
+                int width = (int) fWidth;
+                int height = (int) fHeight;
                 drawChance(graphics, x, y, width, height, recipeTier, chanceTier, showNC, function);
                 if (weightedAmount.isPresent()) {
                     drawWeightedAmount(graphics, x, y, width, height, weightedAmount.get());

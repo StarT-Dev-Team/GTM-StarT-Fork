@@ -2,6 +2,7 @@ package com.gregtechceu.gtceu.api.block;
 
 import com.gregtechceu.gtceu.api.block.property.GTBlockStateProperties;
 import com.gregtechceu.gtceu.api.data.RotationState;
+import com.gregtechceu.gtceu.api.gui.factory.MachineUIFactory;
 import com.gregtechceu.gtceu.api.item.IGTTool;
 import com.gregtechceu.gtceu.api.item.MetaMachineItem;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
@@ -14,6 +15,9 @@ import com.gregtechceu.gtceu.api.machine.feature.*;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.machine.owner.MachineOwner;
 import com.gregtechceu.gtceu.utils.GTUtil;
+
+import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -60,7 +64,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @SuppressWarnings("deprecation")
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class MetaMachineBlock extends Block implements IMachineBlock {
+public class MetaMachineBlock extends Block implements IMachineBlock, BlockUIMenuType.BlockUI {
 
     @Getter
     public final MachineDefinition definition;
@@ -174,6 +178,16 @@ public class MetaMachineBlock extends Block implements IMachineBlock {
             }
         }
         return state;
+    }
+
+    @Override
+    public ModularUI createUI(BlockUIMenuType.BlockUIHolder holder) {
+        return MachineUIFactory.createUI(holder);
+    }
+
+    @Override
+    public boolean stillValid(BlockUIMenuType.BlockUIHolder holder) {
+        return MachineUIFactory.stillValid(holder);
     }
 
     @Override

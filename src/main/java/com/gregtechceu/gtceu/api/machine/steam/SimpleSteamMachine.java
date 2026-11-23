@@ -6,7 +6,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.PredicatedImageWidget;
+import com.gregtechceu.gtceu.api.gui.widget.PredicatedImage;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IExhaustVentMachine;
@@ -23,19 +23,22 @@ import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 import com.gregtechceu.gtceu.common.recipe.condition.VentCondition;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fluids.FluidType;
 
 import com.google.common.collect.Tables;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -47,9 +50,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SimpleSteamMachine extends SteamWorkableMachine implements IExhaustVentMachine, IUIMachine {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(SimpleSteamMachine.class,
-            SteamWorkableMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
     public final NotifiableItemStackHandler importItems;
@@ -75,11 +75,6 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IExhaust
     //////////////////////////////////////
     // ***** Initialization *****//
     //////////////////////////////////////
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 
     @Override
     protected NotifiableFluidTank createSteamTank(Object... args) {
@@ -222,18 +217,28 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IExhaust
                 Collections.emptyList(),
                 true,
                 isHighPressure);
-        Position pos = new Position((Math.max(group.getSize().width + 4 + 8, 176) - 4 - group.getSize().width) / 2 + 4,
-                32);
-        group.setSelfPosition(pos);
-        return new ModularUI(176, 166, this, entityPlayer)
-                .background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure))
-                .widget(group)
-                .widget(new LabelWidget(5, 5, getBlockState().getBlock().getDescriptionId()))
-                .widget(new PredicatedImageWidget(pos.x + group.getSize().width / 2 - 9,
-                        pos.y + group.getSize().height / 2 - 9, 18, 18,
-                        GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure))
-                        .setPredicate(recipeLogic::isWaiting))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(),
-                        GuiTextures.SLOT_STEAM.get(isHighPressure), 7, 84, true));
+        var title = new Label();
+        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
+
+        var indicatorLayer = new UIElement();
+        indicatorLayer.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).right(0).top(0).bottom(0)
+                .alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+        indicatorLayer.setAllowHitTest(false);
+        var indicator = new PredicatedImage(GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure),
+                recipeLogic::isWaiting);
+        indicator.layout(layout -> layout.width(18).height(18));
+        indicatorLayer.addChild(indicator);
+
+        var recipeArea = new UIElement();
+        recipeArea.layout(layout -> layout.alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER)
+                .marginTop(22));
+        recipeArea.addChildren(group, indicatorLayer);
+
+        var root = UITemplate.panel();
+        root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure)));
+        root.layout(layout -> layout.width(176).paddingAll(5).paddingBottom(7));
+        root.addChildren(title, recipeArea,
+                UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(isHighPressure)));
+        return UITemplate.modularUI(root, entityPlayer);
     }
 }

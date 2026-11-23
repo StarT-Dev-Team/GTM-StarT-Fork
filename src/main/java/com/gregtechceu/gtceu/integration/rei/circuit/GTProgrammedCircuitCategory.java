@@ -2,14 +2,15 @@ package com.gregtechceu.gtceu.integration.rei.circuit;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.common.data.GTItems;
+import com.gregtechceu.gtceu.integration.rei.REIIcons;
+import com.gregtechceu.gtceu.integration.xei.GTXEIUI;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTProgrammedCircuitWidget;
 
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.rei.IGui2Renderer;
-import com.lowdragmc.lowdraglib.rei.ModularDisplay;
-import com.lowdragmc.lowdraglib.rei.ModularUIDisplayCategory;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplay;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplayCategory;
+import com.lowdragmc.lowdraglib2.math.Size;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -32,8 +33,9 @@ public class GTProgrammedCircuitCategory extends
     private final Size size;
 
     public GTProgrammedCircuitCategory() {
-        this.icon = IGui2Renderer.toDrawable(new ItemStackTexture(GTItems.PROGRAMMED_CIRCUIT.asItem()));
-        this.size = new Size(158, 80);
+        super(GTProgrammedCircuitDisplay::createModularUI);
+        this.icon = REIIcons.of(new ItemStackTexture(GTItems.PROGRAMMED_CIRCUIT.asItem()));
+        this.size = Size.of(158, 80);
     }
 
     @Override
@@ -56,10 +58,15 @@ public class GTProgrammedCircuitCategory extends
         return getSize().width;
     }
 
-    public static class GTProgrammedCircuitDisplay extends ModularDisplay<WidgetGroup> {
+    public static class GTProgrammedCircuitDisplay implements ModularUIDisplay {
 
-        public GTProgrammedCircuitDisplay() {
-            super(GTProgrammedCircuitWidget::new, GTProgrammedCircuitCategory.CATEGORY);
+        @Override
+        public CategoryIdentifier<?> getCategoryIdentifier() {
+            return CATEGORY;
+        }
+
+        public ModularUI createModularUI() {
+            return GTXEIUI.of(new GTProgrammedCircuitWidget());
         }
 
         @Override

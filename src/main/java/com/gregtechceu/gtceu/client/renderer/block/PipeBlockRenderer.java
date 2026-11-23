@@ -9,7 +9,8 @@ import com.gregtechceu.gtceu.client.util.GTQuadTransformers;
 import com.gregtechceu.gtceu.common.data.GTMaterialBlocks;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.client.renderer.IRenderer;
+import com.lowdragmc.lowdraglib2.client.renderer.IRenderer;
+import com.lowdragmc.lowdraglib2.compat.util.TriState;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
@@ -34,12 +35,11 @@ import net.minecraftforge.client.model.data.ModelData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
-
-import static com.lowdragmc.lowdraglib.client.model.forge.LDLRendererModel.RendererBakedModel.*;
 
 public class PipeBlockRenderer implements IRenderer, ICoverableRenderer {
 
@@ -65,8 +65,8 @@ public class PipeBlockRenderer implements IRenderer, ICoverableRenderer {
     }
 
     @Override
-    public boolean useAO() {
-        return true;
+    public TriState useAO() {
+        return TriState.TRUE;
     }
 
     @Override
@@ -77,16 +77,15 @@ public class PipeBlockRenderer implements IRenderer, ICoverableRenderer {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public List<BakedQuad> renderModel(BlockAndTintGetter level, BlockPos pos, BlockState state, Direction side,
-                                       RandomSource rand) {
-        if (level == null) {
+    public List<BakedQuad> renderModel(@Nullable BlockAndTintGetter level, @Nullable BlockPos pos,
+                                       @Nullable BlockState state, @Nullable Direction side,
+                                       RandomSource rand, ModelData modelData, @Nullable RenderType renderType) {
+        if (level == null || pos == null) {
             return pipeModel.bakeQuads(side, pipeModel.getItemConnections(), 0);
         }
         if (!(level.getBlockEntity(pos) instanceof IPipeNode<?, ?> pipeNode)) {
             return pipeModel.bakeQuads(side, 0, 0);
         }
-        RenderType renderType = CURRENT_RENDER_TYPE.get();
-        ModelData modelData = CURRENT_MODEL_DATA.get().get(MODEL_DATA);
         if (modelData == null) modelData = ModelData.EMPTY;
 
         List<BakedQuad> quads = new LinkedList<>();
@@ -135,7 +134,8 @@ public class PipeBlockRenderer implements IRenderer, ICoverableRenderer {
     @NotNull
     @Override
     @OnlyIn(Dist.CLIENT)
-    public TextureAtlasSprite getParticleTexture() {
+    public TextureAtlasSprite getParticleTexture(@Nullable BlockAndTintGetter level, @Nullable BlockPos pos,
+                                                 ModelData modelData) {
         return pipeModel.getParticleTexture();
     }
 

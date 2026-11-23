@@ -5,8 +5,7 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IOverclockMachine;
 import com.gregtechceu.gtceu.api.machine.feature.ITieredMachine;
 
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 
@@ -19,10 +18,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class TieredLayeredWorkableElectricMultiblockMachine extends LayeredWorkableElectricMultiblockMachine
                                                             implements ITieredMachine, IOverclockMachine {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            TieredLayeredWorkableElectricMultiblockMachine.class,
-            WorkableElectricMultiblockMachine.MANAGED_FIELD_HOLDER);
-
     private final int tier;
 
     @Persisted
@@ -32,11 +27,6 @@ public class TieredLayeredWorkableElectricMultiblockMachine extends LayeredWorka
     public TieredLayeredWorkableElectricMultiblockMachine(IMachineBlockEntity holder, int tier, Object... args) {
         super(holder, args);
         this.tier = tier;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override

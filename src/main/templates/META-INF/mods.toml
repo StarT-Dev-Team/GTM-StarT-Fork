@@ -34,7 +34,7 @@ ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.${mod_id}]]
-modId = "ldlib"
+modId = "ldlib2"
 mandatory = true
 embedded = true
 versionRange = "[${ldlib_version},)"

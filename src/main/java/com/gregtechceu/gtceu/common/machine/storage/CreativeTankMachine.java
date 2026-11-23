@@ -2,20 +2,20 @@ package com.gregtechceu.gtceu.common.machine.storage;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.PhantomFluidWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.PhantomFluidSlot;
+import com.gregtechceu.gtceu.api.gui.widget.TextToggleButton;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceBorderTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DropSaved;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DropSaved;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -27,13 +27,11 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.items.ItemHandlerHelper;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 public class CreativeTankMachine extends QuantumTankMachine {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(CreativeTankMachine.class,
-            QuantumTankMachine.MANAGED_FIELD_HOLDER);
 
     @Getter
     @Persisted
@@ -72,15 +70,13 @@ public class CreativeTankMachine extends QuantumTankMachine {
         return InteractionResult.SUCCESS;
     }
 
-    private void setTicksPerCycle(String value) {
-        if (value.isEmpty()) return;
-        ticksPerCycle = Integer.parseInt(value);
+    private void setTicksPerCycle(int value) {
+        ticksPerCycle = value;
         onFluidChanged();
     }
 
-    private void setmBPerCycle(String value) {
-        if (value.isEmpty()) return;
-        mBPerCycle = Integer.parseInt(value);
+    private void setmBPerCycle(int value) {
+        mBPerCycle = value;
         onFluidChanged();
     }
 
@@ -127,36 +123,38 @@ public class CreativeTankMachine extends QuantumTankMachine {
     }
 
     @Override
-    public WidgetGroup createUIWidget() {
-        var group = new WidgetGroup(0, 0, 176, 131);
-        group.addWidget(new PhantomFluidWidget(cache, 0, 36, 6, 18, 18, this::getStored, this::updateStored)
-                .setShowAmount(false)
-                .setBackground(GuiTextures.FLUID_SLOT));
-        group.addWidget(new LabelWidget(7, 9, "gtceu.creative.tank.fluid"));
-        group.addWidget(new ImageWidget(7, 45, 154, 14, GuiTextures.DISPLAY));
-        group.addWidget(new TextFieldWidget(9, 47, 152, 10, () -> String.valueOf(mBPerCycle), this::setmBPerCycle)
-                .setMaxStringLength(11)
-                .setNumbersOnly(1, Integer.MAX_VALUE));
-        group.addWidget(new LabelWidget(7, 28, "gtceu.creative.tank.mbpc"));
-        group.addWidget(new ImageWidget(7, 82, 154, 14, GuiTextures.DISPLAY));
-        group.addWidget(new TextFieldWidget(9, 84, 152, 10, () -> String.valueOf(ticksPerCycle), this::setTicksPerCycle)
-                .setMaxStringLength(11)
-                .setNumbersOnly(1, Integer.MAX_VALUE));
-        group.addWidget(new LabelWidget(7, 65, "gtceu.creative.tank.tpc"));
-        group.addWidget(new SwitchWidget(7, 101, 162, 20, (clickData, value) -> setWorkingEnabled(value))
-                .setTexture(
-                        new GuiTextureGroup(ResourceBorderTexture.BUTTON_COMMON,
-                                new TextTexture("gtceu.creative.activity.off")),
-                        new GuiTextureGroup(ResourceBorderTexture.BUTTON_COMMON,
-                                new TextTexture("gtceu.creative.activity.on")))
-                .setPressed(isWorkingEnabled()));
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.width(176).height(131));
 
+        var fluidSlot = new PhantomFluidSlot(this::getStored, this::updateStored);
+        fluidSlot.amountLabel.setDisplay(false);
+        fluidSlot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(36).top(6));
+        fluidSlot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+
+        var fluidLabel = new Label();
+        fluidLabel.setText(Component.translatable("gtceu.creative.tank.fluid"));
+        fluidLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(9));
+        var mbpcLabel = new Label();
+        mbpcLabel.setText(Component.translatable("gtceu.creative.tank.mbpc"));
+        mbpcLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(28));
+        var mbpcInput = new IntInput(() -> mBPerCycle, this::setmBPerCycle);
+        mbpcInput.setMin(1);
+        mbpcInput.setMax(Integer.MAX_VALUE);
+        mbpcInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(43).width(152).height(16));
+        var tpcLabel = new Label();
+        tpcLabel.setText(Component.translatable("gtceu.creative.tank.tpc"));
+        tpcLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(65));
+        var tpcInput = new IntInput(() -> ticksPerCycle, this::setTicksPerCycle);
+        tpcInput.setMin(1);
+        tpcInput.setMax(Integer.MAX_VALUE);
+        tpcInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(80).width(152).height(16));
+        var activity = new TextToggleButton("gtceu.creative.activity.on", "gtceu.creative.activity.off",
+                this::isWorkingEnabled, this::setWorkingEnabled);
+        activity.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(101).width(162).height(20));
+
+        group.addChildren(fluidSlot, fluidLabel, mbpcLabel, mbpcInput, tpcLabel, tpcInput, activity);
         return group;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     private class InfiniteCache extends FluidCache {

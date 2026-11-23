@@ -10,11 +10,11 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockControllerMachine;
 import com.gregtechceu.gtceu.api.pattern.BlockPattern;
 import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
+import com.gregtechceu.gtceu.utils.BlockInfoUtil;
 
-import com.lowdragmc.lowdraglib.client.scene.WorldSceneRenderer;
-import com.lowdragmc.lowdraglib.client.scene.forge.WorldSceneRendererImpl;
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
-import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
+import com.lowdragmc.lowdraglib2.client.scene.WorldSceneRenderer;
+import com.lowdragmc.lowdraglib2.utils.data.BlockInfo;
+import com.lowdragmc.lowdraglib2.utils.virtuallevel.TrackedDummyWorld;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -34,6 +34,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.model.data.ModelData;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -232,7 +233,7 @@ public class MultiblockInWorldPreviewRenderer {
 
                     BlockPos realPos = pos.offset(offset);
 
-                    if (column[z].getBlockEntity(realPos) instanceof IMachineBlockEntity holder &&
+                    if (BlockInfoUtil.createBlockEntity(column[z], realPos) instanceof IMachineBlockEntity holder &&
                             holder.getMetaMachine() instanceof IMultiController cont) {
                         holder.getSelf().setLevel(LEVEL);
                         controllerBase = cont;
@@ -245,7 +246,7 @@ public class MultiblockInWorldPreviewRenderer {
 
         LEVEL.addBlocks(blockMap);
         if (controllerBase != null) {
-            LEVEL.setInnerBlockEntity(controllerBase.self().holder.getSelf());
+            LEVEL.setBlockEntity(controllerBase.self().holder.getSelf());
         }
 
         prepareBuffers(LEVEL, blockMap.keySet(), duration);
@@ -502,10 +503,14 @@ public class MultiblockInWorldPreviewRenderer {
                 poseStack.scale(0.8f, 0.8f, 0.8f);
                 poseStack.translate(-0.5, -0.5, -0.5);
 
-                level.setRenderFilter(p -> p.equals(pos));
-                WorldSceneRendererImpl.renderBlocksForge(dispatcher, state, pos, level, poseStack, wrapperBuffer,
-                        GTValues.RNG, layer);
-                level.setRenderFilter(p -> true);
+                level.setBlockFilter(p -> p.equals(pos));
+                var model = dispatcher.getBlockModel(state);
+                var modelData = te != null ? te.getModelData() : ModelData.EMPTY;
+                modelData = model.getModelData(level, pos, state, modelData);
+                GTValues.RNG.setSeed(state.getSeed(pos));
+                dispatcher.renderBatched(state, pos, level, poseStack, wrapperBuffer, true, GTValues.RNG, modelData,
+                        layer);
+                level.setBlockFilter(p -> true);
                 poseStack.popPose();
             }
 
@@ -516,7 +521,7 @@ public class MultiblockInWorldPreviewRenderer {
                 dispatcher.renderLiquid(pos, level, wrapperBuffer, state, fluidState);
             }
 
-            wrapperBuffer.clerOffset();
+            wrapperBuffer.clearOffset();
             wrapperBuffer.clearColor();
         }
     }

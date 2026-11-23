@@ -1,7 +1,7 @@
 package com.gregtechceu.gtceu.api.item.tool.behavior;
 
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -19,7 +19,7 @@ public interface IToolUIBehavior extends IToolBehavior {
                                                                          @NotNull InteractionHand hand) {
         var heldItem = player.getItemInHand(hand);
         if (player instanceof ServerPlayer serverPlayer && openUI(serverPlayer, hand)) {
-            HeldItemUIFactory.INSTANCE.openUI(serverPlayer, hand);
+            HeldItemUIMenuType.openUI(serverPlayer, hand);
             return InteractionResultHolder.success(heldItem);
         }
         return InteractionResultHolder.pass(heldItem);
@@ -27,5 +27,5 @@ public interface IToolUIBehavior extends IToolBehavior {
 
     boolean openUI(@NotNull Player player, @NotNull InteractionHand hand);
 
-    ModularUI createUI(Player player, HeldItemUIFactory.HeldItemHolder holder);
+    ModularUI createUI(Player player, HeldItemUIMenuType.HeldItemUIHolder holder);
 }

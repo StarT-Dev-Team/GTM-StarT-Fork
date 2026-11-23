@@ -7,10 +7,7 @@ import com.gregtechceu.gtceu.api.data.chemical.material.properties.PropertyKey;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.fluids.store.FluidStorageKey;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
-import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
 import com.gregtechceu.gtceu.common.data.GTMaterialItems;
 import com.gregtechceu.gtceu.integration.emi.GTOreByProductPrefixHelper;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidEntryList;
@@ -21,24 +18,32 @@ import com.gregtechceu.gtceu.integration.xei.entry.item.ItemTagList;
 import com.gregtechceu.gtceu.integration.xei.handlers.fluid.CycleFluidEntryHandler;
 import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemEntryHandler;
 
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
+import lombok.Getter;
+
 import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.gregtechceu.gtceu.api.data.tag.TagPrefix.*;
 
-public class GTMaterialInfoWidget extends WidgetGroup {
+public class GTMaterialInfoWidget extends UIElement {
 
     private static final int SLOT = 18, PAD = 3, PER_ROW = 10;
 
@@ -143,24 +148,36 @@ public class GTMaterialInfoWidget extends WidgetGroup {
     private final Material material;
 
     public GTMaterialInfoWidget(Material material) {
-        super(0, 0, PER_ROW * 18 + PAD * 2, 166);
-
         this.material = material;
 
-        setClientSideWidget();
+        setSize(166);
         setMaterial();
     }
 
+    public static final int WIDTH = PER_ROW * 18 + PAD * 2;
+
+    @Getter
+    private int infoHeight;
+
+    private void setSize(int height) {
+        this.infoHeight = height;
+        layout(layout -> layout.width(WIDTH).height(height));
+    }
+
+    private static <T extends UIElement> T place(T element, int x, int y) {
+        element.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(x).top(y));
+        return element;
+    }
+
     public void setMaterial() {
-        this.widgets.clear();
+        clearAllChildren();
 
-        WidgetGroup group = new WidgetGroup();
-
+        var group = new UIElement();
         group.setId(MATERIAL_CONTENT_GROUP_ID);
+        group.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0).widthPercent(100)
+                .heightPercent(100));
 
-        getWidgetsById(MATERIAL_CONTENT_GROUP_ID_REGEX).forEach(this::removeWidget);
-
-        addWidget(group);
+        addChild(group);
 
         int y = addWrappedText(group, material.getLocalizedName().getString(), PAD, -1, true);
 
@@ -203,7 +220,7 @@ public class GTMaterialInfoWidget extends WidgetGroup {
         y = addItemRow(group, fromSlots(SLOTS.get(Section.PARTS)), y);
         y = addTools(group, y);
 
-        setSize(getSize().width, y);
+        setSize(y);
     }
 
     private List<ItemEntryList> fromSlots(List<List<TagPrefix>> slots) {
@@ -240,7 +257,7 @@ public class GTMaterialInfoWidget extends WidgetGroup {
         return list;
     }
 
-    private int addTools(WidgetGroup group, int y) {
+    private int addTools(UIElement group, int y) {
         if (!material.hasProperty(PropertyKey.TOOL)) return y;
 
         List<ItemEntryList> plain = new ArrayList<>();
@@ -289,7 +306,7 @@ public class GTMaterialInfoWidget extends WidgetGroup {
         return entry == null ? ItemStack.EMPTY : entry.asStack();
     }
 
-    private int addItemRow(WidgetGroup group, List<ItemEntryList> row, int y) {
+    private int addItemRow(UIElement group, List<ItemEntryList> row, int y) {
         if (row.isEmpty()) return y;
 
         CycleItemEntryHandler handler = new CycleItemEntryHandler(row);
@@ -299,34 +316,41 @@ public class GTMaterialInfoWidget extends WidgetGroup {
 
             int x = PAD + (i % PER_ROW) * SLOT, yy = y + (i / PER_ROW) * SLOT;
 
-            group.addWidget(new SlotWidget(handler, i, x, yy)
-                    .setCanTakeItems(false)
-                    .setCanPutItems(false)
-                    .setIngredientIO(IngredientIO.INPUT));
+            var entry = row.get(i);
+            var slot = new ItemSlot();
+            slot.bind(new ItemHandlerSlot(handler, i).setCanTake(player -> false).setCanPlace(stack -> false));
+            slot.xeiRecipeIngredient(IngredientIO.INPUT, () -> entry.getStacks().stream())
+                    .xeiRecipeSlot(IngredientIO.INPUT, 1, 1, () -> entry.getStacks().stream());
+            group.addChild(place(slot, x, yy));
         }
 
         return y + ((row.size() + PER_ROW - 1) / PER_ROW) * SLOT + PAD;
     }
 
-    private int addFluidRow(WidgetGroup group, List<FluidEntryList> row, int y) {
+    private int addFluidRow(UIElement group, List<FluidEntryList> row, int y) {
         CycleFluidEntryHandler handler = new CycleFluidEntryHandler(row);
 
         for (int i = 0; i < row.size(); i++) {
-            group.addWidget(
-                    new TankWidget(new CustomFluidTank(handler.getFluidInTank(i)), PAD + i * SLOT, y, false, false)
-                            .setIngredientIO(IngredientIO.INPUT)
-                            .setBackground(GuiTextures.FLUID_SLOT)
-                            .setShowAmount(false));
+            var index = i;
+            var entry = row.get(i);
+            var tank = new FluidSlot();
+            tank.bindDataSource(SupplierDataSource.of(() -> handler.getFluidInTank(index)));
+            tank.xeiRecipeIngredient(IngredientIO.INPUT, () -> entry.getStacks().stream())
+                    .xeiRecipeSlot(IngredientIO.INPUT, 1, 1, () -> entry.getStacks().stream());
+            tank.slotStyle(style -> style.fillDirection(FillDirection.ALWAYS_FULL));
+            tank.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+            tank.amountLabel.setDisplay(false);
+            group.addChild(place(tank, PAD + i * SLOT, y));
         }
 
         return y + SLOT + PAD;
     }
 
-    private int addWrappedText(WidgetGroup group, String text, int y, int color, boolean shadow) {
+    private int addWrappedText(UIElement group, String text, int y, int color, boolean shadow) {
         Font font = Minecraft.getInstance().font;
 
-        for (FormattedText line : font.getSplitter().splitLines(text, getSize().width - PAD * 2, Style.EMPTY)) {
-            group.addWidget(new LabelWidget(PAD, y, line.getString()).setTextColor(color).setDropShadow(shadow));
+        for (FormattedText line : font.getSplitter().splitLines(text, PER_ROW * 18, Style.EMPTY)) {
+            group.addChild(GTRecipeWidget.createLabel(PAD, y, Component.literal(line.getString()), color, shadow));
 
             y += font.lineHeight + 1;
         }

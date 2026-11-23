@@ -40,11 +40,11 @@ public class GTLampItemOverlayRenderer implements IItemDecorator {
 
             RenderSystem.disableDepthTest();
             if (overlayType.noBloom()) {
-                GuiTextures.LAMP_NO_BLOOM.draw(graphics, 0, 0, xPosition, yPosition, 16, 16);
+                GuiTextures.LAMP_NO_BLOOM.draw(graphics, 0, 0, xPosition, yPosition, 16, 16, 0);
             }
 
             if (overlayType.noLight()) {
-                GuiTextures.LAMP_NO_LIGHT.draw(graphics, 0, 0, xPosition, yPosition, 16, 16);
+                GuiTextures.LAMP_NO_LIGHT.draw(graphics, 0, 0, xPosition, yPosition, 16, 16, 0);
             }
             RenderSystem.enableDepthTest();
             return true;

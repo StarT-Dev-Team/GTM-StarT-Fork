@@ -20,8 +20,6 @@ import com.gregtechceu.gtceu.common.cover.FacadeCover;
 import com.gregtechceu.gtceu.common.data.models.GTModels;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.client.model.custommodel.CustomBakedModel;
-
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -313,11 +311,6 @@ public final class MachineModel extends BaseBakedModel implements ICoverableRend
             quads = replacePartBaseModel(quads, part, machine.getFrontFacing(), side, rand, modelData, renderType);
         }
 
-        // we have to recalculate CTM ourselves.
-        // this is the slowest part by a long shot because the LDLib quad logic isn't very optimized.
-        if (level != null && pos != null && blockState != null) {
-            return CustomBakedModel.reBakeCustomQuads(quads, level, pos, blockState, side, 0.0f);
-        }
         return quads;
     }
 

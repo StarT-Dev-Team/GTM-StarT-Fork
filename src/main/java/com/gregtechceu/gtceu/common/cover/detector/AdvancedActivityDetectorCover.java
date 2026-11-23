@@ -5,43 +5,31 @@ import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.IUICover;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.RedstoneUtil;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.TextBoxWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AdvancedActivityDetectorCover extends ActivityDetectorCover implements IUICover {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            AdvancedActivityDetectorCover.class, ActivityDetectorCover.MANAGED_FIELD_HOLDER);
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 
     @Persisted
     @DescSynced
@@ -80,7 +68,7 @@ public class AdvancedActivityDetectorCover extends ActivityDetectorCover impleme
             output = isInverted() ? 15 : 0;
         } else {
             output = RedstoneUtil.computeRedstoneValue(workable.getProgress(), workable.getMaxProgress(),
-                isInverted());
+                    isInverted());
         }
 
         if (isStrongSignal) {
@@ -93,27 +81,30 @@ public class AdvancedActivityDetectorCover extends ActivityDetectorCover impleme
     }
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(0, 0, 176, 80);
-        group.addWidget(new LabelWidget(10, 5, "cover.advanced_activity_detector.label"));
+    public UIElement createUIWidget() {
+        var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
+        group.addChild(new Label().setText(Component.translatable("cover.advanced_activity_detector.label")));
 
-        group.addWidget(new TextBoxWidget(10, 55, 65,
-                List.of(LocalizationUtils.format("cover.advanced_detector.ticks_per_cycle")))
-                .setHoverTooltips(Component.translatable("cover.advanced_detector.ticks_per_cycle.tooltip")));
-
-        group.addWidget(new IntInputWidget(80, 50, 176 - 80 - 10, 20, this::getTicksPerCycle, this::setTicksPerCycle)
-                .setMin(ConfigHolder.INSTANCE.machines.coverMinTicksPerCycle));
-
-        group.addWidget(new ToggleButtonWidget(
-                9, 20, 20, 20,
-                GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
+        var toggles = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3));
+        toggles.addChild(new ToggleButton(GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
                 .isMultiLang()
                 .setTooltipText("cover.advanced_activity_detector.invert"));
+        toggles.addChild(
+                new ToggleButton(GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
+                        .isMultiLang()
+                        .setTooltipText("cover.advanced_detector.signal"));
+        group.addChild(toggles);
 
-        group.addWidget(new ToggleButtonWidget(31, 21, 18, 18,
-                GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
-                .isMultiLang()
-                .setTooltipText("cover.advanced_detector.signal"));
+        var row0 = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        var label0 = new Label().setText(Component.translatable("cover.advanced_detector.ticks_per_cycle"));
+        label0.layout(layout -> layout.width(65));
+        label0.style(style -> style.tooltips("cover.advanced_detector.ticks_per_cycle.tooltip"));
+        var input0 = new IntInput(this::getTicksPerCycle, this::setTicksPerCycle);
+        input0.setMin(ConfigHolder.INSTANCE.machines.coverMinTicksPerCycle);
+        input0.layout(layout -> layout.flex(1).height(20));
+        row0.addChildren(label0, input0);
+        group.addChild(row0);
 
         return group;
     }

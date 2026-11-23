@@ -1,9 +1,9 @@
 package com.gregtechceu.gtceu.integration.ae2.slot;
 
-import com.lowdragmc.lowdraglib.syncdata.IContentChangeAware;
-import com.lowdragmc.lowdraglib.syncdata.ITagSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.IContentChangeAware;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.common.util.INBTSerializable;
 
 import appeng.api.stacks.GenericStack;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * An export only slot to hold {@link appeng.api.stacks.GenericStack}
  */
-public abstract class ExportOnlyAESlot implements IConfigurableSlot, ITagSerializable<CompoundTag>,
+public abstract class ExportOnlyAESlot implements IConfigurableSlot, INBTSerializable<CompoundTag>,
                                        IContentChangeAware {
 
     protected final static String CONFIG_TAG = "config";

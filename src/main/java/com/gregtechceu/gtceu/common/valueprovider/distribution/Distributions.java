@@ -74,7 +74,8 @@ public final class Distributions {
                     checkRange(min, max);
                     checkAverage(average, min, max);
 
-                    if (average >= (min + max) / 2.0) throw new IllegalArgumentException("a geometric distribution can only reach averages below " +
+                    if (average >= (min + max) / 2.0)
+                        throw new IllegalArgumentException("a geometric distribution can only reach averages below " +
                                 "the middle of the range (" + (min + max) / 2.0 + "), got " + average);
 
                     int n = max - min;
@@ -100,7 +101,7 @@ public final class Distributions {
 
     public static IntDistribution binomial(double p) {
         checkProbability("binomial", p);
-        
+
         return new IntDistribution() {
 
             @Override
@@ -209,7 +210,8 @@ public final class Distributions {
      *                arrive as text. Missing amounts between the lowest and highest key get weight 0
      */
     public static WeightedInt fromMap(Map<?, ?> weights) {
-        if (weights == null || weights.isEmpty()) throw new IllegalArgumentException("the weight map must not be empty");
+        if (weights == null || weights.isEmpty())
+            throw new IllegalArgumentException("the weight map must not be empty");
 
         TreeMap<Integer, Double> sorted = new TreeMap<>();
 
@@ -221,7 +223,8 @@ public final class Distributions {
         int max = sorted.lastKey();
 
         if (min < 0) throw new IllegalArgumentException("amounts must not be negative, got " + min);
-        if ((long) max - min + 1 > WeightedInt.MAX_ENTRIES) throw new IllegalArgumentException("range " + min + ".." + max + " is too large, at most " +
+        if ((long) max - min + 1 > WeightedInt.MAX_ENTRIES)
+            throw new IllegalArgumentException("range " + min + ".." + max + " is too large, at most " +
                     WeightedInt.MAX_ENTRIES + " different amounts are supported");
 
         double[] w = new double[max - min + 1];
@@ -236,8 +239,10 @@ public final class Distributions {
     }
 
     private static IntDistribution gaussOf(double mean, double sd) {
-        if (Double.isNaN(mean) || Double.isInfinite(mean)) throw new IllegalArgumentException("gauss mean must be a finite number, got " + mean);
-        if (!(sd > 0) || Double.isInfinite(sd)) throw new IllegalArgumentException("gauss spread must be above 0, got " + sd);
+        if (Double.isNaN(mean) || Double.isInfinite(mean))
+            throw new IllegalArgumentException("gauss mean must be a finite number, got " + mean);
+        if (!(sd > 0) || Double.isInfinite(sd))
+            throw new IllegalArgumentException("gauss spread must be above 0, got " + sd);
 
         return new IntDistribution() {
 

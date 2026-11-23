@@ -6,8 +6,8 @@ import com.gregtechceu.gtceu.api.capability.ICentralMonitor;
 import com.gregtechceu.gtceu.api.capability.IMonitorComponent;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.MenuSlots;
 import com.gregtechceu.gtceu.api.item.IComponentItem;
 import com.gregtechceu.gtceu.api.item.component.IItemComponent;
 import com.gregtechceu.gtceu.api.item.component.IMonitorModuleItem;
@@ -17,7 +17,6 @@ import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockDisplayText;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
-import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
 import com.gregtechceu.gtceu.api.pattern.*;
@@ -30,15 +29,24 @@ import com.gregtechceu.gtceu.common.machine.trait.CentralMonitorLogic;
 import com.gregtechceu.gtceu.common.network.GTNetwork;
 import com.gregtechceu.gtceu.common.network.packets.SCPacketMonitorGroupNBTChange;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
-import com.gregtechceu.gtceu.utils.GTStringUtils;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.*;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorBorderTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.VanillaSpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -50,6 +58,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.IItemHandler;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -66,9 +75,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                                    implements IMonitorComponent, IDataInfoProvider, IMachineLife, ICentralMonitor {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(CentralMonitorMachine.class,
-            WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
     @DescSynced
@@ -104,11 +110,6 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                     .or(Predicates.blocks(GTBlocks.CASING_ALUMINIUM_FROSTPROOF.get()));
         }
         return MULTI_PREDICATE;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -327,89 +328,135 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
         getDefinition().getAdditionalDisplay().accept(this, textList);
     }
 
+    private static void onBothSides(UIElement element, Consumer<UIEvent> handler) {
+        element.addEventListener(UIEvents.MOUSE_DOWN, handler::accept);
+        element.addServerEventListener(UIEvents.MOUSE_DOWN, handler::accept);
+    }
+
+    private static void setButtonTexture(Button button, IGuiTexture texture) {
+        button.buttonStyle(style -> style.baseTexture(texture).hoverTexture(texture).pressedTexture(texture));
+    }
+
+    private static Button textButton(String key, int width, int height) {
+        var button = new Button();
+        button.setText(Component.translatable(key));
+        button.layout(layout -> layout.width(width).height(height));
+        return button;
+    }
+
     @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         updateStructureDimensions();
         selectedComponents.clear();
-        WidgetGroup builder = (WidgetGroup) super.createUIWidget();
+        var builder = super.createUIWidget();
 
-        WidgetGroup main = new WidgetGroup();
-        DraggableScrollableWidgetGroup componentSelection = new DraggableScrollableWidgetGroup(0, 10, 200, 110);
-        main.addWidget(componentSelection);
-        WidgetGroup options = new WidgetGroup(-100, 20, 60, 20);
-        WidgetGroup groupConfig = new WidgetGroup(10, 30, 100, 100);
-        groupConfig.setVisible(false);
+        var main = new UIElement();
+        main.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0));
 
-        ButtonWidget infoWidget = new ButtonWidget(200, 10, 20, 20, null);
-        infoWidget.setButtonTexture(GuiTextures.INFO_ICON);
-        infoWidget.setHoverTooltips(
-                GTStringUtils.toImmutable(LangHandler.getSingleOrMultiLang("gtceu.central_monitor.info_tooltip")));
-        builder.addWidget(infoWidget);
+        var componentSelection = new ScrollerView();
+        componentSelection.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(10).width(200)
+                .height(110));
+        var selectionContent = new UIElement();
+        selectionContent.layout(layout -> layout.width(20 + 16 * (leftDist + rightDist + 1) + 4)
+                .height(30 + 16 * (downDist + upDist + 1) + 4));
+        componentSelection.addScrollViewChild(selectionContent);
+        main.addChild(componentSelection);
+
+        var options = new UIElement();
+        options.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(-100).top(20).width(60)
+                .height(35));
+        var groupConfig = new UIElement();
+        groupConfig.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(10).top(30).width(100)
+                .height(100));
+        groupConfig.setDisplay(false);
+
+        var infoWidget = new Button();
+        infoWidget.noText();
+        infoWidget.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(200).top(10).width(20)
+                .height(20));
+        setButtonTexture(infoWidget, GuiTextures.INFO_ICON);
+        var infoTooltips = LangHandler.getSingleOrMultiLang("gtceu.central_monitor.info_tooltip")
+                .toArray(Component[]::new);
+        infoWidget.style(style -> style.tooltips(infoTooltips));
+        builder.addChild(infoWidget);
+
         List<MonitorGroup> configGroup = new ArrayList<>();
         configGroup.add(null);
 
-        Consumer<MonitorGroup> openGroupConfig = (group) -> {
+        Consumer<MonitorGroup> openGroupConfig = group -> {
             configGroup.set(0, group);
             if (group == null) {
-                main.setVisible(true);
-                groupConfig.setVisible(false);
+                MenuSlots.clearChildren(groupConfig);
+                main.setDisplay(true);
+                groupConfig.setDisplay(false);
                 return;
             }
-            groupConfig.clearAllWidgets();
-            groupConfig.addWidget(new LabelWidget(0, 5, () -> {
-                String currentName = "";
-                if (configGroup.get(0) != null) {
-                    currentName = configGroup.get(0).getName();
-                }
-                return Component.translatable("gtceu.central_monitor.gui.currently_editing", currentName).getString();
-            }));
+            MenuSlots.clearChildren(groupConfig);
+            var editing = new Label();
+            editing.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(5));
+            editing.setText(Component.translatable("gtceu.central_monitor.gui.currently_editing", group.getName()));
+            groupConfig.addChild(editing);
             for (int i = 0; i < 8; i++) {
-                SlotWidget slot = new SlotWidget(group.getPlaceholderSlotsHandler(), i, -38, 16 * i + 46);
-                slot.setHoverTooltips(GTStringUtils
-                        .toImmutable(LangHandler.getMultiLang("gtceu.gui.computer_monitor_cover.slot_tooltip", i + 1)));
-                groupConfig.addWidget(slot);
+                var placeholder = new ItemSlot().bind(group.getPlaceholderSlotsHandler(), i);
+                int top = 16 * i + 46;
+                placeholder.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(-38).top(top));
+                var tooltips = LangHandler.getMultiLang("gtceu.gui.computer_monitor_cover.slot_tooltip", i + 1)
+                        .toArray(Component[]::new);
+                placeholder.style(style -> style.tooltips(tooltips));
+                groupConfig.addChild(placeholder);
             }
-            SlotWidget slot = new SlotWidget(
-                    group.getItemStackHandler(), 0,
-                    0, 20);
-            WidgetGroup itemUI = new WidgetGroup(40, 20, 100, 100);
+            var itemUI = new UIElement();
+            itemUI.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(40).top(20).width(100)
+                    .height(100));
+            var lastItem = new ItemStack[] { ItemStack.EMPTY };
+            var itemHandlerSlot = new ItemHandlerSlot(group.getItemStackHandler(), 0);
             Runnable changeListener = () -> {
-                if (slot.getLastItem().is(slot.getItem().getItem())) return;
-                itemUI.clearAllWidgets();
-                if (slot.getItem().getItem() instanceof IComponentItem item) {
+                var current = itemHandlerSlot.getItem();
+                if (lastItem[0].is(current.getItem())) return;
+                lastItem[0] = current.copy();
+                MenuSlots.clearChildren(itemUI);
+                if (current.getItem() instanceof IComponentItem item) {
                     for (IItemComponent component : item.getComponents()) {
                         if (component instanceof IMonitorModuleItem module) {
-                            itemUI.addWidget(module.createUIWidget(slot.getItem(), this, group));
+                            itemUI.addChild(module.createUIWidget(current, this, group));
                         }
                     }
                 }
             };
-            slot.setChangeListener(changeListener);
+            itemHandlerSlot.addChangeListener(changeListener);
+            var slot = new ItemSlot().bind(itemHandlerSlot);
+            slot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(20));
             changeListener.run();
-            groupConfig.addWidget(itemUI);
-            groupConfig.addWidget(slot);
-            main.setVisible(false);
-            groupConfig.setVisible(true);
+            groupConfig.addChildren(itemUI, slot);
+            main.setDisplay(false);
+            groupConfig.setDisplay(true);
         };
-        builder.addWidget(groupConfig);
-        DraggableScrollableWidgetGroup groupList = new DraggableScrollableWidgetGroup(-100, 50, 70, 80);
+        builder.addChild(groupConfig);
+
+        var groupListView = new ScrollerView();
+        groupListView.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(-100).top(50).width(70)
+                .height(80));
+        var groupList = new UIElement();
+        groupList.layout(layout -> layout.width(66).minHeight(80));
+        groupListView.addScrollViewChild(groupList);
 
         List<List<Consumer<Iterator<IMonitorComponent>>>> imageButtons = new ArrayList<>();
         Map<BlockPos, Runnable> rightClickCallbacks = new HashMap<>();
-        int[] dataSlot = new int[2]; // list to be able to modify it in lambdas
-        dataSlot[0] = 1; // the slot (index starts from 1)
-        dataSlot[1] = 9; // amount of slots
-        IntInputWidget dataSlotInput = new IntInputWidget(120, 20, 60, -20, () -> dataSlot[0],
-                n -> dataSlot[0] = Mth.clamp(n, 1, dataSlot[1]));
-        dataSlotInput.setVisible(false);
-        builder.addWidget(dataSlotInput);
+        int[] dataSlot = new int[2];
+        dataSlot[0] = 1;
+        dataSlot[1] = 9;
+        var dataSlotInput = new IntInput(() -> dataSlot[0], n -> dataSlot[0] = Mth.clamp(n, 1, dataSlot[1]));
+        dataSlotInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(120).top(20).width(60));
+        dataSlotInput.setDisplay(false);
+        builder.addChild(dataSlotInput);
 
         Consumer<MonitorGroup> addGroupToList = group -> {
-            ButtonWidget label = new ButtonWidget(20, groupList.widgets.size() * 15 + 5, 60, 10, null);
-            TextTexture text = new TextTexture(group.getName());
-            text.setType(TextTexture.TextType.LEFT);
-            label.setButtonTexture(text);
-            label.setOnPressCallback(click -> {
+            int top = groupList.getChildren().size() / 2 * 15 + 5;
+            var label = new Button();
+            label.setText(group.getName(), false);
+            label.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(20).top(top).width(46)
+                    .height(10));
+            onBothSides(label, click -> {
                 group.getMonitorPositions().forEach(pos -> {
                     BlockPos rel = toRelative(pos);
                     if (imageButtons.size() - 1 < rel.getY()) return;
@@ -420,33 +467,38 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                     rightClickCallbacks.getOrDefault(group.getTargetRaw(), () -> {}).run();
                 }
             });
-            groupList.addWidget(label);
+            groupList.addChild(label);
 
-            ButtonWidget configButton = new ButtonWidget(
-                    0, label.getSelfPositionY() - 3,
-                    16, 16,
-                    GuiTextures.IO_CONFIG_COVER_SETTINGS,
-                    click -> {
-                        if (configGroup.get(0) == null) {
-                            openGroupConfig.accept(group);
-                        } else {
-                            openGroupConfig.accept(null);
-                        }
-                    });
-            groupList.addWidget(configButton);
+            var configButton = new Button();
+            configButton.noText();
+            configButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(top - 3).width(16)
+                    .height(16));
+            setButtonTexture(configButton, GuiTextures.IO_CONFIG_COVER_SETTINGS);
+            onBothSides(configButton, click -> {
+                if (configGroup.get(0) == null) {
+                    openGroupConfig.accept(group);
+                } else {
+                    openGroupConfig.accept(null);
+                }
+            });
+            groupList.addChild(configButton);
         };
 
         monitorGroups.forEach(addGroupToList);
-        builder.addWidget(groupList);
-        main.addWidget(options);
-        ButtonWidget removeFromGroupButton = new ButtonWidget(0, 0, 60, 20, null);
-        removeFromGroupButton.setButtonTexture(new TextTexture("gtceu.central_monitor.gui.remove_from_group"));
-        removeFromGroupButton.setVisible(false);
-        ButtonWidget setTargetButton = new ButtonWidget(0, 15, 60, 20, null);
-        setTargetButton.setButtonTexture(new TextTexture("gtceu.central_monitor.gui.set_target"));
-        setTargetButton.setVisible(false);
-        ButtonWidget createGroupButton = new ButtonWidget(0, 0, 60, 20, null);
-        createGroupButton.setOnPressCallback(click -> {
+        builder.addChild(groupListView);
+        main.addChild(options);
+
+        var removeFromGroupButton = textButton("gtceu.central_monitor.gui.remove_from_group", 60, 20);
+        removeFromGroupButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0));
+        removeFromGroupButton.setDisplay(false);
+        var setTargetButton = textButton("gtceu.central_monitor.gui.set_target", 60, 20);
+        setTargetButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(15));
+        setTargetButton.setDisplay(false);
+        var createGroupButton = textButton("gtceu.central_monitor.gui.create_group", 60, 20);
+        createGroupButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0));
+        createGroupButton.setDisplay(false);
+
+        onBothSides(createGroupButton, click -> {
             MonitorGroup group = new MonitorGroup(
                     Component.translatable("gtceu.gui.central_monitor.group_default_name", monitorGroups.size() + 1)
                             .getString());
@@ -457,8 +509,8 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
             monitorGroups.add(group);
             addGroupToList.accept(group);
 
-            createGroupButton.setVisible(false);
-            removeFromGroupButton.setVisible(true);
+            createGroupButton.setDisplay(false);
+            removeFromGroupButton.setDisplay(true);
             Iterator<IMonitorComponent> it = selectedComponents.iterator();
             while (it.hasNext()) {
                 IMonitorComponent c = it.next();
@@ -469,7 +521,7 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                 rightClickCallbacks.getOrDefault(selectedTargets.get(0).getPos(), () -> {}).run();
             }
         });
-        setTargetButton.setOnPressCallback(click -> {
+        onBothSides(setTargetButton, click -> {
             MonitorGroup group = null;
             for (MonitorGroup group2 : monitorGroups) {
                 for (IMonitorComponent component : selectedComponents) {
@@ -487,7 +539,7 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                 group.setDataSlot(dataSlot[0] - 1);
             }
         });
-        removeFromGroupButton.setOnPressCallback(click -> {
+        onBothSides(removeFromGroupButton, click -> {
             for (MonitorGroup group : monitorGroups) {
                 for (IMonitorComponent component : selectedComponents) group.remove(component.getPos());
             }
@@ -500,11 +552,11 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                     itg.remove();
                 }
             }
-            groupList.clearAllWidgets();
+            groupList.clearAllChildren();
             monitorGroups.forEach(addGroupToList);
 
-            removeFromGroupButton.setVisible(false);
-            createGroupButton.setVisible(true);
+            removeFromGroupButton.setDisplay(false);
+            createGroupButton.setDisplay(true);
             Iterator<IMonitorComponent> it = selectedComponents.iterator();
             while (it.hasNext()) {
                 IMonitorComponent c = it.next();
@@ -517,25 +569,29 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                 rightClickCallbacks.getOrDefault(selectedTargets.get(0).getPos(), () -> {}).run();
             }
         });
-        createGroupButton.setButtonTexture(new TextTexture("gtceu.central_monitor.gui.create_group"));
-        createGroupButton.setVisible(false);
-        options.addWidget(removeFromGroupButton);
-        options.addWidget(createGroupButton);
-        options.addWidget(setTargetButton);
+        options.addChildren(removeFromGroupButton, createGroupButton, setTargetButton);
+
         int startX = 20;
         int startY = 30;
         for (int row = 0; row <= downDist + upDist; row++) {
             imageButtons.add(new ArrayList<>());
             for (int col = 0; col <= leftDist + rightDist; col++) {
                 IGuiTexture texture = getComponentTexture(row, col);
-                GuiTextureGroup textures = new GuiTextureGroup(texture, new ColorBorderTexture(2, 0xFFFFFF));
+                var border = new ColorBorderTexture(2, 0xFFFFFF);
                 IMonitorComponent component = getComponent(row, col);
                 if (component == null) {
                     GTUtil.getLast(imageButtons).add(it -> {});
                     continue;
                 }
-                ButtonWidget img = new ButtonWidget(startX + (16 * col), startY + (16 * row), 16, 16, textures, null);
-                Consumer<Iterator<IMonitorComponent>> callback = (it) -> {
+                var img = new Button();
+                img.noText();
+                int left = startX + 16 * col;
+                int top = startY + 16 * row;
+                img.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(left).top(top).width(16)
+                        .height(16));
+                Consumer<IGuiTexture> applyTexture = tex -> setButtonTexture(img, new GuiTextureGroup(tex, border));
+                applyTexture.accept(texture);
+                Consumer<Iterator<IMonitorComponent>> callback = it -> {
                     if (!component.isMonitor()) return;
                     if (selectedComponents.contains(component)) {
                         if (it == null) {
@@ -545,63 +601,50 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                         }
 
                         if (!selectedTargets.isEmpty() && selectedTargets.get(0) == component) {
-                            ColorRectTexture rect = new ColorRectTexture(Color.BLUE);
-                            textures.setTextures(rect, texture);
+                            applyTexture.accept(new GuiTextureGroup(new ColorRectTexture(Color.BLUE), texture));
                         } else {
-                            textures.setTextures(texture);
+                            applyTexture.accept(texture);
                         }
 
-                        createGroupButton.setVisible(selectedComponents.stream().noneMatch(this::isInAnyGroup));
-                        removeFromGroupButton.setVisible(selectedComponents.stream().allMatch(this::isInAnyGroup));
-                        setTargetButton.setVisible(removeFromGroupButton.isVisible());
+                        createGroupButton.setDisplay(selectedComponents.stream().noneMatch(this::isInAnyGroup));
+                        removeFromGroupButton.setDisplay(selectedComponents.stream().allMatch(this::isInAnyGroup));
+                        setTargetButton.setDisplay(removeFromGroupButton.isDisplayed());
 
                         if (selectedComponents.isEmpty()) {
-                            createGroupButton.setVisible(false);
-                            removeFromGroupButton.setVisible(false);
-                            setTargetButton.setVisible(false);
+                            createGroupButton.setDisplay(false);
+                            removeFromGroupButton.setDisplay(false);
+                            setTargetButton.setDisplay(false);
                         }
                     } else {
                         boolean inAnyGroup = isInAnyGroup(component);
-                        // yes I know this is terrible but if it works don't touch it :)
-                        if (selectedComponents.isEmpty() && !inAnyGroup) createGroupButton.setVisible(true);
-                        if (inAnyGroup) createGroupButton.setVisible(false);
+                        if (selectedComponents.isEmpty() && !inAnyGroup) createGroupButton.setDisplay(true);
+                        if (inAnyGroup) createGroupButton.setDisplay(false);
                         if (selectedComponents.isEmpty() && inAnyGroup) {
-                            removeFromGroupButton.setVisible(true);
-                            setTargetButton.setVisible(true);
+                            removeFromGroupButton.setDisplay(true);
+                            setTargetButton.setDisplay(true);
                         }
                         if (!inAnyGroup) {
-                            removeFromGroupButton.setVisible(false);
-                            setTargetButton.setVisible(false);
+                            removeFromGroupButton.setDisplay(false);
+                            setTargetButton.setDisplay(false);
                         }
                         selectedComponents.add(component);
-                        ColorRectTexture rect = new ColorRectTexture(
+                        var rect = new ColorRectTexture(
                                 (selectedTargets.isEmpty() || selectedTargets.get(0) != component) ? Color.RED :
                                         Color.PINK);
-                        textures.setTextures(rect, texture);
+                        applyTexture.accept(new GuiTextureGroup(rect, texture));
                     }
-                    if (isInAnyGroup(component)) {
-                        monitorGroups.forEach(group -> {
-                            if (group.contains(component.getPos())) {
-                                img.setHoverTooltips(
-                                        Component.translatable("gtceu.gui.central_monitor.group", group.getName()));
-                            }
-                        });
-                    } else {
-                        img.setHoverTooltips(Component.translatable("gtceu.gui.central_monitor.group",
-                                Component.translatable("gtceu.gui.central_monitor.none")));
-                    }
+                    updateGroupTooltip(img, component);
                 };
                 Runnable rightClickCallback = () -> {
                     if (!selectedTargets.isEmpty()) {
                         if (selectedTargets.get(0).getPos() == component.getPos()) {
                             selectedTargets.clear();
                             if (selectedComponents.contains(component)) {
-                                ColorRectTexture rect = new ColorRectTexture(Color.RED);
-                                textures.setTextures(rect, texture);
+                                applyTexture.accept(new GuiTextureGroup(new ColorRectTexture(Color.RED), texture));
                             } else {
-                                textures.setTextures(texture);
+                                applyTexture.accept(texture);
                             }
-                            dataSlotInput.setVisible(false);
+                            dataSlotInput.setDisplay(false);
                             return;
                         } else {
                             try {
@@ -621,7 +664,7 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                     } else {
                         rect = new ColorRectTexture(Color.BLUE);
                     }
-                    textures.setTextures(rect, texture);
+                    applyTexture.accept(new GuiTextureGroup(rect, texture));
                     if (component.getDataItems() != null) {
                         IItemHandler dataItems = component.getDataItems();
                         MonitorGroup selectedGroup = null;
@@ -641,34 +684,37 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
                             dataSlot[0] = selectedGroup.getDataSlot() + 1;
                         }
                         dataSlot[1] = dataItems.getSlots();
-                        dataSlotInput.setVisible(true);
+                        dataSlotInput.setDisplay(true);
                     }
                 };
-                if (isInAnyGroup(component)) {
-                    monitorGroups.forEach(group -> {
-                        if (group.contains(component.getPos())) img.setHoverTooltips(
-                                Component.translatable("gtceu.gui.central_monitor.group", group.getName()));
-                    });
-                } else {
-                    img.setHoverTooltips(Component.translatable("gtceu.gui.central_monitor.group",
-                            Component.translatable("gtceu.gui.central_monitor.none")));
-                }
-                img.setOnPressCallback(click -> {
+                updateGroupTooltip(img, component);
+                onBothSides(img, click -> {
                     if (click.button == 0) callback.accept(null);
                     else if (click.button == 1) rightClickCallback.run();
                 });
-                componentSelection.addWidget(img);
+                selectionContent.addChild(img);
                 GTUtil.getLast(imageButtons).add(callback);
                 rightClickCallbacks.put(component.getPos(), rightClickCallback);
             }
         }
-        builder.addWidget(main);
+        builder.addChild(main);
         return builder;
+    }
+
+    private void updateGroupTooltip(Button img, IMonitorComponent component) {
+        Component name = Component.translatable("gtceu.gui.central_monitor.none");
+        for (MonitorGroup group : monitorGroups) {
+            if (group.contains(component.getPos())) {
+                name = Component.literal(group.getName());
+            }
+        }
+        var tooltip = Component.translatable("gtceu.gui.central_monitor.group", name);
+        img.style(style -> style.tooltips(tooltip));
     }
 
     @Override
     public IGuiTexture getComponentIcon() {
-        return ResourceTexture.fromSpirit(GTCEu.id("block/multiblock/network_switch/overlay_front_active"));
+        return VanillaSpriteTexture.of(GTCEu.id("block/multiblock/network_switch/overlay_front_active"));
     }
 
     @Override

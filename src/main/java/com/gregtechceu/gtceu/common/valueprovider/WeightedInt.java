@@ -128,15 +128,18 @@ public class WeightedInt extends StatisticalInt {
     private DataResult<WeightedInt> validate() {
         if (offset < 0) return DataResult.error(() -> "min must not be negative, got " + offset);
         if (weights.length == 0) return DataResult.error(() -> "weights must not be empty");
-        if (weights.length > MAX_ENTRIES) return DataResult.error(() -> "too many weights (" + weights.length + "), the maximum is " + MAX_ENTRIES +
+        if (weights.length > MAX_ENTRIES)
+            return DataResult.error(() -> "too many weights (" + weights.length + "), the maximum is " + MAX_ENTRIES +
                     ". Use a smaller range.");
 
         for (double w : weights) {
-            if (Double.isNaN(w) || Double.isInfinite(w) || w < 0) return DataResult.error(() -> "weights must be finite and not negative, got " + w);
+            if (Double.isNaN(w) || Double.isInfinite(w) || w < 0)
+                return DataResult.error(() -> "weights must be finite and not negative, got " + w);
         }
 
         if (!(total > 0)) return DataResult.error(() -> "at least one weight must be above 0");
-        if (Double.isNaN(tierWeightBoost) || Double.isInfinite(tierWeightBoost)) return DataResult.error(() -> "tier boost must be a finite number, got " + tierWeightBoost);
+        if (Double.isNaN(tierWeightBoost) || Double.isInfinite(tierWeightBoost))
+            return DataResult.error(() -> "tier boost must be a finite number, got " + tierWeightBoost);
 
         return DataResult.success(this);
     }

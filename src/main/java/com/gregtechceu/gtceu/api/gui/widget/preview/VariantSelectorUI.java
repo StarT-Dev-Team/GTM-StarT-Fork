@@ -1,27 +1,28 @@
 package com.gregtechceu.gtceu.api.gui.widget.preview;
 
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.pattern.predicates.SimplePredicate;
 import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemStackHandler;
 
-import com.lowdragmc.lowdraglib.gui.editor.ColorPattern;
-import com.lowdragmc.lowdraglib.gui.texture.ColorBorderTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ColorRectTexture;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.ColorPattern;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorBorderTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -30,7 +31,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import org.jetbrains.annotations.NotNull;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class VariantSelectorUI {
         @Nullable
         BlockPos selectedPos();
 
-        Position widgetPosition();
+        float widgetPositionY();
 
         void clearBlockSelection();
 
@@ -60,74 +61,48 @@ public class VariantSelectorUI {
     private static final int LIST_Y = 14;
     private static final int LIST_WIDTH = 24;
     private static final int LIST_HEIGHT = 162;
-    private static final int MAX_UNSCROLLED_ENTRIES = 8;
     private static final int ENTRY_SPACING = 20;
     private static final int MAX_VISIBLE_FLYOUT_ROWS = 6;
     private static final int FLYOUT_SCROLLBAR_WIDTH = 3;
 
     private final Host host;
-    private final int widgetWidth;
     private final int widgetHeight;
 
-    private final DraggableScrollableWidgetGroup listGroup;
-    private final WidgetGroup flyoutGroup;
+    private final ScrollerView listGroup;
+    private final UIElement flyoutGroup;
     @Nullable
     private VariantCategory activeFlyoutCategory = null;
     @Nullable
-    private DraggableScrollableWidgetGroup activeFlyoutPopup = null;
+    private UIElement activeFlyoutPopup = null;
+    @Nullable
+    private UIElement activeFlyoutSource = null;
 
     public VariantSelectorUI(Host host, int widgetWidth, int widgetHeight) {
         this.host = host;
-        this.widgetWidth = widgetWidth;
         this.widgetHeight = widgetHeight;
 
-        this.listGroup = new DraggableScrollableWidgetGroup(LIST_X, LIST_Y, LIST_WIDTH, LIST_HEIGHT) {
+        this.listGroup = new ScrollerView();
+        listGroup.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(LIST_X).top(LIST_Y)
+                .width(LIST_WIDTH).height(LIST_HEIGHT));
+        listGroup.scrollerStyle(style -> style.mode(ScrollerMode.VERTICAL)
+                .verticalScrollDisplay(ScrollDisplay.AUTO));
+        listGroup.viewPort(viewPort -> {
+            viewPort.layout(layout -> layout.paddingAll(0));
+            viewPort.style(style -> style.backgroundTexture(IGuiTexture.EMPTY));
+        });
+        listGroup.addEventListener(UIEvents.MOUSE_WHEEL, event -> closeFlyout(), true);
+        listGroup.setDisplay(false);
 
-            @Override
-            public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-                closeFlyout();
-                return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
-            }
-
-            @Override
-            public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-                closeFlyout();
-                return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-            }
-        };
-        listGroup.setYScrollBarWidth(3)
-                .setYBarStyle(new ColorRectTexture(0x30000000), ColorPattern.T_WHITE.rectTexture().setRadius(1))
-                .setScrollable(true)
-                .setDraggable(false)
-                .setScrollWheelDirection(DraggableScrollableWidgetGroup.ScrollWheelDirection.VERTICAL)
-                .setUseScissor(true);
-        listGroup.setVisible(false);
-
-        this.flyoutGroup = new WidgetGroup(0, 0, widgetWidth, widgetHeight) {
-
-            @Nullable
-            @Override
-            public Widget getHoverElement(double mouseX, double mouseY) {
-                for (int i = widgets.size() - 1; i >= 0; i--) {
-                    Widget widget = widgets.get(i);
-                    if (widget.isVisible()) {
-                        Widget hover = widget.getHoverElement(mouseX, mouseY);
-                        if (hover != null) {
-                            return hover;
-                        }
-                    }
-                }
-                return null;
-            }
-        };
-        flyoutGroup.setVisible(false);
+        this.flyoutGroup = new UIElement();
+        flyoutGroup.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0).width(0).height(0));
+        flyoutGroup.setDisplay(false);
     }
 
-    public DraggableScrollableWidgetGroup getListGroup() {
+    public ScrollerView getListGroup() {
         return listGroup;
     }
 
-    public WidgetGroup getFlyoutGroup() {
+    public UIElement getFlyoutGroup() {
         return flyoutGroup;
     }
 
@@ -136,37 +111,27 @@ public class VariantSelectorUI {
     }
 
     public boolean isMouseOverFlyout(double mouseX, double mouseY) {
-        return activeFlyoutCategory != null && activeFlyoutPopup != null && activeFlyoutPopup.isVisible() &&
-                activeFlyoutPopup.isMouseOverElement(mouseX, mouseY);
+        return activeFlyoutCategory != null && activeFlyoutPopup != null && activeFlyoutPopup.isDisplayed() &&
+                activeFlyoutPopup.isMouseOverElement((float) mouseX, (float) mouseY);
     }
 
     public boolean isMouseOverList(double mouseX, double mouseY) {
-        return listGroup.isVisible() && listGroup.isMouseOverElement(mouseX, mouseY);
+        return listGroup.isDisplayed() && listGroup.isMouseOverElement((float) mouseX, (float) mouseY);
     }
 
     public boolean isMouseOverAny(double mouseX, double mouseY) {
         return isMouseOverFlyout(mouseX, mouseY) || isMouseOverList(mouseX, mouseY);
     }
 
-    public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-        if (isMouseOverFlyout(mouseX, mouseY)) {
-            return flyoutGroup.mouseWheelMove(mouseX, mouseY, wheelDelta);
-        }
-        if (isMouseOverList(mouseX, mouseY)) {
-            return listGroup.mouseWheelMove(mouseX, mouseY, wheelDelta);
-        }
-        return false;
-    }
-
     public void clear() {
         closeFlyout();
-        listGroup.clearAllWidgets();
-        listGroup.setScrollYOffset(0);
-        listGroup.setVisible(false);
+        listGroup.clearAllScrollViewChildren();
+        listGroup.verticalScroller.setValue(0f, true);
+        listGroup.setDisplay(false);
     }
 
     public void resetScroll() {
-        listGroup.setScrollYOffset(0);
+        listGroup.verticalScroller.setValue(0f, true);
     }
 
     public void update() {
@@ -176,11 +141,11 @@ public class VariantSelectorUI {
             return;
         }
 
-        int prevScroll = listGroup.getScrollYOffset();
-        listGroup.clearAllWidgets();
-        listGroup.setVisible(true);
+        Float prevScroll = listGroup.verticalScroller.getValue();
+        listGroup.clearAllScrollViewChildren();
+        listGroup.setDisplay(true);
         build(pattern);
-        listGroup.setScrollYOffset(prevScroll);
+        listGroup.verticalScroller.setValue(prevScroll == null ? 0f : prevScroll, true);
     }
 
     private record CandidateEntry(@Nullable VariantCategory category, SimplePredicate simplePredicate,
@@ -216,51 +181,36 @@ public class VariantSelectorUI {
             return;
         }
 
-        listGroup.setYScrollBarWidth(total > MAX_UNSCROLLED_ENTRIES ? 3 : 0);
-        listGroup.setScrollable(total > MAX_UNSCROLLED_ENTRIES);
-
+        var content = new UIElement();
+        content.layout(layout -> layout.width(LIST_WIDTH - 4).height(total * ENTRY_SPACING + 2));
         for (int i = 0; i < total; i++) {
             CandidateEntry entry = entries.get(i);
             int y = 1 + i * ENTRY_SPACING;
             if (entry.category() != null) {
-                listGroup.addWidget(createCategoryButton(entry.category(), pattern, 1, y, entry.tooltips()));
+                content.addChild(place(createCategoryButton(entry.category(), pattern, entry.tooltips()), 1, y));
             } else {
-                listGroup.addWidget(createCandidateSlot(entry.simplePredicate(), 1, y, entry.tooltips()));
+                content.addChild(place(createCandidateSlot(entry.simplePredicate(), entry.tooltips()), 1, y));
             }
         }
-
-        listGroup.addWidget(new Widget(0, 1 + (total - 1) * ENTRY_SPACING + 19, 1, 2));
+        listGroup.addScrollViewChild(content);
     }
 
-    private static class StackTooltipButton extends ButtonWidget {
-
-        private final ItemStack tooltipStack;
-        private final List<Component> tooltip;
-
-        StackTooltipButton(int x, int y, IGuiTexture texture, ItemStack tooltipStack, List<Component> tooltip) {
-            super(x, y, 18, 18, texture, cd -> {});
-            this.tooltipStack = tooltipStack;
-            this.tooltip = tooltip;
-            setHoverBorderTexture(1, -1);
-        }
-
-        @Override
-        public List<Component> getTooltipTexts() {
-            return tooltip;
-        }
-
-        @Override
-        protected void drawTooltipTexts(int mouseX, int mouseY) {
-            this.tooltipTexts.clear();
-            this.tooltipTexts.addAll(tooltip);
-            if (isMouseOverElement(mouseX, mouseY) && getHoverElement(mouseX, mouseY) == this &&
-                    gui != null && gui.getModularUIGui() != null) {
-                gui.getModularUIGui().setHoverTooltip(tooltip, tooltipStack, null, null);
-            }
-        }
+    private static <T extends UIElement> T place(T element, int x, int y) {
+        element.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(x).top(y));
+        return element;
     }
 
-    private Widget createCategoryButton(VariantCategory cat, MBPattern pattern, int itemX, int itemY,
+    private Button stackButton(IGuiTexture texture, ItemStack tooltipStack, List<Component> tooltip) {
+        var button = new Button().noText();
+        button.layout(layout -> layout.width(18).height(18).paddingAll(0));
+        var hover = IGuiTexture.group(texture, new ColorBorderTexture(1, -1));
+        button.buttonStyle(style -> style.baseTexture(texture).hoverTexture(hover).pressedTexture(hover));
+        button.addEventListener(UIEvents.HOVER_TOOLTIPS,
+                event -> event.hoverTooltips = new HoverTooltips(tooltip, null, null, tooltipStack));
+        return button;
+    }
+
+    private Button createCategoryButton(VariantCategory cat, MBPattern pattern,
                                         @Nullable List<Component> extraTips) {
         BlockState activeState = pattern.activeAbilityChoices.get(cat.ability());
         int vIdx = VariantDiscovery.indexOfBlock(cat.variants(), activeState);
@@ -276,59 +226,31 @@ public class VariantSelectorUI {
         tooltip.add(Component.translatable("gtceu.multiblock.preview.variant_selector.hint")
                 .withStyle(ChatFormatting.GRAY));
 
-        return new StackTooltipButton(itemX, itemY,
-                new GuiTextureGroup(ColorPattern.T_GRAY.rectTexture(), new ItemStackTexture(displayStack)),
-                displayStack, tooltip) {
-
-            @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                if (isMouseOverElement(mouseX, mouseY)) {
-                    if (button == 1) {
-                        closeFlyout();
-                        cycleVariant(cat);
-                        playButtonClickSound();
-                        return true;
-                    } else if (button == 0) {
-                        toggleFlyout(cat, this);
-                        playButtonClickSound();
-                        return true;
-                    }
-                }
-                return super.mouseClicked(mouseX, mouseY, button);
+        var button = stackButton(IGuiTexture.group(ColorPattern.T_GRAY.rectTexture(),
+                new ItemStackTexture(displayStack)), displayStack, tooltip);
+        button.setOnClick(event -> toggleFlyout(cat, button));
+        button.addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            if (event.button == 1) {
+                closeFlyout();
+                cycleVariant(cat);
             }
-
-            @Override
-            public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-                super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-                if (activeFlyoutCategory == cat) {
-                    Position pos = getPosition();
-                    Size size = getSize();
-                    new ColorBorderTexture(1, 0xff00ffff).draw(graphics, mouseX, mouseY, pos.x, pos.y, size.width,
-                            size.height);
-                }
-            }
-        };
+        });
+        return button;
     }
 
-    private Widget createCandidateSlot(SimplePredicate sp, int itemX, int itemY, List<Component> tips) {
+    private ItemSlot createCandidateSlot(SimplePredicate sp, @Nullable List<Component> tips) {
         CycleItemStackHandler handler = new CycleItemStackHandler(List.of(sp.getCandidates()));
 
-        return new SlotWidget(handler, 0, itemX, itemY, false, false) {
-
-            @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                if (isMouseOverElement(mouseX, mouseY)) {
-                    closeFlyout();
-                }
-                return super.mouseClicked(mouseX, mouseY, button);
-            }
-        }
-                .setIngredientIO(IngredientIO.INPUT)
-                .setBackgroundTexture(ColorPattern.T_GRAY.rectTexture())
-                .setOnAddedTooltips((s, list) -> {
-                    if (tips != null) list.addAll(tips);
-                })
-                .setHoverTexture(new ColorBorderTexture(1, -1));
+        var slot = new ItemSlot();
+        slot.bind(new ItemHandlerSlot(handler, 0).setCanTake(player -> false).setCanPlace(stack -> false));
+        slot.xeiRecipeIngredient(IngredientIO.INPUT).xeiRecipeSlot(IngredientIO.INPUT, 1);
+        slot.style(style -> {
+            style.backgroundTexture(ColorPattern.T_GRAY.rectTexture());
+            if (tips != null) style.appendTooltips(tips.toArray(Component[]::new));
+        });
+        slot.slotStyle(style -> style.hoverOverlay(new ColorBorderTexture(1, -1)));
+        slot.addEventListener(UIEvents.MOUSE_DOWN, event -> closeFlyout());
+        return slot;
     }
 
     private void cycleVariant(VariantCategory category) {
@@ -340,7 +262,7 @@ public class VariantSelectorUI {
         host.selectVariant(category.ability(), category.variants().get(next));
     }
 
-    private void toggleFlyout(VariantCategory category, @Nullable Widget sourceWidget) {
+    private void toggleFlyout(VariantCategory category, @Nullable UIElement sourceWidget) {
         if (this.activeFlyoutCategory == category) {
             closeFlyout();
             return;
@@ -348,19 +270,34 @@ public class VariantSelectorUI {
         openFlyout(category, sourceWidget);
     }
 
-    private void openFlyout(VariantCategory category, @Nullable Widget sourceWidget) {
+    private void openFlyout(VariantCategory category, @Nullable UIElement sourceWidget) {
         MBPattern pattern = host.currentPattern();
         if (pattern == null) return;
 
+        closeFlyout();
         this.activeFlyoutCategory = category;
-        flyoutGroup.clearAllWidgets();
-        flyoutGroup.setVisible(true);
+        this.activeFlyoutSource = sourceWidget;
+        if (sourceWidget != null) {
+            sourceWidget.style(style -> style.overlay(new ColorBorderTexture(1, 0xff00ffff)));
+        }
+        flyoutGroup.setDisplay(true);
 
         BlockState currentChoice = pattern.activeAbilityChoices.get(category.ability());
 
         int count = category.variants().size();
         int cols = Math.max(1, Math.min(count, 6));
-        DraggableScrollableWidgetGroup popup = createPopup(sourceWidget, count, cols);
+        int rows = (count + cols - 1) / cols;
+        int visibleRows = Math.max(1, Math.min(rows, MAX_VISIBLE_FLYOUT_ROWS));
+        boolean needScroll = rows > MAX_VISIBLE_FLYOUT_ROWS;
+
+        int flyoutWidth = cols * 18 + 4 + (needScroll ? FLYOUT_SCROLLBAR_WIDTH + 1 : 0);
+        int flyoutHeight = visibleRows * 18 + 4;
+        int flyoutX = LIST_X + LIST_WIDTH + 1;
+        int sourceY = sourceWidget != null ? (int) (sourceWidget.getPositionY() - host.widgetPositionY()) : LIST_Y;
+        int flyoutY = Mth.clamp(sourceY, LIST_Y, Math.max(LIST_Y, widgetHeight - 32 - flyoutHeight));
+
+        var content = new UIElement();
+        content.layout(layout -> layout.width(cols * 18 + 4).height(rows * 18 + 4));
 
         for (int i = 0; i < count; i++) {
             int x = 2 + (i % cols) * 18;
@@ -370,113 +307,61 @@ public class VariantSelectorUI {
             ItemStack vStack = category.variantStacks().get(i);
             boolean isSelected = currentChoice != null && currentChoice.getBlock() == vState.getBlock();
 
-            StackTooltipButton vBtn = new StackTooltipButton(x, y,
-                    new GuiTextureGroup(
-                            isSelected ? new ColorRectTexture(0x4000ff00) : new ColorRectTexture(0x20ffffff),
-                            new ItemStackTexture(vStack)),
-                    vStack, List.of(vStack.getHoverName())) {
-
-                @Override
-                public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                    if (isMouseOverElement(mouseX, mouseY)) {
-                        closeFlyout();
-                        host.selectVariant(category.ability(), vState);
-                        playButtonClickSound();
-                        return true;
-                    }
-                    return false;
-                }
-            };
-            vBtn.setHoverBorderTexture(1, isSelected ? 0xff00ff00 : -1);
-            popup.addWidget(vBtn);
+            var texture = IGuiTexture.group(
+                    isSelected ? new ColorRectTexture(0x4000ff00) : new ColorRectTexture(0x20ffffff),
+                    new ItemStackTexture(vStack));
+            var vBtn = stackButton(texture, vStack, List.of(vStack.getHoverName()));
+            var hover = IGuiTexture.group(texture, new ColorBorderTexture(1, isSelected ? 0xff00ff00 : -1));
+            vBtn.buttonStyle(style -> style.hoverTexture(hover).pressedTexture(hover));
+            vBtn.setOnClick(event -> {
+                closeFlyout();
+                host.selectVariant(category.ability(), vState);
+            });
+            content.addChild(place(vBtn, x, y));
         }
 
-        int rows = (count + cols - 1) / cols;
-        int visibleRows = Math.min(rows, MAX_VISIBLE_FLYOUT_ROWS);
-        if (rows > MAX_VISIBLE_FLYOUT_ROWS) {
-            popup.addWidget(new Widget(0, 2 + rows * 18, 1, 2));
-
+        UIElement popup;
+        var background = IGuiTexture.group(new ColorRectTexture(0xEE8F8F8F), new ColorBorderTexture(1, 0x50A0A0A0));
+        if (needScroll) {
+            var scroller = new ScrollerView();
+            scroller.scrollerStyle(style -> style.mode(ScrollerMode.VERTICAL)
+                    .verticalScrollDisplay(ScrollDisplay.ALWAYS));
+            scroller.viewPort(viewPort -> {
+                viewPort.layout(layout -> layout.paddingAll(0));
+                viewPort.style(style -> style.backgroundTexture(IGuiTexture.EMPTY));
+            });
+            scroller.addScrollViewChild(content);
             int selectedIndex = VariantDiscovery.indexOfBlock(category.variants(), currentChoice);
             if (selectedIndex >= 0) {
                 int selectedRow = selectedIndex / cols;
                 int maxScroll = (rows - visibleRows) * 18;
                 int targetScroll = Mth.clamp((selectedRow - visibleRows / 2) * 18, 0, maxScroll);
-                if (targetScroll > 0) {
-                    popup.setScrollYOffset(targetScroll);
+                if (targetScroll > 0 && maxScroll > 0) {
+                    scroller.verticalScroller.setValue((float) targetScroll / maxScroll, true);
                 }
             }
+            popup = scroller;
+        } else {
+            popup = content;
         }
+        popup.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(flyoutX).top(flyoutY)
+                .width(flyoutWidth).height(flyoutHeight));
+        popup.style(style -> style.backgroundTexture(background));
+        popup.addEventListener(UIEvents.MOUSE_DOWN, UIEvent::stopPropagation);
+        popup.addEventListener(UIEvents.MOUSE_WHEEL, UIEvent::stopPropagation);
 
-        flyoutGroup.addWidget(popup);
+        flyoutGroup.addChild(popup);
         this.activeFlyoutPopup = popup;
     }
 
-    private @NotNull DraggableScrollableWidgetGroup createPopup(@Nullable Widget sourceWidget, int count, int cols) {
-        int rows = (count + cols - 1) / cols;
-        int visibleRows = Math.max(1, Math.min(rows, MAX_VISIBLE_FLYOUT_ROWS));
-        boolean needScroll = rows > MAX_VISIBLE_FLYOUT_ROWS;
-
-        int flyoutWidth = cols * 18 + 4 + (needScroll ? FLYOUT_SCROLLBAR_WIDTH + 1 : 0);
-        int flyoutHeight = visibleRows * 18 + 4;
-
-        int flyoutX = LIST_X + LIST_WIDTH + 1;
-        int sourceY = sourceWidget != null ? sourceWidget.getPosition().y - host.widgetPosition().y : LIST_Y;
-        int flyoutY = Mth.clamp(sourceY, LIST_Y, Math.max(LIST_Y, widgetHeight - 32 - flyoutHeight));
-
-        DraggableScrollableWidgetGroup popup = new DraggableScrollableWidgetGroup(flyoutX, flyoutY, flyoutWidth,
-                flyoutHeight) {
-
-            @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                if (!isMouseOverElement(mouseX, mouseY)) {
-                    return false;
-                }
-                return super.mouseClicked(mouseX, mouseY, button) || true;
-            }
-
-            @Override
-            public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-                if (!isMouseOverElement(mouseX, mouseY)) {
-                    return false;
-                }
-                return super.mouseWheelMove(mouseX, mouseY, wheelDelta) || true;
-            }
-
-            @Nullable
-            @Override
-            public Widget getHoverElement(double mouseX, double mouseY) {
-                if (!isMouseOverElement(mouseX, mouseY)) {
-                    return null;
-                }
-                return super.getHoverElement(mouseX, mouseY);
-            }
-        };
-
-        popup.setBackground(new GuiTextureGroup(
-                new ColorRectTexture(0xEE8F8F8F),
-                new ColorBorderTexture(1, 0x50A0A0A0)));
-
-        if (needScroll) {
-            popup.setYScrollBarWidth(FLYOUT_SCROLLBAR_WIDTH)
-                    .setYBarStyle(new ColorRectTexture(0x40000000), ColorPattern.T_WHITE.rectTexture())
-                    .setScrollable(true)
-                    .setDraggable(false)
-                    .setScrollWheelDirection(DraggableScrollableWidgetGroup.ScrollWheelDirection.VERTICAL)
-                    .setUseScissor(true);
-        } else {
-            popup.setYScrollBarWidth(0)
-                    .setScrollable(false)
-                    .setDraggable(false)
-                    .setUseScissor(false);
-        }
-
-        return popup;
-    }
-
     public void closeFlyout() {
+        if (activeFlyoutSource != null) {
+            activeFlyoutSource.style(style -> style.overlay(IGuiTexture.EMPTY));
+        }
         activeFlyoutCategory = null;
         activeFlyoutPopup = null;
-        flyoutGroup.clearAllWidgets();
-        flyoutGroup.setVisible(false);
+        activeFlyoutSource = null;
+        flyoutGroup.clearAllChildren();
+        flyoutGroup.setDisplay(false);
     }
 }

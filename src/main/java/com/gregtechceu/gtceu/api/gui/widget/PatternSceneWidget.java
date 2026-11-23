@@ -1,10 +1,10 @@
 package com.gregtechceu.gtceu.api.gui.widget;
 
-import com.lowdragmc.lowdraglib.client.scene.ISceneBlockRenderHook;
-import com.lowdragmc.lowdraglib.gui.widget.SceneWidget;
+import com.lowdragmc.lowdraglib2.client.scene.ISceneBlockRenderHook;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Scene;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
@@ -20,25 +20,18 @@ import org.joml.Vector3f;
 import java.util.Collection;
 import java.util.function.BiConsumer;
 
-import javax.annotation.Nonnull;
-
 @OnlyIn(Dist.CLIENT)
-public class PatternSceneWidget extends SceneWidget {
+public class PatternSceneWidget extends Scene {
 
     public static final float DEFAULT_SPIN_SPEED = 0.2f;
-    public static final long DEFAULT_IDLE_DELAY = 0L;
 
     @Nullable
     @Setter
     private BiConsumer<MultiBufferSource, Float> beforeBatchEnd;
 
     @Getter
-    public boolean isTurntableActive = false;
+    private boolean turntableActive = false;
     private float spinSpeed = DEFAULT_SPIN_SPEED;
-    private long idleDelay = DEFAULT_IDLE_DELAY;
-    private boolean autoResume = true;
-    private long lastInteractionTime = 0L;
-    private boolean pausedUntilRetoggle = false;
     private long lastRenderTime = 0L;
     private long lastAtlasTickTime = 0L;
 
@@ -50,18 +43,18 @@ public class PatternSceneWidget extends SceneWidget {
     private Float customZoom = null;
     private Vector3f targetCenter = null;
 
-    public PatternSceneWidget(int x, int y, int width, int height, Level world) {
-        super(x, y, width, height, world);
+    public PatternSceneWidget(Level world) {
+        createScene(world);
     }
 
     public void clearSelection() {
-        this.selectedPosFace = null;
+        this.lastSelectedPosFace = null;
     }
 
     public void setCenter(Vector3f target, boolean smooth) {
         this.focalCenter = new Vector3f(target);
-        if (!smooth || this.center == null) {
-            this.setCenter(new Vector3f(target));
+        if (!smooth) {
+            setCenter(new Vector3f(target));
             this.targetCenter = null;
         } else {
             this.targetCenter = new Vector3f(target);
@@ -69,30 +62,26 @@ public class PatternSceneWidget extends SceneWidget {
     }
 
     public void setCenterSmooth(Vector3f target) {
-        this.setCenter(target, true);
+        setCenter(target, true);
     }
 
     @Override
-    public SceneWidget setRenderedCore(Collection<BlockPos> blocks,
-                                       ISceneBlockRenderHook renderHook) {
+    public Scene setRenderedCore(Collection<BlockPos> blocks, @Nullable ISceneBlockRenderHook renderHook,
+                                 boolean autoCamera) {
         if (this.renderer != null) {
             this.renderer.renderedBlocksMap.clear();
         }
-        super.setRenderedCore(blocks, renderHook);
-        if (this.focalCenter != null) {
+        super.setRenderedCore(blocks, renderHook, autoCamera && focalCenter == null);
+        if (this.focalCenter != null && this.renderer != null) {
             if (this.targetCenter == null) {
                 this.center = new Vector3f(focalCenter);
             }
             if (customZoom != null) {
                 this.zoom = customZoom;
-                if (this.renderer != null) {
-                    this.renderer.setCameraOrtho(range * zoom, range * zoom, range * zoom);
-                }
+                this.renderer.setCameraOrtho(range * zoom, range * zoom, range * zoom);
             }
-            if (this.renderer != null) {
-                this.renderer.setCameraLookAt(this.center, camZoom(), Math.toRadians(rotationPitch),
-                        Math.toRadians(rotationYaw));
-            }
+            this.renderer.setCameraLookAt(this.center, camZoom(), Math.toRadians(rotationYaw),
+                    Math.toRadians(rotationPitch));
         }
         return this;
     }
@@ -106,16 +95,14 @@ public class PatternSceneWidget extends SceneWidget {
     }
 
     public void setTurntableActive(boolean active) {
-        this.isTurntableActive = active;
+        this.turntableActive = active;
         if (active) {
-            this.pausedUntilRetoggle = false;
-            this.lastInteractionTime = 0L;
             this.lastRenderTime = 0L;
         }
     }
 
     private void updateCameraCenter(float dt) {
-        if (this.targetCenter != null && this.center != null) {
+        if (this.targetCenter != null) {
             float distSq = this.center.distanceSquared(this.targetCenter);
             if (distSq < 0.0001f) {
                 this.center.set(this.targetCenter);
@@ -124,40 +111,26 @@ public class PatternSceneWidget extends SceneWidget {
                 this.center.lerp(this.targetCenter, Math.min(1.0f, dt * 10.0f));
             }
             if (this.renderer != null) {
-                this.renderer.setCameraLookAt(this.center, camZoom(),
-                        Math.toRadians(this.rotationPitch),
-                        Math.toRadians(this.rotationYaw));
+                this.renderer.setCameraLookAt(this.center, camZoom(), Math.toRadians(this.rotationYaw),
+                        Math.toRadians(this.rotationPitch));
             }
         }
     }
 
     private void updateTurntable(float dt) {
-        if (!this.isTurntableActive || this.pausedUntilRetoggle) {
-            return;
-        }
-        if (isDragging()) {
-            this.lastInteractionTime = System.currentTimeMillis();
-            if (!this.autoResume) {
-                this.pausedUntilRetoggle = true;
-            }
-            return;
-        }
-        long now = System.currentTimeMillis();
-        if (this.idleDelay > 0 && this.lastInteractionTime > 0L && now - this.lastInteractionTime < this.idleDelay) {
+        if (!this.turntableActive || isDragging()) {
             return;
         }
         float delta = (this.spinSpeed * 60.0f) * dt;
-        this.rotationPitch = ((this.rotationPitch + delta) % 360.0f + 360.0f) % 360.0f;
+        this.rotationYaw = ((this.rotationYaw + delta) % 360.0f + 360.0f) % 360.0f;
         if (this.renderer != null) {
-            this.renderer.setCameraLookAt((this.center != null) ? this.center : new Vector3f(0, 0, 0),
-                    this.camZoom(),
-                    Math.toRadians(this.rotationPitch),
-                    Math.toRadians(this.rotationYaw));
+            this.renderer.setCameraLookAt(this.center, camZoom(), Math.toRadians(this.rotationYaw),
+                    Math.toRadians(this.rotationPitch));
         }
     }
 
     @Override
-    public void drawInBackground(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void drawBackgroundAdditional(GUIContext guiContext) {
         long now = System.currentTimeMillis();
         float dt = (this.lastRenderTime > 0L) ? (now - this.lastRenderTime) / 1000.0f : (1.0f / 60.0f);
         if (dt > 0.1f || dt <= 0.0f) {
@@ -171,28 +144,17 @@ public class PatternSceneWidget extends SceneWidget {
         if (now - this.lastAtlasTickTime >= 50L) {
             this.lastAtlasTickTime = now;
             var modelManager = Minecraft.getInstance().getModelManager();
-            if (modelManager != null) {
-                var atlas = modelManager.getAtlas(TextureAtlas.LOCATION_BLOCKS);
-                if (atlas != null) {
-                    for (var loc : atlas.getTextureLocations()) {
-                        atlas.getSprite(loc);
-                    }
-                    atlas.cycleAnimationFrames();
-                }
+            var atlas = modelManager.getAtlas(TextureAtlas.LOCATION_BLOCKS);
+            for (var loc : atlas.getTextureLocations()) {
+                atlas.getSprite(loc);
             }
+            atlas.cycleAnimationFrames();
             var particleManager = getParticleManager();
             if (particleManager != null) {
                 particleManager.tick();
             }
         }
 
-        super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        this.lastInteractionTime = 0L;
-        this.lastRenderTime = 0L;
-        return super.mouseReleased(mouseX, mouseY, button);
+        super.drawBackgroundAdditional(guiContext);
     }
 }

@@ -1,6 +1,6 @@
 package com.gregtechceu.gtceu.api.item.component;
 
-import com.lowdragmc.lowdraglib.client.renderer.IRenderer;
+import com.lowdragmc.lowdraglib2.client.renderer.IRenderer;
 
 import org.jetbrains.annotations.NotNull;
 

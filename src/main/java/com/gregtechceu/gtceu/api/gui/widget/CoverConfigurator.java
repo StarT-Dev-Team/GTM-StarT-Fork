@@ -7,12 +7,9 @@ import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfigurator;
 import com.gregtechceu.gtceu.common.data.GTItems;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -24,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 public class CoverConfigurator implements IFancyConfigurator {
 
     protected final ICoverable coverable;
-    // runtime
     @Nullable
     protected final Direction side;
     @Nullable
@@ -41,17 +37,13 @@ public class CoverConfigurator implements IFancyConfigurator {
     }
 
     @Override
-    public Widget createConfigurator() {
-        WidgetGroup group = new WidgetGroup(new Position(0, 0));
-        if (side != null) {
-            if (coverable.getCoverAtSide(side) instanceof IUICover iuiCover) {
-                Widget coverConfigurator = iuiCover.createUIWidget();
-                coverConfigurator.setBackground(GuiTextures.BACKGROUND);
-                coverConfigurator.setSelfPosition(new Position(4, -4));
-                group.addWidget(coverConfigurator);
-                group.setSize(new Size(Math.max(120, coverConfigurator.getSize().width + 8),
-                        Math.max(80, 80 + coverConfigurator.getSize().height)));
-            }
+    public UIElement createConfigurator() {
+        var group = new UIElement().layout(layout -> layout.minWidth(120).minHeight(80));
+        if (side != null && coverable.getCoverAtSide(side) instanceof IUICover cover) {
+            var configurator = cover.createUIWidget();
+            configurator.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND));
+            configurator.layout(layout -> layout.marginLeft(4).marginTop(-4));
+            group.addChild(configurator);
         }
         return group;
     }
