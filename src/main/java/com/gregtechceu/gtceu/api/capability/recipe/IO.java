@@ -22,11 +22,6 @@ public enum IO implements EnumSelector.SelectableEnum {
     @Getter
     public final IGuiTexture icon;
 
-    @Override
-    public IGuiTexture getIcon() {
-        return icon;
-    }
-
     IO(String tooltip, String textureName) {
         this.tooltip = tooltip;
         this.icon = SpriteTexture.of("gtceu:textures/gui/icon/io_mode/" + textureName + ".png");

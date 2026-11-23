@@ -34,12 +34,6 @@ public class MachineCoverContainer implements ICoverable, IBlockEntityManaged {
 
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
-
-    @Override
-    public FieldManagedStorage getSyncStorage() {
-        return syncStorage;
-    }
-
     @Getter
     private final MetaMachine machine;
     @DescSynced

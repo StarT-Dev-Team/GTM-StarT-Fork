@@ -52,12 +52,6 @@ public abstract class CoverBehavior implements IBlockEntityManaged, IToolGridHig
 
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
-
-    @Override
-    public FieldManagedStorage getSyncStorage() {
-        return syncStorage;
-    }
-
     public final CoverDefinition coverDefinition;
     public final ICoverable coverHolder;
     public final Direction attachedSide;

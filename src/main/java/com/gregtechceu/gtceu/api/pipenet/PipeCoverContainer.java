@@ -36,12 +36,6 @@ public class PipeCoverContainer implements ICoverable, IBlockEntityManaged {
 
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
-
-    @Override
-    public FieldManagedStorage getSyncStorage() {
-        return syncStorage;
-    }
-
     private final IPipeNode<?, ?> pipeTile;
 
     @DescSynced

@@ -59,12 +59,6 @@ public interface IVoidable extends IMachineFeature {
         private final String localeName;
         @Getter
         private final IGuiTexture icon;
-
-        @Override
-        public IGuiTexture getIcon() {
-            return icon;
-        }
-
         private final Predicate<RecipeCapability<?>> canVoid;
 
         VoidingMode(String name, Predicate<RecipeCapability<?>> canVoid) {

@@ -26,12 +26,6 @@ public abstract class MachineTrait implements IBlockEntityManaged {
 
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
-
-    @Override
-    public FieldManagedStorage getSyncStorage() {
-        return syncStorage;
-    }
-
     @Getter
     protected final MetaMachine machine;
     @Setter

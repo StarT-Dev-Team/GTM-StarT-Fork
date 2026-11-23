@@ -99,12 +99,6 @@ public class MetaMachine implements IBlockEntityManaged, IToolable, ITickSubscri
 
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
-
-    @Override
-    public FieldManagedStorage getSyncStorage() {
-        return syncStorage;
-    }
-
     @Setter
     @Getter
     @Persisted
