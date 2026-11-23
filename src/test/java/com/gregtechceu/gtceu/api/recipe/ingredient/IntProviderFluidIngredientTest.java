@@ -2,11 +2,9 @@ package com.gregtechceu.gtceu.api.recipe.ingredient;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.SimpleTieredMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
@@ -28,7 +26,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -130,10 +127,6 @@ public class IntProviderFluidIngredientTest {
                 .buildRawRecipe());
     }
 
-    private static MetaMachine getMetaMachine(BlockEntity entity) {
-        return ((MetaMachineBlockEntity) entity).getMetaMachine();
-    }
-
     private record BusHolder(ItemBusPartMachine inputBus1, FluidHatchPartMachine inputHatch1,
                              ItemBusPartMachine outputBus1,
                              FluidHatchPartMachine outputHatch1, WorkableMultiblockMachine controller) {}
@@ -151,17 +144,17 @@ public class IntProviderFluidIngredientTest {
      * @return the busses, in the BusHolder record.
      */
     private static BusHolder getBussesAndFormLCR(GameTestHelper helper) {
-        WorkableMultiblockMachine controller = (WorkableMultiblockMachine) getMetaMachine(
+        WorkableMultiblockMachine controller = (WorkableMultiblockMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(1, 2, 0)));
         TestUtils.formMultiblock(controller);
         controller.setRecipeType(LCR_RECIPE_TYPE);
-        ItemBusPartMachine inputBus1 = (ItemBusPartMachine) getMetaMachine(
+        ItemBusPartMachine inputBus1 = (ItemBusPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(2, 1, 0)));
-        FluidHatchPartMachine inputHatch1 = (FluidHatchPartMachine) getMetaMachine(
+        FluidHatchPartMachine inputHatch1 = (FluidHatchPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(2, 2, 0)));
-        ItemBusPartMachine outputBus1 = (ItemBusPartMachine) getMetaMachine(
+        ItemBusPartMachine outputBus1 = (ItemBusPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(0, 1, 0)));
-        FluidHatchPartMachine outputHatch1 = (FluidHatchPartMachine) getMetaMachine(
+        FluidHatchPartMachine outputHatch1 = (FluidHatchPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(0, 2, 0)));
         return new BusHolder(inputBus1, inputHatch1, outputBus1, outputHatch1, controller);
     }
@@ -173,19 +166,19 @@ public class IntProviderFluidIngredientTest {
      * @return the busses, in the BusHolder record.
      */
     private static BusHolderBatchParallel getBussesAndFormLCENT(GameTestHelper helper) {
-        WorkableElectricMultiblockMachine controller = (WorkableElectricMultiblockMachine) getMetaMachine(
+        WorkableElectricMultiblockMachine controller = (WorkableElectricMultiblockMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(2, 2, 0)));
         TestUtils.formMultiblock(controller);
         controller.setRecipeType(CENTRIFUGE_RECIPE_TYPE);
-        ItemBusPartMachine inputBus1 = (ItemBusPartMachine) getMetaMachine(
+        ItemBusPartMachine inputBus1 = (ItemBusPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(1, 2, 0)));
-        FluidHatchPartMachine inputHatch1 = (FluidHatchPartMachine) getMetaMachine(
+        FluidHatchPartMachine inputHatch1 = (FluidHatchPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(0, 2, 0)));
-        ItemBusPartMachine outputBus1 = (ItemBusPartMachine) getMetaMachine(
+        ItemBusPartMachine outputBus1 = (ItemBusPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(2, 1, 0)));
-        FluidHatchPartMachine outputHatch1 = (FluidHatchPartMachine) getMetaMachine(
+        FluidHatchPartMachine outputHatch1 = (FluidHatchPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(1, 1, 0)));
-        ParallelHatchPartMachine parallelHatch = (ParallelHatchPartMachine) getMetaMachine(
+        ParallelHatchPartMachine parallelHatch = (ParallelHatchPartMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(3, 3, 0)));
         return new BusHolderBatchParallel(inputBus1, inputHatch1, outputBus1, outputHatch1, controller, parallelHatch);
     }
@@ -257,7 +250,7 @@ public class IntProviderFluidIngredientTest {
     // This is specifically a test for #3593 / #3594
     @GameTest(template = "singleblock_charged_cr", batch = "RangedFluidIngredients")
     public static void singleblockRangedFluidOutputSabotaged(GameTestHelper helper) {
-        SimpleTieredMachine machine = (SimpleTieredMachine) getMetaMachine(
+        SimpleTieredMachine machine = (SimpleTieredMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(0, 1, 0)));
 
         machine.setRecipeType(CR_RECIPE_TYPE);
@@ -327,7 +320,7 @@ public class IntProviderFluidIngredientTest {
     // Provides too little input fluid, should not run recipes.
     @GameTest(template = "singleblock_charged_cr", batch = "RangedFluidIngredients")
     public static void singleblockRangedFluidInputFailure(GameTestHelper helper) {
-        SimpleTieredMachine machine = (SimpleTieredMachine) getMetaMachine(
+        SimpleTieredMachine machine = (SimpleTieredMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(0, 1, 0)));
 
         machine.setRecipeType(CR_RECIPE_TYPE);
@@ -359,7 +352,7 @@ public class IntProviderFluidIngredientTest {
     // Test for singleblock machine with ranged fluid input
     @GameTest(template = "singleblock_charged_cr", batch = "RangedFluidIngredients")
     public static void singleblockRangedFluidInput(GameTestHelper helper) {
-        SimpleTieredMachine machine = (SimpleTieredMachine) getMetaMachine(
+        SimpleTieredMachine machine = (SimpleTieredMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(0, 1, 0)));
 
         machine.setRecipeType(CR_RECIPE_TYPE);
@@ -420,7 +413,7 @@ public class IntProviderFluidIngredientTest {
     // Test for singleblock machine with ranged fluid input
     @GameTest(template = "singleblock_charged_cr", batch = "RangedFluidIngredients")
     public static void singleblockRangedFluidOutput(GameTestHelper helper) {
-        SimpleTieredMachine machine = (SimpleTieredMachine) getMetaMachine(
+        SimpleTieredMachine machine = (SimpleTieredMachine) TestUtils.getMetaMachine(
                 helper.getBlockEntity(new BlockPos(0, 1, 0)));
 
         machine.setRecipeType(CR_RECIPE_TYPE);

@@ -4,7 +4,6 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.cover.filter.SimpleItemFilter;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.common.cover.data.FilterMode;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMachines;
@@ -41,10 +40,8 @@ public class ItemFilterCoverTest {
     @GameTest(template = "empty_5x5", batch = "coverTests")
     public static void conveyorTransfersFilteredItemsTest(GameTestHelper helper) {
         setupCrates(helper);
-        BufferMachine crate1 = (BufferMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
-                .getMetaMachine();
-        BufferMachine crate2 = (BufferMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
-                .getMetaMachine();
+        BufferMachine crate1 = (BufferMachine) TestUtils.getMetaMachine(helper.getBlockEntity(new BlockPos(0, 1, 0)));
+        BufferMachine crate2 = (BufferMachine) TestUtils.getMetaMachine(helper.getBlockEntity(new BlockPos(0, 2, 0)));
         crate1.getInventory().setStackInSlot(0, new ItemStack(Items.FLINT, 8));
         crate1.getInventory().setStackInSlot(1, new ItemStack(Items.DIAMOND, 16));
         // LV Cover
@@ -68,10 +65,8 @@ public class ItemFilterCoverTest {
     @GameTest(template = "empty_5x5", batch = "coverTests")
     public static void conveyorDoesntTransferFilteredItemsTest(GameTestHelper helper) {
         setupCrates(helper);
-        BufferMachine crate1 = (BufferMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 1, 0)))
-                .getMetaMachine();
-        BufferMachine crate2 = (BufferMachine) ((IMachineBlockEntity) helper.getBlockEntity(new BlockPos(0, 2, 0)))
-                .getMetaMachine();
+        BufferMachine crate1 = (BufferMachine) TestUtils.getMetaMachine(helper.getBlockEntity(new BlockPos(0, 1, 0)));
+        BufferMachine crate2 = (BufferMachine) TestUtils.getMetaMachine(helper.getBlockEntity(new BlockPos(0, 2, 0)));
         crate1.getInventory().setStackInSlot(0, new ItemStack(Items.FLINT, 16));
         crate1.getInventory().setStackInSlot(1, new ItemStack(Items.DIAMOND, 16));
         // LV Cover
