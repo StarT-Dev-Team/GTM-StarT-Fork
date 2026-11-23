@@ -49,12 +49,11 @@ public class MetaMachineBlock extends Block implements IMachineBlock, BlockUIMen
     @Getter
     public final MachineDefinition definition;
 
-    private final MachineBlockHelper helper;
+    private final MachineBlockHelper helper = new MachineBlockHelper(this);
 
     public MetaMachineBlock(Properties properties, MachineDefinition definition) {
         super(properties);
         this.definition = definition;
-        this.helper = new MachineBlockHelper(this);
 
         var defaultBlockState = helper.prepareDefaultState();
         if (defaultBlockState != null) {
