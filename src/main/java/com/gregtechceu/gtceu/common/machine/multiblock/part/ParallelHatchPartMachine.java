@@ -10,12 +10,14 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.multiblock.part.TieredPartMachine;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import lombok.Getter;
 
@@ -64,15 +66,18 @@ public class ParallelHatchPartMachine extends TieredPartMachine implements IFanc
     @Override
     public UIElement createUIWidget() {
         var group = new UIElement();
-        group.layout(layout -> layout.alignItems(AlignItems.CENTER).gapAll(4).paddingAll(4));
+        group.layout(layout -> layout.justifyContent(AlignContent.CENTER).alignItems(AlignItems.CENTER).gapAll(4)
+                .paddingAll(4));
 
         var maxLabel = new Label();
+        maxLabel.getTextStyle().adaptiveWidth(true).textAlignHorizontal(Horizontal.CENTER);
         maxLabel.setText(Component.translatable("gtceu.gui.title.parallel_hatch.max_parallel"));
         var maxInput = new IntInput(this::getCurrentParallel, this::setCurrentParallel);
         maxInput.setMin(MIN_PARALLEL);
         maxInput.setMax(maxParallel);
 
         var minLabel = new Label();
+        minLabel.getTextStyle().adaptiveWidth(true).textAlignHorizontal(Horizontal.CENTER);
         minLabel.setText(Component.translatable("gtceu.gui.title.parallel_hatch.min_parallel"));
         var minInput = new IntInput(this::getMinimumParallel, this::setMinimumParallel);
         minInput.setMin(MIN_PARALLEL);
