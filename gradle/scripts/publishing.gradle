@@ -13,8 +13,8 @@ publishing {
             url "https://repo.expandium.net/${version.toString().toLowerCase().contains('snapshot') ? 'snapshots' : 'releases'}"
 
             credentials {
-                username System.getenv("MAVEN_USER") ?: project.MAVEN_USER ?: ""
-                password System.getenv("MAVEN_TOKEN") ?: project.MAVEN_TOKEN ?: ""
+                username System.getenv("MAVEN_USER") ?: project.findProperty("MAVEN_USER") ?: ""
+                password System.getenv("MAVEN_TOKEN") ?: project.findProperty("MAVEN_TOKEN") ?: ""
             }
         }
 

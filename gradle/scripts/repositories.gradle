@@ -31,7 +31,6 @@ repositories {
         content {
             includeGroup("appeng")
             includeGroup("com.lowdragmc.ldlib2")
-            includeGroup("org.appliedenergistics.yoga")
         }
     }
     maven {
