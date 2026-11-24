@@ -23,6 +23,7 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
 import com.gregtechceu.gtceu.api.misc.virtualregistry.VirtualEnderRegistry;
 import com.gregtechceu.gtceu.api.pattern.MultiblockWorldSavedData;
+import com.gregtechceu.gtceu.api.recipe.loot.LootTableOutputs;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.capability.EnvironmentalHazardSavedData;
 import com.gregtechceu.gtceu.common.capability.LocalizedHazardSavedData;
@@ -258,6 +259,7 @@ public class ForgeCommonEventListener {
         event.addListener(new GTOreLoader());
         event.addListener(new BedrockFluidLoader());
         event.addListener(new BedrockOreLoader());
+        event.addListener(LootTableOutputs.RELOAD_LISTENER);
     }
 
     @SubscribeEvent

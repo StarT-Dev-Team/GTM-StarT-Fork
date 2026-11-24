@@ -21,6 +21,7 @@ import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.*;
 import com.gregtechceu.gtceu.api.recipe.ingredient.nbtpredicate.NBTPredicate;
+import com.gregtechceu.gtceu.api.recipe.loot.LootTableOutputs;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.common.recipe.condition.*;
@@ -830,6 +831,26 @@ public interface GTRecipeSchema {
 
         public GTRecipeJS chancedFluidOutputLogic(ChanceLogic logic) {
             return chancedOutputLogic(FluidRecipeCapability.CAP, logic);
+        }
+
+        public GTRecipeJS outputLootTable(ResourceLocation lootTable) {
+            if (perTick) throw new RecipeExceptionJS("Loot table outputs cannot be per tick");
+            if (getValue(DATA) == null) setValue(DATA, new CompoundTag());
+            LootTableOutputs.addTo(getValue(DATA), lootTable, tierChanceBoost);
+            save();
+            return this;
+        }
+
+        public GTRecipeJS outputLootTable(ResourceLocation lootTable, ChanceLogic logic) {
+            return outputLootTable(lootTable, logic, tierChanceBoost);
+        }
+
+        public GTRecipeJS outputLootTable(ResourceLocation lootTable, ChanceLogic logic, int tierChanceBoost) {
+            int lastTierChanceBoost = this.tierChanceBoost;
+            this.tierChanceBoost = tierChanceBoost;
+            outputLootTable(lootTable);
+            this.tierChanceBoost = lastTierChanceBoost;
+            return chancedItemOutputLogic(logic);
         }
 
         public GTRecipeJS chancedInputLogic(RecipeCapability<?> cap, ChanceLogic logic) {

@@ -1537,6 +1537,7 @@ public class LangHandler {
         provider.add("gtceu.gui.content.chance_base_logic", "Base Chance: %s%% (%s)");
         provider.add("gtceu.gui.content.chance_no_boost", "Chance: %s%%");
         provider.add("gtceu.gui.content.chance_no_boost_logic", "Chance: %s%% (%s)");
+        provider.add("gtceu.gui.content.loot_table", "Loot Table: %s");
         provider.add("gtceu.gui.content.chance_tier_boost_plus", "Bonus Chance: +%s%%/tier");
         provider.add("gtceu.gui.content.chance_tier_boost_minus", "Bonus Chance: -%s%%/tier");
         provider.add("gtceu.gui.content.chance_boosted", "Chance at Tier: %s%%");

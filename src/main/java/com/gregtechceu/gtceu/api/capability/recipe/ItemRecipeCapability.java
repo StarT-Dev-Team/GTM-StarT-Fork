@@ -18,6 +18,7 @@ import com.gregtechceu.gtceu.api.recipe.ingredient.RangedDisplay;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.AbstractMapIngredient;
 import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.item.*;
+import com.gregtechceu.gtceu.api.recipe.loot.LootTableOutputs;
 import com.gregtechceu.gtceu.api.recipe.modifier.ParallelLogic;
 import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
@@ -428,6 +429,12 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
         return new CycleItemEntryHandler((List<ItemEntryList>) contents);
     }
 
+    @Override
+    public boolean isTickSlot(int index, IO io, GTRecipe recipe) {
+        if (io == IO.IN) return super.isTickSlot(index, io, recipe);
+        return index >= LootTableOutputs.displaySize(recipe, recipe.getOutputContents(this).size());
+    }
+
     @NotNull
     @Override
     public Widget createWidget() {
@@ -495,20 +502,27 @@ public class ItemRecipeCapability extends RecipeCapability<Ingredient> {
 
                 slot.setXEIChance(chance);
                 slot.setOnAddedTooltips((w, tooltips) -> {
-                    GTRecipeWidget.setConsumedChance(io == IO.IN, content,
+                    Content shown = content;
+                    if (content instanceof LootTableOutputs.LootTableContent loot) {
+                        tooltips.add(Component.translatable("gtceu.gui.content.loot_table", loot.table.toString())
+                                .withStyle(ChatFormatting.GRAY));
+                        shown = loot.entryFor(w.getItem());
+                        if (shown == null) return;
+                    }
+                    GTRecipeWidget.setConsumedChance(io == IO.IN, shown,
                             recipe.getChanceLogicForCapability(this, io, isTickSlot(index, io, recipe)),
                             tooltips, recipeTier, chanceTier,
                             hideOC ? ChanceBoostFunction.fixed(boostedChance) : recipeType.getChanceFunction());
 
                     // spotless:off
-                    if (this.of(content.content) instanceof IntProviderIngredient ingredient) {
+                    if (this.of(shown.content) instanceof IntProviderIngredient ingredient) {
                         IntProvider countProvider = ingredient.getCountProvider();
 
                         tooltips.add(Component.translatable("gtceu.gui.content.count_range",
                                 countProvider.getMinValue(), countProvider.getMaxValue())
                                 .withStyle(ChatFormatting.GOLD));
                         tooltips.addAll(RangedDisplay.viewerLines(countProvider, tooltipTierDiff));
-                    } else if (this.of(content.content) instanceof SizedIngredient sizedIngredient &&
+                    } else if (this.of(shown.content) instanceof SizedIngredient sizedIngredient &&
                             sizedIngredient.getInner() instanceof IntProviderIngredient ingredient) {
                         IntProvider countProvider = ingredient.getCountProvider();
 

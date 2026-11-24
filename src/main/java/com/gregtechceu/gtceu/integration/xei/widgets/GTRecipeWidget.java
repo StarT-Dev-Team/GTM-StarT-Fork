@@ -4,6 +4,7 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.CWURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.WidgetUtils;
@@ -13,6 +14,7 @@ import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.EnergyStack;
+import com.gregtechceu.gtceu.api.recipe.loot.LootTableOutputs;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.FusionReactorMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
@@ -615,6 +617,9 @@ public class GTRecipeWidget extends WidgetGroup {
         for (var entry : recipe.outputs.entrySet()) {
             RecipeCapability<?> cap = entry.getKey();
             List<Content> contents = entry.getValue();
+            if (cap == ItemRecipeCapability.CAP) {
+                contents = LootTableOutputs.collapseForDisplay(recipe, contents);
+            }
 
             extraContents.put(IO.OUT, cap, contents);
         }
@@ -653,7 +658,10 @@ public class GTRecipeWidget extends WidgetGroup {
             IO io = capabilityEntry.getKey();
             for (var contentsEntry : capabilityEntry.getValue().entrySet()) {
                 RecipeCapability<?> cap = contentsEntry.getKey();
-                int nonTickCount = (io == IO.IN ? recipe.getInputContents(cap) : recipe.getOutputContents(cap)).size();
+                int rawNonTickCount = (io == IO.IN ? recipe.getInputContents(cap) : recipe.getOutputContents(cap))
+                        .size();
+                int nonTickCount = io == IO.OUT && cap == ItemRecipeCapability.CAP ?
+                        LootTableOutputs.displaySize(recipe, rawNonTickCount) : rawNonTickCount;
                 List<Content> contents = contentsEntry.getValue();
                 // bind fluid out overlay
                 var widgetClass = cap.getWidgetClass();
