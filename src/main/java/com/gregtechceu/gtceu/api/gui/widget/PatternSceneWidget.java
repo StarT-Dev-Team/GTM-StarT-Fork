@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 @OnlyIn(Dist.CLIENT)
@@ -46,6 +47,7 @@ public class PatternSceneWidget extends Scene {
     public PatternSceneWidget(Level world) {
         createScene(world);
         setTickWorld(false);
+        Objects.requireNonNull(getDummyWorld()).setBlockFilter(pos -> true);
     }
 
     public void clearSelection() {
