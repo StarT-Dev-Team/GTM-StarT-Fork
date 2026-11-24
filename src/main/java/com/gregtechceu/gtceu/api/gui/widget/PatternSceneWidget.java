@@ -45,6 +45,7 @@ public class PatternSceneWidget extends Scene {
 
     public PatternSceneWidget(Level world) {
         createScene(world);
+        setTickWorld(false);
     }
 
     public void clearSelection() {

@@ -26,6 +26,7 @@ import dev.vfyjxf.taffy.style.TaffyPosition;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
 
@@ -72,14 +73,19 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
             scene.setDraggable(false);
             scene.setRenderFacing(false);
             scene.setRenderSelect(false);
+            scene.setTickWorld(false);
             scene.createScene(world);
             scene.setRenderedCore(List.of(BlockPos.ZERO));
-            scene.addEventListener(UIEvents.TICK, e -> {
+
+            Runnable updateRotation = () -> {
                 var mui = scene.getModularUI();
-                if (mui != null) {
-                    scene.setCameraYawAndPitch(mui.getTickCounter() * 2f, scene.getRotationPitch());
-                }
-            });
+                if (mui == null) return;
+                scene.setCameraYawAndPitch(mui.getTickCounter() * 2f - 90, scene.getRotationPitch());
+            };
+
+            scene.addEventListener(UIEvents.MUI_CHANGED, e -> updateRotation.run());
+            scene.addEventListener(UIEvents.TICK, e -> updateRotation.run());
+
             group.addChildren(image, scene);
         }
         return group;

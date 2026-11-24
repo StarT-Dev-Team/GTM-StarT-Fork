@@ -86,6 +86,7 @@ public class CombinedDirectionalConfigurator extends UIElement {
 
         var scene = new Scene();
         scene.createScene(this.machine.getLevel());
+        scene.setTickWorld(false);
         scene.layout(layout -> layout.widthPercent(100).heightPercent(100));
         scene.setRenderedCore(List.of(pos), null);
         scene.setRenderSelect(false);
