@@ -42,41 +42,100 @@ public class GTMaterialInfoWidget extends WidgetGroup {
 
     private static final int SLOT = 18, PAD = 3, PER_ROW = 10;
 
-    private static final List<List<TagPrefix>> RAW = List.of(
-            List.of(rawOreBlock),
-            List.of(crushed, crushedPurified, crushedRefined),
-            List.of(dustImpure, dustPure),
-            List.of(dust, dustSmall, dustTiny));
-    private static final List<List<TagPrefix>> MATERIALS = List.of(
-            List.of(block),
-            List.of(ingot),
-            List.of(ingotHot),
-            List.of(nugget),
-            List.of(gem, gemChipped, gemFlawed, gemFlawless, gemExquisite));
+    public enum Section {
+        RAW,
+        MATERIALS,
+        PARTS
+    }
 
-    private static final List<List<TagPrefix>> PARTS = List.of(
-            List.of(plate, plateDouble, plateDense),
-            List.of(foil),
-            List.of(round),
-            List.of(rod, rodLong),
-            List.of(bolt),
-            List.of(screw),
-            List.of(ring),
-            List.of(spring, springSmall),
-            List.of(wireFine),
-            List.of(gear, gearSmall),
-            List.of(rotor),
-            List.of(lens),
-            List.of(turbineBlade),
-            List.of(frameGt),
-            List.of(wireGtSingle, wireGtDouble, wireGtQuadruple, wireGtOctal, wireGtHex),
-            List.of(cableGtSingle, cableGtDouble, cableGtQuadruple, cableGtOctal, cableGtHex),
-            List.of(pipeTinyFluid, pipeSmallFluid, pipeNormalFluid, pipeLargeFluid, pipeHugeFluid, pipeQuadrupleFluid,
-                    pipeNonupleFluid),
-            List.of(pipeSmallItem, pipeNormalItem, pipeLargeItem, pipeHugeItem),
-            List.of(pipeSmallRestrictive, pipeNormalRestrictive, pipeLargeRestrictive, pipeHugeRestrictive),
-            List.of(toolHeadDrill, toolHeadChainsaw, toolHeadBuzzSaw, toolHeadScrewdriver, toolHeadWrench,
-                    toolHeadWireCutter));
+    private static final Map<Section, List<List<TagPrefix>>> SLOTS = new EnumMap<>(Section.class);
+
+    static {
+        SLOTS.put(Section.RAW, slots(
+                slot(rawOreBlock),
+                slot(crushed, crushedPurified, crushedRefined),
+                slot(dustImpure, dustPure),
+                slot(dust, dustSmall, dustTiny)));
+
+        SLOTS.put(Section.MATERIALS, slots(
+                slot(block),
+                slot(ingot),
+                slot(ingotHot),
+                slot(nugget),
+                slot(gem, gemChipped, gemFlawed, gemFlawless, gemExquisite)));
+
+        SLOTS.put(Section.PARTS, slots(
+                slot(plate, plateDouble, plateDense),
+                slot(foil),
+                slot(round),
+                slot(rod, rodLong),
+                slot(bolt),
+                slot(screw),
+                slot(ring),
+                slot(spring, springSmall),
+                slot(wireFine),
+                slot(gear, gearSmall),
+                slot(rotor),
+                slot(lens),
+                slot(turbineBlade),
+                slot(frameGt),
+                slot(wireGtSingle, wireGtDouble, wireGtQuadruple, wireGtOctal, wireGtHex),
+                slot(cableGtSingle, cableGtDouble, cableGtQuadruple, cableGtOctal, cableGtHex),
+                slot(pipeTinyFluid, pipeSmallFluid, pipeNormalFluid, pipeLargeFluid, pipeHugeFluid,
+                        pipeQuadrupleFluid, pipeNonupleFluid),
+                slot(pipeSmallItem, pipeNormalItem, pipeLargeItem, pipeHugeItem),
+                slot(pipeSmallRestrictive, pipeNormalRestrictive, pipeLargeRestrictive, pipeHugeRestrictive),
+                slot(toolHeadDrill, toolHeadChainsaw, toolHeadBuzzSaw, toolHeadScrewdriver, toolHeadWrench,
+                        toolHeadWireCutter)));
+    }
+
+    private static List<TagPrefix> slot(TagPrefix... prefixes) {
+        return new ArrayList<>(Arrays.asList(prefixes));
+    }
+
+    @SafeVarargs
+    private static List<List<TagPrefix>> slots(List<TagPrefix>... slots) {
+        return new ArrayList<>(Arrays.asList(slots));
+    }
+
+    public static List<TagPrefix> getSlot(Section section, TagPrefix member) {
+        for (List<TagPrefix> slot : SLOTS.get(section)) {
+            if (slot.contains(member)) return slot;
+        }
+
+        return null;
+    }
+
+    public static void addSlot(Section section, TagPrefix... prefixes) {
+        SLOTS.get(section).add(slot(prefixes));
+    }
+
+    public static void addSlotAfter(Section section, TagPrefix anchor, TagPrefix... prefixes) {
+        List<List<TagPrefix>> slots = SLOTS.get(section);
+        List<TagPrefix> at = getSlot(section, anchor);
+
+        slots.add(at == null ? slots.size() : slots.indexOf(at) + 1, slot(prefixes));
+    }
+
+    public static void removeSlot(Section section, TagPrefix member) {
+        SLOTS.get(section).removeIf(slot -> slot.contains(member));
+    }
+
+    public static void addToSlot(Section section, TagPrefix member, TagPrefix... added) {
+        List<TagPrefix> slot = getSlot(section, member);
+
+        if (slot != null) slot.addAll(Arrays.asList(added));
+    }
+
+    public static void removeFromSlot(Section section, TagPrefix member) {
+        List<TagPrefix> slot = getSlot(section, member);
+
+        if (slot == null) return;
+
+        slot.remove(member);
+
+        if (slot.isEmpty()) SLOTS.get(section).remove(slot);
+    }
 
     public static final String MATERIAL_CONTENT_GROUP_ID = "materialContentGroup";
     public static final Pattern MATERIAL_CONTENT_GROUP_ID_REGEX = Pattern.compile("^materialContentGroup$");
@@ -118,10 +177,10 @@ public class GTMaterialInfoWidget extends WidgetGroup {
             rawEntries.add(GTOreByProductPrefixHelper.getOreByProductPrefix(material));
         }
 
-        rawEntries.addAll(fromPrefixes(RAW));
+        rawEntries.addAll(fromSlots(SLOTS.get(Section.RAW)));
 
         List<ItemEntryList> topRow = new ArrayList<>(rawEntries);
-        List<ItemEntryList> materials = fromPrefixes(MATERIALS);
+        List<ItemEntryList> materials = fromSlots(SLOTS.get(Section.MATERIALS));
 
         if (!topRow.isEmpty() && !materials.isEmpty()) topRow.add(null);
 
@@ -135,30 +194,28 @@ public class GTMaterialInfoWidget extends WidgetGroup {
             for (FluidStorageKey key : FluidStorageKey.allKeys()) {
                 Fluid fluid = material.getFluid(key);
 
-                if (fluid != null) {
-                    rawFluids.add(FluidStackList.of(new FluidStack(fluid, 1000)));
-                }
+                if (fluid != null) rawFluids.add(FluidStackList.of(new FluidStack(fluid, 1000)));
             }
 
-            if (!rawFluids.isEmpty()) {
-                y = addFluidRow(group, rawFluids, y);
-            }
+            if (!rawFluids.isEmpty()) y = addFluidRow(group, rawFluids, y);
         }
 
-        y = addItemRow(group, fromPrefixes(PARTS), y);
+        y = addItemRow(group, fromSlots(SLOTS.get(Section.PARTS)), y);
         y = addTools(group, y);
 
         setSize(getSize().width, y);
     }
 
-    private List<ItemEntryList> fromPrefixes(List<List<TagPrefix>> groups) {
+    private List<ItemEntryList> fromSlots(List<List<TagPrefix>> slots) {
         List<ItemEntryList> list = new ArrayList<>();
 
-        for (List<TagPrefix> group : groups) {
-            if (group.get(0).hasItemTable()) {
+        for (List<TagPrefix> slot : slots) {
+            if (slot.isEmpty()) continue;
+
+            if (slot.get(0).hasItemTable()) {
                 ItemStackList stacks = new ItemStackList();
 
-                for (TagPrefix p : group) {
+                for (TagPrefix p : slot) {
                     ItemStack s = ChemicalHelper.get(p, material);
 
                     if (!s.isEmpty()) stacks.add(s);
@@ -168,7 +225,7 @@ public class GTMaterialInfoWidget extends WidgetGroup {
             } else {
                 ItemTagList tags = new ItemTagList();
 
-                for (TagPrefix p : group) {
+                for (TagPrefix p : slot) {
                     var tag = ChemicalHelper.getTag(p, material);
 
                     if (tag != null && (p.doGenerateItem(material) || p.doGenerateBlock(material))) {
