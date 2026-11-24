@@ -17,6 +17,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.utils.data.BlockInfo;
 import com.lowdragmc.lowdraglib2.utils.virtuallevel.TrackedDummyWorld;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -75,19 +76,33 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
             scene.setTickWorld(false);
             scene.createScene(world);
             scene.setRenderedCore(List.of(BlockPos.ZERO));
-
-            Runnable updateRotation = () -> {
-                var mui = scene.getModularUI();
-                if (mui == null) return;
-                scene.setCameraYawAndPitch(mui.getTickCounter() * 2f - 90, scene.getRotationPitch());
-            };
-
-            scene.addEventListener(UIEvents.MUI_CHANGED, e -> updateRotation.run());
-            scene.addEventListener(UIEvents.TICK, e -> updateRotation.run());
+            enableSceneAutoRotate(scene);
 
             group.addChildren(image, scene);
         }
         return group;
+    }
+
+    private static void enableSceneAutoRotate(Scene scene) {
+        var updateRotation = new Runnable() {
+
+            private float yaw = Float.NaN;
+
+            @Override
+            public void run() {
+                var mui = scene.getModularUI();
+                var player = Minecraft.getInstance().player;
+                if (mui == null || player == null) return;
+                if (Float.isNaN(yaw)) {
+                    var playerRotation = player.getRotationVector();
+                    yaw = playerRotation.y - 90;
+                }
+                scene.setCameraYawAndPitch(yaw + mui.getTickCounter() * 2f, scene.getRotationPitch());
+            }
+        };
+
+        scene.addEventListener(UIEvents.MUI_CHANGED, e -> updateRotation.run());
+        scene.addEventListener(UIEvents.TICK, e -> updateRotation.run());
     }
 
     @Override
