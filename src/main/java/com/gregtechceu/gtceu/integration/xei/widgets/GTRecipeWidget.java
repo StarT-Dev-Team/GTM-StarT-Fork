@@ -13,8 +13,8 @@ import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.chance.logic.ChanceLogic;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.EnergyStack;
-import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.api.recipe.loot.LootTableOutputs;
+import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.FusionReactorMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
@@ -230,11 +230,9 @@ public class GTRecipeWidget extends UIElement {
                 recipeDurationText = createLabel(3 - xOffset, textsY, durationComponent);
             } else {
                 recipeDurationText = createLabel(3 - xOffset, textsY,
-                        durationComponent.withStyle(ChatFormatting.UNDERLINE))
-                        .setTextColor(-1)
-                        .setDropShadow(true);
-
-                setTooltips(recipeDurationText, getRecipeDurationTexts(duration));
+                        durationComponent.withStyle(ChatFormatting.UNDERLINE));
+                recipeDurationText.getTextStyle().textColor(-1).textShadow(true);
+                setTooltips(recipeDurationText, FormattingUtil.formatDurationLongParts(duration));
             }
 
             addChild(recipeDurationText);
