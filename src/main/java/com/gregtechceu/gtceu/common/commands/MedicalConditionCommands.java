@@ -4,6 +4,7 @@ import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.capability.IMedicalConditionTracker;
 import com.gregtechceu.gtceu.api.data.medicalcondition.MedicalCondition;
 import com.gregtechceu.gtceu.common.commands.arguments.MedicalConditionArgument;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -108,7 +109,7 @@ public class MedicalConditionCommands {
             target.sendSystemMessage(
                     Component.translatable(langKey,
                             Component.translatable("gtceu.medical_condition." + entry.getKey().name),
-                            (int) (time / 60), (int) (time % 60)));
+                            FormattingUtil.formatDurationLong((long) (time * 20))));
         }
         return count;
     }

@@ -361,11 +361,11 @@ public class MultiblockDisplayText {
             if (!isStructureFormed || !isActive)
                 return this;
             int currentProgress = (int) (progressPercent * 100);
-            double currentInSec = currentDuration / 20.0;
-            double maxInSec = maxDuration / 20.0;
+
             textList.add(Component.translatable("gtceu.multiblock.progress",
-                    String.format("%.2f", (float) currentInSec),
-                    String.format("%.2f", (float) maxInSec), currentProgress));
+                    FormattingUtil.formatDurationShortFixed((long) currentDuration, (long) maxDuration),
+                    FormattingUtil.formatDurationShortFixed((long) maxDuration), currentProgress));
+
             return this;
         }
 
@@ -753,13 +753,12 @@ public class MultiblockDisplayText {
             var progressPercent = totalDuration == 0 ? 0.0 : totalProgress / (totalDuration * 1.0);
 
             var currentProgress = (int) (progressPercent * 100);
-            var currentInSec = totalProgress / 20.0;
-            var maxInSec = totalDuration / 20.0;
 
             textList.add(Component.literal(""));
             textList.add(Component.translatable("gtceu.multiblock.layered.progress",
-                    String.format("%.2f", (float) currentInSec),
-                    String.format("%.2f", (float) maxInSec), currentProgress));
+                    FormattingUtil.formatDurationShortFixed(totalProgress, totalDuration),
+                    FormattingUtil.formatDurationShortFixed(totalDuration), currentProgress));
+
             return this;
         }
 

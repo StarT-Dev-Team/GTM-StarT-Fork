@@ -886,6 +886,14 @@ public class ConfigHolder {
         @Configurable.Comment({ "Whether or not sounds should be played when crafting with tools.", "Default: true" })
         public boolean toolCraftingSounds = true;
         @Configurable
+        @Configurable.Comment({
+                "Show durations as hours, minutes and seconds, like \"1m 30s\", and large energy numbers with k, M, G, like \"1.5M\".",
+                "If off, durations show as seconds only, like \"90s\", and numbers only get thousands separators.",
+                "Used for machine progress, Large Boiler heat-up time, Power Substation fill/drain time, the energy bar and chargers.",
+                "Some of these texts are built on the server, so set this there too.",
+                "Default: true" })
+        public boolean compactFormatting = true;
+        @Configurable
         @Configurable.Comment({ "The default color to overlay onto machines.",
                 "#FFFFFF is no coloring (default).",
                 "#D2DCFF is the classic blue from GT5." })

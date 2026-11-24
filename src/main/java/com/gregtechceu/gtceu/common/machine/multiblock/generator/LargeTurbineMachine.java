@@ -214,8 +214,8 @@ public class LargeTurbineMachine extends WorkableElectricMultiblockMachine imple
 
                     if (isActive()) {
                         textList.add(3, Component.translatable("gtceu.multiblock.turbine.energy_per_tick",
-                                FormattingUtil.formatNumbers(currentProduction),
-                                FormattingUtil.formatNumbers(maxProduction)));
+                                FormattingUtil.formatNumberCompact(currentProduction, "gtceu.unit.eu_per_tick"),
+                                FormattingUtil.formatNumberCompact(maxProduction, "gtceu.unit.eu_per_tick")));
                     }
 
                     int rotorDurability = rotorHolder.getRotorDurabilityPercent();

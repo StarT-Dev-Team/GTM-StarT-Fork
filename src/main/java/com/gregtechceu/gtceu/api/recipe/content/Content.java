@@ -177,11 +177,13 @@ public class Content {
             } else {
                 int amount = ingredient.getAmount();
                 color = 0xFFFFFF;
-                s = FormattingUtil.formatBuckets(amount);
+                s = FormattingUtil.formatBuckets(amount).getString();
                 if (fontRenderer.width(s) > 32)
-                    s = FormattingUtil.formatNumberReadable(amount, true, FormattingUtil.DECIMAL_FORMAT_1F, "B");
+                    s = FormattingUtil.formatNumberReadable(amount, true, FormattingUtil.DECIMAL_FORMAT_1F,
+                            "gtceu.unit.bucket").getString();
                 if (fontRenderer.width(s) > 32)
-                    s = FormattingUtil.formatNumberReadable(amount, true, FormattingUtil.DECIMAL_FORMAT_0F, "B");
+                    s = FormattingUtil.formatNumberReadable(amount, true, FormattingUtil.DECIMAL_FORMAT_0F,
+                            "gtceu.unit.bucket").getString();
             }
             graphics.drawString(fontRenderer, s, (int) ((x + (width / 3f)) * 2 - fontRenderer.width(s) + 22),
                     (int) ((y + (height / 3f) + 6) * 2), color, true);
@@ -202,12 +204,14 @@ public class Content {
 
         if (content instanceof FluidIngredient) {
             int mB = (int) Math.round(amount.mean());
-            s = "~" + FormattingUtil.formatBuckets(mB);
+            s = "~" + FormattingUtil.formatBuckets(mB).getString();
 
             if (fontRenderer.width(s) > 32)
-                s = "~" + FormattingUtil.formatNumberReadable(mB, true, FormattingUtil.DECIMAL_FORMAT_1F, "B");
+                s = "~" + FormattingUtil.formatNumberReadable(mB, true, FormattingUtil.DECIMAL_FORMAT_1F,
+                        "gtceu.unit.bucket").getString();
             if (fontRenderer.width(s) > 32)
-                s = "~" + FormattingUtil.formatNumberReadable(mB, true, FormattingUtil.DECIMAL_FORMAT_0F, "B");
+                s = "~" + FormattingUtil.formatNumberReadable(mB, true, FormattingUtil.DECIMAL_FORMAT_0F,
+                        "gtceu.unit.bucket").getString();
 
             offset = 22;
         } else {

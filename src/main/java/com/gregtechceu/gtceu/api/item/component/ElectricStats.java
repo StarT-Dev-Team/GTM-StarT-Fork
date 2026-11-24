@@ -37,8 +37,6 @@ import org.jetbrains.annotations.Nullable;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 
 public class ElectricStats implements IInteractionItem, ISubItemHandler, IAddInformation, IItemLifeCycle,
@@ -191,15 +189,6 @@ public class ElectricStats implements IInteractionItem, ISubItemHandler, IAddInf
                                                boolean showTimeRemaining) {
         double percentage = (double) currentCharge / (double) maxCharge;
 
-        Instant start = Instant.now();
-        Instant current = Instant.now().plusSeconds((long) ((currentCharge * 1.0) / GTValues.V[tier] / 20));
-        Instant max = Instant.now().plusSeconds((long) ((maxCharge * 1.0) / GTValues.V[tier] / 20));
-        Duration durationCurrent = Duration.between(start, current);
-        Duration durationMax = Duration.between(start, max);
-        long currentChargeTime;
-        long maxChargeTime;
-        Component unit;
-
         ChatFormatting color = ChatFormatting.RED;
         if (percentage > 0.5) {
             color = ChatFormatting.GREEN;
@@ -208,29 +197,19 @@ public class ElectricStats implements IInteractionItem, ISubItemHandler, IAddInf
         }
 
         if (showTimeRemaining) {
-            if (durationCurrent.getSeconds() <= 60) {
-                maxChargeTime = durationMax.getSeconds();
-                currentChargeTime = durationCurrent.toSeconds();
-                unit = Component.translatable("item.gtceu.battery.charge_unit.second");
-            } else if (durationCurrent.toMinutes() <= 60) {
-                maxChargeTime = durationMax.toMinutes();
-                currentChargeTime = durationCurrent.toMinutes();
-                unit = Component.translatable("item.gtceu.battery.charge_unit.minute");
-            } else {
-                maxChargeTime = durationMax.toHours();
-                currentChargeTime = durationCurrent.toHours();
-                unit = Component.translatable("item.gtceu.battery.charge_unit.hour");
-            }
+            long maxChargeTicks = maxCharge / GTValues.V[tier];
+
             tooltip.add(Component.translatable("item.gtceu.battery.charge_detailed",
-                    FormattingUtil.formatNumbers(currentCharge), FormattingUtil.formatNumbers(maxCharge),
-                    GTValues.VNF[tier],
-                    FormattingUtil.formatNumbers(currentChargeTime), FormattingUtil.formatNumbers(maxChargeTime),
-                    unit)
+                    FormattingUtil.formatNumberCompact(currentCharge, "gtceu.unit.eu"),
+                    FormattingUtil.formatNumberCompact(maxCharge, "gtceu.unit.eu"), GTValues.VNF[tier],
+                    FormattingUtil.formatDurationShort(currentCharge / GTValues.V[tier], maxChargeTicks),
+                    FormattingUtil.formatDurationShort(maxChargeTicks))
                     .withStyle(color));
         } else {
             tooltip.add(Component.translatable("metaitem.generic.electric_item.tooltip",
-                    FormattingUtil.formatNumbers(currentCharge), FormattingUtil.formatNumbers(maxCharge),
-                    GTValues.VNF[tier]).withStyle(color));
+                    FormattingUtil.formatNumberCompact(currentCharge, "gtceu.unit.eu"),
+                    FormattingUtil.formatNumberCompact(maxCharge, "gtceu.unit.eu"), GTValues.VNF[tier])
+                    .withStyle(color));
         }
     }
 

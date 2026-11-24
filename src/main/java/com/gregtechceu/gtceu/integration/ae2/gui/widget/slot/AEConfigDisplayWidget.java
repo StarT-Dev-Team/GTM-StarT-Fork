@@ -114,7 +114,7 @@ public class AEConfigDisplayWidget extends WidgetGroup {
 
                 if (showAmount) {
                     this.amountText = FormattingUtil.formatNumberReadable(stack.amount(), true,
-                            FormattingUtil.DECIMAL_FORMAT_0F, "B");
+                            FormattingUtil.DECIMAL_FORMAT_0F, "gtceu.unit.bucket").getString();
                 }
             } else {
                 this.fluidTank.setFluid(FluidStack.EMPTY);

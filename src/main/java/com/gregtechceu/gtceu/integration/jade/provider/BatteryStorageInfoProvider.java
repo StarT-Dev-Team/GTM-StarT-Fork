@@ -9,6 +9,7 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.machine.electric.BatteryBufferMachine;
 import com.gregtechceu.gtceu.common.machine.electric.ChargerMachine;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -23,8 +24,7 @@ import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
 import snownee.jade.api.ui.IElementHelper;
 
-import static com.gregtechceu.gtceu.utils.GTUtil.formatLongNumber;
-import static com.gregtechceu.gtceu.utils.GTUtil.getStringRemainTime;
+import static com.gregtechceu.gtceu.utils.GTUtil.getRemainTimeText;
 
 public class BatteryStorageInfoProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
@@ -39,14 +39,15 @@ public class BatteryStorageInfoProvider implements IBlockComponentProvider, ISer
                     CompoundTag container = tag.getCompound("energy");
                     long changed = container.getLong("changed"), stored = container.getLong("stored"),
                             capacity = container.getLong("capacity");
-                    iTooltip.add(Component.translatable("gtceu.jade.changes_eu_sec", formatLongNumber(changed)));
+                    iTooltip.add(Component.translatable("gtceu.jade.changes_eu_sec",
+                            FormattingUtil.formatNumberCompact(changed, "gtceu.unit.eu_per_second")));
                     if (changed > 0L) {
                         iTooltip.add(Component
                                 .translatable("gtceu.jade.remaining_charge_time",
-                                        getStringRemainTime((capacity - stored) / changed)));
+                                        getRemainTimeText((capacity - stored) / changed)));
                     } else if (changed < 0L) {
                         iTooltip.add(Component.translatable("gtceu.jade.remaining_discharge_time",
-                                getStringRemainTime((stored) / -changed)));
+                                getRemainTimeText((stored) / -changed)));
                     }
                     if (Minecraft.getInstance().player.isShiftKeyDown()) {
                         CustomItemStackHandler handler = new CustomItemStackHandler();
@@ -58,9 +59,12 @@ public class BatteryStorageInfoProvider implements IBlockComponentProvider, ISer
                                 iTooltip.add(helper.smallItem(stack));
                                 IElectricItem item = GTCapabilityHelper.getElectricItem(stack);
                                 if (item == null) continue;
-                                iTooltip.append(Component.literal(
-                                        GTValues.VNF[item.getTier()] + "§r " + formatLongNumber(item.getCharge()) +
-                                                " / " + formatLongNumber(item.getMaxCharge()) + " EU"));
+                                iTooltip.append(Component.literal(GTValues.VNF[item.getTier()] + "§r ")
+                                        .append(FormattingUtil.formatNumberCompact(item.getCharge(),
+                                                "gtceu.unit.eu"))
+                                        .append(" / ")
+                                        .append(FormattingUtil.formatNumberCompact(item.getMaxCharge(),
+                                                "gtceu.unit.eu")));
                             }
                         }
                     }

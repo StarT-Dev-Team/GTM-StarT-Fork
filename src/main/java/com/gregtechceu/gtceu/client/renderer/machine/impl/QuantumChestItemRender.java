@@ -143,7 +143,7 @@ public class QuantumChestItemRender extends DynamicRender<QuantumChestMachine, Q
             poseStack.scale(3.0f, 3.0f, 1.0f);
             poseStack.translate(-textX, -textY, 0);
         } else {
-            text = storedAmount <= 0 ? "*" : FormattingUtil.formatNumberReadable(storedAmount, false);
+            text = storedAmount <= 0 ? "*" : FormattingUtil.formatNumberReadable(storedAmount, false).getString();
         }
 
         Font font = Minecraft.getInstance().font;
