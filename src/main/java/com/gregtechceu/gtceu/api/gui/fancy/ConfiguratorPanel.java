@@ -173,7 +173,7 @@ public class ConfiguratorPanel extends UIElement {
             var close = new UIElement();
             close.layout(l -> l.width(16).height(16));
             close.style(s -> s.background(DynamicTexture.of(configurator::getIcon)));
-            close.addEventListener(UIEvents.MOUSE_DOWN, this::onIconClicked);
+            close.addEventListener(UIEvents.MOUSE_DOWN, this::onCloseClicked);
             close.addEventListener(UIEvents.HOVER_TOOLTIPS,
                     e -> e.hoverTooltips = new HoverTooltips(configurator.getTooltips(), null, null, null));
             header.addChildren(title, close);
@@ -199,6 +199,10 @@ public class ConfiguratorPanel extends UIElement {
             } else {
                 expandTab(this);
             }
+        }
+
+        protected void onCloseClicked(UIEvent event) {
+            onIconClicked(event);
         }
 
         protected void expand() {
@@ -262,6 +266,8 @@ public class ConfiguratorPanel extends UIElement {
 
     public class FloatingTab extends Tab {
 
+        private static final String CLOSE_MESSAGE = "gtceu:floating_tab_close";
+
         protected Runnable closeCallback = () -> {};
 
         public FloatingTab(IFancyConfigurator configurator) {
@@ -269,6 +275,16 @@ public class ConfiguratorPanel extends UIElement {
             layout(l -> l.positionType(TaffyPosition.ABSOLUTE).top(0).right(0).widthAuto().heightAuto());
             style(s -> s.background(IGuiTexture.EMPTY));
             button.setVisible(false);
+            onMessage(CLOSE_MESSAGE, tag -> {
+                if (expanded == this) collapseTab();
+            });
+        }
+
+        @Override
+        protected void onCloseClicked(UIEvent event) {
+            if (event.button != 0) return;
+            sendMessage(CLOSE_MESSAGE);
+            onIconClicked(event);
         }
 
         @Override
