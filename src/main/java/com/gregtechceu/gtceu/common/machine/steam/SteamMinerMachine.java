@@ -22,7 +22,6 @@ import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -172,7 +171,7 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
     public ModularUI createUI(Player entityPlayer) {
         int rowSize = (int) Math.sqrt(inventorySize);
         var area = new UIElement();
-        area.layout(layout -> layout.height(92));
+        area.layout(layout -> layout.widthPercent(100).height(94));
 
         for (int y = 0; y < rowSize; y++) {
             for (int x = 0; x < rowSize; x++) {
@@ -187,9 +186,7 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
             }
         }
 
-        var title = new Label();
-        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
-        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(5).top(5));
+        var title = UITemplate.title(Component.translatable(getBlockState().getBlock().getDescriptionId()), 5);
 
         var indicator = new PredicatedImage(GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure()),
                 () -> !drainInput(true));
@@ -208,7 +205,7 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
 
         var root = UITemplate.panel();
         root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure())));
-        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(7));
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(5).gapAll(0));
         root.addChildren(area, UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(isHighPressure())));
         return UITemplate.modularUI(root, entityPlayer);
     }

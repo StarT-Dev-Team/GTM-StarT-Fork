@@ -3,17 +3,25 @@ package com.gregtechceu.gtceu.api.gui;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
+import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
+import com.lowdragmc.lowdraglib2.utils.TextUtilities;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 
 import java.util.List;
 
@@ -47,6 +55,35 @@ public class UITemplate {
         panel.addClass("gt-panel");
         panel.style(s -> s.background(panelTexture()));
         return panel;
+    }
+
+    public static Label title(Component text, int inset) {
+        var title = new Label() {
+
+            @Override
+            public String name() {
+                return "label";
+            }
+
+            @Override
+            public void recompute() {
+                if (LDLib2.isClient() && RenderSystem.isOnRenderThread()) {
+                    var font = getFont();
+                    float textWidth = font.width(TextUtilities.withFont(getText(), getTextStyle().font()));
+                    var available = getContentWidth();
+                    var fontSize = textWidth > available && available > 0 ?
+                            font.lineHeight * available / textWidth : font.lineHeight;
+                    if (getTextStyle().fontSize() != fontSize) {
+                        getTextStyle().fontSize(fontSize);
+                    }
+                }
+                super.recompute();
+            }
+        };
+        title.setText(text);
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(inset).right(inset).top(inset));
+        title.textStyle(style -> style.textAlignVertical(Vertical.CENTER));
+        return title;
     }
 
     public static ScrollerView displayScreen(IGuiTexture background) {

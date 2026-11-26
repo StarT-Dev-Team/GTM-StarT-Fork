@@ -27,7 +27,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
@@ -319,9 +318,7 @@ public abstract class SteamBoilerMachine extends SteamWorkableMachine
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        var title = new Label();
-        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
-        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(6).top(6));
+        var title = UITemplate.title(Component.translatable(getBlockState().getBlock().getDescriptionId()), 6);
 
         var temperature = new ProgressTextureBar(GuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure),
                 GuiTextures.PROGRESS_BAR_BOILER_HEAT, FillDirection.DOWN_TO_UP, 10, 54);
@@ -340,12 +337,12 @@ public abstract class SteamBoilerMachine extends SteamWorkableMachine
         canister.style(style -> style.backgroundTexture(GuiTextures.CANISTER_OVERLAY_STEAM.get(isHighPressure)));
 
         var machineArea = new UIElement();
-        machineArea.layout(layout -> layout.height(77));
+        machineArea.layout(layout -> layout.widthPercent(100).height(84));
         machineArea.addChildren(title, temperature, water, steam, canister);
 
         var root = UITemplate.panel();
         root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure)));
-        root.layout(layout -> layout.width(176).paddingHorizontal(0).paddingBottom(7));
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(5).gapAll(0));
         root.addChildren(machineArea, UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(isHighPressure)));
         return UITemplate.modularUI(root, entityPlayer);
     }

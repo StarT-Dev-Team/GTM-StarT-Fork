@@ -25,7 +25,6 @@ import com.gregtechceu.gtceu.common.recipe.condition.VentCondition;
 
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -217,8 +216,7 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IExhaust
                 Collections.emptyList(),
                 true,
                 isHighPressure);
-        var title = new Label();
-        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
+        var title = UITemplate.title(Component.translatable(getBlockState().getBlock().getDescriptionId()), 5);
 
         var indicatorLayer = new UIElement();
         indicatorLayer.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).right(0).top(0).bottom(0)
@@ -230,15 +228,18 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IExhaust
         indicatorLayer.addChild(indicator);
 
         var recipeArea = new UIElement();
-        recipeArea.layout(layout -> layout.alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER)
-                .marginTop(22));
+        recipeArea.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).right(0).top(32)
+                .alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
         recipeArea.addChildren(group, indicatorLayer);
+
+        var machineArea = new UIElement();
+        machineArea.layout(layout -> layout.widthPercent(100).height(84));
+        machineArea.addChildren(title, recipeArea);
 
         var root = UITemplate.panel();
         root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure)));
-        root.layout(layout -> layout.width(176).paddingAll(5).paddingBottom(7));
-        root.addChildren(title, recipeArea,
-                UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(isHighPressure)));
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(5).gapAll(0));
+        root.addChildren(machineArea, UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(isHighPressure)));
         return UITemplate.modularUI(root, entityPlayer);
     }
 }
