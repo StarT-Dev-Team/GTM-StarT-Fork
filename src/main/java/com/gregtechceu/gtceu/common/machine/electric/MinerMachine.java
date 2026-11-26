@@ -281,11 +281,13 @@ public class MinerMachine extends WorkableTieredMachine
             }
 
             var componentPanel = new ComponentPanel(list -> {});
-            componentPanel.setMaxWidthLimit(110);
+            componentPanel.setMaxWidthLimit(103);
+            componentPanel.layout(layout -> layout.gapAll(1));
             componentPanel.setId("component_panel");
 
             var scroller = UITemplate.displayScreen(GuiTextures.DISPLAY);
             scroller.layout(layout -> layout.widthPercent(100).heightPercent(100));
+            scroller.viewPort(viewPort -> viewPort.layout(layout -> layout.paddingAll(3)));
             scroller.addScrollViewChild(componentPanel);
 
             var container = new UIElement();

@@ -43,7 +43,7 @@ public class SteamHatchPartMachine extends FluidHatchPartMachine {
     @Override
     public ModularUI createUI(Player entityPlayer) {
         var area = new UIElement();
-        area.layout(layout -> layout.height(82));
+        area.layout(layout -> layout.widthPercent(100).height(82));
 
         var display = new UIElement();
         display.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(16).width(81).height(55));

@@ -71,6 +71,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.objects.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -335,7 +336,7 @@ public class MEPatternBufferPartMachine extends MEBusPartMachine
                 .setText(customName)
                 .setOnConfirm(this::setCustomName)
                 .setButtonTooltips(Component.translatable("gui.gtceu.rename.desc"));
-        rename.layout(layout -> layout.width(70).height(10).marginLeftAuto());
+        rename.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).right(0).top(1).width(70).height(10));
         header.addChildren(new MEStatusLabel(() -> this.isOnline), rename);
         group.addChild(header);
 

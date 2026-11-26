@@ -101,7 +101,7 @@ public class MEOutputPortPartMachine extends MEBusPartMachine {
     @Override
     public UIElement createUIWidget() {
         var group = new UIElement();
-        group.layout(layout -> layout.width(170).paddingHorizontal(5).gapAll(1));
+        group.layout(layout -> layout.width(18 * 9).gapAll(1));
         var waiting = new Label();
         waiting.setText(Component.translatable("gtceu.gui.waiting_list"));
         waiting.textStyle(style -> style.textColor(0xFF404040).textShadow(false));

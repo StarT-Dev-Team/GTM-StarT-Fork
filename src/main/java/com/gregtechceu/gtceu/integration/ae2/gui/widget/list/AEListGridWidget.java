@@ -3,7 +3,10 @@ package com.gregtechceu.gtceu.integration.ae2.gui.widget.list;
 import com.gregtechceu.gtceu.integration.ae2.utils.KeyStorage;
 
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 
@@ -33,8 +36,15 @@ public class AEListGridWidget extends UIElement {
         this.list = internalList;
         this.slotAmountY = slotsY;
 
-        layout(layout -> layout.width(18 + 140 + 8).height(slotsY * 18));
+        layout(layout -> layout.width(18 * 9).height(slotsY * 18));
         scroller.layout(layout -> layout.widthPercent(100).heightPercent(100));
+        scroller.scrollerStyle(style -> style.mode(ScrollerMode.VERTICAL).verticalScrollDisplay(ScrollDisplay.AUTO));
+        scroller.style(style -> style.backgroundTexture(IGuiTexture.EMPTY));
+        scroller.viewPort(viewPort -> {
+            viewPort.layout(layout -> layout.paddingAll(0));
+            viewPort.style(style -> style.backgroundTexture(IGuiTexture.EMPTY));
+        });
+        scroller.verticalScroller(bar -> bar.layout(layout -> layout.width(4).marginLeft(1)));
         addChild(scroller);
         addChild(new BindableValue<Tag>().bind(DataBindingBuilder.tagS2C(this::collect)
                 .remoteSetter(this::receive).build()));

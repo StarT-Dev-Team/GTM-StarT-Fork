@@ -25,13 +25,13 @@ public class AEGenericDisplayWidget extends UIElement {
     private final Label amountLabel = new Label();
 
     public AEGenericDisplayWidget() {
-        layout(layout -> layout.flexDirection(FlexDirection.ROW).width(18 + 140).height(18));
+        layout(layout -> layout.flexDirection(FlexDirection.ROW).widthPercent(100).height(18));
 
         itemSlot.style(style -> style.backgroundTexture(GuiTextures.SLOT));
         fluidSlot.setDisplay(false);
 
         var number = new UIElement();
-        number.layout(layout -> layout.width(140).height(18).paddingHorizontal(4));
+        number.layout(layout -> layout.flex(1).height(18).paddingHorizontal(4));
         number.style(style -> style.backgroundTexture(GuiTextures.NUMBER_BACKGROUND));
         amountLabel.layout(layout -> layout.widthPercent(100).heightPercent(100));
         amountLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.LEFT)

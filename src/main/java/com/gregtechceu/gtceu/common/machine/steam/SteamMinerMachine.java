@@ -190,18 +190,16 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
 
         var indicator = new PredicatedImage(GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure()),
                 () -> !drainInput(true));
-        indicator.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(79).top(42).width(18).height(18));
+        indicator.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(91).top(70).width(18).height(18));
 
         var display = new UIElement();
         display.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(16).width(105).height(75));
         display.style(style -> style.backgroundTexture(GuiTextures.DISPLAY_STEAM.get(isHighPressure())));
 
-        var text1 = new ComponentPanel(this::addDisplayText).setMaxWidthLimit(84);
-        text1.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(10).top(19));
-        var text2 = new ComponentPanel(this::addDisplayText2).setMaxWidthLimit(84);
-        text2.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(70).top(19));
+        var text = new ComponentPanel(this::addDisplayText).setMaxWidthLimit(97);
+        text.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(11).top(20).gapAll(1));
 
-        area.addChildren(title, display, indicator, text1, text2);
+        area.addChildren(title, display, indicator, text);
 
         var root = UITemplate.panel();
         root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure())));
@@ -212,9 +210,12 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
 
     void addDisplayText(List<Component> textList) {
         int workingArea = IMiner.getWorkingArea(getRecipeLogic().getCurrentRadius());
-        textList.add(Component.translatable("gtceu.machine.miner.startx", this.getRecipeLogic().getX()));
-        textList.add(Component.translatable("gtceu.machine.miner.starty", this.getRecipeLogic().getY()));
-        textList.add(Component.translatable("gtceu.machine.miner.startz", this.getRecipeLogic().getZ()));
+        textList.add(Component.translatable("gtceu.machine.miner.startx", getRecipeLogic().getX()).append(" ")
+                .append(Component.translatable("gtceu.machine.miner.minex", getRecipeLogic().getMineX())));
+        textList.add(Component.translatable("gtceu.machine.miner.starty", getRecipeLogic().getY()).append(" ")
+                .append(Component.translatable("gtceu.machine.miner.miney", getRecipeLogic().getMineY())));
+        textList.add(Component.translatable("gtceu.machine.miner.startz", getRecipeLogic().getZ()).append(" ")
+                .append(Component.translatable("gtceu.machine.miner.minez", getRecipeLogic().getMineZ())));
         textList.add(Component.translatable("gtceu.universal.tooltip.working_area", workingArea, workingArea));
         if (this.getRecipeLogic().isDone())
             textList.add(Component.translatable("gtceu.multiblock.large_miner.done")
@@ -233,12 +234,6 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
         else if (!drainInput(true))
             textList.add(Component.translatable("gtceu.multiblock.large_miner.steam")
                     .withStyle(ChatFormatting.RED));
-    }
-
-    void addDisplayText2(List<Component> textList) {
-        textList.add(Component.translatable("gtceu.machine.miner.minex", this.getRecipeLogic().getMineX()));
-        textList.add(Component.translatable("gtceu.machine.miner.miney", this.getRecipeLogic().getMineY()));
-        textList.add(Component.translatable("gtceu.machine.miner.minez", this.getRecipeLogic().getMineZ()));
     }
 
     public boolean drainInput(boolean simulate) {

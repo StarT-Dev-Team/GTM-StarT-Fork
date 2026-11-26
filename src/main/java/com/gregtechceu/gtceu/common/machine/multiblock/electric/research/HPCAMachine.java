@@ -302,6 +302,7 @@ public class HPCAMachine extends WorkableElectricMultiblockMachine
                 cell.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(left).top(top).width(cellSize)
                         .height(cellSize));
                 cell.style(style -> style.backgroundTexture(DynamicTexture.of(textureSupplier)));
+                cell.setAllowHitTest(false);
                 grid.addChild(cell);
             }
         }

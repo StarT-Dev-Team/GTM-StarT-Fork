@@ -49,7 +49,7 @@ public class CokeOvenMachine extends PrimitiveWorkableMachine implements IUIMach
     @Override
     public ModularUI createUI(Player entityPlayer) {
         var area = new UIElement();
-        area.layout(layout -> layout.height(82));
+        area.layout(layout -> layout.widthPercent(100).height(82));
 
         var title = new Label();
         title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));

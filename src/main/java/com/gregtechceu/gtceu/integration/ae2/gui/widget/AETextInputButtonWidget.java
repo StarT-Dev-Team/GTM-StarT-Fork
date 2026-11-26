@@ -10,6 +10,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 
 import net.minecraft.network.chat.Component;
 
+import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
@@ -35,7 +36,8 @@ public class AETextInputButtonWidget extends UIElement {
     private final Button toggle = new Button();
 
     public AETextInputButtonWidget() {
-        layout(layout -> layout.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER).gapAll(2));
+        layout(layout -> layout.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER)
+                .justifyContent(AlignContent.FLEX_END).gapAll(2));
 
         textField.layout(layout -> layout.flex(1).heightPercent(100));
         textField.setAnyString();

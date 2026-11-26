@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.capability.ICentralMonitor;
 import com.gregtechceu.gtceu.api.capability.IMonitorComponent;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.api.gui.widget.MenuSlots;
 import com.gregtechceu.gtceu.api.item.IComponentItem;
@@ -38,10 +39,11 @@ import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.VanillaSpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
@@ -353,27 +355,29 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
         var main = new UIElement();
         main.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0));
 
-        var componentSelection = new ScrollerView();
-        componentSelection.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(10).width(200)
-                .height(110));
+        var componentSelection = UITemplate.displayScreen(IGuiTexture.EMPTY);
+        componentSelection.scrollerStyle(style -> style.verticalScrollDisplay(ScrollDisplay.AUTO)
+                .horizontalScrollDisplay(ScrollDisplay.AUTO));
+        componentSelection.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(6).top(6).width(112)
+                .height(113));
         var selectionContent = new UIElement();
-        selectionContent.layout(layout -> layout.width(20 + 16 * (leftDist + rightDist + 1) + 4)
+        selectionContent.layout(layout -> layout.width(2 + 16 * (leftDist + rightDist + 1) + 2)
                 .height(30 + 16 * (downDist + upDist + 1) + 4));
         componentSelection.addScrollViewChild(selectionContent);
         main.addChild(componentSelection);
 
         var options = new UIElement();
-        options.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(-100).top(20).width(60)
-                .height(35));
+        options.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(122).top(28).width(62)
+                .height(32));
         var groupConfig = new UIElement();
-        groupConfig.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(10).top(30).width(100)
-                .height(100));
+        groupConfig.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(6).top(6).width(178)
+                .height(113));
         groupConfig.setDisplay(false);
 
         var infoWidget = new Button();
         infoWidget.noText();
-        infoWidget.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(200).top(10).width(20)
-                .height(20));
+        infoWidget.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(166).top(6).width(18)
+                .height(18));
         setButtonTexture(infoWidget, GuiTextures.INFO_ICON);
         var infoTooltips = LangHandler.getSingleOrMultiLang("gtceu.central_monitor.info_tooltip")
                 .toArray(Component[]::new);
@@ -398,16 +402,17 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
             groupConfig.addChild(editing);
             for (int i = 0; i < 8; i++) {
                 var placeholder = new ItemSlot().bind(group.getPlaceholderSlotsHandler(), i);
-                int top = 16 * i + 46;
-                placeholder.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(-38).top(top));
+                int left = 140 + 18 * (i / 4);
+                int top = 14 + 18 * (i % 4);
+                placeholder.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(left).top(top));
                 var tooltips = LangHandler.getMultiLang("gtceu.gui.computer_monitor_cover.slot_tooltip", i + 1)
                         .toArray(Component[]::new);
                 placeholder.style(style -> style.tooltips(tooltips));
                 groupConfig.addChild(placeholder);
             }
             var itemUI = new UIElement();
-            itemUI.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(40).top(20).width(100)
-                    .height(100));
+            itemUI.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(22).top(14).width(114)
+                    .height(99));
             var lastItem = new ItemStack[] { ItemStack.EMPTY };
             var itemHandlerSlot = new ItemHandlerSlot(group.getItemStackHandler(), 0);
             Runnable changeListener = () -> {
@@ -425,7 +430,7 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
             };
             itemHandlerSlot.addChangeListener(changeListener);
             var slot = new ItemSlot().bind(itemHandlerSlot);
-            slot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(20));
+            slot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(14));
             changeListener.run();
             groupConfig.addChildren(itemUI, slot);
             main.setDisplay(false);
@@ -433,11 +438,14 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
         };
         builder.addChild(groupConfig);
 
-        var groupListView = new ScrollerView();
-        groupListView.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(-100).top(50).width(70)
-                .height(80));
+        var groupListView = UITemplate.displayScreen(IGuiTexture.EMPTY);
+        groupListView.scrollerStyle(style -> style.mode(ScrollerMode.VERTICAL)
+                .verticalScrollDisplay(ScrollDisplay.AUTO));
+        groupListView.verticalScroller(bar -> bar.layout(layout -> layout.width(4).marginLeft(1)));
+        groupListView.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(122).top(80).width(62)
+                .height(39));
         var groupList = new UIElement();
-        groupList.layout(layout -> layout.width(66).minHeight(80));
+        groupList.layout(layout -> layout.width(56).minHeight(39));
         groupListView.addScrollViewChild(groupList);
 
         List<List<Consumer<Iterator<IMonitorComponent>>>> imageButtons = new ArrayList<>();
@@ -446,16 +454,16 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
         dataSlot[0] = 1;
         dataSlot[1] = 9;
         var dataSlotInput = new IntInput(() -> dataSlot[0], n -> dataSlot[0] = Mth.clamp(n, 1, dataSlot[1]));
-        dataSlotInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(120).top(20).width(60));
+        dataSlotInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(122).top(62).width(62));
         dataSlotInput.setDisplay(false);
         builder.addChild(dataSlotInput);
 
         Consumer<MonitorGroup> addGroupToList = group -> {
-            int top = groupList.getChildren().size() / 2 * 15 + 5;
+            int top = groupList.getChildren().size() / 2 * 15 + 3;
             var label = new Button();
             label.setText(group.getName(), false);
-            label.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(20).top(top).width(46)
-                    .height(10));
+            label.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(16).top(top - 1).width(40)
+                    .height(12));
             onBothSides(label, click -> {
                 group.getMonitorPositions().forEach(pos -> {
                     BlockPos rel = toRelative(pos);
@@ -471,8 +479,8 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
 
             var configButton = new Button();
             configButton.noText();
-            configButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(top - 3).width(16)
-                    .height(16));
+            configButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(top - 2).width(14)
+                    .height(14));
             setButtonTexture(configButton, GuiTextures.IO_CONFIG_COVER_SETTINGS);
             onBothSides(configButton, click -> {
                 if (configGroup.get(0) == null) {
@@ -488,13 +496,13 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
         builder.addChild(groupListView);
         main.addChild(options);
 
-        var removeFromGroupButton = textButton("gtceu.central_monitor.gui.remove_from_group", 60, 20);
+        var removeFromGroupButton = textButton("gtceu.central_monitor.gui.remove_from_group", 62, 15);
         removeFromGroupButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0));
         removeFromGroupButton.setDisplay(false);
-        var setTargetButton = textButton("gtceu.central_monitor.gui.set_target", 60, 20);
-        setTargetButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(15));
+        var setTargetButton = textButton("gtceu.central_monitor.gui.set_target", 62, 15);
+        setTargetButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(17));
         setTargetButton.setDisplay(false);
-        var createGroupButton = textButton("gtceu.central_monitor.gui.create_group", 60, 20);
+        var createGroupButton = textButton("gtceu.central_monitor.gui.create_group", 62, 15);
         createGroupButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0));
         createGroupButton.setDisplay(false);
 
@@ -571,7 +579,7 @@ public class CentralMonitorMachine extends WorkableElectricMultiblockMachine
         });
         options.addChildren(removeFromGroupButton, createGroupButton, setTargetButton);
 
-        int startX = 20;
+        int startX = 2;
         int startY = 30;
         for (int row = 0; row <= downDist + upDist; row++) {
             imageButtons.add(new ArrayList<>());
