@@ -69,8 +69,8 @@ public class MetaMachineBlockEntityHelper implements IBlockEntityManaged {
     }
 
     public void init() {
-        metaMachine = machineBlockEntity.getDefinition().createMetaMachine(machineBlockEntity);
         renderState = machineBlockEntity.getDefinition().defaultRenderState();
+        metaMachine = machineBlockEntity.getDefinition().createMetaMachine(machineBlockEntity);
         rootStorage.attach(machineBlockEntity.getSyncStorage());
         rootStorage.attach(getSyncStorage());
     }
