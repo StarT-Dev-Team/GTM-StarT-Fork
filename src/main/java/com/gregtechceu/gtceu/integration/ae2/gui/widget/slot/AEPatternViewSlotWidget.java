@@ -33,4 +33,9 @@ public class AEPatternViewSlotWidget extends ItemSlot {
         DrawerHelper.drawItemStack(guiContext.graphics, displayed, 0, 0, guiContext.elementColor,
                 compactCount(displayed));
     }
+
+    @Override
+    public String name() {
+        return "item-slot";
+    }
 }

@@ -74,4 +74,9 @@ public class PhantomFluidSlot extends FluidSlot {
         }
         return FluidStack.EMPTY;
     }
+
+    @Override
+    public String name() {
+        return "fluid-slot";
+    }
 }

@@ -154,4 +154,9 @@ public class GhostCircuitSlot extends ItemSlot {
         });
         return button;
     }
+
+    @Override
+    public String name() {
+        return "item-slot";
+    }
 }

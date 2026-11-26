@@ -43,4 +43,9 @@ public class BlockableFluidSlot extends FluidSlot {
         }
         super.onMouseDown(event);
     }
+
+    @Override
+    public String name() {
+        return "fluid-slot";
+    }
 }

@@ -53,4 +53,9 @@ public class BlockableItemSlot extends ItemSlot {
         }
         super.onMouseDown(event);
     }
+
+    @Override
+    public String name() {
+        return "item-slot";
+    }
 }

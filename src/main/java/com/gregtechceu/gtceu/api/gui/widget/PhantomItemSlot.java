@@ -115,4 +115,9 @@ public class PhantomItemSlot extends ItemSlot {
         var stackSize = mouseButton == 0 ? stackHeld.getCount() : 1;
         setValue(stackHeld.copyWithCount(Math.min(maxStackSize, stackSize)), true);
     }
+
+    @Override
+    public String name() {
+        return "item-slot";
+    }
 }

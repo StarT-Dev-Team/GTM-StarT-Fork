@@ -26,4 +26,9 @@ public class PatternPreviewSlotWidget extends ItemSlot {
                 null);
         graphics.pose().popPose();
     }
+
+    @Override
+    public String name() {
+        return "item-slot";
+    }
 }
