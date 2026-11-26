@@ -9,7 +9,6 @@ import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.util.ClickData;
 
 import net.minecraft.network.chat.Component;
@@ -43,9 +42,8 @@ public interface IDisplayUIMachine extends IUIMachine, IMultiController {
                 .setMaxWidthLimit(154)
                 .clickHandler(this::handleDisplayClick));
 
-        var screen = new ScrollerView();
+        var screen = UITemplate.displayScreen(getScreenTexture());
         screen.layout(l -> l.width(162).height(121));
-        screen.style(s -> s.background(getScreenTexture()));
         screen.addScrollViewChild(content);
 
         var root = UITemplate.panel();

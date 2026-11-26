@@ -30,7 +30,6 @@ import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -364,9 +363,8 @@ public class PowerSubstationMachine extends WorkableMultiblockMachine
                 .setMaxWidthLimit(174)
                 .clickHandler(this::handleDisplayClick));
 
-        var screen = new ScrollerView();
+        var screen = UITemplate.displayScreen(getScreenTexture());
         screen.layout(layout -> layout.width(182).height(117));
-        screen.style(style -> style.background(getScreenTexture()));
         screen.addScrollViewChild(content);
 
         var group = new UIElement();

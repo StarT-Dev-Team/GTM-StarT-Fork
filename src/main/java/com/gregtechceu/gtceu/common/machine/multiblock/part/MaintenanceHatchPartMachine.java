@@ -3,6 +3,7 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.gui.widget.ComponentPanel;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.item.tool.ToolHelper;
@@ -21,7 +22,6 @@ import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
@@ -364,9 +364,8 @@ public class MaintenanceHatchPartMachine extends TieredPartMachine
                 }
             });
 
-            var scroller = new ScrollerView();
+            var scroller = UITemplate.displayScreen(GuiTextures.DISPLAY);
             scroller.layout(layout -> layout.width(142).height(62));
-            scroller.style(style -> style.backgroundTexture(GuiTextures.DISPLAY));
             scroller.addScrollViewChild(panel);
             group.addChild(scroller);
         }

@@ -27,7 +27,6 @@ import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
@@ -140,9 +139,8 @@ public class WorkableElectricMultiblockMachine extends WorkableMultiblockMachine
                 .setMaxWidthLimit(174)
                 .clickHandler(this::handleDisplayClick));
 
-        var screen = new ScrollerView();
+        var screen = UITemplate.displayScreen(getScreenTexture());
         screen.layout(layout -> layout.width(182).height(117));
-        screen.style(style -> style.background(getScreenTexture()));
         screen.addScrollViewChild(content);
 
         var group = new UIElement();

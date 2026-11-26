@@ -7,6 +7,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
@@ -46,6 +47,16 @@ public class UITemplate {
         panel.addClass("gt-panel");
         panel.style(s -> s.background(panelTexture()));
         return panel;
+    }
+
+    public static ScrollerView displayScreen(IGuiTexture background) {
+        var screen = new ScrollerView();
+        screen.style(style -> style.backgroundTexture(background));
+        screen.viewPort(viewPort -> {
+            viewPort.layout(layout -> layout.paddingAll(0));
+            viewPort.style(style -> style.backgroundTexture(IGuiTexture.EMPTY));
+        });
+        return screen;
     }
 
     public static InventorySlots playerInventory() {

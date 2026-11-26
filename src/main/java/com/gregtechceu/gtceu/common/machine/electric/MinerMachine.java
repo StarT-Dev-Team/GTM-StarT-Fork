@@ -6,6 +6,7 @@ import com.gregtechceu.gtceu.api.capability.IControllable;
 import com.gregtechceu.gtceu.api.capability.IMiner;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.gui.WidgetUtils;
 import com.gregtechceu.gtceu.api.gui.editor.EditableMachineUI;
 import com.gregtechceu.gtceu.api.gui.editor.EditableUI;
@@ -29,7 +30,6 @@ import com.gregtechceu.gtceu.utils.GTTransferUtils;
 import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -284,9 +284,8 @@ public class MinerMachine extends WorkableTieredMachine
             componentPanel.setMaxWidthLimit(110);
             componentPanel.setId("component_panel");
 
-            var scroller = new ScrollerView();
+            var scroller = UITemplate.displayScreen(GuiTextures.DISPLAY);
             scroller.layout(layout -> layout.widthPercent(100).heightPercent(100));
-            scroller.style(style -> style.backgroundTexture(GuiTextures.DISPLAY));
             scroller.addScrollViewChild(componentPanel);
 
             var container = new UIElement();
