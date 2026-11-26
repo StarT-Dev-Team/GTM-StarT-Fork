@@ -27,7 +27,6 @@ import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
@@ -44,9 +43,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 
-import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
-import dev.vfyjxf.taffy.style.FlexDirection;
 import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -60,6 +57,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import static dev.vfyjxf.taffy.style.AlignContent.FLEX_START;
+import static dev.vfyjxf.taffy.style.AlignItems.CENTER;
+import static dev.vfyjxf.taffy.style.FlexDirection.ROW;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -430,13 +431,14 @@ public class ConveyorCover extends CoverBehavior implements IIOCover, IUICover, 
     @Override
     public UIElement createUIWidget() {
         var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
-        group.addChild(new Label().setText(Component.translatable(getUITitle(), GTValues.VN[tier])));
 
         group.addChild(new IntInput(() -> this.transferRate, this::setTransferRate)
                 .setMin(1).setMax(maxItemTransferRate).layout(layout -> layout.widthPercent(100).height(20)));
 
-        var modeRow = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW)
-                .justifyContent(AlignContent.SPACE_BETWEEN));
+        var actions = new UIElement()
+                .layout(layout -> layout.flexDirection(ROW).justifyContent(FLEX_START).alignItems(CENTER).gapAll(4));
+        group.addChild(actions);
+
         ioModeSwitch = new Button().noText();
         ioModeSwitch.layout(layout -> layout.width(20).height(20));
         var ioTexture = DynamicTexture.of(() -> new GuiTextureGroup(GuiTextures.VANILLA_BUTTON, io.icon));
@@ -446,35 +448,33 @@ public class ConveyorCover extends CoverBehavior implements IIOCover, IUICover, 
                 List.of(Component.translatable("cover.conveyor.mode", Component.translatable(io.tooltip))), null,
                 null, null));
         ioModeSwitch.setOnServerClick(event -> setIo(io == IO.IN ? IO.OUT : IO.IN));
+        actions.addChild(ioModeSwitch);
 
         var distributionSelector = new EnumSelector<>(DistributionMode.values(), () -> distributionMode,
                 this::setDistributionMode);
         distributionSelector.addEventListener(UIEvents.TICK,
                 event -> distributionSelector.setDisplay(shouldRespectDistributionMode()));
-        modeRow.addChildren(ioModeSwitch, distributionSelector);
-        group.addChild(modeRow);
+        actions.addChild(distributionSelector);
 
-        var extra = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2)
-                .alignItems(AlignItems.CENTER));
-        buildAdditionalUI(extra);
-        group.addChild(extra);
-
+        group.addChild(filterHandler.createFilterSlotUI());
         group.addChild(filterHandler.createFilterConfigUI());
 
-        var bottom = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW)
-                .justifyContent(AlignContent.SPACE_BETWEEN).alignItems(AlignItems.CENTER));
-        bottom.addChild(filterHandler.createFilterSlotUI());
         var manual = new EnumSelector<>(ManualIOMode.VALUES, () -> manualIOMode, this::setManualIOMode);
         manual.style(style -> style.tooltips("cover.universal.manual_import_export.mode.description"));
-        bottom.addChild(manual);
-        group.addChild(bottom);
+        actions.addChild(manual);
+
+        var extra = new UIElement().layout(layout -> layout.flexDirection(ROW).gapAll(2)
+                .alignItems(AlignItems.CENTER));
+        group.addChild(extra);
+
+        buildAdditionalUI(extra, actions);
 
         return group;
     }
 
     @Override
     public Component getCoverUITitle() {
-        return Component.translatable(getUITitle());
+        return Component.translatable(getUITitle(), GTValues.VN[tier]);
     }
 
     @NotNull
@@ -482,7 +482,7 @@ public class ConveyorCover extends CoverBehavior implements IIOCover, IUICover, 
         return "cover.conveyor.title";
     }
 
-    protected void buildAdditionalUI(UIElement group) {
+    protected void buildAdditionalUI(UIElement group, UIElement actions) {
         // Do nothing in the base implementation. This is intended to be overridden by subclasses.
     }
 

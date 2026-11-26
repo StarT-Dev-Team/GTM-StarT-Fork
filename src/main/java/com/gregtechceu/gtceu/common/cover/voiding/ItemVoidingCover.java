@@ -97,7 +97,8 @@ public class ItemVoidingCover extends ConveyorCover implements IUICover, IContro
         top.addChild(new ToggleButton(GuiTextures.BUTTON_POWER, this::isWorkingEnabled, this::setWorkingEnabled)
                 .layout(layout -> layout.width(20).height(20)));
         group.addChild(top);
-        buildAdditionalUI(top);
+
+        buildAdditionalUI(group, top);
 
         var bottom = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
                 .justifyContent(AlignContent.SPACE_BETWEEN));

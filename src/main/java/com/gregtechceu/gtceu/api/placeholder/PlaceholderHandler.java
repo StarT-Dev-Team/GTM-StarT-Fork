@@ -205,15 +205,16 @@ public class PlaceholderHandler {
             placeholderList.addChild(placeholderName);
         }
         var placeholderReference = new ScrollerView();
-        placeholderReference.layout(layout -> layout.width(100).height(200));
+        placeholderReference.layout(layout -> layout.width(160).height(160));
         placeholderReference.addScrollViewChild(placeholderList);
 
         var placeholderReferenceLabel = new Label();
         placeholderReferenceLabel.setText(GTStringUtils.componentsToString(
                 LangHandler.getMultiLang("gtceu.gui.computer_monitor_cover.placeholder_reference")), false);
-        placeholderReferenceLabel.layout(layout -> layout.width(160).height(15));
+        placeholderReferenceLabel.textStyle(s -> s.adaptiveHeight(true));
+        placeholderReferenceLabel.layout(layout -> layout.width(160));
 
-        var out = new UIElement();
+        var out = new UIElement().layout(s -> s.gapAll(5));
         out.addChildren(placeholderReferenceLabel, placeholderReference);
         return out;
     }

@@ -1,5 +1,6 @@
 package com.gregtechceu.gtceu.common.cover;
 
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
@@ -10,8 +11,9 @@ import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.common.cover.data.TransferMode;
 import com.gregtechceu.gtceu.common.pipelike.item.ItemNetHandler;
 
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
@@ -46,7 +48,6 @@ public class RobotArmCover extends ConveyorCover {
     protected int itemsTransferBuffered;
 
     private IntInput stackSizeInput;
-    private TransferMode appliedMode;
 
     public RobotArmCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide, int tier,
                          int maxTransferRate) {
@@ -158,12 +159,6 @@ public class RobotArmCover extends ConveyorCover {
 
     //////////////////////////////////////
     // *********** GUI ***********//
-    //////////////////////////////////////
-
-    @Override
-    public Component getCoverUITitle() {
-        return Component.translatable(getUITitle());
-    }
 
     @Override
     @NotNull
@@ -172,25 +167,26 @@ public class RobotArmCover extends ConveyorCover {
     }
 
     @Override
-    protected void buildAdditionalUI(UIElement group) {
+    protected void buildAdditionalUI(UIElement group, UIElement actions) {
         this.stackSizeInput = new IntInput(() -> globalTransferLimit, val -> globalTransferLimit = val);
         this.stackSizeInput.layout(layout -> layout.flex(1).height(20));
-        this.stackSizeInput.addEventListener(UIEvents.TICK, event -> {
-            if (appliedMode != transferMode) {
-                configureStackSizeInput();
-            }
-        });
-        configureStackSizeInput();
+        this.stackSizeInput.setMin(1).setMax(transferMode.maxStackSize).setDisplay(shouldShowStackSize());
+
+        group.addChildren(
+                new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(this::shouldShowStackSize)
+                        .remoteSetter(show -> stackSizeInput.setDisplay(show))
+                        .build()),
+                new BindableValue<Integer>().bind(DataBindingBuilder.intValS2C(() -> transferMode.maxStackSize)
+                        .remoteSetter(stackSize -> stackSizeInput.setMax(stackSize))
+                        .build()));
 
         group.addChild(this.stackSizeInput);
-        group.addChild(new EnumSelector<>(TransferMode.values(), () -> transferMode, this::setTransferMode));
+
+        actions.addChild(new EnumSelector<>(TransferMode.values(), () -> transferMode, this::setTransferMode));
     }
 
     public void setTransferMode(TransferMode transferMode) {
         this.transferMode = transferMode;
-
-        configureStackSizeInput();
-
         if (!this.isRemote()) {
             configureFilter();
         }
@@ -201,18 +197,6 @@ public class RobotArmCover extends ConveyorCover {
         if (filterHandler.getFilter() instanceof SimpleItemFilter filter) {
             filter.setMaxStackSize(filter.isBlackList() ? 1 : transferMode.maxStackSize);
         }
-
-        configureStackSizeInput();
-    }
-
-    private void configureStackSizeInput() {
-        if (this.stackSizeInput == null)
-            return;
-
-        this.appliedMode = this.transferMode;
-        this.stackSizeInput.setDisplay(shouldShowStackSize());
-        this.stackSizeInput.setMin(1);
-        this.stackSizeInput.setMax(this.transferMode.maxStackSize);
     }
 
     private boolean shouldShowStackSize() {

@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.IUICover;
+import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IDataStickInteractable;
@@ -41,6 +42,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
@@ -135,69 +137,100 @@ public class ComputerMonitorCover extends CoverBehavior
 
     @Override
     public UIElement createUIWidget() {
-        var group = new UIElement().layout(layout -> layout.minWidth(2 * 160 + 3 * 10).paddingAll(5).gapAll(3));
-        var mainPage = new UIElement().layout(layout -> layout.gapAll(2));
-        var formatStringArgsPage = new UIElement().layout(layout -> layout.gapAll(2));
-        formatStringArgsPage.setDisplay(false);
+        var group = new UIElement().layout(layout -> layout.paddingAll(5).gapAll(3));
 
-        for (int i = 0; i < 8; i++) {
-            int finalI = i;
-            if (i >= formatStringLines.size()) formatStringLines.add("");
-            var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+        var mainPage = new UIElement();
+        var blankPlaceholdersPage = new UIElement();
+        group.addChildren(mainPage, blankPlaceholdersPage);
+
+        {
+            mainPage.layout(s -> s.flexDirection(FlexDirection.COLUMN).gapAll(8));
+
+            var cols = new UIElement().layout(s -> s.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER).gapAll(8));
+            mainPage.addChild(cols);
+
+            var controls = new UIElement();
+            cols.addChild(controls);
+
+            for (int i = 0; i < 8; i++) {
+                int finalI = i;
+                if (i >= formatStringLines.size()) formatStringLines.add("");
+                var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
                     .alignItems(AlignItems.CENTER));
-            var formatStringInput = new TextField().setAnyString();
-            formatStringInput.layout(layout -> layout.width(160).height(15));
-            formatStringInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
+                var formatStringInput = new TextField().setAnyString();
+                formatStringInput.layout(layout -> layout.width(160).height(15));
+                formatStringInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
                     "gtceu.gui.computer_monitor_cover.main_textbox_tooltip", finalI + 1))));
-            formatStringInput.bind(DataBindingBuilder.string(() -> formatStringLines.get(finalI),
+                formatStringInput.bind(DataBindingBuilder.string(() -> formatStringLines.get(finalI),
                     s -> formatStringLines.set(finalI, s)).build());
-            var slot = new ItemSlot().bind(itemStackHandler, i);
-            slot.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
+                var slot = new ItemSlot().bind(itemStackHandler, i);
+                slot.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
                     "gtceu.gui.computer_monitor_cover.slot_tooltip", finalI + 1))));
-            row.addChildren(formatStringInput, slot);
-            mainPage.addChild(row);
+                row.addChildren(formatStringInput, slot);
+                controls.addChild(row);
+            }
+
+            var updateIntervalInput = new IntInput(this::getUpdateInterval, this::setUpdateInterval);
+            updateIntervalInput.setMin(1);
+            updateIntervalInput.setMax(60 * 20);
+            updateIntervalInput.setTooltips("gtceu.gui.computer_monitor_cover.update_interval");
+            updateIntervalInput.layout(layout -> layout.widthAuto().height(20).marginTop(4));
+            controls.addChild(updateIntervalInput);
+
+            cols.addChild(PlaceholderHandler.getPlaceholderHandlerUI(""));
+
+            var navigationRow = new UIElement().layout(s -> s.flexDirection(FlexDirection.ROW).justifyContent(AlignContent.FLEX_END));
+            mainPage.addChild(navigationRow);
+
+            var nextPage = new Button().noText();
+            nextPage.layout(layout -> layout.width(20).height(20).alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+            nextPage.style(style -> style
+                .tooltips("gtceu.gui.computer_monitor_cover.edit_blank_placeholders"));
+            nextPage.setOnClick(event -> {
+                mainPage.setDisplay(false);
+                blankPlaceholdersPage.setDisplay(true);
+            });
+            nextPage.addChild(new UIElement()
+                .layout(s -> s.width(12).height(12))
+                .style(s -> s.background(GuiTextures.BUTTON_PAGE_RIGHT)));
+            navigationRow.addChild(nextPage);
         }
-        for (int i = 0; i < 8; i++) {
-            int finalI = i;
-            if (i >= formatStringArgs.size()) formatStringArgs.add("");
-            var formatStringArgsInput = new TextField().setAnyString();
-            formatStringArgsInput.layout(layout -> layout.width(160).height(15));
-            formatStringArgsInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
+
+        {
+            blankPlaceholdersPage.layout(layout -> layout.gapAll(8)).setDisplay(false);
+
+            var controls = new UIElement().layout(s -> s.gapAll(2));
+            blankPlaceholdersPage.addChild(controls);
+
+            for (int i = 0; i < 8; i++) {
+                int finalI = i;
+                if (i >= formatStringArgs.size()) formatStringArgs.add("");
+                var formatStringArgsInput = new TextField().setAnyString();
+                formatStringArgsInput.layout(layout -> layout.width(160).height(15));
+                formatStringArgsInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
                     "gtceu.gui.computer_monitor_cover.second_page_textbox_tooltip",
                     GTStringUtils.getIntOrderingSuffix(finalI + 1)))));
-            formatStringArgsInput.bind(DataBindingBuilder.string(() -> formatStringArgs.get(finalI),
+                formatStringArgsInput.bind(DataBindingBuilder.string(() -> formatStringArgs.get(finalI),
                     s -> formatStringArgs.set(finalI, s)).build());
-            formatStringArgsPage.addChild(formatStringArgsInput);
-        }
+                controls.addChild(formatStringArgsInput);
+            }
 
-        var switchToFormatStringArgsPageButton = new Button().noText();
-        switchToFormatStringArgsPageButton.layout(layout -> layout.width(20).height(20));
-        switchToFormatStringArgsPageButton.style(style -> style
+            var navigationRow = new UIElement().layout(s -> s.flexDirection(FlexDirection.ROW).justifyContent(AlignContent.FLEX_START));
+            blankPlaceholdersPage.addChild(navigationRow);
+
+            var prevPage = new Button().noText();
+            prevPage.layout(layout -> layout.width(20).height(20).alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+            prevPage.style(style -> style
                 .tooltips("gtceu.gui.computer_monitor_cover.edit_blank_placeholders"));
-        switchToFormatStringArgsPageButton.setOnClick(event -> {
-            mainPage.setDisplay(false);
-            formatStringArgsPage.setDisplay(true);
-        });
-        var switchBack = new Button().noText();
-        switchBack.layout(layout -> layout.width(20).height(20));
-        switchBack.style(style -> style.tooltips("gtceu.gui.computer_monitor_cover.edit_displayed_text"));
-        switchBack.setOnClick(event -> {
-            formatStringArgsPage.setDisplay(false);
-            mainPage.setDisplay(true);
-        });
-
-        var updateIntervalInput = new IntInput(this::getUpdateInterval, this::setUpdateInterval);
-        updateIntervalInput.setMin(1);
-        updateIntervalInput.setMax(60 * 20);
-        updateIntervalInput.setTooltips("gtceu.gui.computer_monitor_cover.update_interval");
-        updateIntervalInput.layout(layout -> layout.width(60).height(20));
-
-        var controls = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3));
-        controls.addChildren(updateIntervalInput, switchToFormatStringArgsPageButton);
-        mainPage.addChild(controls);
-        mainPage.addChild(PlaceholderHandler.getPlaceholderHandlerUI(""));
-        formatStringArgsPage.addChild(switchBack);
-        group.addChildren(mainPage, formatStringArgsPage);
+            prevPage.setOnClick(event -> {
+                mainPage.setDisplay(true);
+                blankPlaceholdersPage.setDisplay(false);
+            });
+            prevPage.addChild(new UIElement()
+                .layout(s -> s.width(12).height(12))
+                .style(s -> s.background(GuiTextures.BUTTON_PAGE_LEFT)));
+            navigationRow.addChild(prevPage);
+        }
         return group;
     }
 

@@ -10,7 +10,6 @@ import com.gregtechceu.gtceu.common.cover.data.VoidingMode;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
@@ -40,7 +39,6 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
     protected int globalVoidingLimit = 1;
 
     private IntInput stackSizeInput;
-    private VoidingMode appliedMode;
 
     public AdvancedItemVoidingCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide) {
         super(definition, coverHolder, attachedSide);
@@ -99,7 +97,6 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
 
     public void setVoidingMode(VoidingMode voidingMode) {
         this.voidingMode = voidingMode;
-
         configureStackSizeInput();
 
         if (!this.isRemote()) {
@@ -117,18 +114,14 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
     }
 
     @Override
-    protected void buildAdditionalUI(UIElement group) {
+    protected void buildAdditionalUI(UIElement group, UIElement actions) {
         this.stackSizeInput = new IntInput(() -> globalVoidingLimit, val -> globalVoidingLimit = val);
         this.stackSizeInput.layout(layout -> layout.flex(1).height(20));
-        this.stackSizeInput.addEventListener(UIEvents.TICK, event -> {
-            if (appliedMode != voidingMode) {
-                configureStackSizeInput();
-            }
-        });
         configureStackSizeInput();
 
         group.addChild(this.stackSizeInput);
-        group.addChild(new EnumSelector<>(VoidingMode.values(), () -> voidingMode, this::setVoidingMode));
+
+        actions.addChild(new EnumSelector<>(VoidingMode.values(), () -> voidingMode, this::setVoidingMode));
     }
 
     @Override
@@ -144,7 +137,6 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
         if (this.stackSizeInput == null)
             return;
 
-        this.appliedMode = this.voidingMode;
         this.stackSizeInput.setDisplay(shouldShowStackSize());
         this.stackSizeInput.setMin(1);
         this.stackSizeInput.setMax(this.voidingMode.maxStackSize);

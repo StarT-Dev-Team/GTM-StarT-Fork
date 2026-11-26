@@ -70,7 +70,7 @@ public abstract class NumberInput<T extends Number> extends UIElement {
         setupButton(decrease, "-", oneNegative);
         setupButton(increase, "+", onePositive);
 
-        textField.layout(layout -> layout.flex(1).heightPercent(100));
+        textField.layout(layout -> layout.flex(1).heightPercent(100).paddingHorizontal(6));
         bindText();
         updateTextFieldRange();
 

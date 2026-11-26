@@ -6,13 +6,12 @@ import com.gregtechceu.gtceu.api.gui.util.UICloseHandler;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
-
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 
 public interface IUICover {
 
@@ -41,16 +40,19 @@ public interface IUICover {
     }
 
     default ModularUI createUI(Player entityPlayer) {
-        var root = UITemplate.panel();
-        root.layout(l -> l.minWidth(176));
+        var root = UITemplate.panel()
+                .layout(l -> l.minWidth(176));
 
-        var label = new Label().setText(getCoverUITitle());
-        label.getLayoutStyle().widthPercent(100);
+        var group = new UIElement()
+                .layout(s -> s.display(TaffyDisplay.FLEX).flexDirection(FlexDirection.COLUMN).gapAll(4).paddingAll(4).alignItems(AlignItems.CENTER));
+        root.addChild(group);
 
-        var group = new UIElement();
-        group.getLayoutStyle().display(TaffyDisplay.FLEX).flexDirection(FlexDirection.COLUMN)
-                .gapAll(4).paddingAll(4).alignItems(AlignItems.CENTER);
-        group.addChildren(label, createUIWidget());
+        var label = new Label().setText(getCoverUITitle())
+                .layout(s -> s.widthPercent(100));
+        group.addChild(label);
+
+        var innerUi = createUIWidget();
+        group.addChild(innerUi);
 
         root.addChildren(group, UITemplate.playerInventory());
         UICloseHandler.onClose(root, this::onUIClosed);

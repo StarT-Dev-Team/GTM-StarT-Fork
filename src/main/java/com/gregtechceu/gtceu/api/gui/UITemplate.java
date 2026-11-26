@@ -30,8 +30,7 @@ public class UITemplate {
     public static final ResourceLocation GT_STYLESHEET = GTCEu.id("lss/gtceu.lss");
 
     public static List<Stylesheet> stylesheets() {
-        return List.of(StylesheetManager.INSTANCE.getStylesheetSafe(StylesheetManager.MC),
-                StylesheetManager.INSTANCE.getStylesheetSafe(GT_STYLESHEET));
+        return List.of(StylesheetManager.INSTANCE.getStylesheetSafe(GT_STYLESHEET));
     }
 
     public static UI ui(UIElement root) {

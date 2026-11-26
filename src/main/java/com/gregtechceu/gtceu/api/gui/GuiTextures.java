@@ -1,6 +1,15 @@
 package com.gregtechceu.gtceu.api.gui;
 
+import com.lowdragmc.lowdraglib2.editor.resource.BuiltinPath;
+import com.lowdragmc.lowdraglib2.editor.resource.BuiltinResourceProvider;
+import com.lowdragmc.lowdraglib2.editor.resource.ResourceInstance;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.UIResourceTexture;
+
+import net.minecraft.resources.ResourceLocation;
+
+import java.lang.reflect.Modifier;
 
 @SuppressWarnings("unused")
 public class GuiTextures {
@@ -82,6 +91,11 @@ public class GuiTextures {
     public static final SteamTexture SLOT_STEAM = SteamTexture.fullImage("gtceu:textures/gui/base/slot_%s.png");
     public static final SpriteTexture TOGGLE_BUTTON_BACK = SpriteTexture.of(
             "gtceu:textures/gui/widget/toggle_button_background.png");
+
+    public static final SpriteTexture TOGGLE_BUTTON_BACK_NORMAL = TOGGLE_BUTTON_BACK.copy().setSprite(0, 0, 18, 18)
+            .setBorder(4);
+    public static final SpriteTexture TOGGLE_BUTTON_BACK_ACTIVE = TOGGLE_BUTTON_BACK.copy().setSprite(0, 18, 18, 18)
+            .setBorder(4);
 
     public static final SpriteTexture CLOSE_ICON = SpriteTexture.of("gtceu:textures/gui/icon/close.png");
 
@@ -579,4 +593,28 @@ public class GuiTextures {
             "gtceu:textures/gui/widget/hpca/damaged_advanced_computation_component.png");
     public static final SpriteTexture HPCA_ICON_DAMAGED_COMPUTATION_COMPONENT = SpriteTexture.of(
             "gtceu:textures/gui/widget/hpca/damaged_computation_component.png");
+
+    public static final ResourceLocation GTM_STYLES_RL = ResourceLocation.parse("gtceu:textures/gui/gtm_styles.png");
+    public static final SpriteTexture BUTTON_NORMAL = SpriteTexture.of(GTM_STYLES_RL).setSprite(0, 0, 16, 16)
+            .setBorder(2);
+    public static final SpriteTexture BUTTON_HOVER = SpriteTexture.of(GTM_STYLES_RL).setSprite(16, 0, 16, 16)
+            .setBorder(2);
+    public static final SpriteTexture BUTTON_PRESSED = SpriteTexture.of(GTM_STYLES_RL).setSprite(32, 0, 16, 16)
+            .setBorder(2);
+
+    public static void init(ResourceInstance<IGuiTexture> instance) {
+        var provider = new BuiltinResourceProvider<>("gtm", instance);
+        for (var field : GuiTextures.class.getDeclaredFields()) {
+            if (IGuiTexture.class.isAssignableFrom(field.getType()) && Modifier.isStatic(field.getModifiers())) {
+                try {
+                    var texture = (IGuiTexture) field.get(null);
+                    provider.addResource(field.getName(), texture);
+                    var res = new BuiltinPath("gtm:" + field.getName());
+                    texture = new UIResourceTexture(res);
+                    field.set(null, texture);
+                } catch (Exception ignored) {}
+            }
+        }
+        instance.addBuiltinProvider(provider);
+    }
 }
