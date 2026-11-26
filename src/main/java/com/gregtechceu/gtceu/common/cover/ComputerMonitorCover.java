@@ -67,7 +67,7 @@ public class ComputerMonitorCover extends CoverBehavior
     @Persisted
     @DescSynced
     @Getter
-    private List<MutableComponent> text = new ArrayList<>();
+    private final List<MutableComponent> text = new ArrayList<>();
     @Persisted
     public final CustomItemStackHandler itemStackHandler = new CustomItemStackHandler(8);
     @Setter
@@ -214,14 +214,19 @@ public class ComputerMonitorCover extends CoverBehavior
     private void update() {
         ticksSincePlaced++;
         if (coverHolder.getOffsetTimer() % updateInterval == 0) {
+            List<MutableComponent> newText;
             try {
                 if (GTCEu.Mods.isCreateLoaded())
                     GTCreateIntegration.TemporaryRedstoneLinkTransmitter.destroyAll();
                 setRedstoneSignalOutput(0);
-                text = getRenderedText();
+                newText = getRenderedText();
             } catch (RuntimeException e) {
-                text = GTUtil
+                newText = GTUtil
                         .list(Component.translatable("gtceu.computer_monitor_cover.error.exception", e.getMessage()));
+            }
+            if (!text.equals(newText)) {
+                text.clear();
+                text.addAll(newText);
             }
         }
     }
