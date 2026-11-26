@@ -60,7 +60,8 @@ public interface IFancyConfiguratorButton extends IFancyConfigurator {
         public void bindTab(UIElement tab) {
             isPressed = booleanSupplier.getAsBoolean();
             tab.addChild(new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(booleanSupplier::getAsBoolean)
-                    .remoteSetter(value -> isPressed = value)
+                    .name("tabToggle<" + this + ">")
+                    .remoteSetter(value -> isPressed = (value != null && value))
                     .build()));
         }
 

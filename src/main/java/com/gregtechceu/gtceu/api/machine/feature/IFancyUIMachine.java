@@ -146,15 +146,17 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
 
     @Override
     default void attachAutoPushConfigurators(ConfiguratorPanel configuratorPanel) {
-        if (this instanceof MetaMachine machine) {
-            for (var direction : Direction.values()) {
-                if (machine.getCoverContainer().hasCover(direction)) {
-                    var configurator = machine.getCoverContainer().getCoverAtSide(direction).getConfigurator();
-                    if (configurator != null)
-                        configuratorPanel.attachConfigurators(configurator);
-                }
-            }
-        }
+        // TODO: basically AutoPushConfigurators are configurators on the right side, but the covers are already added
+        // on the left side...
+        // if (this instanceof MetaMachine machine) {
+        // for (var direction : Direction.values()) {
+        // if (machine.getCoverContainer().hasCover(direction)) {
+        // var configurator = machine.getCoverContainer().getCoverAtSide(direction).getConfigurator();
+        // if (configurator != null)
+        // configuratorPanel.attachConfigurators(configurator);
+        // }
+        // }
+        // }
     }
 
     @Override

@@ -27,6 +27,7 @@ public interface IDistinctPart extends IMultiPart {
                 .setTooltipsSupplier(pressed -> List.of(
                         Component.translatable("gtceu.multiblock.universal.distinct")
                                 .setStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW))
+                                .append(Component.literal(" "))
                                 .append(Component.translatable(pressed ? "gtceu.multiblock.universal.distinct.yes" :
                                         "gtceu.multiblock.universal.distinct.no")))));
     }

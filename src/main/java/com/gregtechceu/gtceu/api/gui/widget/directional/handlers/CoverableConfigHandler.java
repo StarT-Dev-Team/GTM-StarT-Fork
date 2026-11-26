@@ -18,6 +18,7 @@ import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.MCSprites;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -83,13 +84,23 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
         var button = new PredicatedButton(
                 () -> side != null && coverBehavior != null && machine.getCoverAtSide(side) instanceof IUICover);
         button.layout(layout -> layout.width(18).height(18));
-        button.buttonStyle(style -> style.baseTexture(CONFIG_BTN_TEXTURE).hoverTexture(CONFIG_BTN_TEXTURE)
-                .pressedTexture(CONFIG_BTN_TEXTURE));
+        button.buttonStyle(style -> style
+                .baseTexture(IGuiTexture.group(GuiTextures.TOGGLE_BUTTON_BACK.copy().setSprite(0, 0, 18, 18),
+                        GuiTextures.IO_CONFIG_COVER_SETTINGS))
+                .hoverTexture(IGuiTexture.group(
+                        GuiTextures.TOGGLE_BUTTON_BACK.copy().setColor(0xffdddddd).setSprite(0, 0, 18, 18),
+                        GuiTextures.IO_CONFIG_COVER_SETTINGS))
+                .pressedTexture(IGuiTexture.group(GuiTextures.TOGGLE_BUTTON_BACK.copy().setSprite(0, 18, 18, 18),
+                        GuiTextures.IO_CONFIG_COVER_SETTINGS)));
         button.setOnClick(event -> {
             toggleConfigTab();
             group.sendMessage(TOGGLE_TAB_MESSAGE);
+            button.setActive(true); // .setActive(coverConfigurator != null);
         });
-        group.onMessage(TOGGLE_TAB_MESSAGE, tag -> toggleConfigTab());
+        group.onMessage(TOGGLE_TAB_MESSAGE, tag -> {
+            toggleConfigTab();
+            button.setActive(true); // .setActive(coverConfigurator != null);
+        });
 
         var slotHandler = new ItemHandlerSlot(handler, 0).setCanPlace(stack -> side != null &&
                 CoverPlaceBehavior.isCoverBehaviorItem(stack, () -> false,
@@ -174,12 +185,14 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
 
             @Override
             public Component getTitle() {
-                return Component.empty();
+                if (side == null || !(coverable.getCoverAtSide(side) instanceof IUICover iuiCover))
+                    return Component.empty();
+                return iuiCover.getCoverUITitle();
             }
 
             @Override
             public IGuiTexture getIcon() {
-                return GuiTextures.CLOSE_ICON;
+                return IGuiTexture.group(MCSprites.RECT_BORDER, GuiTextures.CLOSE_ICON);
             }
 
             @Override
@@ -190,7 +203,7 @@ public class CoverableConfigHandler implements IDirectionalConfigHandler {
                     return group;
 
                 var coverUI = iuiCover.createUIWidget();
-                coverUI.layout(layout -> layout.marginLeft(-1).marginTop(-20));
+                coverUI.layout(layout -> layout.marginLeft(-1));
                 group.addChild(coverUI);
                 return group;
             }

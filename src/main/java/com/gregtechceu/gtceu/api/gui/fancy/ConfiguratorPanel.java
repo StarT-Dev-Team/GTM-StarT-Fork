@@ -17,10 +17,7 @@ import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
 import com.lowdragmc.lowdraglib2.gui.util.WindowDragHelper;
 import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
 
-import dev.vfyjxf.taffy.style.AlignContent;
-import dev.vfyjxf.taffy.style.AlignItems;
-import dev.vfyjxf.taffy.style.FlexDirection;
-import dev.vfyjxf.taffy.style.TaffyPosition;
+import dev.vfyjxf.taffy.style.*;
 import it.unimi.dsi.fastutil.floats.FloatObjectPair;
 import lombok.Getter;
 import lombok.Setter;
@@ -152,11 +149,17 @@ public class ConfiguratorPanel extends UIElement {
 
         protected UIElement createView() {
             var content = configurator.createConfigurator();
+
+            var wrapper = new UIElement();
+            wrapper.addClass("gt-configurator-view-wrapper");
+            wrapper.getLayoutStyle().positionType(TaffyPosition.ABSOLUTE).flexDirection(FlexDirection.ROW)
+                    .right(viewOffset());
+
             var view = new UIElement();
             view.addClass("gt-configurator-view");
-            view.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).top(0).right(viewOffset())
-                    .paddingAll(border).gapAll(2).minWidth(getTabSize() * 2));
+            view.layout(l -> l.paddingAll(border).gapAll(2).minWidth(getTabSize() * 2));
             view.style(s -> s.background(texture).zIndex(1));
+            wrapper.addChild(view);
 
             var header = new UIElement();
             header.addClass("gt-configurator-view-header");
@@ -176,9 +179,11 @@ public class ConfiguratorPanel extends UIElement {
             header.addChildren(title, close);
 
             view.addChildren(header, content);
-            view.setDisplay(false);
-            WindowDragHelper.setDragMove(title, view, null, null);
-            return view;
+
+            wrapper.setVisible(false);
+
+            WindowDragHelper.setDragMove(header, view, null, null);
+            return wrapper;
         }
 
         protected float viewOffset() {
@@ -198,8 +203,8 @@ public class ConfiguratorPanel extends UIElement {
 
         protected void expand() {
             if (view == null) return;
-            view.layout(l -> l.leftAuto().top(0).right(viewOffset()));
-            view.setDisplay(true);
+            view.layout(l -> l.bottom(0).right(viewOffset()));
+            view.setVisible(true);
             style(s -> s.zIndex(10));
             playViewAnimation(true, null);
         }
@@ -208,19 +213,19 @@ public class ConfiguratorPanel extends UIElement {
             if (view == null) return;
             style(s -> s.zIndex(0));
             if (animationSeconds() <= 0 || !view.isDisplayed()) {
-                view.setDisplay(false);
+                view.setVisible(false);
                 return;
             }
             playViewAnimation(false, () -> {
                 if (expanded != this) {
-                    view.setDisplay(false);
+                    view.setVisible(false);
                 }
             });
         }
 
         protected void hideViewImmediately() {
             if (view != null) {
-                view.setDisplay(false);
+                view.setVisible(false);
             }
         }
 
@@ -230,8 +235,8 @@ public class ConfiguratorPanel extends UIElement {
                 if (onFinished != null) onFinished.run();
                 return;
             }
-            var hidden = Transform2D.identity().scale(0.6f).pivot(1f, 0f);
-            var shown = Transform2D.identity().pivot(1f, 0f);
+            var hidden = Transform2D.identity().scale(0.6f).pivot(1f, 1f);
+            var shown = Transform2D.identity().pivot(1f, 1f);
             var animation = view.animation();
             animation.duration(seconds).ease(Eases.QUAD_OUT);
             animation.style(PropertyRegistry.OPACITY,
@@ -261,9 +266,9 @@ public class ConfiguratorPanel extends UIElement {
 
         public FloatingTab(IFancyConfigurator configurator) {
             super(configurator);
-            layout(l -> l.positionType(TaffyPosition.ABSOLUTE).top(0).right(0).width(0).height(0));
+            layout(l -> l.positionType(TaffyPosition.ABSOLUTE).top(0).right(0).widthAuto().heightAuto());
             style(s -> s.background(IGuiTexture.EMPTY));
-            button.setDisplay(false);
+            button.setVisible(false);
         }
 
         @Override

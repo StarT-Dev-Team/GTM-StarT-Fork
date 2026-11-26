@@ -92,7 +92,7 @@ public class FancyMachineUIWidget extends UIElement {
         titleBar.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(8).right(8).top(-16));
 
         this.sideTabsWidget = new VerticalTabsWidget(this::onSideTabClicked);
-        sideTabsWidget.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(-20).top(0));
+        sideTabsWidget.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(-21).top(0));
 
         this.tooltipsHost = new UIElement();
         tooltipsHost.addClass("gt-fancy-tooltips");

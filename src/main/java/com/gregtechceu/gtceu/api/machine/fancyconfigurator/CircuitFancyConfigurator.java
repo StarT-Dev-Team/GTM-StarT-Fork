@@ -11,13 +11,13 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 
 import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -25,9 +25,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.items.ItemStackHandler;
 
-import dev.vfyjxf.taffy.style.FlexDirection;
-import dev.vfyjxf.taffy.style.FlexWrap;
-import dev.vfyjxf.taffy.style.TaffyPosition;
+import dev.vfyjxf.taffy.style.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -95,49 +93,64 @@ public class CircuitFancyConfigurator implements IFancyConfigurator, IFancyCusto
 
     @Override
     public UIElement createConfigurator() {
-        var group = new UIElement().layout(layout -> layout.width(174).height(132).paddingAll(5)
+        var group = new UIElement().layout(layout -> layout.width(174).paddingAll(5)
                 .flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
 
-        var title = new Label().setText(Component.literal("Programmed Circuit Configuration"));
-        title.layout(layout -> layout.widthPercent(100).height(12));
-
         var ghost = ConfigHolder.INSTANCE.machines.ghostCircuit;
-        var slot = new ItemSlot().bind(new ItemHandlerSlot(circuitSlot, 0).setCanPlace(stack -> !ghost)
-                .setCanTake(player -> !ghost));
-        slot.layout(layout -> layout.marginHorizontal(73));
-        slot.style(style -> style.backgroundTexture(IGuiTexture.group(GuiTextures.SLOT,
-                GuiTextures.INT_CIRCUIT_OVERLAY)));
-        group.addChildren(title, slot);
 
-        if (circuitMachine != null && circuitMachine.isCircuitPastingEnabled()) {
-            var machine = circuitMachine;
-            group.addChild(new ToggleButton(GuiTextures.BUTTON_LOCK, machine::isCircuitPastingBlocked,
-                    machine::setCircuitPastingBlocked)
-                    .setTooltipText("gtceu.gui.circuit_pasting.tooltip")
-                    .setShouldUseBaseBackground()
-                    .layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).right(5).top(17)));
-        }
+        var slotWrapper = new UIElement();
+        slotWrapper.getLayoutStyle().widthPercent(100).flexDirection(FlexDirection.COLUMN)
+                .alignItems(AlignItems.CENTER).marginLeft(-1);
+        group.addChild(slotWrapper);
+
+        var slot = new ItemSlot()
+                .bind(new ItemHandlerSlot(circuitSlot, 0).setCanPlace(stack -> !ghost).setCanTake(player -> !ghost));
+        slot.getStyle().backgroundTexture(IGuiTexture.group(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY));
+
         if (ghost) {
-            var clear = new Button().noText();
-            clear.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(78).top(17).width(18)
-                    .height(18));
-            clear.buttonStyle(style -> style.baseTexture(IGuiTexture.EMPTY).hoverTexture(IGuiTexture.EMPTY)
-                    .pressedTexture(IGuiTexture.EMPTY));
-            clear.setOnServerClick(event -> circuitSlot.setStackInSlot(0, ItemStack.EMPTY));
-            group.addChild(clear);
+            var slotButton = new Button().noText();
+            slotButton.getLayoutStyle().width(18).height(18).paddingAll(0);
+            slotButton.getButtonStyle().baseTexture(IGuiTexture.EMPTY).hoverTexture(IGuiTexture.EMPTY)
+                    .pressedTexture(IGuiTexture.EMPTY);
+            slotButton.setOnServerClick(event -> circuitSlot.setStackInSlot(0, ItemStack.EMPTY));
+            slotWrapper.addChildren(slotButton);
+
+            slotButton.addChild(slot);
+        } else {
+            slotWrapper.addChildren(slot);
         }
 
         for (var index = 0; index <= 32; index++) {
             group.addChild(circuitButton(index));
         }
+
+        if (circuitMachine != null && circuitMachine.isCircuitPastingEnabled()) {
+            var machine = circuitMachine;
+
+            var circuitPastingGroup = new UIElement();
+            circuitPastingGroup.getLayoutStyle().widthPercent(100).alignItems(AlignItems.END).paddingTop(4);
+            group.addChild(circuitPastingGroup);
+
+            var toggleButton = new ToggleButton(GuiTextures.BUTTON_LOCK, machine::isCircuitPastingBlocked,
+                    machine::setCircuitPastingBlocked)
+                    .setTooltipText("gtceu.gui.circuit_pasting.tooltip")
+                    .setShouldUseBaseBackground();
+            circuitPastingGroup.addChild(toggleButton);
+        }
+
         return group;
     }
 
     private Button circuitButton(int index) {
+        var circuitTexture = new ItemStackTexture(IntCircuitBehaviour.stack(index)).scale(16f / 18);
+        var slotButtonTexture = IGuiTexture.group(GuiTextures.SLOT, circuitTexture);
+        var slotButtonHoverTexture = IGuiTexture.group(slotButtonTexture,
+                new ColorRectTexture(0x80FFFFFF).scale(16f / 18));
+
         var button = new Button().noText();
-        button.layout(layout -> layout.width(18).height(18));
-        button.buttonStyle(style -> style.baseTexture(IGuiTexture.group(GuiTextures.SLOT,
-                new ItemStackTexture(IntCircuitBehaviour.stack(index)).scale(16f / 18))));
+        button.getLayoutStyle().width(18).height(18);
+        button.getButtonStyle().baseTexture(slotButtonTexture).hoverTexture(slotButtonHoverTexture)
+                .pressedTexture(slotButtonHoverTexture);
         button.setOnServerClick(event -> {
             ItemStack stack = circuitSlot.getStackInSlot(0).copy();
             if (IntCircuitBehaviour.isIntegratedCircuit(stack)) {

@@ -38,7 +38,8 @@ public class TitleBarWidget extends UIElement {
         addClass("gt-title-bar");
         layout(l -> l.flexDirection(FlexDirection.ROW).height(HEIGHT));
 
-        this.backButton = createButton(" <", "gtceu.gui.title_bar.back", onBackClicked);
+        this.backButton = createButton("<", "gtceu.gui.title_bar.back", onBackClicked);
+        this.backButton.text.getTextStyle().textAlignVertical(Vertical.BOTTOM);
         this.menuButton = createButton("+", "gtceu.gui.title_bar.page_switcher", onMenuClicked);
 
         this.mainSection = new UIElement();
