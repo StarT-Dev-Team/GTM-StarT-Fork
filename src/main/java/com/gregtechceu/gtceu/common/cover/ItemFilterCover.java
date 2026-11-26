@@ -14,7 +14,6 @@ import com.gregtechceu.gtceu.common.cover.data.FilterMode;
 import com.gregtechceu.gtceu.common.cover.data.ManualIOMode;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
@@ -91,20 +90,21 @@ public class ItemFilterCover extends CoverBehavior implements IUICover {
     }
 
     @Override
-    public UIElement createUIWidget() {
-        var group = new UIElement().layout(layout -> layout.minWidth(168).paddingAll(4).gapAll(3)
-                .alignItems(AlignItems.CENTER));
-        group.addChild(new Label().setText(Component.translatable(attachItem.getDescriptionId())));
+    public Component getCoverUITitle() {
+        return Component.translatable(attachItem.getDescriptionId());
+    }
 
-        var body = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(8));
+    @Override
+    public UIElement createUIWidget() {
+        var body = new UIElement().layout(layout -> layout.minWidth(168).flexDirection(FlexDirection.ROW).gapAll(8));
         var selectors = new UIElement().layout(layout -> layout.gapAll(2));
         selectors.addChild(new EnumSelector<>(FilterMode.VALUES, () -> filterMode, this::setFilterMode)
                 .layout(layout -> layout.width(18).height(18)));
         selectors.addChild(new EnumSelector<>(ManualIOMode.VALUES, () -> allowFlow, this::setAllowFlow)
                 .layout(layout -> layout.width(18).height(18)));
         body.addChildren(selectors, getItemFilter().openConfigurator());
-        group.addChild(body);
-        return group;
+
+        return body;
     }
 
     private class FilteredItemHandlerWrapper extends ItemHandlerDelegate {

@@ -199,6 +199,11 @@ public class MachineControllerCover extends CoverBehavior implements IUICover {
     // *********** GUI ***********//
     //////////////////////////////////////
 
+    @Override
+    public Component getCoverUITitle() {
+        return Component.translatable("cover.machine_controller.title");
+    }
+
     public UIElement createUIWidget() {
         if (controllerMode != null && getControllable(controllerMode.side) == null) {
             setControllerMode(null);

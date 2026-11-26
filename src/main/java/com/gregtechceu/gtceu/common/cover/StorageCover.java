@@ -67,6 +67,11 @@ public class StorageCover extends CoverBehavior implements IUICover {
     }
 
     @Override
+    public Component getCoverUITitle() {
+        return Component.translatable(getUITitle());
+    }
+
+    @Override
     public UIElement createUIWidget() {
         var group = new UIElement().layout(layout -> layout.minWidth(126).paddingAll(5).gapAll(3));
         group.addChild(new Label().setText(Component.translatable(getUITitle())));

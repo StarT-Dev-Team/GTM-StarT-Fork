@@ -2394,6 +2394,7 @@
   "gtceu.computer_monitor_cover.error.unclosed_bracket": "Unclosed bracket!",
   "gtceu.computer_monitor_cover.error.unexpected_bracket": "Unexpected closing bracket!",
   "gtceu.computer_monitor_cover.error.wrong_number_of_args": "Expected %d args, got %d!",
+  "gtceu.computer_monitor_cover.title": "Computer Monitor",
   "gtceu.cover.activity_detector.message_activity_inverted": "Monitoring Inverted Activity Status",
   "gtceu.cover.activity_detector.message_activity_normal": "Monitoring Normal Activity Status",
   "gtceu.cover.activity_detector_advanced.message_activity_inverted": "Monitoring Inverted Progress Status",

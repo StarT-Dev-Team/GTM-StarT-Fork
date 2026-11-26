@@ -472,6 +472,11 @@ public class ConveyorCover extends CoverBehavior implements IIOCover, IUICover, 
         return group;
     }
 
+    @Override
+    public Component getCoverUITitle() {
+        return Component.translatable(getUITitle());
+    }
+
     @NotNull
     protected String getUITitle() {
         return "cover.conveyor.title";

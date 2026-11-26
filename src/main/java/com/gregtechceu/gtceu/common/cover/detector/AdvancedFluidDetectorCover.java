@@ -139,6 +139,11 @@ public class AdvancedFluidDetectorCover extends FluidDetectorCover implements IU
     //////////////////////////////////////
 
     @Override
+    public Component getCoverUITitle() {
+        return Component.translatable("cover.advanced_fluid_detector.label");
+    }
+
+    @Override
     public UIElement createUIWidget() {
         var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
         group.addChild(new Label().setText(Component.translatable("cover.advanced_fluid_detector.label")));

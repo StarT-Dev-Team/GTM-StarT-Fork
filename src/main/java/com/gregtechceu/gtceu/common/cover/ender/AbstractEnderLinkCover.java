@@ -142,6 +142,11 @@ public abstract class AbstractEnderLinkCover<T extends VirtualEntry> extends Cov
     }
 
     @Override
+    public Component getCoverUITitle() {
+        return Component.translatable(getUITitle());
+    }
+
+    @Override
     public UIElement createUIWidget() {
         virtualEntryWidget = new VirtualEntryWidget(this);
         return virtualEntryWidget;

@@ -129,6 +129,11 @@ public class ComputerMonitorCover extends CoverBehavior
     }
 
     @Override
+    public Component getCoverUITitle() {
+        return Component.translatable("gtceu.computer_monitor_cover.title");
+    }
+
+    @Override
     public UIElement createUIWidget() {
         var group = new UIElement().layout(layout -> layout.minWidth(2 * 160 + 3 * 10).paddingAll(5).gapAll(3));
         var mainPage = new UIElement().layout(layout -> layout.gapAll(2));

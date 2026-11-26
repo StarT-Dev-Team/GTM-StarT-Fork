@@ -17,6 +17,7 @@ import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 
@@ -158,6 +159,11 @@ public class RobotArmCover extends ConveyorCover {
     //////////////////////////////////////
     // *********** GUI ***********//
     //////////////////////////////////////
+
+    @Override
+    public Component getCoverUITitle() {
+        return Component.translatable(getUITitle());
+    }
 
     @Override
     @NotNull

@@ -78,6 +78,11 @@ public class LayeredStepDetectorCover extends DetectorCover implements IUICover 
     }
 
     @Override
+    public Component getCoverUITitle() {
+        return Component.translatable("cover.layered_step_detector.label");
+    }
+
+    @Override
     public UIElement createUIWidget() {
         var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
         group.addChild(new Label().setText(Component.translatable("cover.layered_step_detector.label")));

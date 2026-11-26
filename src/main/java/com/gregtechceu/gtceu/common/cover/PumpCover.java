@@ -283,6 +283,11 @@ public class PumpCover extends CoverBehavior implements IIOCover, IUICover, ICon
     //////////////////////////////////////
 
     @Override
+    public Component getCoverUITitle() {
+        return Component.translatable(getUITitle(), GTValues.VN[tier]);
+    }
+
+    @Override
     public UIElement createUIWidget() {
         var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
         group.addChild(new Label().setText(Component.translatable(getUITitle(), GTValues.VN[tier])));

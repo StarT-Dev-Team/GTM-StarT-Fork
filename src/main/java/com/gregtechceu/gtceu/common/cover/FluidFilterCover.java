@@ -79,6 +79,11 @@ public class FluidFilterCover extends CoverBehavior implements IUICover {
     }
 
     @Override
+    public Component getCoverUITitle() {
+        return Component.translatable(attachItem.getDescriptionId());
+    }
+
+    @Override
     public UIElement createUIWidget() {
         var group = new UIElement().layout(layout -> layout.minWidth(168).paddingAll(4).gapAll(3)
                 .alignItems(AlignItems.CENTER));
