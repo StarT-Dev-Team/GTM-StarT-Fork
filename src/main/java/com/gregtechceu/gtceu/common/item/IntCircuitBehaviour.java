@@ -12,6 +12,7 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 
 import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
@@ -97,6 +98,7 @@ public class IntCircuitBehaviour implements IItemUIFactory, IAddInformation {
         root.layout(layout -> layout.width(184).paddingAll(9).gapAll(4));
 
         var label = new Label().setText(Component.literal("Programmed Circuit Configuration"));
+        label.layout(l -> l.widthPercent(100));
         label.textStyle(style -> style.textColor(0x404040).textShadow(false));
         root.addChild(label);
 
@@ -113,8 +115,12 @@ public class IntCircuitBehaviour implements IItemUIFactory, IAddInformation {
             int finalIdx = idx;
             var button = new Button().noText();
             button.layout(layout -> layout.width(18).height(18));
-            button.buttonStyle(style -> style.baseTexture(IGuiTexture.group(GuiTextures.SLOT,
-                    new ItemStackTexture(stack(finalIdx)).scale(16f / 18))));
+            var circuitTexture = new ItemStackTexture(stack(finalIdx)).scale(16f / 18);
+            var slotButtonTexture = IGuiTexture.group(GuiTextures.SLOT, circuitTexture);
+            var slotButtonHoverTexture = IGuiTexture.group(slotButtonTexture,
+                    new ColorRectTexture(0x80FFFFFF).scale(16f / 18));
+            button.buttonStyle(style -> style.baseTexture(IGuiTexture.group(GuiTextures.SLOT, circuitTexture))
+                    .hoverTexture(slotButtonHoverTexture).pressedTexture(slotButtonHoverTexture));
             button.setOnServerClick(event -> setCircuitConfiguration(holder.itemStack, finalIdx));
             grid.addChild(button);
         }
