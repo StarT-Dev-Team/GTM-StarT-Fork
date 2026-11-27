@@ -4,10 +4,9 @@ import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.widget.PhantomItemSlot;
 import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.utils.GTUtil;
+import com.gregtechceu.gtceu.utils.UIBindingUtils;
 
-import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
@@ -16,9 +15,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
 import dev.vfyjxf.taffy.style.FlexDirection;
-import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
@@ -103,7 +102,9 @@ public class SimpleItemFilter implements ItemFilter {
     public UIElement openConfigurator() {
         var group = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(5));
         var grid = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW));
+        var slots = new ArrayList<PhantomItemSlot>();
         for (int i = 0; i < 3; i++) {
+
             var column = new UIElement();
             for (int j = 0; j < 3; j++) {
                 final int index = i * 3 + j;
@@ -113,7 +114,9 @@ public class SimpleItemFilter implements ItemFilter {
                 });
                 slot.setMaxStackSize(() -> maxStackSize);
                 slot.style(style -> style.backgroundTexture(GuiTextures.SLOT));
-                column.addChild(slot);
+
+                slots.add(slot);
+                column.addChildren(slot);
             }
             grid.addChild(column);
         }
@@ -121,10 +124,12 @@ public class SimpleItemFilter implements ItemFilter {
         buttons.addChildren(
                 new ToggleButton(GuiTextures.BUTTON_BLACKLIST, this::isBlackList, this::setBlackList),
                 new ToggleButton(GuiTextures.BUTTON_FILTER_NBT, this::isIgnoreNbt, this::setIgnoreNbt));
-        var maxStackSync = new BindableValue<Integer>().bind(DataBindingBuilder.intValS2C(() -> maxStackSize)
-                .remoteSetter(size -> maxStackSize = size)
-                .build());
-        maxStackSync.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE));
+
+        var maxStackSync = UIBindingUtils.intS2C(this::getMaxStackSize, size -> {
+            maxStackSize = size;
+            slots.forEach(s -> s.setMaxStackSize(size));
+        });
+
         group.addChildren(grid, buttons, maxStackSync);
         return group;
     }
