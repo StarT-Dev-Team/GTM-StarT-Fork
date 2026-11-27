@@ -18,6 +18,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -108,17 +109,9 @@ public class CircuitFancyConfigurator implements IFancyConfigurator, IFancyCusto
         slot.getStyle().backgroundTexture(IGuiTexture.group(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY));
 
         if (ghost) {
-            var slotButton = new Button().noText();
-            slotButton.getLayoutStyle().width(18).height(18).paddingAll(0);
-            slotButton.getButtonStyle().baseTexture(IGuiTexture.EMPTY).hoverTexture(IGuiTexture.EMPTY)
-                    .pressedTexture(IGuiTexture.EMPTY);
-            slotButton.setOnServerClick(event -> circuitSlot.setStackInSlot(0, ItemStack.EMPTY));
-            slotWrapper.addChildren(slotButton);
-
-            slotButton.addChild(slot);
-        } else {
-            slotWrapper.addChildren(slot);
+            slot.addServerEventListener(UIEvents.MOUSE_DOWN, event -> circuitSlot.setStackInSlot(0, ItemStack.EMPTY));
         }
+        slotWrapper.addChildren(slot);
 
         for (var index = 0; index <= 32; index++) {
             group.addChild(circuitButton(index));
