@@ -20,6 +20,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
@@ -39,7 +40,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.settings.KeyModifier;
 
-import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
@@ -183,9 +183,12 @@ public class TerminalBehavior implements IItemUIFactory, IAddInformation {
     public ModularUI createUI(HeldItemUIMenuType.HeldItemUIHolder holder, Player player) {
         Supplier<ItemStack> held = () -> player.getItemInHand(holder.hand);
         var root = UITemplate.panel();
-        root.layout(layout -> layout.minWidth(176).paddingAll(8).gapAll(4));
+        root.layout(layout -> layout.width(176).paddingAll(8).gapAll(4).alignItems(AlignItems.STRETCH));
 
-        root.addChild(new Label().setText(Component.translatable("metaitem.terminal.ui.title")));
+        var title = new Label().setText(Component.translatable("metaitem.terminal.ui.title"));
+        title.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER));
+        title.layout(layout -> layout.marginBottom(2));
+        root.addChild(title);
 
         root.addChild(toggleRow(held, "metaitem.terminal.help.flipped", "metaitem.terminal.ui.flipped", FLIPPED_KEY,
                 "metaitem.terminal.ui.flipped.tooltip"));
@@ -195,12 +198,12 @@ public class TerminalBehavior implements IItemUIFactory, IAddInformation {
         root.addChild(labelRow("metaitem.terminal.help.layers", "metaitem.terminal.ui.layers"));
         root.addChild(new IntInput(() -> getLayers(held.get()),
                 value -> held.get().getOrCreateTag().putInt(LAYERS_KEY, value)).setMin(0).setMax(MAX_LAYERS)
-                .layout(layout -> layout.widthPercent(100).height(20)));
+                .layout(layout -> layout.widthAuto().height(20)));
 
         root.addChild(labelRow("metaitem.terminal.help.variant", "metaitem.terminal.ui.variant"));
         root.addChild(new IntInput(() -> getVariant(held.get()),
                 value -> held.get().getOrCreateTag().putInt(VARIANT_KEY, value)).setMin(0).setMax(MAX_VARIANT)
-                .layout(layout -> layout.widthPercent(100).height(20)));
+                .layout(layout -> layout.widthAuto().height(20)));
 
         return UITemplate.modularUI(root, player);
     }
@@ -209,20 +212,21 @@ public class TerminalBehavior implements IItemUIFactory, IAddInformation {
         var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2)
                 .alignItems(AlignItems.CENTER));
         row.addChild(createInfoIcon(info));
-        row.addChild(new Label().setText(Component.translatable(label)));
+        row.addChild(new Label().setText(Component.translatable(label)).layout(layout -> layout.flex(1).minWidth(0)));
         return row;
     }
 
     private static UIElement toggleRow(Supplier<ItemStack> held, String info, String label, String key,
                                        String tooltip) {
-        var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2)
-                .alignItems(AlignItems.CENTER).justifyContent(AlignContent.SPACE_BETWEEN));
+        var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(4)
+                .alignItems(AlignItems.CENTER));
         var state = new MutableBoolean(isSet(held.get(), key));
         var sync = new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(() -> isSet(held.get(), key))
                 .remoteSetter(state::setValue)
                 .build());
         sync.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE));
-        row.addChildren(labelRow(info, label), createToggle(held, state, key, tooltip), sync);
+        row.addChildren(labelRow(info, label).layout(layout -> layout.flex(1).minWidth(0)),
+                createToggle(held, state, key, tooltip), sync);
         return row;
     }
 
