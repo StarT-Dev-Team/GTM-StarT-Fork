@@ -3,8 +3,8 @@ package com.gregtechceu.gtceu.api.block;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 
-import com.lowdragmc.lowdraglib.client.renderer.IBlockRendererProvider;
-import com.lowdragmc.lowdraglib.client.renderer.IRenderer;
+import com.lowdragmc.lowdraglib2.client.renderer.IBlockRendererProvider;
+import com.lowdragmc.lowdraglib2.client.renderer.IRenderer;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;

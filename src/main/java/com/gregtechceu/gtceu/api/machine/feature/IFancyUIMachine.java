@@ -2,30 +2,28 @@ package com.gregtechceu.gtceu.api.machine.feature;
 
 import com.gregtechceu.gtceu.api.capability.IControllable;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.gui.fancy.*;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.CombinedDirectionalFancyConfigurator;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.MachineModeFancyConfigurator;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.SceneWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
-import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Scene;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.utils.data.BlockInfo;
+import com.lowdragmc.lowdraglib2.utils.virtuallevel.TrackedDummyWorld;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
-import org.jetbrains.annotations.NotNull;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,14 +32,14 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
 
     @Override
     default ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(176, 166, this, entityPlayer).widget(new FancyMachineUIWidget(this, 176, 166));
+        return UITemplate.modularUI(new FancyMachineUIWidget(this, 176, 166), entityPlayer);
     }
 
     /**
      * We should not override this method in general, and use {@link IFancyUIMachine#createUIWidget()} instead,
      */
     @Override
-    default Widget createMainPage(FancyMachineUIWidget widget) {
+    default UIElement createMainPage(FancyMachineUIWidget widget) {
         var editableUI = self().getDefinition().getEditableUI();
         if (editableUI != null) {
             var template = editableUI.createCustomUI();
@@ -57,38 +55,54 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
     /**
      * Create the core widget of this machine.
      */
-    default Widget createUIWidget() {
-        var group = new WidgetGroup(0, 0, 100, 100);
+    default UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(l -> l.width(100).height(100));
         if (isRemote()) {
-            group.addWidget(new ImageWidget((100 - 48) / 2, 60, 48, 16, GuiTextures.SCENE));
-            TrackedDummyWorld world = new TrackedDummyWorld();
+            var image = new UIElement();
+            image.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left((100 - 48) / 2f).top(60).width(48)
+                    .height(16));
+            image.style(s -> s.background(GuiTextures.SCENE));
+            var world = new TrackedDummyWorld();
             world.addBlock(BlockPos.ZERO, BlockInfo.fromBlockState(self().getBlockState()));
-            SceneWidget sceneWidget = new SceneWidget(0, 0, 100, 100, world) {
+            var scene = new Scene();
+            scene.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(0).top(0).width(100).height(100));
+            scene.useOrtho(true);
+            scene.setOrthoRange(0.5f);
+            scene.setScalable(false);
+            scene.setDraggable(false);
+            scene.setRenderFacing(false);
+            scene.setRenderSelect(false);
+            scene.setTickWorld(false);
+            scene.createScene(world);
+            scene.setRenderedCore(List.of(BlockPos.ZERO));
+            enableSceneAutoRotate(scene);
 
-                @Override
-                @OnlyIn(Dist.CLIENT)
-                public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY,
-                                             float partialTicks) {
-                    // AUTO ROTATION
-                    if (renderer != null) {
-                        this.rotationPitch = (partialTicks + getGui().getTickCount()) * 2;
-                        renderer.setCameraLookAt(this.center, 0.1f, Math.toRadians(this.rotationPitch),
-                                Math.toRadians(this.rotationYaw));
-                    }
-                    super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-                }
-            };
-            sceneWidget.useOrtho(true)
-                    .setOrthoRange(0.5f)
-                    .setScalable(false)
-                    .setDraggable(false)
-                    .setRenderFacing(false)
-                    .setRenderSelect(false);
-            sceneWidget.getRenderer().setFov(30);
-            group.addWidget(sceneWidget);
-            sceneWidget.setRenderedCore(List.of(BlockPos.ZERO), null);
+            group.addChildren(image, scene);
         }
         return group;
+    }
+
+    private static void enableSceneAutoRotate(Scene scene) {
+        var updateRotation = new Runnable() {
+
+            private float yaw = Float.NaN;
+
+            @Override
+            public void run() {
+                var mui = scene.getModularUI();
+                var player = Minecraft.getInstance().player;
+                if (mui == null || player == null) return;
+                if (Float.isNaN(yaw)) {
+                    var playerRotation = player.getRotationVector();
+                    yaw = playerRotation.y - 90;
+                }
+                scene.setCameraYawAndPitch(yaw + mui.getTickCounter() * 2f, scene.getRotationPitch());
+            }
+        };
+
+        scene.addEventListener(UIEvents.MUI_CHANGED, e -> updateRotation.run());
+        scene.addEventListener(UIEvents.TICK, e -> updateRotation.run());
     }
 
     @Override
@@ -112,9 +126,9 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
     default void attachConfigurators(ConfiguratorPanel configuratorPanel) {
         if (this instanceof IControllable controllable) {
             configuratorPanel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
-                    GuiTextures.BUTTON_POWER.getSubTexture(0, 0, 1, 0.5),
-                    GuiTextures.BUTTON_POWER.getSubTexture(0, 0.5, 1, 0.5),
-                    controllable::isWorkingEnabled, (clickData, pressed) -> controllable.setWorkingEnabled(pressed))
+                    GuiTextures.BUTTON_POWER.copy().setSprite(0, 0, 18, 18),
+                    GuiTextures.BUTTON_POWER.copy().setSprite(0, 18, 18, 18),
+                    controllable::isWorkingEnabled, (event, pressed) -> controllable.setWorkingEnabled(pressed))
                     .setTooltipsSupplier(pressed -> List.of(
                             Component.translatable(
                                     pressed ? "behaviour.soft_hammer.enabled" : "behaviour.soft_hammer.disabled"))));
@@ -132,15 +146,17 @@ public interface IFancyUIMachine extends IUIMachine, IFancyUIProvider {
 
     @Override
     default void attachAutoPushConfigurators(ConfiguratorPanel configuratorPanel) {
-        if (this instanceof MetaMachine machine) {
-            for (var direction : Direction.values()) {
-                if (machine.getCoverContainer().hasCover(direction)) {
-                    var configurator = machine.getCoverContainer().getCoverAtSide(direction).getConfigurator();
-                    if (configurator != null)
-                        configuratorPanel.attachConfigurators(configurator);
-                }
-            }
-        }
+        // TODO: basically AutoPushConfigurators are configurators on the right side, but the covers are already added
+        // on the left side...
+        // if (this instanceof MetaMachine machine) {
+        // for (var direction : Direction.values()) {
+        // if (machine.getCoverContainer().hasCover(direction)) {
+        // var configurator = machine.getCoverContainer().getCoverAtSide(direction).getConfigurator();
+        // if (configurator != null)
+        // configuratorPanel.attachConfigurators(configurator);
+        // }
+        // }
+        // }
     }
 
     @Override

@@ -5,9 +5,8 @@ import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.client.util.RenderUtil;
+import com.gregtechceu.gtceu.client.util.StaticFaceBakery;
 import com.gregtechceu.gtceu.utils.GTUtil;
-
-import com.lowdragmc.lowdraglib.client.bakedpipeline.FaceQuad;
 
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -59,10 +58,10 @@ public interface ICoverableRenderer {
                             normal.getY() >= 0 ? 0.99 : min,
                             normal.getZ() >= 0 ? 0.99 : min);
                     if (side == null) { // render back
-                        quads.add(FaceQuad.builder(face.getOpposite(), COVER_BACK_PLATE[0])
+                        quads.add(StaticFaceBakery.builder(face.getOpposite(), COVER_BACK_PLATE[0])
                                 .cube(cube).cubeUV().bake());
                     } else if (side != face.getOpposite()) { // render sides
-                        quads.add(FaceQuad.builder(side, COVER_BACK_PLATE[0])
+                        quads.add(StaticFaceBakery.builder(side, COVER_BACK_PLATE[0])
                                 .cube(cube).cubeUV().bake());
                     }
                 }

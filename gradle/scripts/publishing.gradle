@@ -9,11 +9,12 @@ publishing {
     repositories {
         // Expandium Maven Repository
         maven {
-            url = version.toString().endsWith("-SNAPSHOT") ? "https://repo.expandium.net/snapshots" : "https://repo.expandium.net/releases"
-            allowInsecureProtocol = true
+            name "Expandium"
+            url "https://repo.expandium.net/${version.toString().toLowerCase().contains('snapshot') ? 'snapshots' : 'releases'}"
+
             credentials {
-                username = System.getenv("MAVEN_USER") ?: ""
-                password = System.getenv("MAVEN_TOKEN") ?: ""
+                username System.getenv("MAVEN_USER") ?: project.findProperty("MAVEN_USER") ?: ""
+                password System.getenv("MAVEN_TOKEN") ?: project.findProperty("MAVEN_TOKEN") ?: ""
             }
         }
 

@@ -1,29 +1,25 @@
 package com.gregtechceu.gtceu.integration.rei.recipe;
 
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.rei.ModularDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplay;
 
 import net.minecraft.resources.ResourceLocation;
 
 import me.shedaniel.rei.api.common.category.CategoryIdentifier;
-import me.shedaniel.rei.api.common.entry.EntryIngredient;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
-public class GTRecipeDisplay extends ModularDisplay<WidgetGroup> {
+public class GTRecipeDisplay implements ModularUIDisplay {
 
     private final GTRecipe recipe;
-    protected List<EntryIngredient> allInputs;
+    private final CategoryIdentifier<?> category;
 
     public GTRecipeDisplay(GTRecipe recipe, CategoryIdentifier<?> category) {
-        super(() -> recipe.recipeType.getRecipeUI().createWidget(recipe), category);
         this.recipe = recipe;
-        allInputs = new ArrayList<>(inputs);
-        allInputs.addAll(catalysts);
+        this.category = category;
     }
 
     @Override
@@ -32,12 +28,11 @@ public class GTRecipeDisplay extends ModularDisplay<WidgetGroup> {
     }
 
     @Override
-    public List<EntryIngredient> getInputEntries() {
-        return allInputs;
+    public CategoryIdentifier<?> getCategoryIdentifier() {
+        return category;
     }
 
-    @Override
-    public List<EntryIngredient> getRequiredEntries() {
-        return inputs;
+    public ModularUI createModularUI() {
+        return GTRecipeWidget.createModularUI(recipe);
     }
 }

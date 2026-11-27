@@ -2,120 +2,92 @@ package com.gregtechceu.gtceu.api.gui.fancy;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class TitleBarWidget extends WidgetGroup {
+public class TitleBarWidget extends UIElement {
 
     private static final int BORDER_WIDTH = 3;
-    private static final int HORIZONTAL_MARGIN = 8;
     private static final int HEIGHT = 16;
     private static final int BTN_WIDTH = 18;
-
     private static final float ROLL_SPEED = 0.7f;
 
-    private int width;
-    private boolean showBackButton = false;
-    private boolean showMenuButton = false;
-    private final int innerHeight;
+    private final Button backButton;
+    private final Button menuButton;
+    private final UIElement mainSection;
+    private final UIElement tabIcon;
+    private final Label tabTitle;
 
-    /**
-     * The button group is rendered behind the main section and contains the back and menu buttons.
-     * <p>
-     * For easier texture reuse, the background is applied to the group itself, instead of the individual buttons.<br>
-     * The button group therefore needs to be rendered behind the main section.
-     */
-    private final WidgetGroup buttonGroup;
-    private final Widget backButton;
-    private final Widget menuButton;
+    public TitleBarWidget(UIEventListener onBackClicked, UIEventListener onMenuClicked) {
+        addClass("gt-title-bar");
+        layout(l -> l.flexDirection(FlexDirection.ROW).height(HEIGHT));
 
-    /**
-     * The main section contains the current tab's icon and title text
-     */
-    private final WidgetGroup mainSection;
-    private final ImageWidget tabIcon;
-    private final ImageWidget tabTitle;
-    private TextTexture titleText;
+        this.backButton = createButton("<", "gtceu.gui.title_bar.back", onBackClicked);
+        this.backButton.text.getTextStyle().textAlignVertical(Vertical.BOTTOM);
+        this.menuButton = createButton("+", "gtceu.gui.title_bar.page_switcher", onMenuClicked);
 
-    public TitleBarWidget(int parentWidth, Consumer<ClickData> onBackClicked, Consumer<ClickData> onMenuClicked) {
-        super(HORIZONTAL_MARGIN, -HEIGHT, parentWidth, HEIGHT);
-        this.innerHeight = HEIGHT - BORDER_WIDTH;
-        this.width = parentWidth - (2 * HORIZONTAL_MARGIN);
+        this.mainSection = new UIElement();
+        mainSection.addClass("gt-title-bar-main");
+        mainSection.setOverflowVisible(false);
+        mainSection.layout(l -> l.flex(1).height(HEIGHT).flexDirection(FlexDirection.ROW)
+                .alignItems(AlignItems.CENTER).paddingHorizontal(BORDER_WIDTH + 1).paddingTop(BORDER_WIDTH)
+                .gapAll(2));
+        mainSection.style(s -> s.background(GuiTextures.TITLE_BAR_BACKGROUND));
 
-        addWidget(this.buttonGroup = new WidgetGroup(0, BORDER_WIDTH, width, innerHeight));
-        buttonGroup.setBackground(GuiTextures.TITLE_BAR_BACKGROUND);
-        buttonGroup.addWidget(this.backButton = new ButtonWidget(0, BORDER_WIDTH, BTN_WIDTH, HEIGHT - BORDER_WIDTH,
-                new TextTexture(" <").setDropShadow(false).setColor(ChatFormatting.BLACK.getColor()), onBackClicked)
-                .setHoverTooltips("gtceu.gui.title_bar.back"));
-        buttonGroup.addWidget(this.menuButton = new ButtonWidget(width - BTN_WIDTH, BORDER_WIDTH, BTN_WIDTH,
-                HEIGHT - BORDER_WIDTH,
-                new TextTexture("+").setDropShadow(false).setColor(ChatFormatting.BLACK.getColor()), onMenuClicked)
-                .setHoverTooltips("gtceu.gui.title_bar.page_switcher"));
+        this.tabIcon = new UIElement();
+        tabIcon.layout(l -> l.width(HEIGHT - BORDER_WIDTH - 2).height(HEIGHT - BORDER_WIDTH - 2));
+        this.tabTitle = new Label();
+        tabTitle.layout(l -> l.flex(1).minWidth(0));
+        tabTitle.setOverflowVisible(false);
+        tabTitle.textStyle(t -> t.textWrap(TextWrap.ROLL).adaptiveWidth(false).rollSpeed(ROLL_SPEED).textShadow(false)
+                .textColor(0xFF000000));
+        mainSection.addChildren(tabIcon, tabTitle);
 
-        addWidget(this.mainSection = new WidgetGroup(BTN_WIDTH, 0, width, HEIGHT));
-        mainSection.setBackground(GuiTextures.TITLE_BAR_BACKGROUND);
-        mainSection.addWidget(this.tabIcon = new ImageWidget(
-                BORDER_WIDTH + 1, BORDER_WIDTH + 1,
-                innerHeight - 2, innerHeight - 2,
-                IGuiTexture.EMPTY));
-        mainSection.addWidget(this.tabTitle = new ImageWidget(
-                BORDER_WIDTH + innerHeight, BORDER_WIDTH, 0, 0, IGuiTexture.EMPTY));
+        addChildren(backButton, mainSection, menuButton);
+    }
+
+    private Button createButton(String text, String tooltip, UIEventListener onClick) {
+        var button = new Button();
+        button.setText(text, false);
+        button.textStyle(t -> t.textShadow(false).textColor(0xFF000000)
+                .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER));
+        button.layout(l -> l.width(BTN_WIDTH).height(HEIGHT - BORDER_WIDTH).marginTop(BORDER_WIDTH).paddingAll(0));
+        button.buttonStyle(s -> s.baseTexture(GuiTextures.TITLE_BAR_BACKGROUND)
+                .hoverTexture(GuiTextures.TITLE_BAR_BACKGROUND.copy().setColor(0xFFDDDDDD))
+                .pressedTexture(GuiTextures.TITLE_BAR_BACKGROUND.copy().setColor(0xFFBBBBBB)));
+        button.style(s -> s.tooltips(tooltip));
+        button.setOnClick(onClick);
+        return button;
     }
 
     public void updateState(IFancyUIProvider currentPage, boolean showBackButton, boolean showMenuButton) {
-        this.showBackButton = showBackButton;
-        this.showMenuButton = showMenuButton;
-
-        titleText = new TextTexture(ChatFormatting.BLACK.toString() + currentPage.getTitle().copy().getString())
-                .setDropShadow(false)
-                .setType(TextTexture.TextType.ROLL);
-        titleText.setRollSpeed(ROLL_SPEED);
-
-        tabIcon.setImage(currentPage.getTabIcon());
-        tabTitle.setImage(titleText);
+        tabTitle.setText(currentPage.getTitle().copy());
+        var icon = currentPage.getTabIcon();
+        tabIcon.style(s -> s.background(icon == null ? IGuiTexture.EMPTY : icon));
 
         backButton.setVisible(showBackButton);
         backButton.setActive(showBackButton);
-
         menuButton.setVisible(showMenuButton);
         menuButton.setActive(showMenuButton);
-
-        onSizeUpdate();
     }
 
-    @Override
-    protected void onSizeUpdate() {
-        this.width = getSize().getWidth() - (2 * HORIZONTAL_MARGIN);
-
-        var hiddenButtons = 2;
-        if (showBackButton) hiddenButtons--;
-        if (showMenuButton) hiddenButtons--;
-
-        int buttonGroupWidth = this.width - (BTN_WIDTH * hiddenButtons);
-        buttonGroup.setSize(new Size(buttonGroupWidth, innerHeight));
-        buttonGroup.setSelfPosition(new Position(showBackButton ? 0 : BTN_WIDTH, BORDER_WIDTH));
-        menuButton.setSelfPosition(new Position(buttonGroupWidth - BTN_WIDTH, BORDER_WIDTH));
-
-        int mainSectionWidth = this.width - (BTN_WIDTH * 2);
-        int titleWidth = mainSectionWidth - (2 * BORDER_WIDTH) - innerHeight;
-        mainSection.setSize(new Size(mainSectionWidth, HEIGHT));
-        titleText.setWidth(titleWidth);
-        tabTitle.setSize(new Size(titleWidth, HEIGHT - BORDER_WIDTH));
+    public Component getTitle() {
+        return tabTitle.getText();
     }
 }

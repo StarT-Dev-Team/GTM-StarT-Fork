@@ -7,6 +7,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.data.machines.GTMachineUtils;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.ConfigWidget;
+import com.gregtechceu.gtceu.integration.ae2.gui.widget.MEStatusLabel;
 import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEInputPart;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEFluidList;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEFluidSlot;
@@ -14,11 +15,7 @@ import com.gregtechceu.gtceu.integration.ae2.slot.IConfigurableSlotList;
 import com.gregtechceu.gtceu.integration.ae2.slot.PortAEInventory;
 import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -36,9 +33,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MEInputHatchPartMachine extends MEHatchPartMachine
                                      implements IMEInputPart, IMachineLife, IHasCircuitSlot {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            MEInputHatchPartMachine.class, MEHatchPartMachine.MANAGED_FIELD_HOLDER);
 
     protected ExportOnlyAEFluidList aeFluidHandler;
 
@@ -64,11 +58,6 @@ public class MEInputHatchPartMachine extends MEHatchPartMachine
         this.aeFluidHandler = new ExportOnlyAEFluidList(this, getSlotCount());
 
         return this.aeFluidHandler;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -128,16 +117,13 @@ public class MEInputHatchPartMachine extends MEHatchPartMachine
     }
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(new Position(0, 0));
-
-        group.addWidget(new LabelWidget(3, 0, () -> this.isOnline ?
-                "gtceu.gui.me_network.online" :
-                "gtceu.gui.me_network.offline"));
-        group.addWidget(new ConfigWidget(3, 10, this.aeFluidHandler.getInventory(), this.aeFluidHandler.isStocking(),
-                this.aeFluidHandler::isAutoPull, stack -> this.aeFluidHandler.hasStackInConfig(stack, true),
-                AEFluidKey.class));
-
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.paddingHorizontal(3).gapAll(1));
+        group.addChildren(new MEStatusLabel(() -> this.isOnline),
+                new ConfigWidget(this.aeFluidHandler.getInventory(), this.aeFluidHandler.isStocking(),
+                        this.aeFluidHandler::isAutoPull, stack -> this.aeFluidHandler.hasStackInConfig(stack, true),
+                        AEFluidKey.class));
         return group;
     }
 

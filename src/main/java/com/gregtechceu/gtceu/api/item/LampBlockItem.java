@@ -2,8 +2,8 @@ package com.gregtechceu.gtceu.api.item;
 
 import com.gregtechceu.gtceu.common.block.LampBlock;
 
-import com.lowdragmc.lowdraglib.client.renderer.IItemRendererProvider;
-import com.lowdragmc.lowdraglib.client.renderer.IRenderer;
+import com.lowdragmc.lowdraglib2.client.renderer.IItemRendererProvider;
+import com.lowdragmc.lowdraglib2.client.renderer.IRenderer;
 
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.BlockItem;

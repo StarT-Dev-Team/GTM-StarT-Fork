@@ -1,22 +1,21 @@
 package com.gregtechceu.gtceu.common.machine.storage;
 
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.PhantomSlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.PhantomItemSlot;
+import com.gregtechceu.gtceu.api.gui.widget.TextToggleButton;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceBorderTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DropSaved;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DropSaved;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -26,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.items.ItemHandlerHelper;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,9 +34,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CreativeChestMachine extends QuantumChestMachine {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(CreativeChestMachine.class,
-            QuantumChestMachine.MANAGED_FIELD_HOLDER);
 
     @Getter
     @Persisted
@@ -71,15 +68,13 @@ public class CreativeChestMachine extends QuantumChestMachine {
         return InteractionResult.SUCCESS;
     }
 
-    private void setTicksPerCycle(String value) {
-        if (value.isEmpty()) return;
-        ticksPerCycle = Integer.parseInt(value);
+    private void setTicksPerCycle(int value) {
+        ticksPerCycle = value;
         onItemChanged();
     }
 
-    private void setItemsPerCycle(String value) {
-        if (value.isEmpty()) return;
-        itemsPerCycle = Integer.parseInt(value);
+    private void setItemsPerCycle(int value) {
+        itemsPerCycle = value;
         onItemChanged();
     }
 
@@ -105,38 +100,38 @@ public class CreativeChestMachine extends QuantumChestMachine {
     }
 
     @Override
-    public Widget createUIWidget() {
-        var group = new WidgetGroup(0, 0, 176, 131);
-        group.addWidget(new PhantomSlotWidget(cache, 0, 36, 6)
-                .setClearSlotOnRightClick(true)
-                .setMaxStackSize(1)
-                .setBackgroundTexture(GuiTextures.SLOT)
-                .setChangeListener(this::markDirty));
-        group.addWidget(new LabelWidget(7, 9, "gtceu.creative.chest.item"));
-        group.addWidget(new ImageWidget(7, 48, 154, 14, GuiTextures.DISPLAY));
-        group.addWidget(new TextFieldWidget(9, 50, 152, 10, () -> String.valueOf(itemsPerCycle), this::setItemsPerCycle)
-                .setMaxStringLength(11)
-                .setNumbersOnly(1, Integer.MAX_VALUE));
-        group.addWidget(new LabelWidget(7, 28, "gtceu.creative.chest.ipc"));
-        group.addWidget(new ImageWidget(7, 85, 154, 14, GuiTextures.DISPLAY));
-        group.addWidget(new TextFieldWidget(9, 87, 152, 10, () -> String.valueOf(ticksPerCycle), this::setTicksPerCycle)
-                .setMaxStringLength(11)
-                .setNumbersOnly(1, Integer.MAX_VALUE));
-        group.addWidget(new LabelWidget(7, 65, "gtceu.creative.chest.tpc"));
-        group.addWidget(new SwitchWidget(7, 101, 162, 20, (clickData, value) -> setWorkingEnabled(value))
-                .setTexture(
-                        new GuiTextureGroup(ResourceBorderTexture.BUTTON_COMMON,
-                                new TextTexture("gtceu.creative.activity.off")),
-                        new GuiTextureGroup(ResourceBorderTexture.BUTTON_COMMON,
-                                new TextTexture("gtceu.creative.activity.on")))
-                .setPressed(isWorkingEnabled()));
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.width(176).height(131));
 
+        var itemSlot = new PhantomItemSlot(cache, 0);
+        itemSlot.setClearSlotOnRightClick(true);
+        itemSlot.setMaxStackSize(1);
+        itemSlot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(36).top(6));
+
+        var itemLabel = new Label();
+        itemLabel.setText(Component.translatable("gtceu.creative.chest.item"));
+        itemLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(9));
+        var ipcLabel = new Label();
+        ipcLabel.setText(Component.translatable("gtceu.creative.chest.ipc"));
+        ipcLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(28));
+        var ipcInput = new IntInput(() -> itemsPerCycle, this::setItemsPerCycle);
+        ipcInput.setMin(1);
+        ipcInput.setMax(Integer.MAX_VALUE);
+        ipcInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(43).width(152).height(16));
+        var tpcLabel = new Label();
+        tpcLabel.setText(Component.translatable("gtceu.creative.chest.tpc"));
+        tpcLabel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(65));
+        var tpcInput = new IntInput(() -> ticksPerCycle, this::setTicksPerCycle);
+        tpcInput.setMin(1);
+        tpcInput.setMax(Integer.MAX_VALUE);
+        tpcInput.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(80).width(152).height(16));
+        var activity = new TextToggleButton("gtceu.creative.activity.on", "gtceu.creative.activity.off",
+                this::isWorkingEnabled, this::setWorkingEnabled);
+        activity.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(101).width(162).height(20));
+
+        group.addChildren(itemSlot, itemLabel, ipcLabel, ipcInput, tpcLabel, tpcInput, activity);
         return group;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     private class InfiniteCache extends ItemCache {

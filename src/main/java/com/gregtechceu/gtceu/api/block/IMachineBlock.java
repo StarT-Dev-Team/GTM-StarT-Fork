@@ -1,9 +1,13 @@
 package com.gregtechceu.gtceu.api.block;
 
 import com.gregtechceu.gtceu.api.data.RotationState;
+import com.gregtechceu.gtceu.api.gui.factory.MachineUIFactory;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
+
+import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,7 +23,17 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import org.jetbrains.annotations.Nullable;
 
-public interface IMachineBlock extends EntityBlock {
+public interface IMachineBlock extends EntityBlock, BlockUIMenuType.BlockUI {
+
+    @Override
+    default ModularUI createUI(BlockUIMenuType.BlockUIHolder holder) {
+        return MachineUIFactory.createUI(holder);
+    }
+
+    @Override
+    default boolean stillValid(BlockUIMenuType.BlockUIHolder holder) {
+        return MachineUIFactory.stillValid(holder);
+    }
 
     default Block self() {
         return (Block) this;

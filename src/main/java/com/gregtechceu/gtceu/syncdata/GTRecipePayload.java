@@ -5,7 +5,7 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipeSerializer;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 
-import com.lowdragmc.lowdraglib.syncdata.payload.ObjectTypedPayload;
+import com.lowdragmc.lowdraglib2.compat.network.StreamCodec;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.*;
@@ -16,12 +16,27 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.objects.Reference2IntArrayMap;
 import org.jetbrains.annotations.Nullable;
 
-public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
+public final class GTRecipePayload {
+
+    public static final Codec<GTRecipe> CODEC = Codec.PASSTHROUGH.flatXmap(
+            dynamic -> {
+                var recipe = read(dynamic.convert(NbtOps.INSTANCE).getValue());
+                return recipe == null ? DataResult.error(() -> "Unknown GT recipe") : DataResult.success(recipe);
+            },
+            recipe -> DataResult.success(new Dynamic<>(NbtOps.INSTANCE, write(recipe))));
+
+    public static final StreamCodec<FriendlyByteBuf, GTRecipe> STREAM_CODEC = StreamCodec.of(
+            GTRecipePayload::writeBuf, GTRecipePayload::readBuf);
+
+    private GTRecipePayload() {}
 
     private static RecipeManager getRecipeManager() {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
@@ -32,24 +47,23 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
         }
     }
 
-    @Nullable
-    @Override
-    public Tag serializeNBT() {
+    public static Tag write(GTRecipe recipe) {
         CompoundTag tag = new CompoundTag();
-        tag.putString("id", payload.id.toString());
+        tag.putString("id", recipe.id.toString());
         tag.put("recipe",
-                GTRecipeSerializer.CODEC.encodeStart(NbtOps.INSTANCE, payload).result().orElse(new CompoundTag()));
-        tag.putInt("parallels", payload.parallels);
+                GTRecipeSerializer.CODEC.encodeStart(NbtOps.INSTANCE, recipe).result().orElse(new CompoundTag()));
+        tag.putInt("parallels", recipe.parallels);
         tag.put("parallelsByType", GTRecipeSerializer.PARALLELS_BY_TYPE_CODEC
-                .encodeStart(NbtOps.INSTANCE, payload.parallelsByType).result().orElse(new CompoundTag()));
-        tag.putInt("ocLevel", payload.ocLevel);
-        tag.putInt("baseOcLevel", payload.baseOcLevel);
+                .encodeStart(NbtOps.INSTANCE, recipe.parallelsByType).result().orElse(new CompoundTag()));
+        tag.putInt("ocLevel", recipe.ocLevel);
+        tag.putInt("baseOcLevel", recipe.baseOcLevel);
         return tag;
     }
 
-    @Override
-    public void deserializeNBT(Tag tag) {
+    @Nullable
+    public static GTRecipe read(Tag tag) {
         RecipeManager recipeManager = getRecipeManager();
+        GTRecipe payload = null;
         if (tag instanceof CompoundTag compoundTag) {
             payload = GTRecipeSerializer.CODEC.parse(NbtOps.INSTANCE, compoundTag.get("recipe")).result().orElse(null);
             if (payload != null) {
@@ -58,44 +72,43 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
                 payload.ocLevel = compoundTag.getInt("ocLevel");
                 payload.baseOcLevel = compoundTag.getInt("baseOcLevel");
                 if (compoundTag.contains("parallelsByType")) {
+                    var finalPayload = payload;
                     GTRecipeSerializer.PARALLELS_BY_TYPE_CODEC
                             .parse(NbtOps.INSTANCE, compoundTag.get("parallelsByType")).result()
-                            .ifPresent(parallelsByType -> payload.parallelsByType = parallelsByType);
+                            .ifPresent(parallelsByType -> finalPayload.parallelsByType = parallelsByType);
                 }
             }
-        } else if (tag instanceof StringTag stringTag) { // Backwards Compatibility
+        } else if (tag instanceof StringTag stringTag) {
             var recipe = recipeManager.byKey(new ResourceLocation(stringTag.getAsString())).orElse(null);
             if (recipe instanceof GTRecipe gtRecipe) {
                 payload = gtRecipe;
             } else if (recipe instanceof SmeltingRecipe smeltingRecipe) {
                 payload = GTRecipeTypes.FURNACE_RECIPES.toGTrecipe(new ResourceLocation(stringTag.getAsString()),
                         smeltingRecipe);
-            } else {
-                payload = null;
             }
-        } else if (tag instanceof ByteArrayTag byteArray) { // Backwards Compatibility
+        } else if (tag instanceof ByteArrayTag byteArray) {
             ByteBuf copiedDataBuffer = Unpooled.copiedBuffer(byteArray.getAsByteArray());
             FriendlyByteBuf buf = new FriendlyByteBuf(copiedDataBuffer);
             payload = (GTRecipe) recipeManager.byKey(buf.readResourceLocation()).orElse(null);
             buf.release();
         }
+        return payload;
     }
 
-    @Override
-    public void writePayload(FriendlyByteBuf buf) {
-        buf.writeResourceLocation(this.payload.id);
-        GTRecipeSerializer.SERIALIZER.toNetwork(buf, this.payload);
-        buf.writeInt(this.payload.parallels);
-        buf.writeInt(this.payload.ocLevel);
-        buf.writeInt(this.payload.baseOcLevel);
-        buf.writeMap(this.payload.parallelsByType,
+    private static void writeBuf(FriendlyByteBuf buf, GTRecipe recipe) {
+        buf.writeResourceLocation(recipe.id);
+        GTRecipeSerializer.SERIALIZER.toNetwork(buf, recipe);
+        buf.writeInt(recipe.parallels);
+        buf.writeInt(recipe.ocLevel);
+        buf.writeInt(recipe.baseOcLevel);
+        buf.writeMap(recipe.parallelsByType,
                 (buf1, type) -> buf1.writeUtf(GTRegistries.PARALLEL_TYPES.getKey(type)),
                 FriendlyByteBuf::writeInt);
     }
 
-    @Override
-    public void readPayload(FriendlyByteBuf buf) {
+    private static GTRecipe readBuf(FriendlyByteBuf buf) {
         var id = buf.readResourceLocation();
+        GTRecipe payload;
         if (buf.isReadable()) {
             payload = GTRecipeSerializer.SERIALIZER.fromNetwork(id, buf);
             if (buf.isReadable()) {
@@ -108,10 +121,11 @@ public class GTRecipePayload extends ObjectTypedPayload<GTRecipe> {
                         (buf1) -> GTRegistries.PARALLEL_TYPES.get(buf1.readUtf()),
                         FriendlyByteBuf::readInt));
             }
-        } else { // Backwards Compatibility
+        } else {
             RecipeManager recipeManager = getRecipeManager();
             payload = (GTRecipe) recipeManager.byKey(id).orElse(null);
         }
+        return payload;
     }
 
     static class Client {

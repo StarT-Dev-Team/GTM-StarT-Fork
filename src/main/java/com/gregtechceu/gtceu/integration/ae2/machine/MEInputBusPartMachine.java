@@ -7,6 +7,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.common.data.machines.GTMachineUtils;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.ConfigWidget;
+import com.gregtechceu.gtceu.integration.ae2.gui.widget.MEStatusLabel;
 import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEInputPart;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemList;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemSlot;
@@ -14,11 +15,7 @@ import com.gregtechceu.gtceu.integration.ae2.slot.IConfigurableSlotList;
 import com.gregtechceu.gtceu.integration.ae2.slot.PortAEInventory;
 import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 
@@ -34,9 +31,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class MEInputBusPartMachine extends MEBusPartMachine implements IMEInputPart, IMachineLife, IHasCircuitSlot {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MEInputBusPartMachine.class,
-            MEBusPartMachine.MANAGED_FIELD_HOLDER);
 
     protected ExportOnlyAEItemList aeItemHandler;
 
@@ -62,11 +56,6 @@ public class MEInputBusPartMachine extends MEBusPartMachine implements IMEInputP
         this.aeItemHandler = new ExportOnlyAEItemList(this, getSlotCount());
 
         return this.aeItemHandler;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -125,16 +114,13 @@ public class MEInputBusPartMachine extends MEBusPartMachine implements IMEInputP
     }
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(new Position(0, 0));
-
-        group.addWidget(new LabelWidget(3, 0, () -> this.isOnline ?
-                "gtceu.gui.me_network.online" :
-                "gtceu.gui.me_network.offline"));
-        group.addWidget(new ConfigWidget(3, 10, this.aeItemHandler.getInventory(), this.aeItemHandler.isStocking(),
-                this.aeItemHandler::isAutoPull, stack -> this.aeItemHandler.hasStackInConfig(stack, true),
-                AEItemKey.class));
-
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.paddingHorizontal(3).gapAll(1));
+        group.addChildren(new MEStatusLabel(() -> this.isOnline),
+                new ConfigWidget(this.aeItemHandler.getInventory(), this.aeItemHandler.isStocking(),
+                        this.aeItemHandler::isAutoPull, stack -> this.aeItemHandler.hasStackInConfig(stack, true),
+                        AEItemKey.class));
         return group;
     }
 

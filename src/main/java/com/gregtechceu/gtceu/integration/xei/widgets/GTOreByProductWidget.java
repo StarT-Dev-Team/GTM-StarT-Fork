@@ -3,11 +3,8 @@ package com.gregtechceu.gtceu.integration.xei.widgets;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.recipe.chance.boost.ChanceBoostFunction;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
-import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 import com.gregtechceu.gtceu.integration.xei.entry.fluid.FluidEntryList;
@@ -15,25 +12,36 @@ import com.gregtechceu.gtceu.integration.xei.entry.item.ItemEntryList;
 import com.gregtechceu.gtceu.integration.xei.handlers.fluid.CycleFluidEntryHandler;
 import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemEntryHandler;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
 import it.unimi.dsi.fastutil.ints.IntImmutableList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
-public class GTOreByProductWidget extends WidgetGroup {
+public class GTOreByProductWidget extends UIElement {
 
     public static final String ORE_CONTENT_GROUP_ID = "oreContentGroup";
     public static final Pattern ORE_CONTENT_GROUP_ID_REGEX = Pattern.compile("^oreContentGroup$");
@@ -113,59 +121,76 @@ public class GTOreByProductWidget extends WidgetGroup {
     private int tier = MIN_OC_TIER;
 
     public GTOreByProductWidget(Material material) {
-        super(0, 0, 176, 166);
+        layout(layout -> layout.width(176).height(166));
 
         recipeWrapper = new GTOreByProduct(material);
 
-        setClientSideWidget();
         setRecipe();
     }
 
+    private static UIElement place(UIElement element, int x, int y) {
+        element.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(x).top(y));
+        return element;
+    }
+
+    private static UIElement image(int x, int y, int width, int height, IGuiTexture texture) {
+        var image = new UIElement();
+        image.layout(layout -> layout.width(width).height(height));
+        image.style(style -> style.backgroundTexture(texture));
+        return place(image, x, y);
+    }
+
+    private static List<Component> tooltipsOf(Consumer<List<Component>> collector) {
+        var tooltips = new ArrayList<Component>();
+        collector.accept(tooltips);
+        return tooltips;
+    }
+
     public void setRecipe() {
-        this.widgets.clear();
+        clearAllChildren();
 
-        WidgetGroup group = new WidgetGroup();
-
+        var group = new UIElement();
         group.setId(ORE_CONTENT_GROUP_ID);
-
-        getWidgetsById(ORE_CONTENT_GROUP_ID_REGEX).forEach(this::removeWidget);
-
-        addWidget(group);
+        group.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(0).top(0).width(176).height(166));
 
         BooleanList itemOutputExists = new BooleanArrayList();
 
-        // only draw slot on inputs if it is the ore
-        addWidget(new ImageWidget(ITEM_INPUT_LOCATIONS.getInt(0), ITEM_INPUT_LOCATIONS.getInt(1), 18, 18,
-                GuiTextures.SLOT));
+        addChild(image(ITEM_INPUT_LOCATIONS.getInt(0), ITEM_INPUT_LOCATIONS.getInt(1), 18, 18, GuiTextures.SLOT));
         boolean hasSifter = recipeWrapper.hasSifter();
 
-        addWidget(new ImageWidget(0, 0, 176, 166, GuiTextures.OREBY_BASE));
+        addChild(image(0, 0, 176, 166, GuiTextures.OREBY_BASE));
         if (recipeWrapper.hasDirectSmelt()) {
-            addWidget(new ImageWidget(0, 0, 176, 166, GuiTextures.OREBY_SMELT));
+            addChild(image(0, 0, 176, 166, GuiTextures.OREBY_SMELT));
         }
         if (recipeWrapper.hasChemBath()) {
-            addWidget(new ImageWidget(0, 0, 176, 166, GuiTextures.OREBY_CHEM));
+            addChild(image(0, 0, 176, 166, GuiTextures.OREBY_CHEM));
         }
         if (recipeWrapper.hasSeparator()) {
-            addWidget(new ImageWidget(0, 0, 176, 166, GuiTextures.OREBY_SEP));
+            addChild(image(0, 0, 176, 166, GuiTextures.OREBY_SEP));
         }
         if (hasSifter) {
-            addWidget(new ImageWidget(0, 0, 176, 166, GuiTextures.OREBY_SIFT));
+            addChild(image(0, 0, 176, 166, GuiTextures.OREBY_SIFT));
         }
+        addChild(group);
+
+        var slots = new ArrayList<UIElement>();
 
         List<ItemEntryList> itemInputs = recipeWrapper.itemInputs;
         CycleItemEntryHandler itemInputsHandler = new CycleItemEntryHandler(itemInputs);
 
         for (int i = 0; i < ITEM_INPUT_LOCATIONS.size(); i += 2) {
             final int finalI = i;
-            group.addWidget(new SlotWidget(itemInputsHandler, i / 2, ITEM_INPUT_LOCATIONS.getInt(i),
-                    ITEM_INPUT_LOCATIONS.getInt(i + 1))
-                    .setCanTakeItems(false)
-                    .setCanPutItems(false)
-                    .setIngredientIO(IngredientIO.INPUT)
-                    .setOnAddedTooltips(
-                            (slot, tooltips) -> recipeWrapper.getTooltip(finalI / 2, tooltips, MIN_OC_TIER, tier))
-                    .setBackground((IGuiTexture) null));
+            var entry = itemInputs.get(i / 2);
+            var slot = new ItemSlot();
+            slot.bind(new ItemHandlerSlot(itemInputsHandler, i / 2).setCanTake(player -> false)
+                    .setCanPlace(stack -> false));
+            slot.xeiRecipeIngredient(IngredientIO.INPUT, () -> stacksOf(entry))
+                    .xeiRecipeSlot(IngredientIO.INPUT, 1, 1, () -> stacksOf(entry));
+            var tooltips = tooltipsOf(
+                    list -> recipeWrapper.getTooltip(finalI / 2, list, MIN_OC_TIER, tier));
+            slot.style(style -> style.backgroundTexture(IGuiTexture.EMPTY)
+                    .appendTooltips(tooltips.toArray(Component[]::new)));
+            slots.add(place(slot, ITEM_INPUT_LOCATIONS.getInt(i), ITEM_INPUT_LOCATIONS.getInt(i + 1)));
         }
 
         NonNullList<ItemStack> itemOutputs = recipeWrapper.itemOutputs;
@@ -191,18 +216,29 @@ public class GTOreByProductWidget extends WidgetGroup {
                 continue;
             }
 
-            group.addWidget(new SlotWidget(itemOutputsHandler, slotIndex, ITEM_OUTPUT_LOCATIONS.getInt(i),
-                    ITEM_OUTPUT_LOCATIONS.getInt(i + 1))
-                    .setCanTakeItems(false)
-                    .setCanPutItems(false)
-                    .setIngredientIO(FINAL_OUTPUT_INDICES.contains(i) ? IngredientIO.OUTPUT : IngredientIO.BOTH)
-                    .setXEIChance(xeiChance)
-                    .setOnAddedTooltips(
-                            (slot, tooltips) -> recipeWrapper.getTooltip(slotIndex + itemInputs.size(), tooltips,
-                                    MIN_OC_TIER, tier))
-                    .setBackground((IGuiTexture) null).setOverlay(overlay));
+            var io = FINAL_OUTPUT_INDICES.contains(i) ? IngredientIO.OUTPUT : IngredientIO.NONE;
+            var slot = new ItemSlot();
+            slot.bind(new ItemHandlerSlot(itemOutputsHandler, slotIndex).setCanTake(player -> false)
+                    .setCanPlace(stack -> false));
+            slot.xeiRecipeIngredient(io).xeiRecipeSlot(io, xeiChance);
+            var tooltips = tooltipsOf(list -> recipeWrapper.getTooltip(slotIndex + itemInputs.size(), list,
+                    MIN_OC_TIER, tier));
+            var slotOverlay = overlay;
+            slot.style(style -> {
+                style.backgroundTexture(IGuiTexture.EMPTY).appendTooltips(tooltips.toArray(Component[]::new));
+                if (slotOverlay != null) style.overlay(slotOverlay);
+            });
+            slots.add(place(slot, ITEM_OUTPUT_LOCATIONS.getInt(i), ITEM_OUTPUT_LOCATIONS.getInt(i + 1)));
             itemOutputExists.add(true);
         }
+
+        for (int i = 0; i < ITEM_OUTPUT_LOCATIONS.size(); i += 2) {
+            if (itemOutputExists.getBoolean(i / 2) || (i > 28 * 2 && itemOutputExists.getBoolean(28) && hasSifter)) {
+                group.addChild(image(ITEM_OUTPUT_LOCATIONS.getInt(i), ITEM_OUTPUT_LOCATIONS.getInt(i + 1), 18, 18,
+                        GuiTextures.SLOT));
+            }
+        }
+        slots.forEach(group::addChild);
 
         List<FluidEntryList> fluidInputs = recipeWrapper.fluidInputs;
         CycleFluidEntryHandler fluidInputsHandler = new CycleFluidEntryHandler(fluidInputs);
@@ -210,32 +246,34 @@ public class GTOreByProductWidget extends WidgetGroup {
         for (int i = 0; i < FLUID_LOCATIONS.size(); i += 2) {
             int slotIndex = i / 2;
             if (!fluidInputs.get(slotIndex).isEmpty()) {
-                var tank = new TankWidget(new CustomFluidTank(fluidInputsHandler.getFluidInTank(slotIndex)),
-                        FLUID_LOCATIONS.getInt(i), FLUID_LOCATIONS.getInt(i + 1), false, false)
-                        .setIngredientIO(IngredientIO.INPUT)
-                        .setBackground(GuiTextures.FLUID_SLOT)
-                        .setShowAmount(false);
-                group.addWidget(tank);
+                var entry = fluidInputs.get(slotIndex);
+                var tank = new FluidSlot();
+                tank.bindDataSource(SupplierDataSource.of(() -> fluidInputsHandler.getFluidInTank(slotIndex)));
+                tank.xeiRecipeIngredient(IngredientIO.INPUT, () -> entry.getStacks().stream())
+                        .xeiRecipeSlot(IngredientIO.INPUT, 1, 1, () -> entry.getStacks().stream());
+                tank.slotStyle(style -> style.fillDirection(FillDirection.ALWAYS_FULL));
+                tank.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+                tank.amountLabel.setDisplay(false);
+                group.addChild(place(tank, FLUID_LOCATIONS.getInt(i), FLUID_LOCATIONS.getInt(i + 1)));
             }
         }
 
         String tierText = GTValues.VNF[tier];
-        LabelWidget voltageTextWidget = new LabelWidget(GTRecipeWidget.getVoltageXOffset(tier, getSize().width),
-                getSize().height - 10, tierText).setTextColor(-1).setDropShadow(false);
-        group.addWidget(new ButtonWidget(voltageTextWidget.getPositionX(), voltageTextWidget.getPositionY(),
-                voltageTextWidget.getSizeWidth(), voltageTextWidget.getSizeHeight(),
-                cd -> cycleTier(cd.button))
-                .setHoverTooltips(LangHandler.getMultiLang("gtceu.oc.tooltip", GTValues.VNF[MIN_OC_TIER])
-                        .toArray(Component[]::new)));
-        group.addWidget(voltageTextWidget);
+        var voltageButton = new Button();
+        voltageButton.setText(tierText, false);
+        voltageButton.textStyle(style -> style.textColor(-1).textShadow(false).adaptiveWidth(true));
+        voltageButton.buttonStyle(style -> style.baseTexture(IGuiTexture.EMPTY).hoverTexture(IGuiTexture.EMPTY)
+                .pressedTexture(IGuiTexture.EMPTY));
+        var textWidth = Minecraft.getInstance().font.width(tierText);
+        voltageButton.layout(layout -> layout.width(textWidth + 4).height(10).paddingAll(0));
+        voltageButton.setOnClick(event -> cycleTier(event.button));
+        voltageButton.style(style -> style.tooltips(LangHandler.getMultiLang("gtceu.oc.tooltip",
+                GTValues.VNF[MIN_OC_TIER]).toArray(Component[]::new)));
+        group.addChild(place(voltageButton, GTRecipeWidget.getVoltageXOffset(tier, 176), 166 - 10));
+    }
 
-        for (int i = 0; i < ITEM_OUTPUT_LOCATIONS.size(); i += 2) {
-            // stupid hack to show all sifter slots if the first one exists
-            if (itemOutputExists.getBoolean(i / 2) || (i > 28 * 2 && itemOutputExists.getBoolean(28) && hasSifter)) {
-                group.addWidget(this.widgets.size() - 3, new ImageWidget(ITEM_OUTPUT_LOCATIONS.getInt(i),
-                        ITEM_OUTPUT_LOCATIONS.getInt(i + 1), 18, 18, GuiTextures.SLOT));
-            }
-        }
+    private static Stream<ItemStack> stacksOf(ItemEntryList entry) {
+        return entry == null ? Stream.empty() : entry.getStacks().stream();
     }
 
     private void cycleTier(int button) {

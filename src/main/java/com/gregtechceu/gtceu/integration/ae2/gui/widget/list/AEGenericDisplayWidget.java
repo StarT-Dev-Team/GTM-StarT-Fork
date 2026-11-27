@@ -1,89 +1,68 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.list;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
-import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
-import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
-import com.gregtechceu.gtceu.integration.ae2.utils.AEUtil;
-import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Locale;
+public class AEGenericDisplayWidget extends UIElement {
 
-public class AEGenericDisplayWidget extends WidgetGroup {
+    private final ItemSlot itemSlot = new ItemSlot();
+    private final AEFluidDisplayWidget fluidSlot = new AEFluidDisplayWidget();
+    private final Label amountLabel = new Label();
 
-    private final AEListGridWidget gridWidget;
-    private final int index;
-    private final CustomItemStackHandler itemHandler = new CustomItemStackHandler(1);
-    private final CustomFluidTank fluidTank = new CustomFluidTank(1);
-    private final SlotWidget itemSlot;
-    private final TankWidget fluidSlot;
+    public AEGenericDisplayWidget() {
+        layout(layout -> layout.flexDirection(FlexDirection.ROW).widthPercent(100).height(18));
 
-    public AEGenericDisplayWidget(int x, int y, AEListGridWidget gridWidget, int index) {
-        super(x, y, 18 + 140, 18);
+        itemSlot.style(style -> style.backgroundTexture(GuiTextures.SLOT));
+        fluidSlot.setDisplay(false);
 
-        this.gridWidget = gridWidget;
-        this.index = index;
+        var number = new UIElement();
+        number.layout(layout -> layout.flex(1).height(18).paddingHorizontal(4));
+        number.style(style -> style.backgroundTexture(GuiTextures.NUMBER_BACKGROUND));
+        amountLabel.layout(layout -> layout.widthPercent(100).heightPercent(100));
+        amountLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.LEFT)
+                .textAlignVertical(Vertical.CENTER).textColor(-1));
+        number.addChild(amountLabel);
 
-        setClientSideWidget();
-
-        addWidget(new ImageWidget(18, 0, 140, 18, GuiTextures.NUMBER_BACKGROUND));
-
-        this.itemSlot = (SlotWidget) new SlotWidget(this.itemHandler, 0, 0, 0, false, false).setClientSideWidget();
-        this.fluidSlot = new TankWidget(this.fluidTank, 0, 0, 18, 18, false, false).setShowAmount(false)
-                .setBackground(GuiTextures.SLOT).setClientSideWidget();
-
-        addWidget(this.itemSlot);
-        addWidget(this.fluidSlot);
-        addWidget(new LabelWidget(22, 5, this::getAmountText).setTextColor(-1));
-
-        this.fluidSlot.setVisible(false);
+        addChildren(itemSlot, fluidSlot, number);
     }
 
-    private String getAmountText() {
-        GenericStack stack = this.gridWidget.getAt(this.index);
+    public void update(@Nullable GenericStack stack) {
+        var isFluid = stack != null && stack.what() instanceof AEFluidKey;
+        itemSlot.setDisplay(!isFluid);
+        fluidSlot.setDisplay(isFluid);
 
-        if (stack == null) return "";
-
-        Locale locale = Minecraft.getInstance().getLanguageManager().getJavaLocale();
-
-        return String.format(locale, "x%,d", stack.amount());
-    }
-
-    @Override
-    public void updateScreen() {
-        super.updateScreen();
-
-        GenericStack stack = this.gridWidget.getAt(this.index);
-
-        boolean isFluid = stack != null && stack.what() instanceof AEFluidKey;
-
-        this.itemSlot.setVisible(!isFluid);
-        this.fluidSlot.setVisible(isFluid);
+        if (stack == null) {
+            itemSlot.setItem(ItemStack.EMPTY, false);
+            fluidSlot.setStack(null);
+            amountLabel.setText(Component.empty());
+            return;
+        }
 
         if (isFluid) {
-            this.fluidTank.setCapacity(Math.max(1, GTMath.saturatedCast(stack.amount())));
-            this.fluidTank.setFluid(AEUtil.toFluidStack(stack));
+            fluidSlot.setStack(stack);
+            itemSlot.setItem(ItemStack.EMPTY, false);
         } else {
-            this.fluidTank.setFluid(FluidStack.EMPTY);
+            fluidSlot.setStack(null);
+            var displayed = stack.what() instanceof AEItemKey key ? key.toStack() : ItemStack.EMPTY;
+            itemSlot.setItem(displayed, false);
         }
 
-        ItemStack displayed = stack != null && stack.what() instanceof AEItemKey key ? key.toStack() : ItemStack.EMPTY;
-
-        if (!ItemStack.matches(this.itemHandler.getStackInSlot(0), displayed)) {
-            this.itemHandler.setStackInSlot(0, displayed);
-        }
+        var locale = Minecraft.getInstance().getLanguageManager().getJavaLocale();
+        amountLabel.setText(Component.literal(String.format(locale, "x%,d", stack.amount())));
     }
 }

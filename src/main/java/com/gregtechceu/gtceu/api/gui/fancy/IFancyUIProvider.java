@@ -1,7 +1,7 @@
 package com.gregtechceu.gtceu.api.gui.fancy;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
@@ -16,7 +16,7 @@ public interface IFancyUIProvider {
     /**
      * Create the main page ui.
      */
-    Widget createMainPage(FancyMachineUIWidget widget);
+    UIElement createMainPage(FancyMachineUIWidget widget);
 
     /**
      * Get the tab icon of this page.

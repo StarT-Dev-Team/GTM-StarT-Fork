@@ -1,7 +1,7 @@
 package com.gregtechceu.gtceu.api.cover.filter;
 
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.lookup.GTRecipeLookup;
@@ -9,14 +9,15 @@ import com.gregtechceu.gtceu.api.recipe.lookup.ingredient.MapIngredientTypeManag
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.AlignItems;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 
 import java.util.List;
@@ -71,10 +72,11 @@ public class SmartItemFilter implements ItemFilter {
     }
 
     @Override
-    public WidgetGroup openConfigurator(int x, int y) {
-        WidgetGroup group = new WidgetGroup(x, y, 18 * 3 + 25, 18 * 3);
-        group.addWidget(new EnumSelectorWidget<>(16, 8, 32, 32,
-                SmartFilteringMode.VALUES, filterMode, this::setFilterMode));
+    public UIElement openConfigurator() {
+        var group = new UIElement().layout(layout -> layout.alignItems(AlignItems.CENTER));
+        var selector = new EnumSelector<>(SmartFilteringMode.VALUES, () -> filterMode, this::setFilterMode);
+        selector.layout(layout -> layout.width(32).height(32));
+        group.addChild(selector);
         return group;
     }
 
@@ -113,7 +115,7 @@ public class SmartItemFilter implements ItemFilter {
     }
 
     @MethodsReturnNonnullByDefault
-    private enum SmartFilteringMode implements EnumSelectorWidget.SelectableEnum {
+    private enum SmartFilteringMode implements EnumSelector.SelectableEnum {
 
         ELECTROLYZER("electrolyzer", GTRecipeTypes.ELECTROLYZER_RECIPES),
         CENTRIFUGE("centrifuge", GTRecipeTypes.CENTRIFUGE_RECIPES),
@@ -137,7 +139,7 @@ public class SmartItemFilter implements ItemFilter {
 
         @Override
         public IGuiTexture getIcon() {
-            return new ResourceTexture("gtceu:textures/block/machines/" + localeName + "/overlay_front.png");
+            return SpriteTexture.of("gtceu:textures/block/machines/" + localeName + "/overlay_front.png");
         }
     }
 }

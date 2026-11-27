@@ -7,9 +7,9 @@ import com.gregtechceu.gtceu.api.registry.registrate.BuilderBase;
 import com.gregtechceu.gtceu.common.data.GTRecipeCategories;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -41,7 +41,7 @@ public class GTRecipeCategoryBuilder extends BuilderBase<GTRecipeCategory> {
     }
 
     public GTRecipeCategoryBuilder setCustomIcon(ResourceLocation location) {
-        this.icon = new ResourceTexture(location.withPrefix("textures/").withSuffix(".png"));
+        this.icon = SpriteTexture.of(location.withPrefix("textures/").withSuffix(".png"));
         return this;
     }
 

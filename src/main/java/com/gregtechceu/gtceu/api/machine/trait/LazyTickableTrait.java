@@ -4,16 +4,7 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.ILazyTickableMachine;
 
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-
 public class LazyTickableTrait extends MachineTrait {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(LazyTickableTrait.class);
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 
     private final Runnable callback;
 

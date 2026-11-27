@@ -2,26 +2,27 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.BlockableSlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.BlockableTankWidget;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableFluidSlot;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableItemSlot;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.fluids.FluidType;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,9 +32,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class DualHatchPartMachine extends ItemBusPartMachine {
 
     public static final int INITIAL_TANK_CAPACITY = 16 * FluidType.BUCKET_VOLUME;
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(DualHatchPartMachine.class,
-            ItemBusPartMachine.MANAGED_FIELD_HOLDER);
-
     @Persisted
     public final NotifiableFluidTank tank;
 
@@ -162,38 +160,47 @@ public class DualHatchPartMachine extends ItemBusPartMachine {
     ///////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
+    public UIElement createUIWidget() {
         int slots = getInventorySize();
         int tanks = (int) Math.sqrt(slots);
-        var group = new WidgetGroup(0, 0, 18 * (tanks + 1) + 16, 18 * tanks + 16);
-        var container = new WidgetGroup(4, 4, 18 * (tanks + 1) + 8, 18 * tanks + 8);
+        boolean canPut = io.support(IO.IN);
 
+        var container = new UIElement();
+        container.layout(layout -> layout.flexDirection(FlexDirection.ROW).paddingAll(4));
+        container.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
+
+        var items = new UIElement();
         int index = 0;
         for (int y = 0; y < tanks; y++) {
+            var row = new UIElement();
+            row.layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < tanks; x++) {
-                container.addWidget(new BlockableSlotWidget(
-                        getInventory().storage, index++, 4 + x * 18, 4 + y * 18, true, io.support(IO.IN))
-                        .setIsBlocked(this::isLocked)
-                        .setBackgroundTexture(GuiTextures.SLOT)
-                        .setIngredientIO(this.io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT));
+                var slot = new BlockableItemSlot();
+                slot.setIsBlocked(this::isLocked);
+                slot.bind(new ItemHandlerSlot(getInventory().storage, index++)
+                        .setCanPlace(stack -> canPut && !isLocked())
+                        .setCanTake(player -> !isLocked()));
+                slot.xeiRecipeIngredient(this.io == IO.IN ? IngredientIO.INPUT : IngredientIO.OUTPUT);
+                row.addChild(slot);
             }
+            items.addChild(row);
         }
 
-        index = 0;
-        for (int y = 0; y < tanks; y++) {
-            container.addWidget(new BlockableTankWidget(
-                    tank.getStorages()[index++], 4 + tanks * 18, 4 + y * 18, true, io.support(IO.IN))
-                    .setIsBlocked(this::isLocked)
-                    .setBackground(GuiTextures.FLUID_SLOT));
+        var fluids = new UIElement();
+        for (int i = 0; i < tanks; i++) {
+            var slot = new BlockableFluidSlot();
+            slot.setIsBlocked(this::isLocked);
+            slot.bind(tank.getStorages()[i], 0);
+            slot.setAllowClickFilled(canPut);
+            slot.setAllowClickDrained(true);
+            slot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+            fluids.addChild(slot);
         }
 
-        container.setBackground(GuiTextures.BACKGROUND_INVERSE);
-        group.addWidget(container);
+        container.addChildren(items, fluids);
+        var group = new UIElement();
+        group.layout(layout -> layout.alignItems(AlignItems.CENTER).paddingAll(4));
+        group.addChild(container);
         return group;
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 }

@@ -1,11 +1,11 @@
 package com.gregtechceu.gtceu.common.cover.data;
 
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 
-public enum DistributionMode implements EnumSelectorWidget.SelectableEnum {
+public enum DistributionMode implements EnumSelector.SelectableEnum {
 
     ROUND_ROBIN_GLOBAL("round_robin_global"),
     ROUND_ROBIN_PRIO("round_robin_prio"),
@@ -27,6 +27,6 @@ public enum DistributionMode implements EnumSelectorWidget.SelectableEnum {
 
     @Override
     public IGuiTexture getIcon() {
-        return new ResourceTexture("gtceu:textures/gui/icon/distribution_mode/" + localeName + ".png");
+        return SpriteTexture.of("gtceu:textures/gui/icon/distribution_mode/" + localeName + ".png");
     }
 }

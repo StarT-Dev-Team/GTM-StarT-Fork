@@ -36,14 +36,17 @@ public abstract class IntDistribution {
     protected static void checkRange(int min, int max) {
         if (min < 0) throw new IllegalArgumentException("min must not be negative, got " + min);
         if (min > max) throw new IllegalArgumentException("min (" + min + ") must not be above max (" + max + ")");
-        if ((long) max - min + 1 > WeightedInt.MAX_ENTRIES) throw new IllegalArgumentException("range " + min + ".." + max + " is too large, at most " +
+        if ((long) max - min + 1 > WeightedInt.MAX_ENTRIES)
+            throw new IllegalArgumentException("range " + min + ".." + max + " is too large, at most " +
                     WeightedInt.MAX_ENTRIES + " different amounts are supported");
     }
 
     protected static void checkAverage(double average, int min, int max) {
-        if (min >= max) throw new IllegalArgumentException("a target average needs a range with more than one value, got " + min +
+        if (min >= max)
+            throw new IllegalArgumentException("a target average needs a range with more than one value, got " + min +
                     ".." + max);
-        if (!(average > min && average < max)) throw new IllegalArgumentException("target average " + average + " must be above min (" + min +
+        if (!(average > min && average < max))
+            throw new IllegalArgumentException("target average " + average + " must be above min (" + min +
                     ") and below max (" + max + ")");
     }
 }

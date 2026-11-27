@@ -1,125 +1,119 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.list;
 
-import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.client.TooltipsHandler;
 import com.gregtechceu.gtceu.integration.ae2.utils.AEUtil;
-import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.ingredient.IRecipeIngredientSlot;
-import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.LDLib2;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
+import com.lowdragmc.lowdraglib2.integration.xei.emi.LDLibEMIPlugin;
+import com.lowdragmc.lowdraglib2.integration.xei.jei.LDLibJEIPlugin;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.LDLibREIPlugin;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraftforge.fluids.FluidStack;
 
-import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.GenericStack;
-import dev.emi.emi.api.forge.ForgeEmiStack;
+import dev.architectury.hooks.fluid.forge.FluidStackHooksForge;
+import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.stack.EmiStackInteraction;
+import lombok.Getter;
 import me.shedaniel.rei.api.common.util.EntryStacks;
-import org.jetbrains.annotations.NotNull;
+import mezz.jei.api.forge.ForgeTypes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
-import static com.gregtechceu.gtceu.integration.ae2.gui.widget.slot.AEConfigSlotWidget.drawSelectionOverlay;
-import static com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawText;
+public class AEFluidDisplayWidget extends UIElement {
 
-/**
- * Display a certain {@link FluidStack} element.
- */
-public class AEFluidDisplayWidget extends Widget implements IRecipeIngredientSlot {
+    private static final ColorRectTexture HOVER = new ColorRectTexture(0x80FFFFFF);
 
-    private final AEListGridWidget gridWidget;
-    private final int index;
+    @Getter
+    private FluidStack fluid = FluidStack.EMPTY;
+    private long amount;
 
-    public AEFluidDisplayWidget(int x, int y, AEListGridWidget gridWidget, int index) {
-        super(new Position(x, y), new Size(18, 18));
-        this.gridWidget = gridWidget;
-        this.index = index;
-    }
-
-    @Override
-    public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-        Position position = getPosition();
-        GenericStack fluid = this.gridWidget.getAt(this.index);
-        GuiTextures.FLUID_SLOT.draw(graphics, mouseX, mouseY, position.x, position.y, 18, 18);
-        GuiTextures.NUMBER_BACKGROUND.draw(graphics, mouseX, mouseY, position.x + 18, position.y, 140, 18);
-        int stackX = position.x + 1;
-        int stackY = position.y + 1;
-        if (fluid != null) {
-            FluidStack fluidStack = fluid.what() instanceof AEFluidKey key ?
-                    new FluidStack(key.getFluid(), GTMath.saturatedCast(fluid.amount()), key.getTag()) :
-                    FluidStack.EMPTY;
-            DrawerHelper.drawFluidForGui(graphics, FluidHelperImpl.toFluidStack(fluidStack), fluid.amount(), stackX,
-                    stackY, 16, 16);
-            String amountStr = String.format("x%,d", fluid.amount());
-            drawText(graphics, amountStr, stackX + 20, stackY + 5, 1, 0xFFFFFFFF);
-        }
-        if (isMouseOverElement(mouseX, mouseY)) {
-            drawSelectionOverlay(graphics, stackX, stackY, 16, 16);
-        }
-    }
-
-    @Override
-    public void drawInForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (isMouseOverElement(mouseX, mouseY)) {
-            GenericStack fluid = this.gridWidget.getAt(this.index);
-            if (fluid != null) {
-                FluidStack fluidStack = fluid.what() instanceof AEFluidKey key ?
-                        new FluidStack(key.getFluid(), GTMath.saturatedCast(fluid.amount()), key.getTag()) :
-                        FluidStack.EMPTY;
-                List<Component> tooltips = new ArrayList<>();
-                tooltips.add(fluidStack.getDisplayName());
-                tooltips.add(Component.literal(String.format("%,d mB", fluid.amount())));
-                TooltipsHandler.appendFluidTooltips(fluidStack, tooltips::add, TooltipFlag.NORMAL);
-                graphics.renderTooltip(Minecraft.getInstance().font, tooltips, Optional.empty(), mouseX, mouseY);
+    public AEFluidDisplayWidget() {
+        layout(layout -> layout.width(18).height(18).paddingAll(1));
+        style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+        addEventListener(UIEvents.HOVER_TOOLTIPS, this::onHoverTooltips);
+        if (LDLib2.isClient() && !LDLib2.isServer()) {
+            if (LDLib2.isJeiLoaded()) {
+                JEISupport.clickableIngredient(this);
+            }
+            if (LDLib2.isReiLoaded()) {
+                REISupport.focusedStack(this);
+            }
+            if (LDLib2.isEmiLoaded()) {
+                EMISupport.stackProvider(this);
             }
         }
     }
 
-    @Nullable
-    private Object getXEIfluidStack(@Nullable GenericStack fluidStack) {
-        if (fluidStack != null) {
-            FluidStack lastFluidInTank = AEUtil.toFluidStack(fluidStack);
-            if (!lastFluidInTank.isEmpty()) {
-                return switch (GTCEu.Mods.loadedXEI()) {
-                    case JEI -> TankWidget.JEICallWrapper.getJEIFluidClickable(lastFluidInTank, getPosition(),
-                            getSize());
-                    case REI -> EntryStacks.of(TankWidget.REICallWrapper.toREIStack(lastFluidInTank));
-                    case EMI -> ForgeEmiStack.of(lastFluidInTank);
-                    default -> lastFluidInTank;
-                };
-            }
+    public AEFluidDisplayWidget setStack(@Nullable GenericStack stack) {
+        this.fluid = stack == null ? FluidStack.EMPTY : AEUtil.toFluidStack(stack);
+        this.amount = stack == null ? 0 : stack.amount();
+        return this;
+    }
+
+    private void onHoverTooltips(UIEvent event) {
+        if (fluid.isEmpty()) return;
+        var tooltips = new ArrayList<Component>();
+        tooltips.add(fluid.getDisplayName());
+        tooltips.add(Component.literal(String.format("%,d mB", amount)));
+        TooltipsHandler.appendFluidTooltips(fluid, tooltips::add, TooltipFlag.NORMAL);
+        event.hoverTooltips = new HoverTooltips(tooltips, null, null, null);
+    }
+
+    @Override
+    public void drawBackgroundAdditional(GUIContext guiContext) {
+        var x = getContentX();
+        var y = getContentY();
+        var width = getContentWidth();
+        var height = getContentHeight();
+        if (!fluid.isEmpty()) {
+            DrawerHelper.drawFluidForGui(guiContext.graphics, fluid, x, y, width, height, -1);
         }
-
-        return null;
+        if (isHover()) {
+            guiContext.drawTexture(HOVER, x, y, width, height);
+        }
     }
 
-    @Override
-    public List<Object> getXEIIngredients() {
-        GenericStack fluid = this.gridWidget.getAt(this.index);
-        var xeiStack = getXEIfluidStack(fluid);
-        return xeiStack != null ? List.of(xeiStack) : Collections.emptyList();
+    private static class JEISupport {
+
+        static void clickableIngredient(AEFluidDisplayWidget widget) {
+            LDLibJEIPlugin.clickableIngredient(widget, () -> {
+                if (widget.fluid.isEmpty()) return null;
+                return LDLibJEIPlugin.createTypedIngredient(ForgeTypes.FLUID_STACK, widget.fluid).orElse(null);
+            });
+        }
     }
 
-    @Nullable
-    @Override
-    public Object getXEIIngredientOverMouse(double mouseX, double mouseY) {
-        if (!isMouseOverElement(mouseX, mouseY)) return null;
+    private static class REISupport {
 
-        GenericStack fluid = this.gridWidget.getAt(this.index);
-        return getXEIfluidStack(fluid);
+        static void focusedStack(AEFluidDisplayWidget widget) {
+            LDLibREIPlugin.focusedStack(widget, () -> {
+                if (widget.fluid.isEmpty()) return null;
+                return EntryStacks.of(FluidStackHooksForge.fromForge(widget.fluid));
+            });
+        }
+    }
+
+    private static class EMISupport {
+
+        static void stackProvider(AEFluidDisplayWidget widget) {
+            LDLibEMIPlugin.stackProvider(widget, () -> {
+                if (widget.fluid.isEmpty()) return null;
+                var fluid = widget.fluid;
+                return new EmiStackInteraction(EmiStack.of(fluid.getFluid(), fluid.getTag(), fluid.getAmount()),
+                        null, false);
+            });
+        }
     }
 }

@@ -1,8 +1,8 @@
 package com.gregtechceu.gtceu.integration.top.provider;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.IParallelHatch;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.recipe.ParallelType;
@@ -33,7 +33,7 @@ public class ParallelProvider implements IProbeInfoProvider {
     public void addProbeInfo(ProbeMode probeMode, IProbeInfo info, Player player, Level level,
                              BlockState blockState, IProbeHitData iProbeHitData) {
         BlockEntity blockEntity = level.getBlockEntity(iProbeHitData.getPos());
-        if (blockEntity instanceof MetaMachineBlockEntity machineBlockEntity) {
+        if (blockEntity instanceof IMachineBlockEntity machineBlockEntity) {
             var parallels = 0;
             var parallelsByType = Reference2IntMaps.<ParallelType>emptyMap();
             var exact = false;

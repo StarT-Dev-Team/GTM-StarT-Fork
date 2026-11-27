@@ -66,8 +66,8 @@ public class AllNBTPredicate extends NBTPredicate {
     public String toString() {
         return "AllNBTPredicate{" +
                 "children=[" + children.stream()
-                .map(Object::toString)
-                .collect(Collectors.joining(", ")) +
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", ")) +
                 "]}";
     }
 }

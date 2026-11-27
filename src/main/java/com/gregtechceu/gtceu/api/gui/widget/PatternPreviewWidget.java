@@ -3,7 +3,6 @@ package com.gregtechceu.gtceu.api.gui.widget;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.RotationState;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.widget.preview.*;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
@@ -17,21 +16,29 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.config.MultiblockPreviewConfig;
 import com.gregtechceu.gtceu.integration.xei.handlers.item.CycleItemStackHandler;
 
-import com.lowdragmc.lowdraglib.core.mixins.accessor.ParticleEngineAccessor;
-import com.lowdragmc.lowdraglib.gui.editor.ColorPattern;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.core.mixins.ParticleEngineAccessor;
+import com.lowdragmc.lowdraglib2.gui.ColorPattern;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
@@ -40,10 +47,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.emi.emi.screen.RecipeScreen;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import me.shedaniel.rei.impl.client.gui.screen.AbstractDisplayViewingScreen;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
@@ -52,7 +59,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @OnlyIn(Dist.CLIENT)
-public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWidget.Host, VariantSelectorUI.Host {
+public class PatternPreviewWidget extends UIElement implements PreviewSceneWidget.Host, VariantSelectorUI.Host {
 
     public static final int WIDGET_WIDTH = 214;
     public static final int WIDGET_HEIGHT = 206;
@@ -95,9 +102,9 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     private final PreviewState state;
 
     private final PatternSceneWidget sceneWidget;
-    private final DraggableScrollableWidgetGroup partsBar;
+    private final ScrollerView partsBar;
     private final VariantSelectorUI variantSelector;
-    private SlotWidget[] slotWidgets;
+    private PatternPreviewSlotWidget[] slotWidgets;
 
     private PreviewButton pageButton;
     private PreviewButton layerButton;
@@ -117,35 +124,43 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     private boolean isLoaded;
 
     protected PatternPreviewWidget(MultiblockMachineDefinition controllerDefinition) {
-        super(0, 0, WIDGET_WIDTH, WIDGET_HEIGHT);
-        setClientSideWidget();
+        layout(layout -> layout.width(WIDGET_WIDTH).height(WIDGET_HEIGHT));
         this.controllerDefinition = controllerDefinition;
         this.state = new PreviewState(controllerDefinition);
         this.variantSelector = new VariantSelectorUI(this, WIDGET_WIDTH, WIDGET_HEIGHT);
 
         this.sceneWidget = buildScene();
         this.partsBar = buildPartsBar();
-        addWidget(new ImageWidget(3, 3, WIDGET_WIDTH - 26, 10,
-                new TextTexture(controllerDefinition.getDescriptionId(), -1)
-                        .setType(TextTexture.TextType.ROLL)
-                        .setWidth(WIDGET_WIDTH - 26)
-                        .setDropShadow(true)));
+        var title = new UIElement();
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(3).top(3).width(WIDGET_WIDTH - 26)
+                .height(10));
+        title.style(style -> style.backgroundTexture(new TextTexture(controllerDefinition.getDescriptionId(), -1)
+                .setType(TextTexture.TextType.ROLL)
+                .setWidth(WIDGET_WIDTH - 26)
+                .setDropShadow(true)));
+        addChild(title);
 
         this.patterns = PatternLoader.loadPatterns(controllerDefinition,
                 positions -> sceneWidget.setRenderedCore(positions, null));
 
         buildControlButtons();
 
-        addWidget(variantSelector.getListGroup());
-        addWidget(variantSelector.getFlyoutGroup());
+        addChild(variantSelector.getListGroup());
+        addChild(variantSelector.getFlyoutGroup());
+        addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            if (variantSelector.isFlyoutOpen() && !variantSelector.isMouseOverAny(event.x, event.y)) {
+                variantSelector.closeFlyout();
+            }
+        }, true);
 
         setPage(getPage(this.controllerDefinition));
     }
 
     private PatternSceneWidget buildScene() {
-        PreviewSceneWidget scene = new PreviewSceneWidget(3, 3, WIDGET_WIDTH - 6, WIDGET_HEIGHT - 32,
-                PreviewLevel.get(), this);
-        addWidget(scene);
+        PreviewSceneWidget scene = new PreviewSceneWidget(PreviewLevel.get(), this);
+        scene.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(3).top(3).width(WIDGET_WIDTH - 6)
+                .height(WIDGET_HEIGHT - 32));
+        addChild(scene);
         scene.setOnSelected(this::onPosSelected);
         scene.setRenderFacing(false);
         scene.setBeforeBatchEnd(this::renderGrid);
@@ -156,17 +171,17 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         return scene;
     }
 
-    private DraggableScrollableWidgetGroup buildPartsBar() {
-        DraggableScrollableWidgetGroup bar = new DraggableScrollableWidgetGroup(3, WIDGET_HEIGHT - 28,
-                WIDGET_WIDTH - 8,
-                25)
-                .setXScrollBarHeight(4)
-                .setXBarStyle(GuiTextures.SLIDER_BACKGROUND, GuiTextures.BUTTON)
-                .setScrollable(true)
-                .setDraggable(true);
-        bar.setScrollWheelDirection(DraggableScrollableWidgetGroup.ScrollWheelDirection.HORIZONTAL);
-        bar.setScrollYOffset(0);
-        addWidget(bar);
+    private ScrollerView buildPartsBar() {
+        var bar = new ScrollerView();
+        bar.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(3).top(WIDGET_HEIGHT - 28)
+                .width(WIDGET_WIDTH - 8).height(25));
+        bar.scrollerStyle(style -> style.mode(ScrollerMode.HORIZONTAL)
+                .horizontalScrollDisplay(ScrollDisplay.AUTO));
+        bar.viewPort(viewPort -> {
+            viewPort.layout(layout -> layout.paddingAll(0));
+            viewPort.style(style -> style.backgroundTexture(IGuiTexture.EMPTY));
+        });
+        addChild(bar);
 
         if (ConfigHolder.INSTANCE.client.useVBO) {
             if (!RenderSystem.isOnRenderThread()) {
@@ -182,67 +197,67 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         boolean canRotate = canRotatePitch() || canRotateRoll();
         boolean canFlip = controllerDefinition.isAllowFlip();
 
-        addWidget(pageButton = new PreviewButton(COL_MIDDLE, ROW_PAGE, () -> "P:" + state.index,
-                cd -> updatePage(cd.button == 1))
+        addChild(pageButton = new PreviewButton(COL_MIDDLE, ROW_PAGE, () -> "P:" + state.index,
+                () -> updatePage(false))
                 .onRightClick(() -> updatePage(true))
                 .onWheel(delta -> stepPage(delta > 0 ? 1 : -1))
                 .dynamicTooltip(this::pageTooltip));
-        pageButton.setVisible(patterns.length > 1);
+        pageButton.setDisplay(patterns.length > 1);
 
-        addWidget(layerButton = new PreviewButton(COL_RIGHT, ROW_PAGE,
+        addChild(layerButton = new PreviewButton(COL_RIGHT, ROW_PAGE,
                 () -> state.layer >= 0 ? "L:" + state.layer : "ALL",
-                cd -> updateLayer(cd.button == 1))
+                () -> updateLayer(false))
                 .onRightClick(() -> updateLayer(true))
                 .onWheel(delta -> stepLayer(delta > 0 ? 1 : -1))
                 .dynamicTooltip(this::layerTooltip));
 
-        addWidget(graduationButton = new PreviewButton(COL_MIDDLE, ROW_GRID,
+        addChild(graduationButton = new PreviewButton(COL_MIDDLE, ROW_GRID,
                 () -> state.graduationStep() == 0 ? "OFF" : String.valueOf(state.graduationStep()),
-                cd -> state.cycleGraduation(cd.button == 1))
+                () -> state.cycleGraduation(false))
                 .onRightClick(() -> state.cycleGraduation(true))
                 .onWheel(delta -> state.cycleGraduation(delta < 0))
                 .dynamicTooltip(this::graduationTooltip));
-        graduationButton.setVisible(state.showGrid);
+        graduationButton.setDisplay(state.showGrid);
 
-        addWidget(gridButton = new PreviewButton(COL_RIGHT, ROW_GRID, () -> state.showGrid ? "ON" : "OFF",
-                cd -> toggleGrid())
+        addChild(gridButton = new PreviewButton(COL_RIGHT, ROW_GRID, () -> state.showGrid ? "ON" : "OFF",
+                () -> toggleGrid())
                 .dynamicTooltip(this::gridTooltip));
 
         if (canFlip) {
-            addWidget(flipButton = new PreviewButton(COL_RIGHT, ROW_ORIENT, () -> state.flipped ? "MIR" : "OFF",
-                    cd -> flipStructure())
+            addChild(flipButton = new PreviewButton(COL_RIGHT, ROW_ORIENT, () -> state.flipped ? "MIR" : "OFF",
+                    () -> flipStructure())
                     .dynamicTooltip(this::flipTooltip));
         }
 
         if (canRotate) {
-            addWidget(rotateButton = new PreviewButton(canFlip ? COL_MIDDLE : COL_RIGHT, ROW_ORIENT, () -> {
+            addChild(rotateButton = new PreviewButton(canFlip ? COL_MIDDLE : COL_RIGHT, ROW_ORIENT, () -> {
                 if (isRollMode()) {
                     return "R:" + state.upwardsFacing.getName().substring(0, 1).toUpperCase();
                 } else {
                     return "P:" + state.frontFacing.getName().substring(0, 1).toUpperCase();
                 }
-            }, cd -> rotateStructure(cd.button != 1))
+            }, () -> rotateStructure(true))
                     .onRightClick(() -> rotateStructure(false))
                     .onWheel(delta -> rotateStructure(delta > 0))
                     .dynamicTooltip(this::rotateTooltip));
         }
 
         if (canRotate || canFlip) {
-            addWidget(resetButton = new PreviewButton(canRotate && canFlip ? COL_LEFT : COL_MIDDLE, ROW_ORIENT,
-                    () -> "RST", cd -> resetOrientation())
+            addChild(resetButton = new PreviewButton(canRotate && canFlip ? COL_LEFT : COL_MIDDLE, ROW_ORIENT,
+                    () -> "RST", () -> resetOrientation())
                     .dynamicTooltip(this::resetTooltip));
-            resetButton.setVisible(!state.isDefaultOrientation(controllerDefinition));
+            resetButton.setDisplay(!state.isDefaultOrientation(controllerDefinition));
         }
 
         int turntableY = (canRotate || canFlip) ? ROW_TURNTABLE_SHIFTED : ROW_ORIENT;
-        addWidget(modeButton = new PreviewButton(COL_MIDDLE, turntableY, () -> state.mode.label,
-                cd -> cycleMode(cd.button == 1))
+        addChild(modeButton = new PreviewButton(COL_MIDDLE, turntableY, () -> state.mode.label,
+                () -> cycleMode(false))
                 .onRightClick(() -> cycleMode(true))
                 .onWheel(delta -> cycleMode(delta < 0))
                 .dynamicTooltip(this::modeTooltip));
 
-        addWidget(turntableButton = new PreviewButton(COL_RIGHT, turntableY, () -> state.turntable ? "ON" : "OFF",
-                cd -> toggleTurntable())
+        addChild(turntableButton = new PreviewButton(COL_RIGHT, turntableY, () -> state.turntable ? "ON" : "OFF",
+                () -> toggleTurntable())
                 .dynamicTooltip(this::turntableTooltip));
     }
 
@@ -386,7 +401,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
 
     public void toggleGrid() {
         state.toggleGrid();
-        graduationButton.setVisible(state.showGrid);
+        graduationButton.setDisplay(state.showGrid);
     }
 
     private void renderGrid(MultiBufferSource bufferSource, float partialTicks) {
@@ -585,7 +600,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
         applyMode(pattern);
         setupParts(pattern);
         if (resetButton != null) {
-            resetButton.setVisible(!isDefaultOrientation());
+            resetButton.setDisplay(!isDefaultOrientation());
         }
         variantSelector.closeFlyout();
         updateVariantUI();
@@ -611,22 +626,26 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     }
 
     public void setupParts(MBPattern pattern) {
-        if (slotWidgets != null) {
-            for (SlotWidget slotWidget : slotWidgets) {
-                partsBar.removeWidget(slotWidget);
-            }
-        }
-        slotWidgets = new SlotWidget[pattern.parts.size()];
+        partsBar.clearAllScrollViewChildren();
+        slotWidgets = new PatternPreviewSlotWidget[pattern.parts.size()];
         var itemHandler = new CycleItemStackHandler(pattern.parts);
+        var content = new UIElement();
         int xOffset = 0;
         for (int i = 0; i < slotWidgets.length; i++) {
             int padding = slotPadding(itemHandler.getStackInSlot(i).getCount());
-            slotWidgets[i] = new PatternPreviewSlotWidget(itemHandler, i, (4 + xOffset + padding), 0, false, false)
-                    .setBackgroundTexture(ColorPattern.T_GRAY.rectTexture())
-                    .setIngredientIO(IngredientIO.INPUT);
+            var slot = new PatternPreviewSlotWidget();
+            slot.bind(new ItemHandlerSlot(itemHandler, i).setCanTake(player -> false).setCanPlace(stack -> false));
+            slot.xeiRecipeIngredient(IngredientIO.INPUT).xeiRecipeSlot(IngredientIO.INPUT, 1);
+            slot.style(style -> style.backgroundTexture(ColorPattern.T_GRAY.rectTexture()));
+            var slotX = 4 + xOffset + padding;
+            slot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(slotX).top(0));
+            slotWidgets[i] = slot;
             xOffset += 18 + (2 * padding);
-            partsBar.addWidget(slotWidgets[i]);
+            content.addChild(slot);
         }
+        var contentWidth = xOffset + 8;
+        content.layout(layout -> layout.width(contentWidth).height(18));
+        partsBar.addScrollViewChild(content);
     }
 
     private static int slotPadding(int count) {
@@ -684,8 +703,8 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     }
 
     @Override
-    public Position widgetPosition() {
-        return getPosition();
+    public float widgetPositionY() {
+        return getPositionY();
     }
 
     @Override
@@ -700,8 +719,8 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     }
 
     @Override
-    public void updateScreen() {
-        super.updateScreen();
+    public void screenTick() {
+        super.screenTick();
         if (sceneWidget.isTurntableActive() != state.turntable) {
             sceneWidget.setTurntableActive(state.turntable);
         }
@@ -751,8 +770,14 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
             double xSpd = facing.getStepX() + (GTValues.RNG.nextFloat() - 0.5f) * 0.5f;
             double zSpd = facing.getStepZ() + (GTValues.RNG.nextFloat() - 0.5f) * 0.5f;
 
-            Particle particle = ((ParticleEngineAccessor) Minecraft.getInstance().particleEngine)
-                    .invokeMakeParticle(GTParticleTypes.MUFFLER_PARTICLE.get(), xPos, yPos, zPos, xSpd, ySpd, zSpd);
+            var particleType = GTParticleTypes.MUFFLER_PARTICLE.get();
+            var providers = ((ParticleEngineAccessor) Minecraft.getInstance().particleEngine).getProviders();
+            @SuppressWarnings("unchecked")
+            var provider = (ParticleProvider<ParticleOptions>) providers
+                    .get(BuiltInRegistries.PARTICLE_TYPE.getKey(particleType));
+            Particle particle = provider == null ? null :
+                    provider.createParticle(particleType, Minecraft.getInstance().level, xPos, yPos, zPos, xSpd,
+                            ySpd, zSpd);
             if (particle != null) {
                 particleManager.addParticle(particle);
             }
@@ -760,31 +785,7 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
     }
 
     @Override
-    public boolean mouseWheelMove(double mouseX, double mouseY, double wheelDelta) {
-        for (PreviewButton button : new PreviewButton[] { pageButton, layerButton, graduationButton,
-                rotateButton, modeButton }) {
-            if (button != null && button.isVisible() && button.isMouseOverElement(mouseX, mouseY) &&
-                    button.mouseWheelMove(mouseX, mouseY, wheelDelta)) {
-                return true;
-            }
-        }
-        if (variantSelector.mouseWheelMove(mouseX, mouseY, wheelDelta)) {
-            return true;
-        }
-        return super.mouseWheelMove(mouseX, mouseY, wheelDelta);
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (variantSelector.isFlyoutOpen() && variantSelector.getFlyoutGroup().isVisible() &&
-                !variantSelector.isMouseOverAny(mouseX, mouseY)) {
-            variantSelector.closeFlyout();
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
-    public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void drawBackgroundAdditional(GUIContext guiContext) {
         RenderSystem.enableBlend();
         if (state.mode == PreviewMode.ACTIVE) {
             long now = System.currentTimeMillis();
@@ -793,6 +794,6 @@ public class PatternPreviewWidget extends WidgetGroup implements PreviewSceneWid
                 updateActiveSimulation();
             }
         }
-        super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
+        super.drawBackgroundAdditional(guiContext);
     }
 }

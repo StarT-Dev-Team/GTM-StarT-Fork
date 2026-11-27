@@ -4,15 +4,16 @@ import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.filter.ItemFilter;
 import com.gregtechceu.gtceu.api.cover.filter.SimpleItemFilter;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.common.cover.data.VoidingMode;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
@@ -39,7 +40,7 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
     @Getter
     protected int globalVoidingLimit = 1;
 
-    private IntInputWidget stackSizeInput;
+    private IntInput stackSizeInput;
 
     public AdvancedItemVoidingCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide) {
         super(definition, coverHolder, attachedSide);
@@ -98,7 +99,6 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
 
     public void setVoidingMode(VoidingMode voidingMode) {
         this.voidingMode = voidingMode;
-
         configureStackSizeInput();
 
         if (!this.isRemote()) {
@@ -116,15 +116,23 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
     }
 
     @Override
-    protected void buildAdditionalUI(WidgetGroup group) {
-        group.addWidget(
-                new EnumSelectorWidget<>(146, 20, 20, 20, VoidingMode.values(), voidingMode, this::setVoidingMode));
-
-        this.stackSizeInput = new IntInputWidget(64, 20, 80, 20,
-                () -> globalVoidingLimit, val -> globalVoidingLimit = val);
+    protected void buildAdditionalUI(UIElement group, UIElement actions) {
+        var input = new IntInput(() -> globalVoidingLimit, val -> globalVoidingLimit = val);
+        input.layout(layout -> layout.flex(1).height(20));
+        this.stackSizeInput = input;
         configureStackSizeInput();
 
-        group.addWidget(this.stackSizeInput);
+        group.addChildren(
+                new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(this::shouldShowStackSize)
+                        .remoteSetter(input::setDisplay)
+                        .build()),
+                new BindableValue<Integer>().bind(DataBindingBuilder.intValS2C(() -> voidingMode.maxStackSize)
+                        .remoteSetter(input::setMax)
+                        .build()));
+
+        group.addChild(input);
+
+        actions.addChild(new EnumSelector<>(VoidingMode.values(), () -> voidingMode, this::setVoidingMode));
     }
 
     @Override
@@ -140,7 +148,7 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
         if (this.stackSizeInput == null)
             return;
 
-        this.stackSizeInput.setVisible(shouldShowStackSize());
+        this.stackSizeInput.setDisplay(shouldShowStackSize());
         this.stackSizeInput.setMin(1);
         this.stackSizeInput.setMax(this.voidingMode.maxStackSize);
     }
@@ -158,12 +166,4 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
     //////////////////////////////////////
     // ***** LDLib SyncData ******//
     //////////////////////////////////////
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(AdvancedItemVoidingCover.class,
-            ItemVoidingCover.MANAGED_FIELD_HOLDER);
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 }

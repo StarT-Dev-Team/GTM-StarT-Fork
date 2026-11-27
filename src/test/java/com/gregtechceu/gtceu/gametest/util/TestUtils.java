@@ -2,7 +2,6 @@ package com.gregtechceu.gtceu.gametest.util;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
@@ -268,11 +267,11 @@ public class TestUtils {
     /**
      * Shortcut function to retrieve a metamachine from a blockentity's
      *
-     * @param entity The MetaMachineBlockEntity
+     * @param entity The IMachineBlockEntity
      * @return the machine held, if any
      */
     public static MetaMachine getMetaMachine(BlockEntity entity) {
-        return ((MetaMachineBlockEntity) entity).getMetaMachine();
+        return ((IMachineBlockEntity) entity).getMetaMachine();
     }
 
     /**

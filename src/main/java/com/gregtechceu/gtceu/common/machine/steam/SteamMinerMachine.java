@@ -5,8 +5,8 @@ import com.gregtechceu.gtceu.api.capability.IMiner;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.PredicatedImageWidget;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ComponentPanel;
+import com.gregtechceu.gtceu.api.gui.widget.PredicatedImage;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.*;
@@ -18,13 +18,13 @@ import com.gregtechceu.gtceu.common.item.PortableScannerBehavior;
 import com.gregtechceu.gtceu.common.machine.trait.miner.SteamMinerLogic;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -38,6 +38,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -169,38 +170,52 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
     @Override
     public ModularUI createUI(Player entityPlayer) {
         int rowSize = (int) Math.sqrt(inventorySize);
-
-        ModularUI builder = new ModularUI(175, 176, this, entityPlayer)
-                .background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure()));
-        builder.widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(),
-                GuiTextures.SLOT_STEAM.get(isHighPressure()), 7,
-                94, true));
+        var area = new UIElement();
+        area.layout(layout -> layout.widthPercent(100).height(94));
 
         for (int y = 0; y < rowSize; y++) {
             for (int x = 0; x < rowSize; x++) {
                 int index = y * rowSize + x;
-                builder.widget(new SlotWidget(exportItems, index, 142 - rowSize * 9 + x * 18, 18 + y * 18, true, false)
-                        .setBackgroundTexture(GuiTextures.SLOT_STEAM.get(isHighPressure())));
+                var slot = new ItemSlot();
+                slot.bind(new ItemHandlerSlot(exportItems, index).setCanPlace(stack -> false));
+                slot.style(style -> style.backgroundTexture(GuiTextures.SLOT_STEAM.get(isHighPressure())));
+                int left = 142 - rowSize * 9 + x * 18;
+                int top = 18 + y * 18;
+                slot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(left).top(top));
+                area.addChild(slot);
             }
         }
 
-        builder.widget(new LabelWidget(5, 5, getBlockState().getBlock().getDescriptionId()));
-        builder.widget(new PredicatedImageWidget(79, 42, 18, 18, GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure()))
-                .setPredicate(() -> !drainInput(true)));
-        builder.widget(new ImageWidget(7, 16, 105, 75, GuiTextures.DISPLAY_STEAM.get(isHighPressure())));
-        builder.widget(new ComponentPanelWidget(10, 19, this::addDisplayText)
-                .setMaxWidthLimit(84));
-        builder.widget(new ComponentPanelWidget(70, 19, this::addDisplayText2)
-                .setMaxWidthLimit(84));
+        var title = UITemplate.title(Component.translatable(getBlockState().getBlock().getDescriptionId()), 5);
 
-        return builder;
+        var indicator = new PredicatedImage(GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure()),
+                () -> !drainInput(true));
+        indicator.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(91).top(70).width(18).height(18));
+
+        var display = new UIElement();
+        display.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(7).top(16).width(105).height(75));
+        display.style(style -> style.backgroundTexture(GuiTextures.DISPLAY_STEAM.get(isHighPressure())));
+
+        var text = new ComponentPanel(this::addDisplayText).setMaxWidthLimit(97);
+        text.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(11).top(20).gapAll(1));
+
+        area.addChildren(title, display, indicator, text);
+
+        var root = UITemplate.panel();
+        root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure())));
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(5).gapAll(0));
+        root.addChildren(area, UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(isHighPressure())));
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     void addDisplayText(List<Component> textList) {
         int workingArea = IMiner.getWorkingArea(getRecipeLogic().getCurrentRadius());
-        textList.add(Component.translatable("gtceu.machine.miner.startx", this.getRecipeLogic().getX()));
-        textList.add(Component.translatable("gtceu.machine.miner.starty", this.getRecipeLogic().getY()));
-        textList.add(Component.translatable("gtceu.machine.miner.startz", this.getRecipeLogic().getZ()));
+        textList.add(Component.translatable("gtceu.machine.miner.startx", getRecipeLogic().getX()).append(" ")
+                .append(Component.translatable("gtceu.machine.miner.minex", getRecipeLogic().getMineX())));
+        textList.add(Component.translatable("gtceu.machine.miner.starty", getRecipeLogic().getY()).append(" ")
+                .append(Component.translatable("gtceu.machine.miner.miney", getRecipeLogic().getMineY())));
+        textList.add(Component.translatable("gtceu.machine.miner.startz", getRecipeLogic().getZ()).append(" ")
+                .append(Component.translatable("gtceu.machine.miner.minez", getRecipeLogic().getMineZ())));
         textList.add(Component.translatable("gtceu.universal.tooltip.working_area", workingArea, workingArea));
         if (this.getRecipeLogic().isDone())
             textList.add(Component.translatable("gtceu.multiblock.large_miner.done")
@@ -219,12 +234,6 @@ public class SteamMinerMachine extends SteamWorkableMachine implements IMiner, I
         else if (!drainInput(true))
             textList.add(Component.translatable("gtceu.multiblock.large_miner.steam")
                     .withStyle(ChatFormatting.RED));
-    }
-
-    void addDisplayText2(List<Component> textList) {
-        textList.add(Component.translatable("gtceu.machine.miner.minex", this.getRecipeLogic().getMineX()));
-        textList.add(Component.translatable("gtceu.machine.miner.miney", this.getRecipeLogic().getMineY()));
-        textList.add(Component.translatable("gtceu.machine.miner.minez", this.getRecipeLogic().getMineZ()));
     }
 
     public boolean drainInput(boolean simulate) {

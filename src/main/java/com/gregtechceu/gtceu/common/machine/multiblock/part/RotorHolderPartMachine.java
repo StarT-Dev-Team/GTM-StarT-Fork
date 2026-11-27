@@ -4,7 +4,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.data.chemical.material.properties.PropertyKey;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.BlockableSlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.BlockableItemSlot;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
@@ -17,12 +17,10 @@ import com.gregtechceu.gtceu.common.data.GTDamageTypes;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.item.TurbineRotorBehaviour;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -34,6 +32,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
+import dev.vfyjxf.taffy.style.AlignItems;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -47,9 +46,6 @@ import static com.gregtechceu.gtceu.api.machine.property.GTMachineModelPropertie
 @MethodsReturnNonnullByDefault
 public class RotorHolderPartMachine extends TieredPartMachine
                                     implements IMachineLife, IRotorHolderMachine, IInteractedMachine {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            RotorHolderPartMachine.class, TieredPartMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
     @DescSynced
@@ -80,11 +76,6 @@ public class RotorHolderPartMachine extends TieredPartMachine
     //////////////////////////////////////
     // ***** Initialization ******//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     @Override
     public void onMachineRemoved() {
         clearInventory(inventory.storage);
@@ -238,14 +229,20 @@ public class RotorHolderPartMachine extends TieredPartMachine
     // ********** GUI ***********//
     //////////////////////////////////////
     @Override
-    public Widget createUIWidget() {
-        var group = new WidgetGroup(0, 0, 18 + 16, 18 + 16);
-        var container = new WidgetGroup(4, 4, 18 + 8, 18 + 8);
-        container.addWidget(new BlockableSlotWidget(inventory.storage, 0, 4, 4)
-                .setIsBlocked(() -> rotorSpeed != 0)
-                .setBackground(GuiTextures.SLOT, GuiTextures.TURBINE_OVERLAY));
-        container.setBackground(GuiTextures.BACKGROUND_INVERSE);
-        group.addWidget(container);
+    public UIElement createUIWidget() {
+        var slot = new BlockableItemSlot();
+        slot.setIsBlocked(() -> rotorSpeed != 0);
+        slot.bind(inventory.storage, 0);
+        slot.slotStyle(style -> style.slotOverlay(GuiTextures.TURBINE_OVERLAY));
+
+        var container = new UIElement();
+        container.layout(layout -> layout.paddingAll(4));
+        container.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
+        container.addChild(slot);
+
+        var group = new UIElement();
+        group.layout(layout -> layout.alignItems(AlignItems.CENTER).paddingAll(4));
+        group.addChild(container);
         return group;
     }
 }

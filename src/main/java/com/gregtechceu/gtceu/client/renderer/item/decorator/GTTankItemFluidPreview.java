@@ -3,8 +3,7 @@ package com.gregtechceu.gtceu.client.renderer.item.decorator;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
-import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -102,11 +101,12 @@ public class GTTankItemFluidPreview implements IItemDecorator {
             if (!fluidInTank.isEmpty()) {
                 DrawerHelper.drawFluidForGui(
                         guiGraphics,
-                        FluidHelperImpl.toFluidStack(fluidInTank),
+                        fluidInTank,
                         x + OFFSET[renderedCount][0],
                         y + OFFSET[renderedCount][1],
                         8.0F,
-                        8.0F);
+                        8.0F,
+                        -1);
                 renderedCount++;
             }
         }

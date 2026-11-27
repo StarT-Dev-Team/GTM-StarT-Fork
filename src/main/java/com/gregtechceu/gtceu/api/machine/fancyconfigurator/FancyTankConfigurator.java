@@ -2,15 +2,15 @@ package com.gregtechceu.gtceu.api.machine.fancyconfigurator;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfigurator;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
 
 import net.minecraft.network.chat.Component;
 
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -41,7 +41,7 @@ public class FancyTankConfigurator implements IFancyConfigurator {
     }
 
     @Override
-    public Widget createConfigurator() {
+    public UIElement createConfigurator() {
         int rowSize = (int) Math.sqrt(tanks.length);
         int colSize = rowSize;
         if (tanks.length == 8) {
@@ -49,19 +49,22 @@ public class FancyTankConfigurator implements IFancyConfigurator {
             colSize = 2;
         }
 
-        var group = new WidgetGroup(0, 0, 18 * rowSize + 16, 18 * colSize + 16);
-        var container = new WidgetGroup(4, 4, 18 * rowSize + 8, 18 * colSize + 8);
+        var group = new UIElement().layout(layout -> layout.paddingAll(4));
+        var container = new UIElement().layout(layout -> layout.paddingAll(4));
+        container.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
 
         int index = 0;
         for (int y = 0; y < colSize; y++) {
+            var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < rowSize; x++) {
-                container.addWidget(new TankWidget(tanks[index++], 4 + x * 18, 4 + y * 18, true, true)
-                        .setBackground(GuiTextures.FLUID_SLOT));
+                var slot = new FluidSlot().bind(tanks[index++], 0);
+                slot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+                row.addChild(slot);
             }
+            container.addChild(row);
         }
 
-        container.setBackground(GuiTextures.BACKGROUND_INVERSE);
-        group.addWidget(container);
+        group.addChild(container);
 
         return group;
     }

@@ -1,22 +1,25 @@
 package com.gregtechceu.gtceu.common.item;
 
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.item.component.IAddInformation;
 import com.gregtechceu.gtceu.api.item.component.IItemUIFactory;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
-import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -29,6 +32,9 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.FlexWrap;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -41,11 +47,6 @@ public class IntCircuitBehaviour implements IItemUIFactory, IAddInformation {
         var stack = GTItems.PROGRAMMED_CIRCUIT.asStack();
         setCircuitConfiguration(stack, configuration);
         return stack;
-    }
-
-    public static void setCircuitConfiguration(HeldItemUIFactory.HeldItemHolder holder, int configuration) {
-        setCircuitConfiguration(holder.getHeld(), configuration);
-        holder.markAsDirty();
     }
 
     public static void setCircuitConfiguration(ItemStack itemStack, int configuration) {
@@ -76,13 +77,6 @@ public class IntCircuitBehaviour implements IItemUIFactory, IAddInformation {
 
     // deprecated, not needed (for now)
     @Deprecated
-    public static void adjustConfiguration(HeldItemUIFactory.HeldItemHolder holder, int amount) {
-        adjustConfiguration(holder.getHeld(), amount);
-        holder.markAsDirty();
-    }
-
-    // deprecated, not needed (for now)
-    @Deprecated
     public static void adjustConfiguration(ItemStack stack, int amount) {
         if (!isIntegratedCircuit(stack)) return;
         int configuration = getCircuitConfiguration(stack);
@@ -99,41 +93,39 @@ public class IntCircuitBehaviour implements IItemUIFactory, IAddInformation {
     }
 
     @Override
-    public ModularUI createUI(HeldItemUIFactory.HeldItemHolder holder, Player entityPlayer) {
-        LabelWidget label = new LabelWidget(9, 8, "Programmed Circuit Configuration");
-        label.setDropShadow(false);
-        label.setTextColor(0x404040);
-        var modular = new ModularUI(184, 132, holder, entityPlayer)
-                .widget(label);
-        SlotWidget slotwidget = new SlotWidget(
-                new CustomItemStackHandler(stack(getCircuitConfiguration(holder.getHeld()))),
-                0, 82, 20, false, false);
-        slotwidget.setBackground(GuiTextures.SLOT);
-        modular.widget(slotwidget);
-        int idx = 0;
-        for (int x = 0; x <= 2; x++) {
-            for (int y = 0; y <= 8; y++) {
-                int finalIdx = idx;
-                modular.widget(new ButtonWidget(10 + (18 * y), 48 + (18 * x), 18, 18,
-                        new GuiTextureGroup(GuiTextures.SLOT, new ItemStackTexture(stack(finalIdx)).scale(16f / 18)),
-                        data -> {
-                            setCircuitConfiguration(holder, finalIdx);
-                            slotwidget.setHandlerSlot(new CustomItemStackHandler(stack(finalIdx)), 0);
-                        }));
-                idx++;
-            }
+    public ModularUI createUI(HeldItemUIMenuType.HeldItemUIHolder holder, Player entityPlayer) {
+        var root = UITemplate.panel();
+        root.layout(layout -> layout.width(184).paddingAll(9).gapAll(4));
+
+        var label = new Label().setText(Component.literal("Programmed Circuit Configuration"));
+        label.layout(l -> l.widthPercent(100));
+        label.textStyle(style -> style.textColor(0x404040).textShadow(false));
+        root.addChild(label);
+
+        var slot = new ItemSlot().bind(DataBindingBuilder
+                .itemStackS2C(() -> stack(getCircuitConfiguration(holder.itemStack))).build());
+        slot.style(style -> style.backgroundTexture(GuiTextures.SLOT));
+        var slotRow = new UIElement().layout(layout -> layout.alignItems(AlignItems.CENTER));
+        slotRow.addChild(slot);
+        root.addChild(slotRow);
+
+        var grid = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW)
+                .flexWrap(FlexWrap.WRAP));
+        for (int idx = 0; idx <= 32; idx++) {
+            int finalIdx = idx;
+            var button = new Button().noText();
+            button.layout(layout -> layout.width(18).height(18));
+            var circuitTexture = new ItemStackTexture(stack(finalIdx)).scale(16f / 18);
+            var slotButtonTexture = IGuiTexture.group(GuiTextures.SLOT, circuitTexture);
+            var slotButtonHoverTexture = IGuiTexture.group(slotButtonTexture,
+                    new ColorRectTexture(0x80FFFFFF).scale(16f / 18));
+            button.buttonStyle(style -> style.baseTexture(IGuiTexture.group(GuiTextures.SLOT, circuitTexture))
+                    .hoverTexture(slotButtonHoverTexture).pressedTexture(slotButtonHoverTexture));
+            button.setOnServerClick(event -> setCircuitConfiguration(holder.itemStack, finalIdx));
+            grid.addChild(button);
         }
-        for (int x = 0; x <= 5; x++) {
-            int finalIdx = x + 27;
-            modular.widget(new ButtonWidget(10 + (18 * x), 102, 18, 18,
-                    new GuiTextureGroup(GuiTextures.SLOT, new ItemStackTexture(stack(finalIdx)).scale(16f / 18)),
-                    data -> {
-                        setCircuitConfiguration(holder, finalIdx);
-                        slotwidget.setHandlerSlot(new CustomItemStackHandler(stack(finalIdx)), 0);
-                    }));
-        }
-        modular.mainGroup.setBackground(GuiTextures.BACKGROUND);
-        return modular;
+        root.addChild(grid);
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     @Override
@@ -141,8 +133,8 @@ public class IntCircuitBehaviour implements IItemUIFactory, IAddInformation {
         var stack = context.getItemInHand();
         int circuitSetting = getCircuitConfiguration(stack);
         BlockEntity entity = context.getLevel().getBlockEntity(context.getClickedPos());
-        if (entity instanceof MetaMachineBlockEntity machineEntity && context.isSecondaryUseActive()) {
-            if (machineEntity.metaMachine instanceof IHasCircuitSlot circuitMachine &&
+        if (entity instanceof IMachineBlockEntity machineEntity && context.isSecondaryUseActive()) {
+            if (machineEntity.getMetaMachine() instanceof IHasCircuitSlot circuitMachine &&
                     circuitMachine.getCircuitInventory().getSlots() > 0) {
                 if (!circuitMachine.isCircuitPastingBlocked()) {
                     setCircuitConfig(circuitMachine.getCircuitInventory(), circuitSetting);

@@ -7,18 +7,14 @@ import com.gregtechceu.gtceu.api.cover.filter.FilterHandler;
 import com.gregtechceu.gtceu.api.cover.filter.FilterHandlers;
 import com.gregtechceu.gtceu.api.cover.filter.FluidFilter;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.TextBoxWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
@@ -28,6 +24,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,14 +40,6 @@ import static com.gregtechceu.gtceu.utils.RedstoneUtil.computeRedstoneBetweenVal
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AdvancedFluidDetectorCover extends FluidDetectorCover implements IUICover {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            AdvancedFluidDetectorCover.class, FluidDetectorCover.MANAGED_FIELD_HOLDER);
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 
     private static final int DEFAULT_MIN = 64;
     private static final int DEFAULT_MAX = 512;
@@ -148,45 +139,63 @@ public class AdvancedFluidDetectorCover extends FluidDetectorCover implements IU
     //////////////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(0, 0, 176, 195);
-        group.addWidget(new LabelWidget(10, 5, "cover.advanced_fluid_detector.label"));
+    public Component getCoverUITitle() {
+        return Component.translatable("cover.advanced_fluid_detector.label");
+    }
 
-        group.addWidget(new TextBoxWidget(10, 55, 65,
-                List.of(LocalizationUtils.format("cover.advanced_fluid_detector.min"))));
+    @Override
+    public UIElement createUIWidget() {
+        var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
+        group.addChild(new Label().setText(Component.translatable("cover.advanced_fluid_detector.label")));
 
-        group.addWidget(new TextBoxWidget(10, 80, 65,
-                List.of(LocalizationUtils.format("cover.advanced_fluid_detector.max"))));
-
-        group.addWidget(new TextBoxWidget(10, 105, 65,
-                List.of(LocalizationUtils.format("cover.advanced_detector.ticks_per_cycle")))
-                .setHoverTooltips(Component.translatable("cover.advanced_detector.ticks_per_cycle.tooltip")));
-
-        group.addWidget(new IntInputWidget(80, 50, 176 - 80 - 10, 20, this::getMinValue, this::setMinValue));
-        group.addWidget(new IntInputWidget(80, 75, 176 - 80 - 10, 20, this::getMaxValue, this::setMaxValue));
-        group.addWidget(new IntInputWidget(80, 100, 176 - 80 - 10, 20, this::getTicksPerCycle, this::setTicksPerCycle)
-                .setMin(ConfigHolder.INSTANCE.machines.coverMinTicksPerCycle));
-
-        // Invert Redstone Output Toggle:
-        group.addWidget(new ToggleButtonWidget(
-                9, 20, 20, 20,
-                GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
+        var toggles = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3));
+        toggles.addChild(new ToggleButton(GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
                 .isMultiLang()
                 .setTooltipText("cover.advanced_fluid_detector.invert"));
-
-        group.addWidget(
-                new ToggleButtonWidget(31, 21, 18, 18, GuiTextures.BUTTON_LOCK, this::isLatched, this::setLatched)
-                        .setShouldUseBaseBackground()
-                        .isMultiLang()
-                        .setTooltipText("cover.advanced_detector.latch"));
-
-        group.addWidget(new ToggleButtonWidget(52, 21, 18, 18,
-                GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
+        toggles.addChild(new ToggleButton(GuiTextures.BUTTON_LOCK, this::isLatched, this::setLatched)
+                .setShouldUseBaseBackground()
                 .isMultiLang()
-                .setTooltipText("cover.advanced_detector.signal"));
+                .setTooltipText("cover.advanced_detector.latch"));
+        toggles.addChild(
+                new ToggleButton(GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
+                        .isMultiLang()
+                        .setTooltipText("cover.advanced_detector.signal"));
+        group.addChild(toggles);
 
-        group.addWidget(filterHandler.createFilterSlotUI(148, 125));
-        group.addWidget(filterHandler.createFilterConfigUI(10, 125, 156, 60));
+        var row0 = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        var label0 = new Label().setText(Component.translatable("cover.advanced_fluid_detector.min"));
+        label0.layout(layout -> layout.width(65));
+        var input0 = new IntInput(this::getMinValue, this::setMinValue);
+        input0.layout(layout -> layout.flex(1).height(20));
+        row0.addChildren(label0, input0);
+        group.addChild(row0);
+
+        var row1 = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        var label1 = new Label().setText(Component.translatable("cover.advanced_fluid_detector.max"));
+        label1.layout(layout -> layout.width(65));
+        var input1 = new IntInput(this::getMaxValue, this::setMaxValue);
+        input1.layout(layout -> layout.flex(1).height(20));
+        row1.addChildren(label1, input1);
+        group.addChild(row1);
+
+        var row2 = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        var label2 = new Label().setText(Component.translatable("cover.advanced_detector.ticks_per_cycle"));
+        label2.layout(layout -> layout.width(65));
+        label2.style(style -> style.tooltips("cover.advanced_detector.ticks_per_cycle.tooltip"));
+        var input2 = new IntInput(this::getTicksPerCycle, this::setTicksPerCycle);
+        input2.setMin(ConfigHolder.INSTANCE.machines.coverMinTicksPerCycle);
+        input2.layout(layout -> layout.flex(1).height(20));
+        row2.addChildren(label2, input2);
+        group.addChild(row2);
+
+        var filter = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .justifyContent(AlignContent.SPACE_BETWEEN));
+        filter.addChild(filterHandler.createFilterConfigUI());
+        filter.addChild(filterHandler.createFilterSlotUI());
+        group.addChild(filter);
 
         return group;
     }

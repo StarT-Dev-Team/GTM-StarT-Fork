@@ -7,7 +7,7 @@ import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlags;
 import com.gregtechceu.gtceu.api.data.chemical.material.properties.PropertyKey;
 
-import com.lowdragmc.lowdraglib.jei.ModularUIRecipeCategory;
+import com.lowdragmc.lowdraglib2.integration.xei.jei.ModularUIRecipeCategory;
 
 import net.minecraft.network.chat.Component;
 
@@ -31,6 +31,7 @@ public class GTOreProcessingInfoCategory extends ModularUIRecipeCategory<GTOrePr
     private final IDrawable icon;
 
     public GTOreProcessingInfoCategory(IJeiHelpers helpers) {
+        super(GTOreProcessingInfoWrapper::createModularUI);
         IGuiHelper guiHelper = helpers.getGuiHelper();
         this.background = guiHelper.createBlankDrawable(186, 174);
         this.icon = helpers.getGuiHelper().createDrawableItemStack(ChemicalHelper.get(rawOre, Iron));
@@ -76,5 +77,15 @@ public class GTOreProcessingInfoCategory extends ModularUIRecipeCategory<GTOrePr
     @Override
     public IDrawable getIcon() {
         return icon;
+    }
+
+    @Override
+    public int getWidth() {
+        return 186;
+    }
+
+    @Override
+    public int getHeight() {
+        return 174;
     }
 }

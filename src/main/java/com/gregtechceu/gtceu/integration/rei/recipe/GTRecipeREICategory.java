@@ -6,10 +6,10 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.category.GTRecipeCategory;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
+import com.gregtechceu.gtceu.integration.rei.REIIcons;
 
-import com.lowdragmc.lowdraglib.rei.IGui2Renderer;
-import com.lowdragmc.lowdraglib.rei.ModularUIDisplayCategory;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplayCategory;
+import com.lowdragmc.lowdraglib2.math.Size;
 
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
@@ -39,11 +39,12 @@ public class GTRecipeREICategory extends ModularUIDisplayCategory<GTRecipeDispla
     private final Size size;
 
     public GTRecipeREICategory(@NotNull GTRecipeCategory category) {
+        super(GTRecipeDisplay::createModularUI);
         this.category = category;
         var recipeType = category.getRecipeType();
         var size = recipeType.getRecipeUI().getJEISize();
-        this.size = new Size(size.width + 8, size.height + 8);
-        this.icon = IGui2Renderer.toDrawable(category.getIcon());
+        this.size = Size.of(size.width + 8, size.height + 8);
+        this.icon = REIIcons.of(category.getIcon());
     }
 
     public static void registerDisplays(DisplayRegistry registry) {

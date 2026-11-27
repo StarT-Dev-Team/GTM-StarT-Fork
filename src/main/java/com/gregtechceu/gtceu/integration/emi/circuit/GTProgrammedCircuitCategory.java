@@ -3,9 +3,10 @@ package com.gregtechceu.gtceu.integration.emi.circuit;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
+import com.gregtechceu.gtceu.integration.xei.GTXEIUI;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTProgrammedCircuitWidget;
 
-import com.lowdragmc.lowdraglib.emi.ModularEmiRecipe;
+import com.lowdragmc.lowdraglib2.integration.xei.emi.ModularUIEMIRecipe;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -35,10 +36,10 @@ public class GTProgrammedCircuitCategory extends EmiRecipeCategory {
         return Component.translatable("gtceu.jei.programmed_circuit");
     }
 
-    public static class GTProgrammedCircuitWrapper extends ModularEmiRecipe<GTProgrammedCircuitWidget> {
+    public static class GTProgrammedCircuitWrapper extends ModularUIEMIRecipe {
 
         public GTProgrammedCircuitWrapper() {
-            super(GTProgrammedCircuitWidget::new);
+            super(recipe -> GTXEIUI.of(new GTProgrammedCircuitWidget()));
         }
 
         @Override
@@ -48,7 +49,12 @@ public class GTProgrammedCircuitCategory extends EmiRecipeCategory {
 
         @Override
         public int getDisplayWidth() {
-            return super.getDisplayWidth();
+            return 150;
+        }
+
+        @Override
+        public int getDisplayHeight() {
+            return 80;
         }
 
         @Override

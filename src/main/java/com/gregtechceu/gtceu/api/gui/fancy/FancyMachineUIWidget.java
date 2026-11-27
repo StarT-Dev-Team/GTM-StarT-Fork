@@ -1,97 +1,180 @@
 package com.gregtechceu.gtceu.api.gui.fancy;
 
-import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.config.ConfigHolder;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.gui.widget.custom.PlayerInventoryWidget;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
+
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Getter
-public class FancyMachineUIWidget extends WidgetGroup {
+public class FancyMachineUIWidget extends UIElement {
+
+    public static final int INVENTORY_HEIGHT = 86;
+    public static final String NAVIGATION_MESSAGE = "gtceu:fancy_navigation";
+
+    protected static final int NAV_TAB = 0;
+    protected static final int NAV_BACK = 1;
+    protected static final int NAV_PAGE_SWITCHER = 2;
+    protected static final int NAV_SWITCH_PAGE = 3;
 
     protected final TitleBarWidget titleBar;
     protected final VerticalTabsWidget sideTabsWidget;
-    protected final WidgetGroup pageContainer;
+    protected final UIElement pageContainer;
     protected final PageSwitcher pageSwitcher;
-    protected final ConfiguratorPanel configuratorPanel;
-    protected final ConfiguratorPanel autoPushConfiguratorPanel;
-    protected final TooltipsPanel tooltipsPanel;
+    protected final UIElement configuratorHost;
+    protected final UIElement autoPushConfiguratorHost;
+    protected final UIElement tooltipsHost;
 
     @Nullable
-    protected final PlayerInventoryWidget playerInventory;
-    @Setter
-    protected int border = 4;
+    protected final InventorySlots playerInventory;
+    protected final int border = 4;
+    protected final int minWidth;
+    protected final int minPageHeight;
 
     protected final IFancyUIProvider mainPage;
 
-    /*
-     * Current Page: The page visible in the UI
-     * Current Home Page: The currently selected multiblock part's home page.
-     */
     protected IFancyUIProvider currentPage;
     protected IFancyUIProvider currentHomePage;
 
-    protected List<IFancyUIProvider> allPages;
+    protected final List<IFancyUIProvider> allPages;
 
-    protected Deque<NavigationEntry> previousPages = new ArrayDeque<>();
+    protected final Deque<NavigationEntry> previousPages = new ArrayDeque<>();
+    protected final Map<IFancyUIProvider, Page> pages = new IdentityHashMap<>();
+    protected final Map<IFancyUIProvider, SideTabs> sideTabs = new IdentityHashMap<>();
 
     protected record NavigationEntry(IFancyUIProvider page, IFancyUIProvider homePage, Runnable onNavigation) {}
 
-    public FancyMachineUIWidget(IFancyUIProvider mainPage, int width, int height) {
-        super(0, 0, width, height);
-        this.mainPage = mainPage;
+    protected record SideTabs(@Nullable IFancyUIProvider mainTab, List<IFancyUIProvider> subTabs) {}
 
-        addWidget(this.pageContainer = new WidgetGroup(0, 0, width, height));
-
-        if (mainPage.hasPlayerInventory()) {
-            addWidget(this.playerInventory = new PlayerInventoryWidget());
-            this.playerInventory.setSelfPosition(new Position(2, height - 86));
-            this.playerInventory.setBackground((IGuiTexture) null);
-        } else {
-            playerInventory = null;
-        }
-
-        addWidget(this.titleBar = new TitleBarWidget(width, this::navigateBack, this::openPageSwitcher));
-        addWidget(this.sideTabsWidget = new VerticalTabsWidget(this::navigate, -20, 0, 24, height));
-        addWidget(this.tooltipsPanel = new TooltipsPanel());
-        addWidget(this.configuratorPanel = new ConfiguratorPanel(-(24 + 2), height));
-        addWidget(this.autoPushConfiguratorPanel = new ConfiguratorPanel(2, height));
-        this.pageSwitcher = new PageSwitcher(this::switchPage);
-
-        setBackground(GuiTextures.BACKGROUND.copy()
-                .setColor(Long.decode(ConfigHolder.INSTANCE.client.defaultUIColor).intValue() | 0xFF000000));
+    public FancyMachineUIWidget(IFancyUIProvider mainPage) {
+        this(mainPage, 176, 166);
     }
 
-    @Override
-    public void initWidget() {
-        super.initWidget();
+    public FancyMachineUIWidget(IFancyUIProvider mainPage, int width, int height) {
+        this.mainPage = mainPage;
+        this.minWidth = width;
+        this.minPageHeight = Math.max(86, height - INVENTORY_HEIGHT);
+        addClass("gt-fancy-ui");
+        style(s -> s.background(UITemplate.panelTexture()));
+        layout(l -> l.minWidth(width).paddingAll(border).gapAll(2).alignItems(AlignItems.CENTER));
 
-        if (this.playerInventory != null) {
-            this.playerInventory.setPlayer(gui.entityPlayer);
+        this.pageContainer = new UIElement();
+        pageContainer.addClass("gt-fancy-page-container");
+        pageContainer.layout(l -> l.minWidth(width - border * 2).minHeight(minPageHeight - border * 2)
+                .alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+        addChild(pageContainer);
+
+        if (mainPage.hasPlayerInventory()) {
+            this.playerInventory = UITemplate.playerInventory();
+            addChild(playerInventory);
+        } else {
+            this.playerInventory = null;
         }
 
-        this.allPages = Stream.concat(Stream.of(this.mainPage), this.mainPage.getSubTabs().stream()).toList();
+        this.titleBar = new TitleBarWidget(e -> requestNavigation(NAV_BACK, 0),
+                e -> requestNavigation(NAV_PAGE_SWITCHER, 0));
+        titleBar.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(8).right(8).top(-16));
 
-        performNavigation(this.mainPage, this.mainPage);
+        this.sideTabsWidget = new VerticalTabsWidget(this::onSideTabClicked);
+        sideTabsWidget.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(-21).top(0));
+
+        this.tooltipsHost = new UIElement();
+        tooltipsHost.addClass("gt-fancy-tooltips");
+        tooltipsHost.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).right(-(TooltipsPanel.ICON_SIZE + 2)).top(2)
+                .width(TooltipsPanel.ICON_SIZE));
+
+        this.configuratorHost = new UIElement();
+        configuratorHost.addClass("gt-fancy-configurators");
+        configuratorHost.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
+                .left(-(ConfiguratorPanel.TAB_SIZE + 2)).bottom(4).width(ConfiguratorPanel.TAB_SIZE));
+
+        this.autoPushConfiguratorHost = new UIElement();
+        autoPushConfiguratorHost.addClass("gt-fancy-auto-push-configurators");
+        autoPushConfiguratorHost.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
+                .right(-(ConfiguratorPanel.TAB_SIZE + 2)).bottom(4).width(ConfiguratorPanel.TAB_SIZE));
+
+        addChildren(titleBar, sideTabsWidget, tooltipsHost, configuratorHost, autoPushConfiguratorHost);
+
+        this.allPages = Stream.concat(Stream.of(mainPage), mainPage.getSubTabs().stream()).toList();
+        this.pageSwitcher = new PageSwitcher(this::onPageSwitched);
+
+        onMessage(NAVIGATION_MESSAGE, tag -> handleNavigation(tag.getInt("action"), tag.getInt("index")));
+
+        performNavigation(mainPage, mainPage);
+    }
+
+    @Nullable
+    public Player getPlayer() {
+        var mui = getModularUI();
+        return mui == null ? null : mui.player;
+    }
+
+    public ConfiguratorPanel getConfiguratorPanel() {
+        return getOrCreatePage(currentPage).configuratorPanel;
+    }
+
+    public ConfiguratorPanel getAutoPushConfiguratorPanel() {
+        return getOrCreatePage(currentPage).autoPushConfiguratorPanel;
+    }
+
+    public TooltipsPanel getTooltipsPanel() {
+        return getOrCreatePage(currentPage).tooltipsPanel;
     }
 
     ////////////////////////////////////////
     // ********* NAVIGATION *********//
     ////////////////////////////////////////
+
+    protected void onSideTabClicked(IFancyUIProvider tab) {
+        requestNavigation(NAV_TAB, sideTabsWidget.getAllTabs().indexOf(tab));
+    }
+
+    protected void onPageSwitched(IFancyUIProvider page) {
+        requestNavigation(NAV_SWITCH_PAGE, allPages.indexOf(page));
+    }
+
+    protected void requestNavigation(int action, int index) {
+        handleNavigation(action, index);
+        var tag = new CompoundTag();
+        tag.putInt("action", action);
+        tag.putInt("index", index);
+        sendMessage(NAVIGATION_MESSAGE, tag);
+    }
+
+    protected void handleNavigation(int action, int index) {
+        switch (action) {
+            case NAV_TAB -> {
+                var tabs = sideTabsWidget.getAllTabs();
+                if (index >= 0 && index < tabs.size()) {
+                    navigate(tabs.get(index));
+                }
+            }
+            case NAV_BACK -> navigateBack();
+            case NAV_PAGE_SWITCHER -> openPageSwitcher();
+            case NAV_SWITCH_PAGE -> {
+                if (index >= 0 && index < allPages.size()) {
+                    switchPage(allPages.get(index));
+                }
+            }
+            default -> {}
+        }
+    }
 
     protected void navigate(IFancyUIProvider newPage) {
         navigate(newPage, this.currentHomePage);
@@ -100,7 +183,6 @@ public class FancyMachineUIWidget extends WidgetGroup {
     protected void navigate(IFancyUIProvider nextPage, IFancyUIProvider nextHomePage) {
         if (nextPage != mainPage) {
             if (!this.previousPages.isEmpty() && this.previousPages.peek().page == nextPage) {
-                // In case the user manually navigates back one step, just remove it from the navigation stack
                 this.previousPages.pop();
             } else if (this.currentPage != null) {
                 this.previousPages.push(new NavigationEntry(this.currentPage, this.currentHomePage, () -> {}));
@@ -112,47 +194,41 @@ public class FancyMachineUIWidget extends WidgetGroup {
         performNavigation(nextPage, nextHomePage);
     }
 
-    protected void navigateBack(ClickData clickData) {
-        NavigationEntry navigationEntry = previousPages.pop();
+    protected void navigateBack() {
+        if (previousPages.isEmpty()) return;
+        var navigationEntry = previousPages.pop();
 
         performNavigation(navigationEntry.page, navigationEntry.homePage);
         navigationEntry.onNavigation.run();
     }
 
     protected void performNavigation(IFancyUIProvider nextPage, IFancyUIProvider nextHomePage) {
-        if (currentHomePage != nextHomePage)
+        if (currentHomePage != nextHomePage) {
             setupSideTabs(nextHomePage);
+        }
 
         this.currentPage = nextPage;
         this.currentHomePage = nextHomePage;
 
-        if (currentPage != currentHomePage) {
-            // Ensure the home page's basic layout is applied before navigating to another page:
-            setupFancyUI(currentHomePage);
-        }
-
-        setupFancyUI(nextPage, nextPage.hasPlayerInventory());
+        setupFancyUI(nextPage);
     }
 
     ///////////////////////////////////////////////
     // *********** PAGE SWITCHER ***********//
     ///////////////////////////////////////////////
 
-    protected void openPageSwitcher(ClickData clickData) {
+    protected void openPageSwitcher() {
+        if (allPages.size() <= 1 || currentPage == pageSwitcher) return;
         pageSwitcher.setPageList(allPages, currentHomePage);
 
-        // If we're in another tab of the current page, ensure nav to its main tab when closing the page switcher:
         if (currentPage != currentHomePage && !previousPages.isEmpty()) {
             previousPages.pop();
         }
 
-        this.sideTabsWidget.setVisible(false);
-        this.sideTabsWidget.setActive(false);
+        this.sideTabsWidget.setDisplay(false);
 
-        this.previousPages.push(new NavigationEntry(currentHomePage, currentHomePage, () -> {
-            sideTabsWidget.setVisible(true);
-            sideTabsWidget.setActive(true);
-        }));
+        this.previousPages.push(new NavigationEntry(currentHomePage, currentHomePage,
+                () -> sideTabsWidget.setDisplay(true)));
 
         this.currentPage = this.pageSwitcher;
         this.currentHomePage = this.pageSwitcher;
@@ -161,13 +237,11 @@ public class FancyMachineUIWidget extends WidgetGroup {
     }
 
     protected void switchPage(IFancyUIProvider nextHomePage) {
-        // Ensure that the back button always leads back to the main page:
         this.currentHomePage = mainPage;
         this.currentPage = mainPage;
         this.previousPages.clear();
 
-        sideTabsWidget.setVisible(true);
-        sideTabsWidget.setActive(true);
+        sideTabsWidget.setDisplay(true);
 
         setupSideTabs(this.currentHomePage);
         navigate(nextHomePage, nextHomePage);
@@ -177,73 +251,86 @@ public class FancyMachineUIWidget extends WidgetGroup {
     // *********** UI RENDERING ***********//
     //////////////////////////////////////////////
 
-    protected void setupFancyUI(IFancyUIProvider fancyUI) {
-        this.setupFancyUI(fancyUI, fancyUI.hasPlayerInventory());
+    protected Page getOrCreatePage(IFancyUIProvider provider) {
+        var page = pages.get(provider);
+        if (page == null) {
+            page = new Page(provider);
+            pages.put(provider, page);
+            page.attach();
+        }
+        return page;
     }
 
-    protected void setupFancyUI(IFancyUIProvider fancyUI, boolean showInventory) {
-        clearUI();
+    protected void setupFancyUI(IFancyUIProvider fancyUI) {
+        var next = getOrCreatePage(fancyUI);
+        for (var page : pages.values()) {
+            page.setShown(page == next);
+        }
 
         sideTabsWidget.selectTab(fancyUI);
-        titleBar.updateState(
-                fancyUI,
-                !this.previousPages.isEmpty(),
+        titleBar.updateState(fancyUI, !this.previousPages.isEmpty(),
                 this.allPages.size() > 1 && this.currentPage != this.pageSwitcher);
 
-        var page = fancyUI.createMainPage(this);
-
-        // layout
-        var size = new Size(Math.max(172, page.getSize().width + border * 2),
-                Math.max(86, page.getSize().height + border * 2));
-        setSize(new Size(size.width,
-                size.height + (!showInventory || playerInventory == null ? 0 : playerInventory.getSize().height)));
-        if (GTCEu.isClientSide() && getGui() != null) {
-            getGui().setSize(getSize().width, getSize().height);
+        if (playerInventory != null) {
+            playerInventory.setDisplay(fancyUI.hasPlayerInventory());
         }
-        this.sideTabsWidget.setSize(new Size(24, size.height));
-        this.pageContainer.setSize(size);
-        this.tooltipsPanel.setSelfPosition(new Position(size.width + 2, 2));
-
-        setupInventoryPosition(showInventory, size);
-
-        // setup
-        this.pageContainer.addWidget(page);
-        page.setSelfPosition(new Position(
-                (pageContainer.getSize().width - page.getSize().width) / 2,
-                (pageContainer.getSize().height - page.getSize().height) / 2));
-        fancyUI.attachConfigurators(configuratorPanel);
-        configuratorPanel
-                .setSelfPosition(new Position(-24 - 2, getGui().getHeight() - configuratorPanel.getSize().height - 4));
-        fancyUI.attachAutoPushConfigurators(autoPushConfiguratorPanel);
-        autoPushConfiguratorPanel
-                .setSelfPosition(new Position(getGui().getWidth() + 2,
-                        getGui().getHeight() - autoPushConfiguratorPanel.getSize().height - 4));
-        fancyUI.attachTooltips(tooltipsPanel);
-
-        titleBar.setSize(new Size(this.getSize().width, titleBar.getSize().height));
     }
 
-    private void setupInventoryPosition(boolean showInventory, Size parentSize) {
-        if (this.playerInventory == null)
-            return;
-
-        this.playerInventory.setSelfPosition(new Position(
-                (parentSize.width - playerInventory.getSize().width) / 2,
-                parentSize.height));
-
-        this.playerInventory.setActive(showInventory);
-        this.playerInventory.setVisible(showInventory);
+    protected void setupSideTabs(IFancyUIProvider homePage) {
+        var tabs = sideTabs.get(homePage);
+        if (tabs == null) {
+            sideTabsWidget.setTabs(null, List.of());
+            homePage.attachSideTabs(sideTabsWidget);
+            tabs = new SideTabs(sideTabsWidget.getMainTab(), new ArrayList<>(sideTabsWidget.getSubTabs()));
+            sideTabs.put(homePage, tabs);
+        } else {
+            sideTabsWidget.setTabs(tabs.mainTab, tabs.subTabs);
+        }
     }
 
-    protected void clearUI() {
-        this.pageContainer.clearAllWidgets();
-        this.configuratorPanel.clear();
-        this.autoPushConfiguratorPanel.clear();
-        this.tooltipsPanel.clear();
-    }
+    public class Page {
 
-    protected void setupSideTabs(IFancyUIProvider currentHomePage) {
-        this.sideTabsWidget.clearSubTabs();
-        currentHomePage.attachSideTabs(sideTabsWidget);
+        @Getter
+        protected final IFancyUIProvider provider;
+        @Getter
+        protected final UIElement container;
+        @Getter
+        protected final ConfiguratorPanel configuratorPanel;
+        @Getter
+        protected final ConfiguratorPanel autoPushConfiguratorPanel;
+        @Getter
+        protected final TooltipsPanel tooltipsPanel;
+
+        protected Page(IFancyUIProvider provider) {
+            this.provider = provider;
+            this.container = new UIElement();
+            container.addClass("gt-fancy-page");
+            container.layout(l -> l.alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+            this.configuratorPanel = new ConfiguratorPanel();
+            this.autoPushConfiguratorPanel = new ConfiguratorPanel();
+            this.tooltipsPanel = new TooltipsPanel();
+        }
+
+        protected void attach() {
+            pageContainer.addChild(container);
+            configuratorHost.addChild(configuratorPanel);
+            autoPushConfiguratorHost.addChild(autoPushConfiguratorPanel);
+            tooltipsHost.addChild(tooltipsPanel);
+            container.addChild(provider.createMainPage(FancyMachineUIWidget.this));
+            provider.attachConfigurators(configuratorPanel);
+            provider.attachAutoPushConfigurators(autoPushConfiguratorPanel);
+            provider.attachTooltips(tooltipsPanel);
+        }
+
+        protected void setShown(boolean shown) {
+            container.setDisplay(shown);
+            configuratorPanel.setDisplay(shown);
+            autoPushConfiguratorPanel.setDisplay(shown);
+            tooltipsPanel.setDisplay(shown);
+            if (!shown) {
+                configuratorPanel.collapseTab();
+                autoPushConfiguratorPanel.collapseTab();
+            }
+        }
     }
 }

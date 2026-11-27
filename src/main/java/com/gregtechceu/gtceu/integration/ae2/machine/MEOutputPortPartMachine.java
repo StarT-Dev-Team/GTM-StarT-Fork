@@ -4,23 +4,21 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
+import com.gregtechceu.gtceu.integration.ae2.gui.widget.MEStatusLabel;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.list.AEListGridWidget;
 import com.gregtechceu.gtceu.integration.ae2.machine.trait.PortOutputHandlers;
 import com.gregtechceu.gtceu.integration.ae2.utils.KeyStorage;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+
+import net.minecraft.network.chat.Component;
 
 import appeng.api.config.Actionable;
 import appeng.api.stacks.AEKey;
 
 public class MEOutputPortPartMachine extends MEBusPartMachine {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            MEOutputPortPartMachine.class, MEBusPartMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
     private KeyStorage internalBuffer;
@@ -71,11 +69,6 @@ public class MEOutputPortPartMachine extends MEBusPartMachine {
     }
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
-    @Override
     public void onMachineRemoved() {
         var grid = getMainNode().getGrid();
         if (grid != null && !this.internalBuffer.isEmpty()) {
@@ -106,14 +99,14 @@ public class MEOutputPortPartMachine extends MEBusPartMachine {
     }
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(0, 0, 170, 65);
-
-        group.addWidget(new LabelWidget(5, 0,
-                () -> this.isOnline ? "gtceu.gui.me_network.online" : "gtceu.gui.me_network.offline"));
-        group.addWidget(new LabelWidget(5, 10, "gtceu.gui.waiting_list"));
-        group.addWidget(new AEListGridWidget.Generic(5, 20, 3, this.internalBuffer));
-
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.width(18 * 9).gapAll(1));
+        var waiting = new Label();
+        waiting.setText(Component.translatable("gtceu.gui.waiting_list"));
+        waiting.textStyle(style -> style.textColor(0xFF404040).textShadow(false));
+        group.addChildren(new MEStatusLabel(() -> this.isOnline), waiting,
+                new AEListGridWidget.Generic(3, this.internalBuffer));
         return group;
     }
 }

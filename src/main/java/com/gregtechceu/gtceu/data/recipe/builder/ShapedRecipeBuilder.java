@@ -3,12 +3,10 @@ package com.gregtechceu.gtceu.data.recipe.builder;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.recipe.StrictShapedRecipe;
 
-import com.lowdragmc.lowdraglib.utils.Builder;
-import com.lowdragmc.lowdraglib.utils.NBTToJsonConverter;
-
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -20,11 +18,20 @@ import net.minecraftforge.common.crafting.StrictNBTIngredient;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.JsonOps;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
-public class ShapedRecipeBuilder extends Builder<Ingredient, ShapedRecipeBuilder> {
+public class ShapedRecipeBuilder {
+
+    protected List<String[]> shape = new ArrayList<>();
+    protected Map<Character, Ingredient> symbolMap = new LinkedHashMap<>();
 
     protected ItemStack output = ItemStack.EMPTY;
     protected ResourceLocation id;
@@ -42,6 +49,16 @@ public class ShapedRecipeBuilder extends Builder<Ingredient, ShapedRecipeBuilder
 
     public ShapedRecipeBuilder pattern(String slice) {
         return aisle(slice);
+    }
+
+    public ShapedRecipeBuilder aisle(String... data) {
+        this.shape.add(data);
+        return this;
+    }
+
+    public ShapedRecipeBuilder where(char symbol, Ingredient value) {
+        this.symbolMap.put(symbol, value);
+        return this;
     }
 
     public ShapedRecipeBuilder define(char cha, TagKey<Item> itemStack) {
@@ -104,9 +121,10 @@ public class ShapedRecipeBuilder extends Builder<Ingredient, ShapedRecipeBuilder
         return this;
     }
 
-    @Override
     public ShapedRecipeBuilder shallowCopy() {
-        var builder = super.shallowCopy();
+        var builder = new ShapedRecipeBuilder();
+        builder.shape = new ArrayList<>(shape);
+        builder.symbolMap = new HashMap<>(symbolMap);
         builder.output = output.copy();
         return builder;
     }
@@ -144,7 +162,7 @@ public class ShapedRecipeBuilder extends Builder<Ingredient, ShapedRecipeBuilder
                 result.addProperty("count", output.getCount());
             }
             if (output.hasTag() && output.getTag() != null) {
-                result.add("nbt", NBTToJsonConverter.getObject(output.getTag()));
+                result.add("nbt", NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, output.getTag()));
             }
             json.add("result", result);
         }

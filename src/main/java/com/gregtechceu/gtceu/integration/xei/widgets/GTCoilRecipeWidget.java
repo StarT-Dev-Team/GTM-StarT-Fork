@@ -5,15 +5,16 @@ import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.lwjgl.glfw.GLFW;
@@ -27,8 +28,8 @@ public abstract class GTCoilRecipeWidget extends GTRecipeWidget {
     private List<ICoilType> validCoils;
     @Getter(AccessLevel.PROTECTED)
     private ICoilType selectedCoil;
-    private ButtonWidget coilButton;
-    private LabelWidget recipeCoilText;
+    private Button coilButton;
+    private Label recipeCoilText;
 
     protected GTCoilRecipeWidget(GTRecipe recipe) {
         super(recipe);
@@ -38,10 +39,12 @@ public abstract class GTCoilRecipeWidget extends GTRecipeWidget {
 
             if (!validCoils.isEmpty()) {
                 selectedCoil = validCoils.get(0);
-                coilButton = new ButtonWidget(getCoilXOffset(), voltageTextWidget.getSelfPositionY() - 6, 16, 16,
-                        cd -> setRecipeCoil(cd.button));
+                coilButton = new Button().noText();
+                coilButton.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(getCoilXOffset())
+                        .top(getVoltageTextY() - 6).width(16).height(16).paddingAll(0));
+                coilButton.setOnClick(event -> setRecipeCoil(event.button));
 
-                addWidget(coilButton);
+                addChild(coilButton);
                 updateOC(false);
             }
         }
@@ -67,7 +70,7 @@ public abstract class GTCoilRecipeWidget extends GTRecipeWidget {
     }
 
     private int getCoilXOffset() {
-        return getVoltageXOffset(getTier(), getSize().width) - getXOffset() - 24;
+        return getVoltageXOffset(getTier(), getWidgetWidth()) - getXOffset() - 24;
     }
 
     private void setRecipeCoil(int button) {
@@ -113,14 +116,17 @@ public abstract class GTCoilRecipeWidget extends GTRecipeWidget {
     protected void onRecipeOverclockWidgetUpdated() {
         if (coilButton == null) return;
 
-        coilButton.setSelfPositionX(getCoilXOffset());
-        coilButton.setButtonTexture(new ItemStackTexture(getCoilStack(selectedCoil)));
-        coilButton.setHoverTooltips(getCoilTooltips().toArray(Component[]::new));
+        var coilX = getCoilXOffset();
+        var coilTexture = new ItemStackTexture(getCoilStack(selectedCoil));
+        coilButton.layout(layout -> layout.left(coilX));
+        coilButton.buttonStyle(style -> style.baseTexture(coilTexture).hoverTexture(coilTexture)
+                .pressedTexture(coilTexture));
+        coilButton.style(style -> style.tooltips(getCoilTooltips().toArray(Component[]::new)));
 
         updateRecipeCoilText();
     }
 
-    public void setRecipeCoilText(LabelWidget text) {
+    public void setRecipeCoilText(Label text) {
         recipeCoilText = text;
 
         updateRecipeCoilText();
@@ -129,7 +135,7 @@ public abstract class GTCoilRecipeWidget extends GTRecipeWidget {
     private void updateRecipeCoilText() {
         if (recipeCoilText == null || selectedCoil == null) return;
 
-        recipeCoilText.setComponent(Component.translatable("gtceu.recipe.coil.tier",
+        recipeCoilText.setText(Component.translatable("gtceu.recipe.coil.tier",
                 getCoilStack(selectedCoil).getHoverName()));
     }
 }

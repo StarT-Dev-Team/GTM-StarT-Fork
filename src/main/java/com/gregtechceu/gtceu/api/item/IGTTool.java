@@ -25,8 +25,9 @@ import com.gregtechceu.gtceu.data.recipe.VanillaRecipeHelper;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
 
 import net.minecraft.Util;
 import net.minecraft.client.color.item.ItemColor;
@@ -83,7 +84,7 @@ import static com.gregtechceu.gtceu.api.item.tool.ToolHelper.*;
 import static net.minecraft.world.item.Item.BASE_ATTACK_DAMAGE_UUID;
 import static net.minecraft.world.item.Item.BASE_ATTACK_SPEED_UUID;
 
-public interface IGTTool extends HeldItemUIFactory.IHeldItemUIHolder, ItemLike, IForgeItem {
+public interface IGTTool extends HeldItemUIMenuType.HeldItemUI, ItemLike, IForgeItem {
 
     GTToolType getToolType();
 
@@ -721,7 +722,7 @@ public interface IGTTool extends HeldItemUIFactory.IHeldItemUIHolder, ItemLike, 
         if (tooltip.size() != statSectionStart) {
             tooltip.add(CommonComponents.EMPTY);
         }
-        
+
         // behaviors
         AoESymmetrical aoeDefinition = getAoEDefinition(stack);
         boolean addedMagneticOrAOELine = false;
@@ -870,14 +871,15 @@ public interface IGTTool extends HeldItemUIFactory.IHeldItemUIHolder, ItemLike, 
     }
 
     @Override
-    default ModularUI createUI(Player player, HeldItemUIFactory.HeldItemHolder holder) {
+    default ModularUI createUI(HeldItemUIMenuType.HeldItemUIHolder holder) {
         for (var behavior : getToolStats().getBehaviors()) {
-            if (!(behavior instanceof IToolUIBehavior uiBehavior) || !uiBehavior.openUI(player, holder.getHand())) {
+            if (!(behavior instanceof IToolUIBehavior uiBehavior) ||
+                    !uiBehavior.openUI(holder.player, holder.hand)) {
                 continue;
             }
-            return uiBehavior.createUI(player, holder);
+            return uiBehavior.createUI(holder.player, holder);
         }
-        return new ModularUI(holder, player);
+        return new ModularUI(UI.empty(), holder.player);
     }
 
     default Set<GTToolType> getToolClasses(ItemStack stack) {

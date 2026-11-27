@@ -6,31 +6,28 @@ import com.gregtechceu.gtceu.api.capability.IEnergyInfoProvider;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.IUICover;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.LongInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.LongInput;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.TextBoxWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigInteger;
-import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -39,14 +36,6 @@ import static com.gregtechceu.gtceu.utils.RedstoneUtil.computeLatchedRedstoneBet
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class AdvancedEnergyDetectorCover extends EnergyDetectorCover implements IUICover {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            AdvancedEnergyDetectorCover.class, EnergyDetectorCover.MANAGED_FIELD_HOLDER);
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 
     private static final int DEFAULT_MIN_PERCENT = 33;
     private static final int DEFAULT_MAX_PERCENT = 66;
@@ -60,8 +49,8 @@ public class AdvancedEnergyDetectorCover extends EnergyDetectorCover implements 
     @Getter
     private boolean usePercent;
 
-    private LongInputWidget minValueInput;
-    private LongInputWidget maxValueInput;
+    private LongInput minValueInput;
+    private LongInput maxValueInput;
 
     @Persisted
     @DescSynced
@@ -148,47 +137,59 @@ public class AdvancedEnergyDetectorCover extends EnergyDetectorCover implements 
     //////////////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(0, 0, 176, 130);
-        group.addWidget(new LabelWidget(10, 5, "cover.advanced_energy_detector.label"));
+    public Component getCoverUITitle() {
+        return Component.translatable("cover.advanced_energy_detector.label");
+    }
 
-        group.addWidget(new TextBoxWidget(10, 55, 25,
-                List.of(LocalizationUtils.format("cover.advanced_energy_detector.min"))));
+    @Override
+    public UIElement createUIWidget() {
+        var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
+        group.addChild(new Label().setText(Component.translatable("cover.advanced_energy_detector.label")));
 
-        group.addWidget(new TextBoxWidget(10, 80, 25,
-                List.of(LocalizationUtils.format("cover.advanced_energy_detector.max"))));
-
-        group.addWidget(new TextBoxWidget(10, 105, 65,
-                List.of(LocalizationUtils.format("cover.advanced_detector.ticks_per_cycle")))
-                .setHoverTooltips(Component.translatable("cover.advanced_detector.ticks_per_cycle.tooltip")));
-
-        minValueInput = new LongInputWidget(40, 50, 176 - 40 - 10, 20, this::getMinValue, this::setMinValue);
-        maxValueInput = new LongInputWidget(40, 75, 176 - 40 - 10, 20, this::getMaxValue, this::setMaxValue);
-        group.addWidget(new IntInputWidget(80, 100, 176 - 80 - 10, 20, this::getTicksPerCycle, this::setTicksPerCycle)
-                .setMin(ConfigHolder.INSTANCE.machines.coverMinTicksPerCycle));
-
-        initializeMinMaxInputs(usePercent);
-        group.addWidget(minValueInput);
-        group.addWidget(maxValueInput);
-
-        // Invert Redstone Output Toggle:
-        group.addWidget(new ToggleButtonWidget(
-                9, 20, 20, 20,
-                GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
+        var toggles = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3));
+        toggles.addChild(new ToggleButton(GuiTextures.INVERT_REDSTONE_BUTTON, this::isInverted, this::setInverted)
                 .isMultiLang()
                 .setTooltipText("cover.advanced_energy_detector.invert"));
+        toggles.addChild(
+                new ToggleButton(GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
+                        .isMultiLang()
+                        .setTooltipText("cover.advanced_detector.signal"));
+        toggles.addChild(
+                new ToggleButton(GuiTextures.ENERGY_DETECTOR_COVER_MODE_BUTTON, this::isUsePercent, this::setUsePercent)
+                        .isMultiLang()
+                        .setTooltipText("cover.advanced_energy_detector.use_percent"));
+        group.addChild(toggles);
 
-        group.addWidget(new ToggleButtonWidget(31, 21, 18, 18,
-                GuiTextures.BUTTON_REDSTONE_STRENGTH, this::isStrongSignal, this::setStrongSignal)
-                .isMultiLang()
-                .setTooltipText("cover.advanced_detector.signal"));
+        var row0 = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        var label0 = new Label().setText(Component.translatable("cover.advanced_energy_detector.min"));
+        label0.layout(layout -> layout.width(65));
+        this.minValueInput = new LongInput(this::getMinValue, this::setMinValue);
+        this.minValueInput.layout(layout -> layout.flex(1).height(20));
+        row0.addChildren(label0, this.minValueInput);
+        group.addChild(row0);
 
-        // Mode (EU / Percent) Toggle:
-        group.addWidget(new ToggleButtonWidget(
-                176 - 29, 20, 20, 20,
-                GuiTextures.ENERGY_DETECTOR_COVER_MODE_BUTTON, this::isUsePercent, this::setUsePercent)
-                .isMultiLang()
-                .setTooltipText("cover.advanced_energy_detector.use_percent"));
+        var row1 = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        var label1 = new Label().setText(Component.translatable("cover.advanced_energy_detector.max"));
+        label1.layout(layout -> layout.width(65));
+        this.maxValueInput = new LongInput(this::getMaxValue, this::setMaxValue);
+        this.maxValueInput.layout(layout -> layout.flex(1).height(20));
+        row1.addChildren(label1, this.maxValueInput);
+        group.addChild(row1);
+
+        var row2 = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        var label2 = new Label().setText(Component.translatable("cover.advanced_detector.ticks_per_cycle"));
+        label2.layout(layout -> layout.width(65));
+        label2.style(style -> style.tooltips("cover.advanced_detector.ticks_per_cycle.tooltip"));
+        var input2 = new IntInput(this::getTicksPerCycle, this::setTicksPerCycle);
+        input2.setMin(ConfigHolder.INSTANCE.machines.coverMinTicksPerCycle);
+        input2.layout(layout -> layout.flex(1).height(20));
+        row2.addChildren(label2, input2);
+        group.addChild(row2);
+
+        initializeMinMaxInputs(usePercent);
 
         return group;
     }

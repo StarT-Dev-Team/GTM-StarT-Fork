@@ -1,11 +1,12 @@
 package com.gregtechceu.gtceu.api.cover.filter;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.ScrollablePhantomFluidWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.PhantomFluidSlot;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.api.transfer.fluid.CustomFluidTank;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +15,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -98,45 +100,35 @@ public class SimpleFluidFilter implements FluidFilter {
         onUpdated.accept(this);
     }
 
-    public WidgetGroup openConfigurator(int x, int y) {
-        WidgetGroup group = new WidgetGroup(x, y, 18 * 3 + 25, 18 * 3); // 80 55
+    public UIElement openConfigurator() {
+        var group = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(5));
+        var grid = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW));
         fluidStorageSlots = new CustomFluidTank[9];
         for (int i = 0; i < 3; i++) {
+            var column = new UIElement();
             for (int j = 0; j < 3; j++) {
                 final int index = i * 3 + j;
 
-                fluidStorageSlots[index] = new CustomFluidTank(maxStackSize);
-                fluidStorageSlots[index].setFluid(matches[index]);
-
-                var tank = new ScrollablePhantomFluidWidget(fluidStorageSlots[index], 0, i * 18, j * 18, 18, 18,
-                        () -> fluidStorageSlots[index].getFluid(),
-                        (fluid) -> fluidStorageSlots[index].setFluid(fluid)) {
-
-                    @Override
-                    public void updateScreen() {
-                        super.updateScreen();
-                        setShowAmount(maxStackSize > 1L);
-                    }
-
-                    @Override
-                    public void detectAndSendChanges() {
-                        super.detectAndSendChanges();
-                        setShowAmount(maxStackSize > 1L);
-                    }
-                };
-
-                tank.setChangeListener(() -> {
-                    matches[index] = fluidStorageSlots[index].getFluidInTank(0);
+                var storage = new CustomFluidTank(maxStackSize);
+                storage.setFluid(matches[index]);
+                storage.setOnContentsChanged(() -> {
+                    matches[index] = storage.getFluidInTank(0);
                     onUpdated.accept(this);
-                }).setBackground(GuiTextures.SLOT);
+                });
+                fluidStorageSlots[index] = storage;
 
-                group.addWidget(tank);
+                var tank = new PhantomFluidSlot(storage::getFluid, storage::setFluid).scrollable(storage, 0);
+                tank.addEventListener(UIEvents.TICK, event -> tank.amountLabel.setDisplay(maxStackSize > 1L));
+                tank.style(style -> style.backgroundTexture(GuiTextures.SLOT));
+                column.addChild(tank);
             }
+            grid.addChild(column);
         }
-        group.addWidget(new ToggleButtonWidget(18 * 3 + 5, 0, 20, 20,
-                GuiTextures.BUTTON_BLACKLIST, this::isBlackList, this::setBlackList));
-        group.addWidget(new ToggleButtonWidget(18 * 3 + 5, 20, 20, 20,
-                GuiTextures.BUTTON_FILTER_NBT, this::isIgnoreNbt, this::setIgnoreNbt));
+        var buttons = new UIElement();
+        buttons.addChildren(
+                new ToggleButton(GuiTextures.BUTTON_BLACKLIST, this::isBlackList, this::setBlackList),
+                new ToggleButton(GuiTextures.BUTTON_FILTER_NBT, this::isIgnoreNbt, this::setIgnoreNbt));
+        group.addChildren(grid, buttons);
         return group;
     }
 

@@ -5,15 +5,16 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.filter.ItemFilter;
 import com.gregtechceu.gtceu.api.cover.filter.SimpleItemFilter;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.common.cover.data.TransferMode;
 import com.gregtechceu.gtceu.common.pipelike.item.ItemNetHandler;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
@@ -33,9 +34,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class RobotArmCover extends ConveyorCover {
 
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(RobotArmCover.class,
-            ConveyorCover.MANAGED_FIELD_HOLDER);
-
     @Persisted
     @DescSynced
     @Getter
@@ -47,7 +45,7 @@ public class RobotArmCover extends ConveyorCover {
     protected int globalTransferLimit;
     protected int itemsTransferBuffered;
 
-    private IntInputWidget stackSizeInput;
+    private IntInput stackSizeInput;
 
     public RobotArmCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide, int tier,
                          int maxTransferRate) {
@@ -57,11 +55,6 @@ public class RobotArmCover extends ConveyorCover {
 
     public RobotArmCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide, int tier) {
         this(definition, coverHolder, attachedSide, tier, CONVEYOR_SCALING.applyAsInt(tier));
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -164,7 +157,6 @@ public class RobotArmCover extends ConveyorCover {
 
     //////////////////////////////////////
     // *********** GUI ***********//
-    //////////////////////////////////////
 
     @Override
     @NotNull
@@ -173,24 +165,29 @@ public class RobotArmCover extends ConveyorCover {
     }
 
     @Override
-    protected void buildAdditionalUI(WidgetGroup group) {
-        group.addWidget(
-                new EnumSelectorWidget<>(146, 45, 20, 20, TransferMode.values(), transferMode, this::setTransferMode));
+    protected void buildAdditionalUI(UIElement group, UIElement actions) {
+        this.stackSizeInput = new IntInput(() -> globalTransferLimit, val -> globalTransferLimit = val);
+        this.stackSizeInput.layout(layout -> layout.flex(1).height(20));
+        this.stackSizeInput.setMin(1).setMax(transferMode.maxStackSize).setDisplay(shouldShowStackSize());
 
-        this.stackSizeInput = new IntInputWidget(64, 45, 80, 20,
-                () -> globalTransferLimit, val -> globalTransferLimit = val);
-        configureStackSizeInput();
+        group.addChildren(
+                new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(this::shouldShowStackSize)
+                        .remoteSetter(show -> stackSizeInput.setDisplay(show))
+                        .build()),
+                new BindableValue<Integer>().bind(DataBindingBuilder.intValS2C(() -> transferMode.maxStackSize)
+                        .remoteSetter(stackSize -> stackSizeInput.setMax(stackSize))
+                        .build()));
 
-        group.addWidget(this.stackSizeInput);
+        group.addChild(this.stackSizeInput);
+
+        actions.addChild(new EnumSelector<>(TransferMode.values(), () -> transferMode, this::setTransferMode));
     }
 
     public void setTransferMode(TransferMode transferMode) {
         this.transferMode = transferMode;
-
-        configureStackSizeInput();
-
         if (!this.isRemote()) {
             configureFilter();
+            if (stackSizeInput != null) stackSizeInput.setMax(transferMode.maxStackSize);
         }
     }
 
@@ -199,17 +196,6 @@ public class RobotArmCover extends ConveyorCover {
         if (filterHandler.getFilter() instanceof SimpleItemFilter filter) {
             filter.setMaxStackSize(filter.isBlackList() ? 1 : transferMode.maxStackSize);
         }
-
-        configureStackSizeInput();
-    }
-
-    private void configureStackSizeInput() {
-        if (this.stackSizeInput == null)
-            return;
-
-        this.stackSizeInput.setVisible(shouldShowStackSize());
-        this.stackSizeInput.setMin(1);
-        this.stackSizeInput.setMax(this.transferMode.maxStackSize);
     }
 
     private boolean shouldShowStackSize() {

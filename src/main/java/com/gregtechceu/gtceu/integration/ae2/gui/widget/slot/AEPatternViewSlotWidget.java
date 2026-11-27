@@ -1,86 +1,41 @@
 package com.gregtechceu.gtceu.integration.ae2.gui.widget.slot;
 
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.GuiTextures;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.Container;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
-import org.jetbrains.annotations.NotNull;
+import appeng.crafting.pattern.EncodedPatternItem;
 
-public class AEPatternViewSlotWidget extends SlotWidget {
+public class AEPatternViewSlotWidget extends ItemSlot {
 
-    protected IGuiTexture occupiedTexture;
-
-    public AEPatternViewSlotWidget() {}
-
-    public AEPatternViewSlotWidget(
-                                   Container inventory,
-                                   int slotIndex,
-                                   int xPosition,
-                                   int yPosition,
-                                   boolean canTakeItems,
-                                   boolean canPutItems) {
-        super(inventory, slotIndex, xPosition, yPosition, canTakeItems, canPutItems);
-    }
-
-    public AEPatternViewSlotWidget(
-                                   IItemHandlerModifiable itemHandler,
-                                   int slotIndex,
-                                   int xPosition,
-                                   int yPosition,
-                                   boolean canTakeItems,
-                                   boolean canPutItems) {
-        super(itemHandler, slotIndex, xPosition, yPosition, canTakeItems, canPutItems);
-    }
-
-    public AEPatternViewSlotWidget(
-                                   IItemHandlerModifiable itemHandler, int slotIndex, int xPosition, int yPosition) {
-        super(itemHandler, slotIndex, xPosition, yPosition);
-    }
-
-    public AEPatternViewSlotWidget(Container inventory, int slotIndex, int xPosition, int yPosition) {
-        super(inventory, slotIndex, xPosition, yPosition);
-    }
-
-    public AEPatternViewSlotWidget setOccupiedTexture(IGuiTexture... occupiedTexture) {
-        this.occupiedTexture = occupiedTexture.length > 1 ? new GuiTextureGroup(occupiedTexture) : occupiedTexture[0];
-        return this;
+    public AEPatternViewSlotWidget(IItemHandlerModifiable itemHandler, int slotIndex, Runnable changeListener) {
+        super();
+        style(style -> style.backgroundTexture(GuiTextures.SLOT));
+        slotStyle(style -> style.slotOverlay(GuiTextures.PATTERN_OVERLAY).showSlotOverlayOnlyEmpty(true));
+        bind(new ItemHandlerSlot(itemHandler, slotIndex).addChangeListener(changeListener));
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
-    public void updateScreen() {
-        super.updateScreen();
-        if (occupiedTexture != null) {
-            occupiedTexture.updateTick();
+    protected void drawItemStack(GUIContext guiContext, ItemStack itemStack) {
+        var displayed = itemStack;
+        if (!itemStack.isEmpty() && itemStack.getItem() instanceof EncodedPatternItem pattern) {
+            var output = pattern.getOutput(itemStack);
+            if (!output.isEmpty()) {
+                displayed = output;
+            }
         }
+        DrawerHelper.drawItemStack(guiContext.graphics, displayed, 0, 0, guiContext.elementColor,
+                compactCount(displayed));
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
-    protected void drawBackgroundTexture(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
-        Position pos = getPosition();
-        Size size = getSize();
-        if (getHandler() != null && getHandler().hasItem()) {
-            if (occupiedTexture != null) {
-                occupiedTexture.draw(graphics, mouseX, mouseY, pos.x, pos.y, size.width, size.height);
-            }
-        } else {
-            if (backgroundTexture != null) {
-                backgroundTexture.draw(graphics, mouseX, mouseY, pos.x, pos.y, size.width, size.height);
-            }
-        }
-
-        if (hoverTexture != null && isMouseOverElement(mouseX, mouseY)) {
-            hoverTexture.draw(graphics, mouseX, mouseY, pos.x, pos.y, size.width, size.height);
-        }
+    public String name() {
+        return "item-slot";
     }
 }

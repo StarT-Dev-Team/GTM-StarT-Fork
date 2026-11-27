@@ -2,9 +2,8 @@ package com.gregtechceu.gtceu.integration.top.element;
 
 import com.gregtechceu.gtceu.GTCEu;
 
-import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
-import com.lowdragmc.lowdraglib.gui.util.TextFormattingUtil;
-import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
+import com.lowdragmc.lowdraglib2.gui.util.TextFormattingUtil;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -44,8 +43,7 @@ public class FluidStackElement implements IElement {
             y += 2;
             int width = style.getWidth() - 4;
             int height = style.getHeight() - 4;
-            DrawerHelper.drawFluidForGui(guiGraphics, FluidHelperImpl.toFluidStack(fluidStack), fluidStack.getAmount(),
-                    x, y, width, height);
+            DrawerHelper.drawFluidForGui(guiGraphics, fluidStack, x, y, width, height, -1);
 
             guiGraphics.pose().pushPose();
             guiGraphics.pose().scale(0.5F, 0.5F, 1);

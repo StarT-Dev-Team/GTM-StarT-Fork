@@ -5,10 +5,11 @@ import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
+import com.gregtechceu.gtceu.api.gui.texture.UVSpriteTexture;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.FancySelectorConfigurator;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
@@ -45,7 +46,7 @@ public interface IVoidable extends IMachineFeature {
                                 Component.translatable(m.localeName))));
     }
 
-    enum VoidingMode implements StringRepresentable, EnumSelectorWidget.SelectableEnum {
+    enum VoidingMode implements StringRepresentable, EnumSelector.SelectableEnum {
 
         VOID_NONE("gtceu.gui.no_voiding", cap -> false),
         VOID_ITEMS("gtceu.gui.item_voiding", cap -> cap == ItemRecipeCapability.CAP),
@@ -63,7 +64,7 @@ public interface IVoidable extends IMachineFeature {
         VoidingMode(String name, Predicate<RecipeCapability<?>> canVoid) {
             this.localeName = name;
             this.canVoid = canVoid;
-            this.icon = GuiTextures.BUTTON_VOID_MULTIBLOCK.getSubTexture(0, ordinal() * 0.25, 1, 0.25);
+            this.icon = UVSpriteTexture.of(GuiTextures.BUTTON_VOID_MULTIBLOCK, 0, ordinal() * 0.25f, 1, 0.25f);
         }
 
         public boolean canVoid(RecipeCapability<?> capability) {

@@ -4,23 +4,24 @@ import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.data.worldgen.bedrockore.BedrockOreDefinition;
+import com.gregtechceu.gtceu.integration.xei.GTXEIUI;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTOreVeinWidget;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.rei.ModularDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplay;
 
+import me.shedaniel.rei.api.common.category.CategoryIdentifier;
 import me.shedaniel.rei.api.common.entry.EntryIngredient;
 import me.shedaniel.rei.api.common.util.EntryIngredients;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class GTBedrockOreDisplay extends ModularDisplay<WidgetGroup> {
+public class GTBedrockOreDisplay implements ModularUIDisplay {
 
     private final BedrockOreDefinition bedrockOre;
 
     public GTBedrockOreDisplay(BedrockOreDefinition bedrockOre) {
-        super(() -> new GTOreVeinWidget(bedrockOre), GTBedrockOreDisplayCategory.CATEGORY);
         this.bedrockOre = bedrockOre;
     }
 
@@ -31,5 +32,14 @@ public class GTBedrockOreDisplay extends ModularDisplay<WidgetGroup> {
             outputs.add(EntryIngredients.of(ChemicalHelper.get(TagPrefix.rawOre, material)));
         }
         return outputs;
+    }
+
+    @Override
+    public CategoryIdentifier<?> getCategoryIdentifier() {
+        return GTBedrockOreDisplayCategory.CATEGORY;
+    }
+
+    public ModularUI createModularUI() {
+        return GTXEIUI.of(new GTOreVeinWidget(bedrockOre));
     }
 }

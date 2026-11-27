@@ -3,23 +3,22 @@ package com.gregtechceu.gtceu.common.machine.multiblock.electric;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.fluids.PropertyFluidFilter;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockControllerMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.transfer.fluid.IFluidHandlerModifiable;
 
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -27,6 +26,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,16 +83,31 @@ public class MultiblockTankMachine extends MultiblockControllerMachine implement
     /////////////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
-        var group = new WidgetGroup(0, 0, 90, 63);
-        group.setBackground(GuiTextures.BACKGROUND_INVERSE);
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.width(90).height(63));
+        group.style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
 
-        group.addWidget(new ImageWidget(4, 4, 82, 55, GuiTextures.DISPLAY));
-        group.addWidget(new LabelWidget(8, 8, "gtceu.gui.fluid_amount"));
-        group.addWidget(new LabelWidget(8, 18, this::getFluidLabel).setTextColor(-1).setDropShadow(true));
-        group.addWidget(new TankWidget(tank.getStorages()[0], 68, 23, true, true)
-                .setBackground(GuiTextures.FLUID_SLOT));
+        var display = new UIElement();
+        display.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(4).top(4).width(82).height(55));
+        display.style(style -> style.backgroundTexture(GuiTextures.DISPLAY));
 
+        var title = new Label();
+        title.setText(Component.translatable("gtceu.gui.fluid_amount"));
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(8).top(8));
+
+        var amount = new Label();
+        amount.textStyle(style -> style.textColor(-1).textShadow(true));
+        amount.bind(DataBindingBuilder.componentS2C(() -> Component.literal(getFluidLabel())).build());
+        amount.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(8).top(18));
+
+        var slot = new FluidSlot().bind(tank.getStorages()[0], 0);
+        slot.setAllowClickFilled(true);
+        slot.setAllowClickDrained(true);
+        slot.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(68).top(23));
+        slot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+
+        group.addChildren(display, title, amount, slot);
         return group;
     }
 
@@ -103,12 +118,4 @@ public class MultiblockTankMachine extends MultiblockControllerMachine implement
     //////////////////////////////////////
     // ***** LDLib SyncData ******//
     //////////////////////////////////////
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MultiblockTankMachine.class,
-            MultiblockControllerMachine.MANAGED_FIELD_HOLDER);
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 }

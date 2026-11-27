@@ -1,72 +1,57 @@
 package com.gregtechceu.gtceu.api.gui.fancy;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.utils.Size;
-
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TooltipsPanel extends Widget {
+public class TooltipsPanel extends UIElement {
+
+    public static final int ICON_SIZE = 20;
 
     @Getter
     protected List<IFancyTooltip> tooltips = new ArrayList<>();
 
     public TooltipsPanel() {
-        super(202, 2, 20, 0);
+        addClass("gt-tooltips-panel");
+        layout(l -> l.width(ICON_SIZE).gapAll(2));
+        addEventListener(UIEvents.TICK, e -> updateIcons());
+    }
+
+    protected void updateIcons() {
+        var children = getChildren();
+        for (int i = 0; i < children.size() && i < tooltips.size(); i++) {
+            children.get(i).setDisplay(tooltips.get(i).showFancyTooltip());
+        }
     }
 
     public void clear() {
         tooltips.clear();
+        for (var child : new ArrayList<>(getChildren())) {
+            removeChild(child);
+        }
     }
 
     public void attachTooltips(IFancyTooltip... tooltips) {
         this.tooltips.addAll(Arrays.asList(tooltips));
+        for (var tooltip : tooltips) {
+            addChild(createIcon(tooltip));
+        }
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.drawInBackground(graphics, mouseX, mouseY, partialTicks);
-        var position = getPosition();
-        var size = getSize();
-        int offsetY = 0;
-        for (IFancyTooltip tooltip : this.tooltips) {
-            if (tooltip.showFancyTooltip()) {
-                // draw icon
-                tooltip.getFancyTooltipIcon().draw(graphics, mouseX, mouseY, position.x, position.y + offsetY,
-                        size.width, size.width);
-                offsetY += size.getWidth() + 2;
-            }
-        }
-        setSize(new Size(getSize().width, Math.max(0, offsetY)));
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void drawInForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (getHoverElement(mouseX, mouseY) == this && gui != null && gui.getModularUIGui() != null) {
-            var position = getPosition();
-            var size = getSize();
-            int offsetY = 0;
-            for (IFancyTooltip tooltip : this.tooltips) {
-                if (tooltip.showFancyTooltip()) {
-                    if (isMouseOver(position.x, position.y + offsetY, size.width, size.width, mouseX, mouseY)) {
-                        gui.getModularUIGui().setHoverTooltip(tooltip.getFancyTooltip(), ItemStack.EMPTY, null,
-                                tooltip.getFancyComponent());
-                        return;
-                    }
-                    offsetY += size.getWidth() + 2;
-                }
-            }
-        }
+    protected UIElement createIcon(IFancyTooltip tooltip) {
+        var icon = new UIElement();
+        icon.addClass("gt-fancy-tooltip");
+        icon.layout(l -> l.width(ICON_SIZE).height(ICON_SIZE));
+        icon.style(s -> s.background(DynamicTexture.of(tooltip::getFancyTooltipIcon)));
+        icon.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> e.hoverTooltips = new HoverTooltips(
+                tooltip.getFancyTooltip(), tooltip.getFancyComponent(), null, null));
+        return icon;
     }
 }

@@ -2,7 +2,7 @@ package com.gregtechceu.gtceu.client.util;
 
 import com.gregtechceu.gtceu.core.mixins.client.GuiGraphicsAccessor;
 
-import com.lowdragmc.lowdraglib.utils.ColorUtils;
+import com.lowdragmc.lowdraglib2.utils.ColorUtils;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;

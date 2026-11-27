@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.client.util;
 
-import com.lowdragmc.lowdraglib.client.bakedpipeline.FaceQuad;
-
+import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.client.renderer.FaceInfo;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -25,6 +24,7 @@ import static net.minecraft.client.renderer.block.model.FaceBakery.calculateFaci
 
 public class StaticFaceBakery {
 
+    public static final AABB BLOCK = new AABB(0, 0, 0, 1, 1, 1);
     public static final AABB SLIGHTLY_OVER_BLOCK = new AABB(-0.001f, -0.001f, -0.001f,
             1.001f, 1.001f, 1.001f);
     public static final AABB OUTPUT_OVERLAY = new AABB(-.006f, -.006f, -.006f,
@@ -71,7 +71,7 @@ public class StaticFaceBakery {
 
     public static BakedQuad bakeFace(Direction face, TextureAtlasSprite sprite, ModelState rotation, int tintIndex,
                                      int emissivity, boolean cull, boolean shade) {
-        return bakeFace(FaceQuad.BLOCK, face, sprite, rotation, tintIndex, emissivity, cull, shade);
+        return bakeFace(BLOCK, face, sprite, rotation, tintIndex, emissivity, cull, shade);
     }
 
     public static BakedQuad bakeFace(Direction face, TextureAtlasSprite sprite, ModelState rotation, int tintIndex,
@@ -93,6 +93,98 @@ public class StaticFaceBakery {
 
     public static BakedQuad bakeFace(AABB cube, Direction face, TextureAtlasSprite sprite) {
         return bakeFace(cube, face, sprite, BlockModelRotation.X0_Y0, -1, 0, true, true);
+    }
+
+    public static Builder builder(Direction face, TextureAtlasSprite sprite) {
+        return new Builder(face, sprite);
+    }
+
+    public static class Builder {
+
+        private Vector3f from = new Vector3f(0, 0, 0);
+        private Vector3f to = new Vector3f(16, 16, 16);
+        private final Direction face;
+        private final TextureAtlasSprite sprite;
+        private ModelState rotation = BlockModelRotation.X0_Y0;
+        private int tintIndex = -1;
+        private int emissivity = 0;
+        private boolean cull = true;
+        private boolean shade = true;
+        private UVPair uv0 = new UVPair(0, 0);
+        private UVPair uv1 = new UVPair(16, 16);
+
+        private Builder(Direction face, TextureAtlasSprite sprite) {
+            this.face = face;
+            this.sprite = sprite;
+        }
+
+        public Builder cube(AABB cube) {
+            from = new Vector3f((float) cube.minX * 16f, (float) cube.minY * 16f, (float) cube.minZ * 16f);
+            to = new Vector3f((float) cube.maxX * 16f, (float) cube.maxY * 16f, (float) cube.maxZ * 16f);
+            return this;
+        }
+
+        public Builder tintIndex(int tintIndex) {
+            this.tintIndex = tintIndex;
+            return this;
+        }
+
+        public Builder emissivity(int emissivity) {
+            this.emissivity = emissivity;
+            return this;
+        }
+
+        public Builder cull(boolean cull) {
+            this.cull = cull;
+            return this;
+        }
+
+        public Builder shade(boolean shade) {
+            this.shade = shade;
+            return this;
+        }
+
+        public Builder rotation(ModelState rotation) {
+            this.rotation = rotation;
+            return this;
+        }
+
+        public Builder cubeUV() {
+            switch (face) {
+                case UP -> {
+                    uv0 = new UVPair(from.x(), from.z());
+                    uv1 = new UVPair(to.x(), to.z());
+                }
+                case DOWN -> {
+                    uv0 = new UVPair(from.x(), to.z());
+                    uv1 = new UVPair(to.x(), from.z());
+                }
+                case NORTH -> {
+                    uv0 = new UVPair(to.x(), to.y());
+                    uv1 = new UVPair(from.x(), from.y());
+                }
+                case SOUTH -> {
+                    uv0 = new UVPair(from.x(), to.y());
+                    uv1 = new UVPair(to.x(), from.y());
+                }
+                case WEST -> {
+                    uv0 = new UVPair(from.z(), to.y());
+                    uv1 = new UVPair(to.z(), from.y());
+                }
+                case EAST -> {
+                    uv0 = new UVPair(to.z(), to.y());
+                    uv1 = new UVPair(from.z(), from.y());
+                }
+            }
+            return this;
+        }
+
+        public BakedQuad bake() {
+            return bakeQuad(from, to,
+                    new BlockElementFace(cull ? face : null, tintIndex, sprite.contents().name().toString(),
+                            new BlockFaceUV(new float[] { uv0.u(), uv0.v(), uv1.u(), uv1.v() }, 0)),
+                    sprite, face, rotation, null, shade, emissivity);
+        }
     }
 
     public static BakedQuad bakeQuad(Vector3f posFrom,

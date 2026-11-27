@@ -20,7 +20,7 @@ import com.gregtechceu.gtceu.common.cover.FacadeCover;
 import com.gregtechceu.gtceu.common.data.models.GTModels;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.client.model.custommodel.CustomBakedModel;
+import com.lowdragmc.lowdraglib2.client.model.custommodel.CustomBakedModel;
 
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -318,6 +318,7 @@ public final class MachineModel extends BaseBakedModel implements ICoverableRend
         if (level != null && pos != null && blockState != null) {
             return CustomBakedModel.reBakeCustomQuads(quads, level, pos, blockState, side, 0.0f);
         }
+
         return quads;
     }
 

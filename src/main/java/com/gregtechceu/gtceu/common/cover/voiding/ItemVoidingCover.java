@@ -6,15 +6,13 @@ import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.cover.IUICover;
 import com.gregtechceu.gtceu.api.cover.filter.ItemFilter;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.common.cover.ConveyorCover;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -28,6 +26,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.items.IItemHandler;
 
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -87,18 +88,23 @@ public class ItemVoidingCover extends ConveyorCover implements IUICover, IContro
     //////////////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
-        final var group = new WidgetGroup(0, 0, 176, 120);
-        group.addWidget(new LabelWidget(10, 5, getUITitle()));
+    public UIElement createUIWidget() {
+        var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
+        group.addChild(new Label().setText(Component.translatable(getUITitle())));
 
-        group.addWidget(new ToggleButtonWidget(10, 20, 20, 20,
-                GuiTextures.BUTTON_POWER, this::isWorkingEnabled, this::setWorkingEnabled));
+        var top = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .alignItems(AlignItems.CENTER));
+        top.addChild(new ToggleButton(GuiTextures.BUTTON_POWER, this::isWorkingEnabled, this::setWorkingEnabled)
+                .layout(layout -> layout.width(20).height(20)));
+        group.addChild(top);
 
-        // group.addWidget(filterHandler.createFilterSlotUI(36, 21));
-        group.addWidget(filterHandler.createFilterSlotUI(148, 91));
-        group.addWidget(filterHandler.createFilterConfigUI(10, 50, 126, 60));
+        buildAdditionalUI(group, top);
 
-        buildAdditionalUI(group);
+        var bottom = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
+                .justifyContent(AlignContent.SPACE_BETWEEN));
+        bottom.addChild(filterHandler.createFilterConfigUI());
+        bottom.addChild(filterHandler.createFilterSlotUI());
+        group.addChild(bottom);
 
         return group;
     }
@@ -126,8 +132,8 @@ public class ItemVoidingCover extends ConveyorCover implements IUICover, IContro
     }
 
     @Override
-    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
-                                              Direction side) {
+    public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                            Direction side) {
         var superTips = super.sideTips(player, pos, state, toolTypes, side);
         if (superTips != null) return superTips;
         if (toolTypes.contains(GTToolType.SOFT_MALLET)) {
@@ -139,12 +145,4 @@ public class ItemVoidingCover extends ConveyorCover implements IUICover, IContro
     //////////////////////////////////////
     // ***** LDLib SyncData ******//
     //////////////////////////////////////
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(ItemVoidingCover.class,
-            ConveyorCover.MANAGED_FIELD_HOLDER);
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
 }

@@ -2,30 +2,26 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.IParallelHatch;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
-import com.gregtechceu.gtceu.api.machine.multiblock.part.MultiblockPartMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.part.TieredPartMachine;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
 public class ParallelHatchPartMachine extends TieredPartMachine implements IFancyUIMachine, IParallelHatch {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            ParallelHatchPartMachine.class, MultiblockPartMachine.MANAGED_FIELD_HOLDER);
 
     private static final int MIN_PARALLEL = 1;
 
@@ -68,28 +64,27 @@ public class ParallelHatchPartMachine extends TieredPartMachine implements IFanc
     }
 
     @Override
-    public Widget createUIWidget() {
-        var parallelAmountGroup = new WidgetGroup(0, 0, 100, 80);
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.justifyContent(AlignContent.CENTER).alignItems(AlignItems.CENTER).gapAll(4)
+                .paddingAll(4));
 
-        parallelAmountGroup.addWidget(new LabelWidget(-14, 4, "gtceu.gui.title.parallel_hatch.max_parallel"));
-        parallelAmountGroup
-                .addWidget(new IntInputWidget(new Position(0, 18), this::getCurrentParallel, this::setCurrentParallel)
-                        .setMin(MIN_PARALLEL)
-                        .setMax(maxParallel));
+        var maxLabel = new Label();
+        maxLabel.getTextStyle().adaptiveWidth(true).textAlignHorizontal(Horizontal.CENTER);
+        maxLabel.setText(Component.translatable("gtceu.gui.title.parallel_hatch.max_parallel"));
+        var maxInput = new IntInput(this::getCurrentParallel, this::setCurrentParallel);
+        maxInput.setMin(MIN_PARALLEL);
+        maxInput.setMax(maxParallel);
 
-        parallelAmountGroup.addWidget(new LabelWidget(-10, 50, "gtceu.gui.title.parallel_hatch.min_parallel"));
-        parallelAmountGroup
-                .addWidget(new IntInputWidget(new Position(0, 64), this::getMinimumParallel, this::setMinimumParallel)
-                        .setMin(MIN_PARALLEL)
-                        .setMax(maxParallel));
+        var minLabel = new Label();
+        minLabel.getTextStyle().adaptiveWidth(true).textAlignHorizontal(Horizontal.CENTER);
+        minLabel.setText(Component.translatable("gtceu.gui.title.parallel_hatch.min_parallel"));
+        var minInput = new IntInput(this::getMinimumParallel, this::setMinimumParallel);
+        minInput.setMin(MIN_PARALLEL);
+        minInput.setMax(maxParallel);
 
-        return parallelAmountGroup;
-    }
-
-    @Override
-    @NotNull
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
+        group.addChildren(maxLabel, maxInput, minLabel, minInput);
+        return group;
     }
 
     @Override

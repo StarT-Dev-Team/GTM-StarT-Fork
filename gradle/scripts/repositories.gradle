@@ -25,8 +25,20 @@ repositories {
         url = "https://maven.firstdark.dev/snapshots"
     }
 
-    maven {  // AE2UELM
+    maven {  // AE2UELM & LDLib2
+        name = "Expandium"
         url = "https://repo.expandium.net/releases"
+        content {
+            includeGroup("appeng")
+            includeGroup("com.lowdragmc.ldlib2")
+        }
+    }
+    maven {
+        name "Expandium Snapshots"
+        url "https://repo.expandium.net/snapshots"
+        content {
+            includeGroup("com.lowdragmc.ldlib2")
+        }
     }
 
     exclusiveContent { // Create, Ponder, Flywheel

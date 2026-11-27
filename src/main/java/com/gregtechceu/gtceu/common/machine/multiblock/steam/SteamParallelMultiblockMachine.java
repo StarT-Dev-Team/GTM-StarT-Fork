@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
+import com.gregtechceu.gtceu.api.gui.widget.ComponentPanel;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
@@ -24,11 +25,10 @@ import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -167,16 +167,23 @@ public class SteamParallelMultiblockMachine extends WorkableMultiblockMachine im
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        var screen = new DraggableScrollableWidgetGroup(7, 4, 162, 121).setBackground(getScreenTexture());
-        screen.addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()));
-        screen.addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
+        boolean steel = ConfigHolder.INSTANCE.machines.steelSteamMultiblocks;
+        var content = new UIElement();
+        content.layout(layout -> layout.paddingAll(4).gapAll(3));
+        var title = new Label();
+        title.setText(Component.translatable(self().getBlockState().getBlock().getDescriptionId()));
+        content.addChildren(title, new ComponentPanel(this::addDisplayText)
                 .setMaxWidthLimit(154)
                 .clickHandler(this::handleDisplayClick));
-        return new ModularUI(176, 216, this, entityPlayer)
-                .background(GuiTextures.BACKGROUND_STEAM.get(ConfigHolder.INSTANCE.machines.steelSteamMultiblocks))
-                .widget(screen)
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(),
-                        GuiTextures.SLOT_STEAM.get(ConfigHolder.INSTANCE.machines.steelSteamMultiblocks), 7, 134,
-                        true));
+
+        var screen = UITemplate.displayScreen(getScreenTexture());
+        screen.layout(layout -> layout.width(162).height(121));
+        screen.addScrollViewChild(content);
+
+        var root = UITemplate.panel();
+        root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(steel)));
+        root.layout(layout -> layout.width(176));
+        root.addChildren(screen, UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(steel)));
+        return UITemplate.modularUI(root, entityPlayer);
     }
 }

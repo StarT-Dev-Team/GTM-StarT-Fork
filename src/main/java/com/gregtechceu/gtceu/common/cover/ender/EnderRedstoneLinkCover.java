@@ -6,22 +6,16 @@ import com.gregtechceu.gtceu.api.misc.virtualregistry.EntryTypes;
 import com.gregtechceu.gtceu.api.misc.virtualregistry.VirtualEntry;
 import com.gregtechceu.gtceu.api.misc.virtualregistry.entries.VirtualRedstone;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.core.Direction;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class EnderRedstoneLinkCover extends AbstractEnderLinkCover<VirtualRedstone> {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(EnderRedstoneLinkCover.class,
-            AbstractEnderLinkCover.MANAGED_FIELD_HOLDER);
 
     @Persisted
     @DescSynced
@@ -74,8 +68,8 @@ public class EnderRedstoneLinkCover extends AbstractEnderLinkCover<VirtualRedsto
     }
 
     @Override
-    protected Widget addVirtualEntryWidget(VirtualEntry entry, int x, int y, int width, int height, boolean canClick) {
-        return new WidgetGroup(x, y, width, height);
+    protected UIElement addVirtualEntryWidget(Supplier<? extends VirtualEntry> entry, boolean interactive) {
+        return new UIElement();
     }
 
     @Override
@@ -97,10 +91,5 @@ public class EnderRedstoneLinkCover extends AbstractEnderLinkCover<VirtualRedsto
     protected int getSignalInput() {
         return coverHolder.getLevel().getSignal(coverHolder.getPos().relative(attachedSide),
                 attachedSide.getOpposite());
-    }
-
-    @Override
-    public @NotNull ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 }

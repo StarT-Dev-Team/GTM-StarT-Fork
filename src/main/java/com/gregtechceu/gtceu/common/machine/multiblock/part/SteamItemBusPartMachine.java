@@ -3,20 +3,25 @@ package com.gregtechceu.gtceu.common.machine.multiblock.part;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import org.jetbrains.annotations.NotNull;
 
 public class SteamItemBusPartMachine extends ItemBusPartMachine {
@@ -32,30 +37,37 @@ public class SteamItemBusPartMachine extends ItemBusPartMachine {
     @Override
     public ModularUI createUI(@NotNull Player entityPlayer) {
         int rowSize = (int) Math.sqrt(getInventorySize());
-        int xOffset = rowSize == 10 ? 9 : 0;
-        var modular = new ModularUI(176 + xOffset * 2,
-                18 + 18 * rowSize + 105, this, entityPlayer)
-                .background(GuiTextures.BACKGROUND_STEAM.get(ConfigHolder.INSTANCE.machines.steelSteamMultiblocks))
-                .widget(new LabelWidget(10, 5, getBlockState().getBlock().getDescriptionId()))
-                .widget(new ToggleButtonWidget(7 + xOffset, 18 + 18 * rowSize, 18, 18,
-                        GuiTextures.BUTTON_ITEM_OUTPUT, this::isWorkingEnabled, this::setWorkingEnabled)
-                        .setShouldUseBaseBackground() // TODO: Steamify background
-                        .setTooltipText(autoTooltipKey))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(),
-                        GuiTextures.SLOT_STEAM.get(ConfigHolder.INSTANCE.machines.steelSteamMultiblocks),
-                        7 + xOffset, 18 + 18 * rowSize + 24, true));
+        boolean steel = ConfigHolder.INSTANCE.machines.steelSteamMultiblocks;
 
+        var title = new Label();
+        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
+        title.layout(layout -> layout.alignSelf(AlignItems.FLEX_START).marginLeft(5));
+
+        var toggle = new ToggleButton(GuiTextures.BUTTON_ITEM_OUTPUT, this::isWorkingEnabled,
+                this::setWorkingEnabled)
+                .setShouldUseBaseBackground()
+                .setTooltipText(autoTooltipKey);
+        toggle.layout(layout -> layout.alignSelf(AlignItems.FLEX_START).marginLeft(2));
+
+        var grid = new UIElement();
+        boolean canPut = io.support(IO.IN);
         for (int y = 0; y < rowSize; y++) {
+            var row = new UIElement();
+            row.layout(layout -> layout.flexDirection(FlexDirection.ROW));
             for (int x = 0; x < rowSize; x++) {
-                int index = y * rowSize + x;
-                modular.widget(new SlotWidget(getInventory().storage, index,
-                        (88 - rowSize * 9 + x * 18) + xOffset, 18 + y * 18 + 6, true, io.support(IO.IN))
-                        .setBackgroundTexture(
-                                GuiTextures.SLOT_STEAM.get(ConfigHolder.INSTANCE.machines.steelSteamMultiblocks)));
+                var slot = new ItemSlot().bind(new ItemHandlerSlot(getInventory().storage, y * rowSize + x)
+                        .setCanPlace(stack -> canPut));
+                slot.style(style -> style.backgroundTexture(GuiTextures.SLOT_STEAM.get(steel)));
+                row.addChild(slot);
             }
+            grid.addChild(row);
         }
 
-        return modular;
+        var root = UITemplate.panel();
+        root.style(style -> style.background(GuiTextures.BACKGROUND_STEAM.get(steel)));
+        root.layout(layout -> layout.minWidth(176).paddingAll(5).paddingBottom(7));
+        root.addChildren(title, grid, toggle, UITemplate.bindPlayerInventory(GuiTextures.SLOT_STEAM.get(steel)));
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     @Override

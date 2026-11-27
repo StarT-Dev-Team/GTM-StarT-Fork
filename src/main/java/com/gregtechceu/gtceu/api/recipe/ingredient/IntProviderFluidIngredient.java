@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
  * and either an {@link IntProvider} or {@code int, int} range bounds (inclusive).
  * Functions similarly to {@link IntProviderIngredient}.
  */
-public class IntProviderFluidIngredient extends FluidIngredient implements IRangedIngredient{
+public class IntProviderFluidIngredient extends FluidIngredient implements IRangedIngredient {
 
     public static final Codec<IntProviderFluidIngredient> CODEC = ExtraCodecs.JSON
             .xmap(IntProviderFluidIngredient::fromJson, IntProviderFluidIngredient::toJson);

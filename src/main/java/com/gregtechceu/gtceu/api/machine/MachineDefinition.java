@@ -11,7 +11,7 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifierList;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 
-import com.lowdragmc.lowdraglib.utils.ShapeUtils;
+import com.lowdragmc.lowdraglib2.utils.ShapeUtils;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.IdMapper;

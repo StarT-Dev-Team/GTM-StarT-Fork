@@ -1,14 +1,14 @@
 package com.gregtechceu.gtceu.api.recipe;
 
 import com.gregtechceu.gtceu.GTCEu;
+import com.gregtechceu.gtceu.api.gui.texture.UVSpriteTexture;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
@@ -63,12 +63,11 @@ public abstract class RecipeCondition<T extends RecipeCondition<T>> {
     }
 
     public IGuiTexture getInValidTexture() {
-        return new ResourceTexture("gtceu:textures/gui/condition/" + getType() + ".png").getSubTexture(0, 0, 1, 0.5f);
+        return UVSpriteTexture.of("gtceu:textures/gui/condition/" + getType() + ".png", 0, 0, 1, 0.5f);
     }
 
     public IGuiTexture getValidTexture() {
-        return new ResourceTexture("gtceu:textures/gui/condition/" + getType() + ".png").getSubTexture(0, 0.5f, 1,
-                0.5f);
+        return UVSpriteTexture.of("gtceu:textures/gui/condition/" + getType() + ".png", 0, 0.5f, 1, 0.5f);
     }
 
     public boolean isOr() {
@@ -90,7 +89,7 @@ public abstract class RecipeCondition<T extends RecipeCondition<T>> {
         return true;
     }
 
-    public Widget createCustomXeiWidget(@NotNull GTRecipeWidget wrapper, @NotNull GTRecipe recipe) {
+    public UIElement createCustomXeiWidget(@NotNull GTRecipeWidget wrapper, @NotNull GTRecipe recipe) {
         return null;
     }
 

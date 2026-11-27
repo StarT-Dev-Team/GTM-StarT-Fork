@@ -1,6 +1,6 @@
 package com.gregtechceu.gtceu.client.model;
 
-import com.lowdragmc.lowdraglib.client.model.ModelFactory;
+import com.lowdragmc.lowdraglib2.client.model.ModelFactory;
 
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;

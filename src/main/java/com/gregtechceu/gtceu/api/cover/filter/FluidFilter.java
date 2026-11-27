@@ -1,6 +1,6 @@
 package com.gregtechceu.gtceu.api.cover.filter;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -54,7 +54,7 @@ public interface FluidFilter extends Filter<FluidStack, FluidFilter> {
         }
 
         @Override
-        public WidgetGroup openConfigurator(int x, int y) {
+        public UIElement openConfigurator() {
             throw new NotImplementedException("Not available for empty fluid filter");
         }
 

@@ -3,10 +3,10 @@ package com.gregtechceu.gtceu.integration.rei.multipage;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
 import com.gregtechceu.gtceu.common.data.machines.GTMultiMachines;
+import com.gregtechceu.gtceu.integration.rei.REIIcons;
 
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.rei.IGui2Renderer;
-import com.lowdragmc.lowdraglib.rei.ModularUIDisplayCategory;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplayCategory;
 
 import net.minecraft.network.chat.Component;
 
@@ -21,7 +21,8 @@ public class MultiblockInfoDisplayCategory extends ModularUIDisplayCategory<Mult
     private final Renderer icon;
 
     public MultiblockInfoDisplayCategory() {
-        this.icon = IGui2Renderer.toDrawable(new ItemStackTexture(GTMultiMachines.ELECTRIC_BLAST_FURNACE.getItem()));
+        super(MultiblockInfoDisplay::createModularUI);
+        this.icon = REIIcons.of(new ItemStackTexture(GTMultiMachines.ELECTRIC_BLAST_FURNACE.getItem()));
     }
 
     public static void registerDisplays(DisplayRegistry registry) {

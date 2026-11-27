@@ -11,9 +11,9 @@ import com.gregtechceu.gtceu.api.cover.IUICover;
 import com.gregtechceu.gtceu.api.cover.filter.FilterHandler;
 import com.gregtechceu.gtceu.api.cover.filter.FilterHandlers;
 import com.gregtechceu.gtceu.api.cover.filter.FluidFilter;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.NumberInputWidget;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
+import com.gregtechceu.gtceu.api.gui.widget.NumberInput;
 import com.gregtechceu.gtceu.api.machine.ConditionalSubscriptionHandler;
 import com.gregtechceu.gtceu.api.transfer.fluid.FluidHandlerDelegate;
 import com.gregtechceu.gtceu.api.transfer.fluid.IFluidHandlerModifiable;
@@ -22,13 +22,12 @@ import com.gregtechceu.gtceu.common.cover.data.BucketMode;
 import com.gregtechceu.gtceu.common.cover.data.ManualIOMode;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -39,6 +38,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
@@ -54,9 +56,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class PumpCover extends CoverBehavior implements IIOCover, IUICover, IControllable {
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(PumpCover.class,
-            CoverBehavior.MANAGED_FIELD_HOLDER);
 
     // .5b 2b 8b
     public static final Int2IntFunction PUMP_SCALING = tier -> 16 * (int) Math.pow(4, Math.min(tier, GTValues.UV));
@@ -91,7 +90,7 @@ public class PumpCover extends CoverBehavior implements IIOCover, IUICover, ICon
     @DescSynced
     protected final FilterHandler<FluidStack, FluidFilter> filterHandler;
     protected final ConditionalSubscriptionHandler subscriptionHandler;
-    private NumberInputWidget<Integer> transferRateWidget;
+    private NumberInput<Integer> transferRateWidget;
 
     public PumpCover(CoverDefinition definition, ICoverable coverHolder, Direction attachedSide, int tier,
                      int maxTransferRate) {
@@ -130,11 +129,6 @@ public class PumpCover extends CoverBehavior implements IIOCover, IUICover, ICon
     //////////////////////////////////////
     // ***** Initialization ******//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     @Override
     public boolean canAttach() {
         return super.canAttach() && getOwnFluidHandler() != null;
@@ -289,30 +283,51 @@ public class PumpCover extends CoverBehavior implements IIOCover, IUICover, ICon
     //////////////////////////////////////
 
     @Override
-    public Widget createUIWidget() {
-        final var group = new WidgetGroup(0, 0, 176, 137);
-        group.addWidget(new LabelWidget(10, 5, Component.translatable(getUITitle(), GTValues.VN[tier]).getString()));
+    public Component getCoverUITitle() {
+        return Component.translatable(getUITitle(), GTValues.VN[tier]);
+    }
 
-        transferRateWidget = new IntInputWidget(10, 20, 134, 20,
-                this::getCurrentBucketModeTransferRate, this::setCurrentBucketModeTransferRate).setMin(0);
-        setBucketMode(this.bucketMode); // initial input widget config happens here
-        group.addWidget(transferRateWidget);
+    @Override
+    public UIElement createUIWidget() {
+        var group = new UIElement().layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(3));
+        group.addChild(new Label().setText(Component.translatable(getUITitle(), GTValues.VN[tier])));
 
-        group.addWidget(new EnumSelectorWidget<>(
-                146, 20, 20, 20,
+        var rateRow = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2)
+                .alignItems(AlignItems.CENTER));
+        transferRateWidget = new IntInput(this::getCurrentBucketModeTransferRate,
+                this::setCurrentBucketModeTransferRate);
+        transferRateWidget.setMin(0);
+        transferRateWidget.layout(layout -> layout.flex(1).height(20));
+        setBucketMode(this.bucketMode);
+        var appliedMode = new BucketMode[] { this.bucketMode };
+        transferRateWidget.addEventListener(UIEvents.TICK, event -> {
+            if (appliedMode[0] != bucketMode) {
+                appliedMode[0] = bucketMode;
+                transferRateWidget.setMax(maxFluidTransferRate / bucketMode.multiplier);
+            }
+        });
+        rateRow.addChild(transferRateWidget);
+        rateRow.addChild(new EnumSelector<>(
                 Arrays.stream(BucketMode.values()).filter(m -> m.multiplier <= maxFluidTransferRate).toList(),
-                bucketMode, this::setBucketMode).setTooltipSupplier(this::getBucketModeTooltip));
+                () -> bucketMode, this::setBucketMode).setTooltipSupplier(this::getBucketModeTooltip));
+        group.addChild(rateRow);
 
-        group.addWidget(new EnumSelectorWidget<>(10, 45, 20, 20, List.of(IO.IN, IO.OUT), io, this::setIo));
+        group.addChild(new EnumSelector<>(List.of(IO.IN, IO.OUT), () -> io, this::setIo));
 
-        group.addWidget(new EnumSelectorWidget<>(146, 107, 20, 20,
-                ManualIOMode.VALUES, manualIOMode, this::setManualIOMode)
-                .setHoverTooltips("cover.universal.manual_import_export.mode.description"));
+        var extra = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2)
+                .alignItems(AlignItems.CENTER));
+        buildAdditionalUI(extra);
+        group.addChild(extra);
 
-        group.addWidget(filterHandler.createFilterSlotUI(125, 108));
-        group.addWidget(filterHandler.createFilterConfigUI(10, 72, 156, 60));
+        group.addChild(filterHandler.createFilterConfigUI());
 
-        buildAdditionalUI(group);
+        var bottom = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW)
+                .justifyContent(AlignContent.SPACE_BETWEEN).alignItems(AlignItems.CENTER));
+        bottom.addChild(filterHandler.createFilterSlotUI());
+        var manual = new EnumSelector<>(ManualIOMode.VALUES, () -> manualIOMode, this::setManualIOMode);
+        manual.style(style -> style.tooltips("cover.universal.manual_import_export.mode.description"));
+        bottom.addChild(manual);
+        group.addChild(bottom);
 
         return group;
     }
@@ -335,7 +350,7 @@ public class PumpCover extends CoverBehavior implements IIOCover, IUICover, ICon
         return "cover.pump.title";
     }
 
-    protected void buildAdditionalUI(WidgetGroup group) {
+    protected void buildAdditionalUI(UIElement group) {
         // Do nothing in the base implementation. This is intended to be overridden by subclasses.
     }
 

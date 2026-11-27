@@ -7,7 +7,7 @@ import com.gregtechceu.gtceu.common.data.item.GTToolActions;
 import com.gregtechceu.gtceu.common.item.tool.rotation.CustomBlockRotations;
 import com.gregtechceu.gtceu.common.item.tool.rotation.ICustomRotationBehavior;
 
-import com.lowdragmc.lowdraglib.utils.RayTraceHelper;
+import com.lowdragmc.lowdraglib2.utils.RayTraceHelper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

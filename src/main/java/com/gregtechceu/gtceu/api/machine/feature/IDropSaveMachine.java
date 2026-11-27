@@ -1,5 +1,9 @@
 package com.gregtechceu.gtceu.api.machine.feature;
 
+import com.gregtechceu.gtceu.syncdata.LegacyManagedData;
+
+import com.lowdragmc.lowdraglib2.Platform;
+
 import net.minecraft.nbt.CompoundTag;
 
 /**
@@ -27,13 +31,16 @@ public interface IDropSaveMachine extends IMachineFeature {
      * @param tag The tag to save to.
      */
     default void saveToItem(CompoundTag tag) {
-        self().holder.saveManagedPersistentData(tag, true);
+        self().holder.saveManagedPersistentData(Platform.getFrozenRegistry(), tag, true);
     }
 
     /**
      * Loads the contents of the block entity from a compound tag.
      */
     default void loadFromItem(CompoundTag tag) {
-        self().holder.loadManagedPersistentData(tag);
+        var holder = self().holder;
+        var saved = tag.contains(LegacyManagedData.MANAGED) ? tag :
+                LegacyManagedData.wrapFlatTag(holder.getRootStorage(), tag);
+        holder.loadManagedPersistentData(Platform.getFrozenRegistry(), saved);
     }
 }

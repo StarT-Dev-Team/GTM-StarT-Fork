@@ -3,19 +3,18 @@ package com.gregtechceu.gtceu.api.cover.filter;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.cover.CoverBehavior;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.MenuSlots;
 import com.gregtechceu.gtceu.api.machine.MachineCoverContainer;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.IEnhancedManaged;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.FieldManagedStorage;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.syncdata.IManaged;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.ItemStack;
@@ -30,9 +29,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhancedManaged {
+public abstract class FilterHandler<T, F extends Filter<T, F>> implements IManaged {
 
-    private final IEnhancedManaged container;
+    private final IManaged container;
 
     @Persisted
     @DescSynced
@@ -40,13 +39,13 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
 
     private @Nullable F filter;
     private @Nullable CustomItemStackHandler filterSlot;
-    private @Nullable WidgetGroup filterGroup;
+    private @Nullable UIElement filterGroup;
 
     private @NotNull Consumer<F> onFilterLoaded = (filter) -> {};
     private @NotNull Consumer<F> onFilterRemoved = (filter) -> {};
     private @NotNull Consumer<F> onFilterUpdated = (filter) -> {};
 
-    public FilterHandler(IEnhancedManaged container) {
+    public FilterHandler(IManaged container) {
         this.container = container;
     }
 
@@ -60,16 +59,17 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
     // ***** PUBLIC API ******//
     //////////////////////////////////
 
-    public Widget createFilterSlotUI(int xPos, int yPos) {
-        return new SlotWidget(getFilterSlot(), 0, xPos, yPos)
-                .setChangeListener(this::updateFilter)
-                .setBackgroundTexture(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.FILTER_SLOT_OVERLAY));
+    public ItemSlot createFilterSlotUI() {
+        var slot = new ItemSlot().bind(getFilterSlot(), 0);
+        slot.style(style -> style.backgroundTexture(
+                IGuiTexture.group(GuiTextures.SLOT, GuiTextures.FILTER_SLOT_OVERLAY)));
+        return slot;
     }
 
-    public Widget createFilterConfigUI(int xPos, int yPos, int width, int height) {
-        this.filterGroup = new WidgetGroup(xPos, yPos, width, height);
+    public UIElement createFilterConfigUI() {
+        this.filterGroup = new UIElement();
         if (!this.filterItem.isEmpty()) {
-            this.filterGroup.addWidget(getFilter().openConfigurator(0, 0));
+            this.filterGroup.addChild(getFilter().openConfigurator());
         }
 
         return this.filterGroup;
@@ -130,7 +130,7 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
             this.onFilterRemoved.accept(oldFilter);
         }
         this.loadFilterFromItem();
-        this.onChanged();
+        this.notifyPersistence();
     }
 
     ///////////////////////////////////////
@@ -172,7 +172,7 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
         }
 
         loadFilterFromItem();
-        this.onChanged();
+        this.notifyPersistence();
     }
 
     private void loadFilterFromItem() {
@@ -180,7 +180,7 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
             this.filter = loadFilter(this.filterItem);
             filter.setOnUpdated(f -> {
                 this.onFilterUpdated.accept(f);
-                this.onChanged();
+                this.notifyPersistence();
             });
             if (filter instanceof SmartItemFilter smart &&
                     container instanceof CoverBehavior cover &&
@@ -199,34 +199,22 @@ public abstract class FilterHandler<T, F extends Filter<T, F>> implements IEnhan
         if (this.filterGroup == null)
             return;
 
-        this.filterGroup.clearAllWidgets();
+        MenuSlots.clearChildren(this.filterGroup);
 
         if (!this.filterItem.isEmpty() && this.filter != null) {
-            this.filterGroup.addWidget(this.filter.openConfigurator(0, 0));
+            this.filterGroup.addChild(this.filter.openConfigurator());
         }
     }
 
     //////////////////////////////////////
-    // ***** LDLib SyncData ******//
+    // ***** LDLib2 SyncData ******//
     //////////////////////////////////////
-
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(FilterHandler.class);
 
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
-    @Override
-    public void onChanged() {
-        this.container.onChanged();
-    }
-
-    @Override
-    public void scheduleRenderUpdate() {
-        this.container.scheduleRenderUpdate();
+    public void notifyPersistence() {
+        this.container.notifyPersistence();
     }
 }

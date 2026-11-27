@@ -1,49 +1,36 @@
 package com.gregtechceu.gtceu.api.gui.factory;
 
-import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 
-import com.lowdragmc.lowdraglib.gui.factory.UIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.server.level.ServerPlayer;
 
-public class MachineUIFactory extends UIFactory<MetaMachine> {
+public class MachineUIFactory {
 
     public static final MachineUIFactory INSTANCE = new MachineUIFactory();
 
-    public MachineUIFactory() {
-        super(GTCEu.id("machine"));
+    private MachineUIFactory() {}
+
+    public boolean openUI(MetaMachine machine, ServerPlayer player) {
+        return BlockUIMenuType.openUI(player, machine.getPos());
     }
 
-    @Override
-    protected ModularUI createUITemplate(MetaMachine holder, Player entityPlayer) {
-        if (holder instanceof IUIMachine machine) {
-            return machine.createUI(entityPlayer);
+    public static ModularUI createUI(BlockUIMenuType.BlockUIHolder holder) {
+        if (MetaMachine.getMachine(holder.player.level(), holder.pos) instanceof IUIMachine uiMachine) {
+            return uiMachine.createUI(holder.player);
         }
-        return null;
+        return new ModularUI(UI.empty(), holder.player);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    protected MetaMachine readHolderFromSyncData(FriendlyByteBuf syncData) {
-        Level world = Minecraft.getInstance().level;
-        if (world == null) return null;
-        if (world.getBlockEntity(syncData.readBlockPos()) instanceof IMachineBlockEntity holder) {
-            return holder.getMetaMachine();
+    public static boolean stillValid(BlockUIMenuType.BlockUIHolder holder) {
+        if (!holder.blockState.is(holder.player.level().getBlockState(holder.pos).getBlock())) {
+            return false;
         }
-        return null;
-    }
-
-    @Override
-    protected void writeHolderToSyncData(FriendlyByteBuf syncData, MetaMachine holder) {
-        syncData.writeBlockPos(holder.getPos());
+        var machine = MetaMachine.getMachine(holder.player.level(), holder.pos);
+        return machine instanceof IUIMachine && !machine.isInValid();
     }
 }

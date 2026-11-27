@@ -6,12 +6,12 @@ import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.client.ClientProxy;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.integration.rei.REIIcons;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTOreVeinWidget;
 
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.rei.IGui2Renderer;
-import com.lowdragmc.lowdraglib.rei.ModularUIDisplayCategory;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.integration.xei.rei.ModularUIDisplayCategory;
+import com.lowdragmc.lowdraglib2.math.Size;
 
 import net.minecraft.network.chat.Component;
 
@@ -36,8 +36,9 @@ public class GTBedrockOreDisplayCategory extends ModularUIDisplayCategory<GTBedr
     private final Size size;
 
     public GTBedrockOreDisplayCategory() {
-        this.icon = IGui2Renderer.toDrawable(new ItemStackTexture(GTMaterials.Oil.getFluid().getBucket().asItem()));
-        this.size = new Size(10 + GTOreVeinWidget.width, 140);
+        super(GTBedrockOreDisplay::createModularUI);
+        this.icon = REIIcons.of(new ItemStackTexture(GTMaterials.Oil.getFluid().getBucket().asItem()));
+        this.size = Size.of(10 + GTOreVeinWidget.width, 140);
     }
 
     @Override

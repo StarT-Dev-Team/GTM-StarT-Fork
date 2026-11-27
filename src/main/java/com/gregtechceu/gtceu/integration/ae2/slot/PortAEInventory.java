@@ -1,9 +1,9 @@
 package com.gregtechceu.gtceu.integration.ae2.slot;
 
-import com.lowdragmc.lowdraglib.syncdata.IContentChangeAware;
-import com.lowdragmc.lowdraglib.syncdata.ITagSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.IContentChangeAware;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.common.util.INBTSerializable;
 
 import appeng.api.stacks.GenericStack;
 import appeng.helpers.externalstorage.GenericStackInv;
@@ -11,7 +11,7 @@ import appeng.util.ConfigInventory;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
-public class PortAEInventory implements IConfigurableSlotList, ITagSerializable<CompoundTag>, IContentChangeAware {
+public class PortAEInventory implements IConfigurableSlotList, INBTSerializable<CompoundTag>, IContentChangeAware {
 
     public static final int BASE_SIZE = 16;
     public static final int SLOTS_PER_TIER = 4;

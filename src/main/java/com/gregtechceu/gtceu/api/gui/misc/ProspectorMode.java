@@ -15,11 +15,10 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
-import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
@@ -267,14 +266,12 @@ public abstract class ProspectorMode<T> {
             if (items.length > 0) {
                 var item = items[0];
                 double progress = item.left * 1.0 / Math.max(Math.min(item.left, 100), 1);
-                float drawnU = (float) ProgressTexture.FillDirection.DOWN_TO_UP.getDrawnU(progress);
-                float drawnV = (float) ProgressTexture.FillDirection.DOWN_TO_UP.getDrawnV(progress);
-                float drawnWidth = (float) ProgressTexture.FillDirection.DOWN_TO_UP.getDrawnWidth(progress);
-                float drawnHeight = (float) ProgressTexture.FillDirection.DOWN_TO_UP.getDrawnHeight(progress);
-                DrawerHelper.drawFluidForGui(graphics,
-                        FluidHelperImpl.toFluidStack(new FluidStack(item.fluid(), item.left)), 100,
-                        (int) (x + drawnU * width), (int) (y + drawnV * height), ((int) (width * drawnWidth)),
-                        ((int) (height * drawnHeight)));
+                float drawnU = (float) FillDirection.DOWN_TO_UP.getDrawnU(progress);
+                float drawnV = (float) FillDirection.DOWN_TO_UP.getDrawnV(progress);
+                float drawnWidth = (float) FillDirection.DOWN_TO_UP.getDrawnWidth(progress);
+                float drawnHeight = (float) FillDirection.DOWN_TO_UP.getDrawnHeight(progress);
+                DrawerHelper.drawFluidForGui(graphics, new FluidStack(item.fluid(), item.left),
+                        x + drawnU * width, y + drawnV * height, width * drawnWidth, height * drawnHeight, -1);
             }
         }
     };

@@ -3,22 +3,26 @@ package com.gregtechceu.gtceu.common.machine.multiblock.primitive;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ProgressTextureBar;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -29,6 +33,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.fluids.FluidUtil;
+
+import dev.vfyjxf.taffy.style.TaffyPosition;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -42,24 +48,44 @@ public class CokeOvenMachine extends PrimitiveWorkableMachine implements IUIMach
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(176, 166, this, entityPlayer)
-                .background(GuiTextures.PRIMITIVE_BACKGROUND)
-                .widget(new LabelWidget(5, 5, getBlockState().getBlock().getDescriptionId()))
-                .widget(new SlotWidget(importItems.storage, 0, 52, 30, true, true)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_FURNACE_OVERLAY)))
-                .widget(new ProgressWidget(recipeLogic::getProgressPercent, 76, 32, 20, 15,
-                        GuiTextures.PRIMITIVE_BLAST_FURNACE_PROGRESS_BAR))
-                .widget(new SlotWidget(exportItems.storage, 0, 103, 30, true, false)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_FURNACE_OVERLAY)))
-                .widget(new TankWidget(exportFluids.getStorages()[0], 134, 13, 20, 58, true, false)
-                        .setBackground(GuiTextures.PRIMITIVE_LARGE_FLUID_TANK)
-                        .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP)
-                        .setShowAmountOverlay(false)
-                        .setOverlay(GuiTextures.PRIMITIVE_LARGE_FLUID_TANK_OVERLAY))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.PRIMITIVE_SLOT, 7, 84,
-                        true));
+        var area = new UIElement();
+        area.layout(layout -> layout.widthPercent(100).height(82));
+
+        var title = new Label();
+        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(5).top(5));
+
+        var input = new ItemSlot().bind(importItems.storage, 0);
+        input.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_FURNACE_OVERLAY)));
+        input.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(52).top(30));
+
+        var progress = ProgressTextureBar.of(GuiTextures.PRIMITIVE_BLAST_FURNACE_PROGRESS_BAR,
+                FillDirection.LEFT_TO_RIGHT, 20, 15);
+        progress.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(76).top(32));
+        progress.bindDataSource(SupplierDataSource.of(() -> (float) recipeLogic.getProgressPercent()));
+
+        var output = new ItemSlot().bind(new ItemHandlerSlot(exportItems.storage, 0).setCanPlace(stack -> false));
+        output.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_FURNACE_OVERLAY)));
+        output.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(103).top(30));
+
+        var tank = new FluidSlot().bind(exportFluids.getStorages()[0], 0);
+        tank.setAllowClickFilled(false);
+        tank.setAllowClickDrained(true);
+        tank.slotStyle(style -> style.fillDirection(FillDirection.DOWN_TO_UP)
+                .slotOverlay(GuiTextures.PRIMITIVE_LARGE_FLUID_TANK_OVERLAY));
+        tank.amountLabel.setDisplay(false);
+        tank.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(134).top(13).width(20).height(58));
+        tank.style(style -> style.backgroundTexture(GuiTextures.PRIMITIVE_LARGE_FLUID_TANK));
+
+        area.addChildren(title, input, progress, output, tank);
+
+        var root = UITemplate.panel();
+        root.style(style -> style.background(GuiTextures.PRIMITIVE_BACKGROUND));
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(7));
+        root.addChildren(area, UITemplate.bindPlayerInventory(GuiTextures.PRIMITIVE_SLOT));
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     @Override

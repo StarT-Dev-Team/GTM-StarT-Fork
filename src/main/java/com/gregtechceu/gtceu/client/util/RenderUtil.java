@@ -6,10 +6,11 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.FluidIngredient;
 import com.gregtechceu.gtceu.utils.GTMatrixUtils;
-import com.gregtechceu.gtceu.utils.ResearchManager;
 import com.gregtechceu.gtceu.utils.GTUtil;
+import com.gregtechceu.gtceu.utils.ResearchManager;
 
-import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
+import com.lowdragmc.lowdraglib2.client.shader.LDLibRenderTypes;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -316,7 +317,11 @@ public class RenderUtil {
                         var texture = RenderUtil.FluidTextureType.STILL.map(clientExt, output);
                         int color = clientExt.getTintColor(output);
 
-                        DrawerHelper.drawFluidTexture(graphics, x, y, texture, 0, 0, z, color);
+                        var buffer = graphics.bufferSource()
+                                .getBuffer(LDLibRenderTypes.guiTexture(InventoryMenu.BLOCK_ATLAS));
+                        DrawerHelper.drawFluidTexture(buffer, graphics.pose().last(), x, y, texture, 0, 0, z,
+                                color | 0xFF000000);
+                        graphics.flush();
                         return true;
                     }
                 }

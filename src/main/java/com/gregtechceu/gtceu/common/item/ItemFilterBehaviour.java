@@ -1,17 +1,19 @@
 package com.gregtechceu.gtceu.common.item;
 
 import com.gregtechceu.gtceu.api.cover.filter.ItemFilter;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.item.component.IItemUIFactory;
 
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+
+import dev.vfyjxf.taffy.style.AlignItems;
 
 import java.util.function.Function;
 
@@ -24,12 +26,13 @@ public record ItemFilterBehaviour(Function<ItemStack, ItemFilter> filterCreator)
     }
 
     @Override
-    public ModularUI createUI(HeldItemUIFactory.HeldItemHolder holder, Player entityPlayer) {
-        var held = holder.getHeld();
-        return new ModularUI(176, 157, holder, entityPlayer)
-                .background(GuiTextures.BACKGROUND)
-                .widget(new LabelWidget(5, 5, held.getDescriptionId()))
-                .widget(ItemFilter.loadFilter(held).openConfigurator((176 - 80) / 2, (60 - 55) / 2 + 15))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.SLOT, 7, 75, true));
+    public ModularUI createUI(HeldItemUIMenuType.HeldItemUIHolder holder, Player entityPlayer) {
+        var held = holder.itemStack;
+        var root = UITemplate.panel();
+        root.layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(5).alignItems(AlignItems.CENTER));
+        root.addChild(new Label().setText(Component.translatable(held.getDescriptionId())));
+        root.addChild(ItemFilter.loadFilter(held).openConfigurator());
+        root.addChild(UITemplate.playerInventory());
+        return UITemplate.modularUI(root, entityPlayer);
     }
 }

@@ -9,8 +9,7 @@ import com.gregtechceu.gtceu.api.gui.editor.EditableUI;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfigurator;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfiguratorButton;
-import com.gregtechceu.gtceu.api.gui.widget.GhostCircuitSlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.GhostCircuitSlot;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.fancyconfigurator.CircuitFancyConfigurator;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputBoth;
@@ -25,17 +24,16 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.ISubscription;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -51,6 +49,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import com.google.common.collect.Tables;
 import com.mojang.blaze3d.MethodsReturnNonnullByDefault;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import lombok.Getter;
 import lombok.Setter;
@@ -68,9 +69,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class SimpleTieredMachine extends WorkableTieredMachine
                                  implements IAutoOutputBoth, IFancyUIMachine, IHasCircuitSlot {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(SimpleTieredMachine.class,
-            WorkableTieredMachine.MANAGED_FIELD_HOLDER);
 
     @Persisted
     @DescSynced
@@ -126,11 +124,6 @@ public class SimpleTieredMachine extends WorkableTieredMachine
     //////////////////////////////////////
     // ***** Initialization ******//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     protected CustomItemStackHandler createChargerItemHandler(Object... args) {
         var handler = new CustomItemStackHandler() {
 
@@ -345,7 +338,7 @@ public class SimpleTieredMachine extends WorkableTieredMachine
                 GuiTextures.IO_CONFIG_FLUID_MODES_BUTTON,
                 "gtceu.gui.fluid_auto_output",
                 this::isAutoOutputFluids,
-                (cd, nextState) -> this.setAutoOutputFluids(nextState));
+                (event, nextState) -> this.setAutoOutputFluids(nextState));
     }
 
     private IFancyConfigurator createAutoOutputItemConfigurator() {
@@ -353,20 +346,20 @@ public class SimpleTieredMachine extends WorkableTieredMachine
                 GuiTextures.IO_CONFIG_ITEM_MODES_BUTTON,
                 "gtceu.gui.item_auto_output",
                 this::isAutoOutputItems,
-                (cd, nextState) -> this.setAutoOutputItems(nextState));
+                (event, nextState) -> this.setAutoOutputItems(nextState));
     }
 
-    private IFancyConfigurator createAutoOutputConfigurator(ResourceTexture modesButtonTexture,
+    private IFancyConfigurator createAutoOutputConfigurator(SpriteTexture modesButtonTexture,
                                                             String tooltipBaseLangKey,
                                                             BooleanSupplier stateSupplier,
-                                                            BiConsumer<ClickData, Boolean> onToggle) {
+                                                            BiConsumer<UIEvent, Boolean> onToggle) {
         var toggle = new IFancyConfiguratorButton.Toggle(
                 new GuiTextureGroup(
-                        GuiTextures.TOGGLE_BUTTON_BACK.getSubTexture(0, 0, 1, 0.5),
-                        modesButtonTexture.getSubTexture(0, 1 / 3f, 1, 1 / 3f)),
+                        GuiTextures.TOGGLE_BUTTON_BACK.copy().setSprite(0, 0, 18, 18),
+                        modesButtonTexture.copy().setSprite(0, 36, 36, 36)),
                 new GuiTextureGroup(
-                        GuiTextures.TOGGLE_BUTTON_BACK.getSubTexture(0, 0.5, 1, 0.5),
-                        modesButtonTexture.getSubTexture(0, 2 / 3f, 1, 1 / 3f)),
+                        GuiTextures.TOGGLE_BUTTON_BACK.copy().setSprite(0, 18, 18, 18),
+                        modesButtonTexture.copy().setSprite(0, 72, 36, 36)),
                 stateSupplier,
                 onToggle);
 
@@ -381,22 +374,13 @@ public class SimpleTieredMachine extends WorkableTieredMachine
     @SuppressWarnings("UnstableApiUsage")
     public static BiFunction<ResourceLocation, GTRecipeType, EditableMachineUI> EDITABLE_UI_CREATOR = Util
             .memoize((path, recipeType) -> new EditableMachineUI("simple", path, () -> {
-                WidgetGroup template = recipeType.getRecipeUI().createEditableUITemplate(false, false).createDefault();
-                SlotWidget batterySlot = createBatterySlot().createDefault();
-                WidgetGroup group = new WidgetGroup(0, 0, template.getSize().width,
-                        Math.max(template.getSize().height, 78));
-                template.setSelfPosition(new Position(0, (group.getSize().height - template.getSize().height) / 2));
-                batterySlot.setSelfPosition(new Position(group.getSize().width / 2 - 9, group.getSize().height - 18));
-                group.addWidget(batterySlot);
-                group.addWidget(template);
-
-                // TODO fix this.
-                // if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
-                // SlotWidget circuitSlot = createCircuitConfigurator().createDefault();
-                // circuitSlot.setSelfPosition(new Position(120, 62));
-                // group.addWidget(circuitSlot);
-                // }
-
+                var template = recipeType.getRecipeUI().createEditableUITemplate(false, false).createDefault();
+                var batterySlot = createBatterySlot().createDefault();
+                batterySlot.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).bottom(0).leftPercent(50)
+                        .marginLeft(-9));
+                var group = new UIElement();
+                group.layout(l -> l.minHeight(78).alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+                group.addChildren(template, batterySlot);
                 return group;
             }, (template, machine) -> {
                 if (machine instanceof SimpleTieredMachine tieredMachine) {
@@ -416,42 +400,38 @@ public class SimpleTieredMachine extends WorkableTieredMachine
                                     Collections.emptyList(),
                                     false, false));
                     createBatterySlot().setupUI(template, tieredMachine);
-                    // createCircuitConfigurator().setupUI(template, tieredMachine);
                 }
             }));
 
     /**
      * Create a battery slot widget.
      */
-    protected static EditableUI<SlotWidget, SimpleTieredMachine> createBatterySlot() {
-        return new EditableUI<>("battery_slot", SlotWidget.class, () -> {
-            var slotWidget = new SlotWidget();
-            slotWidget.setBackground(GuiTextures.SLOT, GuiTextures.CHARGER_OVERLAY);
-            return slotWidget;
-        }, (slotWidget, machine) -> {
-            slotWidget.setHandlerSlot(machine.chargerInventory, 0);
-            slotWidget.setCanPutItems(true);
-            slotWidget.setCanTakeItems(true);
-            slotWidget.setHoverTooltips(LangHandler.getMultiLang("gtceu.gui.charger_slot.tooltip",
-                    GTValues.VNF[machine.getTier()], GTValues.VNF[machine.getTier()]).toArray(Component[]::new));
+    protected static EditableUI<ItemSlot, SimpleTieredMachine> createBatterySlot() {
+        return new EditableUI<>("battery_slot", ItemSlot.class, () -> {
+            var slot = new ItemSlot();
+            slot.slotStyle(style -> style.slotOverlay(GuiTextures.CHARGER_OVERLAY));
+            return slot;
+        }, (slot, machine) -> {
+            slot.bind(machine.chargerInventory, 0);
+            var tooltips = LangHandler.getMultiLang("gtceu.gui.charger_slot.tooltip",
+                    GTValues.VNF[machine.getTier()], GTValues.VNF[machine.getTier()]).toArray(Component[]::new);
+            slot.style(style -> style.tooltips(tooltips));
         });
     }
 
     /**
      * Create a ghost circuit slot widget.
      */
-    protected static EditableUI<GhostCircuitSlotWidget, SimpleTieredMachine> createCircuitConfigurator() {
-        return new EditableUI<>("circuit_configurator", GhostCircuitSlotWidget.class, () -> {
-            var slotWidget = new GhostCircuitSlotWidget();
-            slotWidget.setBackground(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY);
-            return slotWidget;
-        }, (slotWidget, machine) -> {
-            slotWidget.setCircuitInventory(machine.circuitInventory);
-            slotWidget.setCircuitMachine(machine);
-            slotWidget.setCanPutItems(false);
-            slotWidget.setCanTakeItems(false);
-            slotWidget.setHoverTooltips(
-                    LangHandler.getMultiLang("gtceu.gui.configurator_slot.tooltip").toArray(Component[]::new));
+    protected static EditableUI<GhostCircuitSlot, SimpleTieredMachine> createCircuitConfigurator() {
+        return new EditableUI<>("circuit_configurator", GhostCircuitSlot.class, () -> {
+            var slot = new GhostCircuitSlot();
+            slot.slotStyle(style -> style.slotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY));
+            return slot;
+        }, (slot, machine) -> {
+            slot.setCircuitInventory(machine.circuitInventory.storage);
+            slot.setCircuitMachine(machine);
+            var tooltips = LangHandler.getMultiLang("gtceu.gui.configurator_slot.tooltip").toArray(Component[]::new);
+            slot.style(style -> style.tooltips(tooltips));
         });
     }
 
@@ -464,8 +444,8 @@ public class SimpleTieredMachine extends WorkableTieredMachine
     // ******* Rendering ********//
     //////////////////////////////////////
     @Override
-    public @Nullable ResourceTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
-                                              Direction side) {
+    public @Nullable SpriteTexture sideTips(Player player, BlockPos pos, BlockState state, Set<GTToolType> toolTypes,
+                                            Direction side) {
         if (toolTypes.contains(GTToolType.WRENCH)) {
             if (!player.isShiftKeyDown()) {
                 if (!hasFrontFacing() || side != getFrontFacing()) {

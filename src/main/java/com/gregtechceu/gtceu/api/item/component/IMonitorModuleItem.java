@@ -5,7 +5,7 @@ import com.gregtechceu.gtceu.client.renderer.monitor.IMonitorRenderer;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.CentralMonitorMachine;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.monitor.MonitorGroup;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.world.item.ItemStack;
 
@@ -17,7 +17,7 @@ public interface IMonitorModuleItem extends IItemComponent {
 
     IMonitorRenderer getRenderer(ItemStack stack);
 
-    Widget createUIWidget(ItemStack stack, CentralMonitorMachine machine, MonitorGroup group);
+    UIElement createUIWidget(ItemStack stack, CentralMonitorMachine machine, MonitorGroup group);
 
     default String getType() {
         return "unknown";

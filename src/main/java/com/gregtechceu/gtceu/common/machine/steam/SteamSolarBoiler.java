@@ -1,19 +1,22 @@
 package com.gregtechceu.gtceu.common.machine.steam;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.widget.ProgressTextureBar;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.steam.SteamBoilerMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
 
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import org.jetbrains.annotations.NotNull;
 
 public class SteamSolarBoiler extends SteamBoilerMachine {
@@ -62,13 +65,14 @@ public class SteamSolarBoiler extends SteamBoilerMachine {
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return super.createUI(entityPlayer)
-                .widget(new ProgressWidget(() -> GTUtil.canSeeSunClearly(getLevel(), getPos()) ? 1.0 : 0.0, 114, 44, 20,
-                        20)
-                        .setProgressTexture(
-                                GuiTextures.PROGRESS_BAR_SOLAR_STEAM.get(isHighPressure).getSubTexture(0, 0, 1, 0.5),
-                                GuiTextures.PROGRESS_BAR_SOLAR_STEAM.get(isHighPressure).getSubTexture(0, 0.5, 1,
-                                        0.5)));
+        var modularUI = super.createUI(entityPlayer);
+        var bar = ProgressTextureBar.of(GuiTextures.PROGRESS_BAR_SOLAR_STEAM.get(isHighPressure),
+                FillDirection.LEFT_TO_RIGHT, 20, 20);
+        bar.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(114).top(44));
+        bar.bindDataSource(SupplierDataSource.of(
+                () -> GTUtil.canSeeSunClearly(getLevel(), getPos()) ? 1.0f : 0.0f));
+        modularUI.ui.rootElement.getChildren().get(0).addChild(bar);
+        return modularUI;
     }
 
     @Override

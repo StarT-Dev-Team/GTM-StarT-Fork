@@ -2,7 +2,7 @@ package com.gregtechceu.gtceu.api.capability;
 
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
 
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
@@ -52,7 +52,7 @@ public interface IHPCAComponentHatch {
     /**
      * The icon for this component in the HPCA's UI. Should be a 13x13 px sprite.
      */
-    ResourceTexture getComponentIcon();
+    IGuiTexture getComponentIcon();
 
     /**
      * Sets the component to be active for the sake of model overlays.

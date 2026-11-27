@@ -6,17 +6,14 @@ import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.api.recipe.RecipeTransaction;
 import com.gregtechceu.gtceu.common.data.machines.GTMachineUtils;
 import com.gregtechceu.gtceu.integration.ae2.gui.widget.ConfigWidget;
+import com.gregtechceu.gtceu.integration.ae2.gui.widget.MEStatusLabel;
 import com.gregtechceu.gtceu.integration.ae2.machine.feature.multiblock.IMEInputPart;
 import com.gregtechceu.gtceu.integration.ae2.machine.trait.PortInputHandlers;
 import com.gregtechceu.gtceu.integration.ae2.slot.IConfigurableSlotList;
 import com.gregtechceu.gtceu.integration.ae2.slot.PortAEInventory;
 
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import appeng.api.config.Actionable;
 import appeng.api.stacks.AEFluidKey;
@@ -28,9 +25,6 @@ import appeng.api.storage.MEStorage;
 import java.util.List;
 
 public class MEInputPortPartMachine extends MEBusPartMachine implements IMEInputPart {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            MEInputPortPartMachine.class, MEBusPartMachine.MANAGED_FIELD_HOLDER);
 
     public static final String TAG_PORT = "MEInputPort";
     public static final String TAG_BUS = "MEInputBus";
@@ -69,11 +63,6 @@ public class MEInputPortPartMachine extends MEBusPartMachine implements IMEInput
     private void onPortSlotsChanged() {
         if (this.itemHandler != null) this.itemHandler.onContentsChanged();
         if (this.fluidHandler != null) this.fluidHandler.notifyChanged();
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     public PortAEInventory getPortInventory() {
@@ -199,14 +188,12 @@ public class MEInputPortPartMachine extends MEBusPartMachine implements IMEInput
     }
 
     @Override
-    public Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(new Position(0, 0));
-
-        group.addWidget(new LabelWidget(3, 0,
-                () -> this.isOnline ? "gtceu.gui.me_network.online" : "gtceu.gui.me_network.offline"));
-        group.addWidget(new ConfigWidget(3, 10, this.portSlots.getViews(), isStocking(), this::isAutoPullEnabled,
-                this::hasStackInOtherPartOrHere, null));
-
+    public UIElement createUIWidget() {
+        var group = new UIElement();
+        group.layout(layout -> layout.paddingHorizontal(3).gapAll(1));
+        group.addChildren(new MEStatusLabel(() -> this.isOnline),
+                new ConfigWidget(this.portSlots.getViews(), isStocking(), this::isAutoPullEnabled,
+                        this::hasStackInOtherPartOrHere, null));
         return group;
     }
 

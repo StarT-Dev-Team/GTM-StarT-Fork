@@ -1,21 +1,20 @@
 package com.gregtechceu.gtceu.common.recipe.condition;
 
 import com.gregtechceu.gtceu.api.data.DimensionMarker;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
 import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
-import com.gregtechceu.gtceu.api.transfer.item.CustomItemStackHandler;
 import com.gregtechceu.gtceu.common.data.GTRecipeConditions;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTRecipeWidget;
 
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.jei.IngredientIO;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.integration.xei.IngredientIO;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -26,6 +25,7 @@ import net.minecraft.world.level.block.Blocks;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -72,24 +72,22 @@ public class DimensionCondition extends RecipeCondition<DimensionCondition> {
     }
 
     @Override
-    public Widget createCustomXeiWidget(@NotNull GTRecipeWidget widget, @NotNull GTRecipe recipe) {
+    public UIElement createCustomXeiWidget(@NotNull GTRecipeWidget widget, @NotNull GTRecipe recipe) {
         var xOffset = recipe.recipeType.getRecipeUI().getJEISize().width - widget.getXOffset() - 44;
         var yOffset = recipe.recipeType.getRecipeUI().getJEISize().height - 32;
 
         DimensionMarker dimMarker = GTRegistries.DIMENSION_MARKERS.getOrDefault(this.dimension.location(),
                 new DimensionMarker(DimensionMarker.MAX_TIER, () -> Blocks.BARRIER, this.dimension.toString()));
         ItemStack icon = dimMarker.getIcon();
-        CustomItemStackHandler handler = new CustomItemStackHandler(1);
-        SlotWidget dimSlot = new SlotWidget(handler, 0, xOffset, yOffset, false, false)
-                .setIngredientIO(IngredientIO.INPUT);
-        handler.setStackInSlot(0, icon);
+        var dimSlot = new ItemSlot().setItem(icon).xeiRecipeIngredient(IngredientIO.INPUT);
+        dimSlot.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(xOffset).top(yOffset));
+        dimSlot.style(s -> s.backgroundTexture(IGuiTexture.EMPTY));
         if (ConfigHolder.INSTANCE.compat.showDimensionTier) {
-            dimSlot.setOverlay(
+            dimSlot.slotStyle(s -> s.slotOverlay(
                     new TextTexture("T" + (dimMarker.tier >= DimensionMarker.MAX_TIER ? "?" : dimMarker.tier))
-                            .scale(0.75f).transform(-3.0f, 5.0f));
+                            .scale(0.75f).transform(-3.0f, 5.0f)));
         }
-
-        return dimSlot.setBackgroundTexture(IGuiTexture.EMPTY);
+        return dimSlot;
     }
 
     @Override

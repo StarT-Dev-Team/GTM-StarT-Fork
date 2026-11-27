@@ -15,9 +15,7 @@ import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
 import com.gregtechceu.gtceu.api.recipe.ui.GTRecipeTypeUI;
 import com.gregtechceu.gtceu.common.data.GTParallelTypes;
 
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
@@ -134,14 +132,10 @@ public class SimpleGeneratorMachine extends WorkableTieredMachine
     @SuppressWarnings("UnstableApiUsage")
     public static BiFunction<ResourceLocation, GTRecipeType, EditableMachineUI> EDITABLE_UI_CREATOR = Util
             .memoize((path, recipeType) -> new EditableMachineUI("generator", path, () -> {
-                WidgetGroup template = recipeType.getRecipeUI().createEditableUITemplate(false, false).createDefault();
-                WidgetGroup group = new WidgetGroup(0, 0, template.getSize().width + 4 + 8,
-                        template.getSize().height + 8);
-                Size size = group.getSize();
-                template.setSelfPosition(new Position(
-                        (size.width - 4 - template.getSize().width) / 2 + 4,
-                        (size.height - template.getSize().height) / 2));
-                group.addWidget(template);
+                var template = recipeType.getRecipeUI().createEditableUITemplate(false, false).createDefault();
+                var group = new UIElement();
+                group.layout(layout -> layout.paddingAll(4).paddingLeft(8));
+                group.addChild(template);
                 return group;
             }, (template, machine) -> {
                 if (machine instanceof SimpleGeneratorMachine generatorMachine) {

@@ -4,42 +4,37 @@ import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfigurator;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyCustomMiddleClickAction;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyCustomMouseWheelAction;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.data.lang.LangHandler;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.items.ItemStackHandler;
 
+import dev.vfyjxf.taffy.style.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public class CircuitFancyConfigurator implements IFancyConfigurator, IFancyCustomMouseWheelAction,
                                       IFancyCustomMiddleClickAction {
-
-    private static final int SET_TO_ZERO = 2;
-    private static final int SET_TO_EMPTY = 3;
-    private static final int SET_TO_N = 4;
 
     private static final int NO_CONFIG = -1;
 
@@ -75,113 +70,90 @@ public class CircuitFancyConfigurator implements IFancyConfigurator, IFancyCusto
     }
 
     @Override
-    public boolean mouseWheelMove(BiConsumer<Integer, Consumer<FriendlyByteBuf>> writeClientAction, double mouseX,
-                                  double mouseY, double wheelDelta) {
+    public boolean mouseWheelMove(double wheelDelta) {
         if (wheelDelta == 0) return false;
         if (!ConfigHolder.INSTANCE.machines.ghostCircuit && circuitSlot.getStackInSlot(0).isEmpty()) return false;
         int nextValue = getNextValue(wheelDelta > 0);
         if (nextValue == NO_CONFIG) {
             if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
                 circuitSlot.setStackInSlot(0, ItemStack.EMPTY);
-                writeClientAction.accept(SET_TO_EMPTY, buf -> {});
             }
         } else {
             circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(nextValue));
-            writeClientAction.accept(SET_TO_N, buf -> buf.writeVarInt(nextValue));
         }
         return true;
     }
 
     @Override
-    public void handleClientAction(int id, FriendlyByteBuf buffer) {
-        switch (id) {
-            case SET_TO_ZERO -> {
-                if (ConfigHolder.INSTANCE.machines.ghostCircuit || !circuitSlot.getStackInSlot(0).isEmpty())
-                    circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(0));
-            }
-            case SET_TO_EMPTY -> {
-                if (ConfigHolder.INSTANCE.machines.ghostCircuit || circuitSlot.getStackInSlot(0).isEmpty())
-                    circuitSlot.setStackInSlot(0, ItemStack.EMPTY);
-                else
-                    circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(0));
-            }
-            case SET_TO_N -> {
-                if (ConfigHolder.INSTANCE.machines.ghostCircuit || !circuitSlot.getStackInSlot(0).isEmpty())
-                    circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(buffer.readVarInt()));
-            }
-        }
-    }
-
-    @Override
-    public void onMiddleClick(BiConsumer<Integer, Consumer<FriendlyByteBuf>> writeClientAction) {
+    public void onMiddleClick() {
         if (!ConfigHolder.INSTANCE.machines.ghostCircuit && !circuitSlot.getStackInSlot(0).isEmpty())
             circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(0));
         else
             circuitSlot.setStackInSlot(0, ItemStack.EMPTY);
-        writeClientAction.accept(SET_TO_EMPTY, buf -> {});
     }
 
     @Override
-    public Widget createConfigurator() {
-        var group = new WidgetGroup(0, 0, 174, 132);
-        group.addWidget(new LabelWidget(9, 8, "Programmed Circuit Configuration"));
-        group.addWidget(new SlotWidget(circuitSlot, 0, (group.getSize().width - 18) / 2, 20,
-                !ConfigHolder.INSTANCE.machines.ghostCircuit, !ConfigHolder.INSTANCE.machines.ghostCircuit)
-                .setBackground(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY)));
+    public UIElement createConfigurator() {
+        var group = new UIElement().layout(layout -> layout.width(174).paddingAll(5)
+                .flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
+
+        var ghost = ConfigHolder.INSTANCE.machines.ghostCircuit;
+
+        var slotWrapper = new UIElement();
+        slotWrapper.getLayoutStyle().widthPercent(100).flexDirection(FlexDirection.COLUMN)
+                .alignItems(AlignItems.CENTER).marginLeft(-1);
+        group.addChild(slotWrapper);
+
+        var slot = new ItemSlot()
+                .bind(new ItemHandlerSlot(circuitSlot, 0).setCanPlace(stack -> !ghost).setCanTake(player -> !ghost));
+        slot.getStyle().backgroundTexture(IGuiTexture.group(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY));
+
+        if (ghost) {
+            slot.addServerEventListener(UIEvents.MOUSE_DOWN, event -> circuitSlot.setStackInSlot(0, ItemStack.EMPTY));
+        }
+        slotWrapper.addChildren(slot);
+
+        for (var index = 0; index <= 32; index++) {
+            group.addChild(circuitButton(index));
+        }
+
         if (circuitMachine != null && circuitMachine.isCircuitPastingEnabled()) {
-            group.addWidget(new ToggleButtonWidget(149, 20, 18, 18,
-                    GuiTextures.BUTTON_LOCK, circuitMachine::isCircuitPastingBlocked,
-                    circuitMachine::setCircuitPastingBlocked)
+            var machine = circuitMachine;
+
+            var circuitPastingGroup = new UIElement();
+            circuitPastingGroup.getLayoutStyle().widthPercent(100).alignItems(AlignItems.END).paddingTop(4);
+            group.addChild(circuitPastingGroup);
+
+            var toggleButton = new ToggleButton(GuiTextures.BUTTON_LOCK, machine::isCircuitPastingBlocked,
+                    machine::setCircuitPastingBlocked)
                     .setTooltipText("gtceu.gui.circuit_pasting.tooltip")
-                    .setShouldUseBaseBackground());
+                    .setShouldUseBaseBackground();
+            circuitPastingGroup.addChild(toggleButton);
         }
-        if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
-            group.addWidget(new ButtonWidget((group.getSize().width - 18) / 2, 20, 18, 18, IGuiTexture.EMPTY,
-                    clickData -> {
-                        if (!clickData.isRemote) {
-                            circuitSlot.setStackInSlot(0, ItemStack.EMPTY);
-                        }
-                    }));
-        }
-        int idx = 0;
-        for (int x = 0; x <= 2; x++) {
-            for (int y = 0; y <= 8; y++) {
-                int finalIdx = idx;
-                group.addWidget(new ButtonWidget(5 + (18 * y), 48 + (18 * x), 18, 18,
-                        new GuiTextureGroup(GuiTextures.SLOT,
-                                new ItemStackTexture(IntCircuitBehaviour.stack(finalIdx)).scale(16f / 18)),
-                        clickData -> {
-                            if (!clickData.isRemote) {
-                                ItemStack stack = circuitSlot.getStackInSlot(0).copy();
-                                if (IntCircuitBehaviour.isIntegratedCircuit(stack)) {
-                                    IntCircuitBehaviour.setCircuitConfiguration(stack, finalIdx);
-                                    circuitSlot.setStackInSlot(0, stack);
-                                } else if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
-                                    circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(finalIdx));
-                                }
-                            }
-                        }));
-                idx++;
-            }
-        }
-        for (int x = 0; x <= 5; x++) {
-            int finalIdx = x + 27;
-            group.addWidget(new ButtonWidget(5 + (18 * x), 102, 18, 18,
-                    new GuiTextureGroup(GuiTextures.SLOT,
-                            new ItemStackTexture(IntCircuitBehaviour.stack(finalIdx)).scale(16f / 18)),
-                    clickData -> {
-                        if (!clickData.isRemote) {
-                            ItemStack stack = circuitSlot.getStackInSlot(0).copy();
-                            if (IntCircuitBehaviour.isIntegratedCircuit(stack)) {
-                                IntCircuitBehaviour.setCircuitConfiguration(stack, finalIdx);
-                                circuitSlot.setStackInSlot(0, stack);
-                            } else if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
-                                circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(finalIdx));
-                            }
-                        }
-                    }));
-        }
+
         return group;
+    }
+
+    private Button circuitButton(int index) {
+        var circuitTexture = new ItemStackTexture(IntCircuitBehaviour.stack(index)).scale(16f / 18);
+        var slotButtonTexture = IGuiTexture.group(GuiTextures.SLOT, circuitTexture);
+        var slotButtonHoverTexture = IGuiTexture.group(slotButtonTexture,
+                new ColorRectTexture(0x80FFFFFF).scale(16f / 18));
+
+        var button = new Button().noText();
+        button.getLayoutStyle().width(18).height(18);
+        button.getButtonStyle().baseTexture(slotButtonTexture).hoverTexture(slotButtonHoverTexture)
+                .pressedTexture(slotButtonHoverTexture);
+        button.setOnServerClick(event -> {
+            ItemStack stack = circuitSlot.getStackInSlot(0).copy();
+            if (IntCircuitBehaviour.isIntegratedCircuit(stack)) {
+                IntCircuitBehaviour.setCircuitConfiguration(stack, index);
+                circuitSlot.setStackInSlot(0, stack);
+            } else if (ConfigHolder.INSTANCE.machines.ghostCircuit) {
+                circuitSlot.setStackInSlot(0, IntCircuitBehaviour.stack(index));
+            }
+        });
+        return button;
     }
 
     @Override

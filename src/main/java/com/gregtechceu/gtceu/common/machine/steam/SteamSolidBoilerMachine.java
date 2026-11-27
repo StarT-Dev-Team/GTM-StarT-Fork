@@ -6,7 +6,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ProgressTextureBar;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.steam.SteamBoilerMachine;
@@ -14,12 +14,13 @@ import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Player;
@@ -27,6 +28,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidUtil;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 
@@ -39,8 +41,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class SteamSolidBoilerMachine extends SteamBoilerMachine implements IMachineLife {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            SteamSolidBoilerMachine.class, SteamBoilerMachine.MANAGED_FIELD_HOLDER);
     public static final Object2BooleanMap<Item> FUEL_CACHE = new Object2BooleanOpenHashMap<>();
 
     @Persisted
@@ -70,11 +70,6 @@ public class SteamSolidBoilerMachine extends SteamBoilerMachine implements IMach
     //////////////////////////////////////
     // ***** Initialization *****//
     //////////////////////////////////////
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     protected NotifiableItemStackHandler createFuelHandler(Object... args) {
         return new NotifiableItemStackHandler(this, 1, IO.IN, IO.IN);
     }
@@ -130,18 +125,25 @@ public class SteamSolidBoilerMachine extends SteamBoilerMachine implements IMach
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return super.createUI(entityPlayer)
-                .widget(new SlotWidget(this.fuelHandler.storage, 0, 115, 62)
-                        .setBackgroundTexture(new GuiTextureGroup(GuiTextures.SLOT_STEAM.get(isHighPressure),
-                                GuiTextures.COAL_OVERLAY_STEAM.get(isHighPressure))))
-                .widget(new SlotWidget(this.ashHandler.storage, 0, 115, 26, true, false)
-                        .setBackgroundTexture(new GuiTextureGroup(GuiTextures.SLOT_STEAM.get(isHighPressure),
-                                GuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))))
-                .widget(new ProgressWidget(recipeLogic::getProgressPercent, 115, 44, 18, 18)
-                        .setProgressTexture(
-                                GuiTextures.PROGRESS_BAR_BOILER_FUEL.get(isHighPressure).getSubTexture(0, 0, 1, 0.5),
-                                GuiTextures.PROGRESS_BAR_BOILER_FUEL.get(isHighPressure).getSubTexture(0, 0.5, 1, 0.5))
-                        .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP));
+        var modularUI = super.createUI(entityPlayer);
+
+        var fuel = new ItemSlot().bind(fuelHandler.storage, 0);
+        fuel.style(style -> style.backgroundTexture(new GuiTextureGroup(GuiTextures.SLOT_STEAM.get(isHighPressure),
+                GuiTextures.COAL_OVERLAY_STEAM.get(isHighPressure))));
+        fuel.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(115).top(62));
+
+        var ash = new ItemSlot().bind(new ItemHandlerSlot(ashHandler.storage, 0).setCanPlace(stack -> false));
+        ash.style(style -> style.backgroundTexture(new GuiTextureGroup(GuiTextures.SLOT_STEAM.get(isHighPressure),
+                GuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))));
+        ash.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(115).top(26));
+
+        var progress = ProgressTextureBar.of(GuiTextures.PROGRESS_BAR_BOILER_FUEL.get(isHighPressure),
+                FillDirection.DOWN_TO_UP, 18, 18);
+        progress.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(115).top(44));
+        progress.bindDataSource(SupplierDataSource.of(() -> (float) recipeLogic.getProgressPercent()));
+
+        modularUI.ui.rootElement.getChildren().get(0).addChildren(fuel, ash, progress);
+        return modularUI;
     }
 
     @Override

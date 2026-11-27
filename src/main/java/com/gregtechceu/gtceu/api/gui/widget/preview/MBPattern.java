@@ -20,9 +20,9 @@ import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.item.TurbineRotorBehaviour;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.RotorHolderPartMachine;
 
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
-import com.lowdragmc.lowdraglib.utils.ItemStackKey;
-import com.lowdragmc.lowdraglib.utils.TrackedDummyWorld;
+import com.lowdragmc.lowdraglib2.utils.data.BlockInfo;
+import com.lowdragmc.lowdraglib2.utils.data.ItemStackKey;
+import com.lowdragmc.lowdraglib2.utils.virtuallevel.TrackedDummyWorld;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -106,7 +106,7 @@ public class MBPattern {
 
             if (level != null) {
                 level.addBlocks(this.blockMap);
-                level.setInnerBlockEntity(controllerBase.self().holder.getSelf());
+                level.setBlockEntity(controllerBase.self().holder.getSelf());
             }
 
             recalculateBounds();

@@ -34,7 +34,7 @@ public interface IRecipeCapabilityHolder {
                 .getOrDefault(cap, Collections.emptyList());
     }
 
-        default void addHandlerList(RecipeHandlerList handlerList) {
+    default void addHandlerList(RecipeHandlerList handlerList) {
         if (handlerList == RecipeHandlerList.NO_DATA) return;
         IO io = handlerList.getHandlerIO();
 

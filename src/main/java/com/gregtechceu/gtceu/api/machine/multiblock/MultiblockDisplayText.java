@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.IParallelHatch;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
+import com.gregtechceu.gtceu.api.gui.widget.ComponentPanel;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.pattern.error.PatternError;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
@@ -17,8 +18,6 @@ import com.gregtechceu.gtceu.common.machine.trait.LayeredRecipeLogic;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.utils.GTUtil;
-
-import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -769,7 +768,7 @@ public class MultiblockDisplayText {
 
             textList.add(Component.literal(""));
             textList.add(Component.translatable("gtceu.multiblock.layered.next_step_inputs")
-                    .append(ComponentPanelWidget.withButton(Component.literal(" [")
+                    .append(ComponentPanel.withButton(Component.literal(" [")
                             .append(Component.translatable("gtceu.multiblock.layered.cancel"))
                             .append(Component.literal("]")), "layered_cancel")));
 

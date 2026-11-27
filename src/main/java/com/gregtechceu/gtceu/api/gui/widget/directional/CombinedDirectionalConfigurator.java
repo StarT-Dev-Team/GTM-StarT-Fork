@@ -5,28 +5,27 @@ import com.gregtechceu.gtceu.api.gui.fancy.FancyMachineUIWidget;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.client.scene.ISceneBlockRenderHook;
-import com.lowdragmc.lowdraglib.client.scene.WorldSceneRenderer;
-import com.lowdragmc.lowdraglib.gui.editor.ColorPattern;
-import com.lowdragmc.lowdraglib.gui.util.ClickData;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.SceneWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
-import com.lowdragmc.lowdraglib.utils.BlockPosFace;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.lowdragmc.lowdraglib2.LDLib2;
+import com.lowdragmc.lowdraglib2.client.scene.ISceneBlockRenderHook;
+import com.lowdragmc.lowdraglib2.gui.ColorPattern;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Scene;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.utils.data.BlockPosFace;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -35,161 +34,151 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class CombinedDirectionalConfigurator extends WidgetGroup {
+public class CombinedDirectionalConfigurator extends UIElement {
 
-    protected final static int MOUSE_CLICK_CLIENT_ACTION_ID = 0x0001_0001;
-    protected final static int UPDATE_UI_ID = 0x0001_0002;
+    public static final String SIDE_MESSAGE = "gtceu:directional_side";
+    public static final String CLICK_MESSAGE = "gtceu:directional_click";
 
     protected final IDirectionalConfigHandler[] configHandlers;
-    protected final int width, height;
     private final FancyMachineUIWidget machineUI;
     private final MetaMachine machine;
 
-    protected SceneWidget sceneWidget;
-    protected ImageWidget imageWidget;
+    protected final UIElement sceneHost = new UIElement();
+    protected @Nullable Scene scene;
 
-    protected @Nullable BlockPos selectedPos;
     protected @Nullable Direction selectedSide;
 
     public CombinedDirectionalConfigurator(FancyMachineUIWidget machineUI, IDirectionalConfigHandler[] configHandlers,
-                                           MetaMachine machine, int width, int height) {
-        super(0, 0, width, height);
-        this.width = width;
-        this.height = height;
-
+                                           MetaMachine machine) {
         this.machineUI = machineUI;
         this.configHandlers = configHandlers;
         this.machine = machine;
-    }
 
-    @Override
-    public void initWidget() {
-        super.initWidget();
+        layout(layout -> layout.minWidth(168).minHeight(80).flexGrow(1));
+        style(style -> style.backgroundTexture(GuiTextures.BACKGROUND_INVERSE));
 
-        addWidget(imageWidget = new ImageWidget(0, 0, width, height, GuiTextures.BACKGROUND_INVERSE));
-        addWidget(sceneWidget = createSceneWidget());
+        sceneHost.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(4).top(4).right(4).bottom(4));
+        addChild(sceneHost);
 
-        for (IDirectionalConfigHandler configHandler : configHandlers) {
+        if (LDLib2.isRemote()) {
+            scene = createScene();
+            sceneHost.addChild(scene);
+        }
+
+        for (var configHandler : configHandlers) {
             configHandler.addAdditionalUIElements(this);
         }
 
-        addConfigWidgets(sceneWidget);
+        addConfigWidgets();
+
+        onMessage(SIDE_MESSAGE, tag -> applySide(GTUtil.DIRECTIONS[tag.getByte("side")]));
+        onMessage(CLICK_MESSAGE, tag -> {
+            var side = GTUtil.DIRECTIONS[tag.getByte("side")];
+            for (var configHandler : configHandlers) {
+                configHandler.handleClick(tag.getInt("button"), side);
+            }
+        });
     }
 
-    private SceneWidget createSceneWidget() {
+    @OnlyIn(Dist.CLIENT)
+    private Scene createScene() {
         var pos = this.machine.getPos();
 
-        SceneWidget sceneWidget = new SceneWidget(4, 4, width - 8, height - 8, this.machine.getLevel())
-                .setRenderedCore(List.of(pos), null)
-                .setRenderSelect(false)
-                .setOnSelected(this::onSideSelected);
+        var scene = new Scene();
+        scene.createScene(this.machine.getLevel());
+        scene.setTickWorld(false);
+        scene.layout(layout -> layout.widthPercent(100).heightPercent(100));
+        scene.setRenderedCore(List.of(pos), null);
+        scene.setRenderSelect(false);
+        scene.setOnSelected(this::onSideSelected);
 
-        if (isRemote()) {
-            sceneWidget.getRenderer().addRenderedBlocks(
-                    List.of(pos.above(), pos.below(), pos.north(), pos.south(), pos.east(), pos.west()),
-                    new ISceneBlockRenderHook() {
+        scene.getRenderer().addRenderedBlocks(
+                List.of(pos.above(), pos.below(), pos.north(), pos.south(), pos.east(), pos.west()),
+                new ISceneBlockRenderHook() {
 
-                        @Override
-                        @OnlyIn(Dist.CLIENT)
-                        public void apply(boolean isTESR, RenderType layer) {
-                            RenderSystem.enableBlend();
-                            RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
-                        }
-                    });
+                    @Override
+                    @OnlyIn(Dist.CLIENT)
+                    public void apply(RenderType layer) {
+                        RenderSystem.enableBlend();
+                        RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
+                    }
+                });
 
-            sceneWidget.getRenderer().setAfterWorldRender(this::renderOverlays);
+        scene.setAfterWorldRender(this::renderOverlays);
 
-            var playerRotation = gui.entityPlayer.getRotationVector();
-            sceneWidget.setCameraYawAndPitch(playerRotation.x, playerRotation.y - 90);
+        var player = Minecraft.getInstance().player;
+        if (player != null) {
+            var playerRotation = player.getRotationVector();
+            scene.setCameraYawAndPitch(playerRotation.y - 90, playerRotation.x);
         }
-        sceneWidget.setBackground(ColorPattern.BLACK.rectTexture());
-        return sceneWidget;
+        scene.style(style -> style.backgroundTexture(ColorPattern.BLACK.rectTexture()));
+
+        scene.addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            if (event.button == 0 || selectedSide == null) return;
+            var hover = scene.getLastHoverPosFace();
+            if (hover != null && hover.pos().equals(machine.getPos()) && hover.facing() == selectedSide) {
+                sendClick(event.button);
+            }
+        });
+        return scene;
     }
 
-    private void renderOverlays(WorldSceneRenderer renderer) {
-        sceneWidget.renderBlockOverLay(renderer);
-
+    @OnlyIn(Dist.CLIENT)
+    private void renderOverlays(Scene scene) {
         for (Direction face : GTUtil.DIRECTIONS) {
-            for (IDirectionalConfigHandler configHandler : configHandlers) {
-                configHandler.renderOverlay(sceneWidget, new BlockPosFace(machine.getPos(), face));
+            for (var configHandler : configHandlers) {
+                configHandler.renderOverlay(scene, new BlockPosFace(machine.getPos(), face));
             }
         }
     }
 
-    private void addConfigWidgets(SceneWidget sceneWidget) {
-        int yOffsetLeft = 0, yOffsetRight = 0;
+    private void addConfigWidgets() {
+        var left = new UIElement().layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(6).bottom(6)
+                .flexDirection(FlexDirection.COLUMN_REVERSE).gapAll(3));
+        var right = new UIElement().layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).right(6).bottom(6)
+                .flexDirection(FlexDirection.COLUMN_REVERSE).gapAll(3));
 
-        for (IDirectionalConfigHandler configHandler : configHandlers) {
-            Widget widget = configHandler.getSideSelectorWidget(sceneWidget, machineUI);
-
+        for (var configHandler : configHandlers) {
+            var widget = configHandler.getSideSelectorWidget(machineUI);
             if (widget == null)
                 continue;
 
-            final Size widgetSize = widget.getSize();
             switch (configHandler.getScreenSide()) {
-                case LEFT -> {
-                    widget.setSelfPosition(new Position(6, height - 6 - widgetSize.height - yOffsetLeft));
-                    yOffsetLeft += widgetSize.height + 3;
-                }
-                case RIGHT -> {
-                    widget.setSelfPosition(
-                            new Position(width - widgetSize.width - 6, height - 6 - widgetSize.height - yOffsetRight));
-                    yOffsetRight += widgetSize.height + 3;
-                }
+                case LEFT -> left.addChild(widget);
+                case RIGHT -> right.addChild(widget);
             }
-
-            this.addWidget(widget);
         }
+
+        addChildren(left, right);
     }
 
     protected void onSideSelected(BlockPos pos, Direction side) {
         if (!pos.equals(machine.getPos()))
             return;
 
-        if (this.selectedSide == side)
-            return; // No need to do anything if the same side is already selected
-
-        this.selectedSide = side;
-
-        for (IDirectionalConfigHandler configWidget : this.configHandlers) {
-            configWidget.onSideSelected(pos, side);
-        }
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        var lastSide = this.selectedSide;
-
-        var result = super.mouseClicked(mouseX, mouseY, button);
-
-        if (isMouseOverElement(mouseX, mouseY) && this.selectedSide == lastSide && this.selectedSide != null) {
-            var hover = sceneWidget.getHoverPosFace();
-
-            if (hover != null && hover.pos.equals(machine.getPos()) && hover.facing == this.selectedSide) {
-                var cd = new ClickData();
-                writeClientAction(MOUSE_CLICK_CLIENT_ACTION_ID, buf -> {
-                    cd.writeToBuf(buf);
-                    buf.writeByte(this.selectedSide.ordinal());
-                });
-            }
-        }
-
-        return result;
-    }
-
-    @Override
-    public void handleClientAction(int id, FriendlyByteBuf buf) {
-        if (id != MOUSE_CLICK_CLIENT_ACTION_ID) {
-            super.handleClientAction(id, buf);
+        if (this.selectedSide == side) {
+            sendClick(0);
             return;
         }
 
-        var clickData = ClickData.readFromBuf(buf);
-        var side = GTUtil.DIRECTIONS[buf.readByte()];
+        applySide(side);
+        var tag = new CompoundTag();
+        tag.putByte("side", (byte) side.ordinal());
+        sendMessage(SIDE_MESSAGE, tag);
+    }
 
-        for (IDirectionalConfigHandler configHandler : configHandlers) {
-            configHandler.handleClick(clickData, side);
+    protected void applySide(Direction side) {
+        this.selectedSide = side;
+        for (var configHandler : this.configHandlers) {
+            configHandler.onSideSelected(machine.getPos(), side);
         }
+    }
+
+    private void sendClick(int button) {
+        if (selectedSide == null) return;
+        var tag = new CompoundTag();
+        tag.putInt("button", button);
+        tag.putByte("side", (byte) selectedSide.ordinal());
+        sendMessage(CLICK_MESSAGE, tag);
     }
 }

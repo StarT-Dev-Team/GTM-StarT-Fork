@@ -6,7 +6,7 @@ import com.gregtechceu.gtceu.client.ClientProxy;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTOreVeinWidget;
 
-import com.lowdragmc.lowdraglib.jei.ModularUIRecipeCategory;
+import com.lowdragmc.lowdraglib2.integration.xei.jei.ModularUIRecipeCategory;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Items;
@@ -32,6 +32,7 @@ public class GTBedrockOreInfoCategory extends ModularUIRecipeCategory<GTBedrockO
     private final IDrawable icon;
 
     public GTBedrockOreInfoCategory(IJeiHelpers helpers) {
+        super(GTBedrockOreInfoWrapper::createModularUI);
         IGuiHelper guiHelper = helpers.getGuiHelper();
         this.background = guiHelper.createBlankDrawable(GTOreVeinWidget.width, 120);
         this.icon = helpers.getGuiHelper()
@@ -65,5 +66,15 @@ public class GTBedrockOreInfoCategory extends ModularUIRecipeCategory<GTBedrockO
     @Override
     public Component getTitle() {
         return Component.translatable("gtceu.jei.bedrock_ore_diagram");
+    }
+
+    @Override
+    public int getWidth() {
+        return GTOreVeinWidget.width;
+    }
+
+    @Override
+    public int getHeight() {
+        return 120;
     }
 }

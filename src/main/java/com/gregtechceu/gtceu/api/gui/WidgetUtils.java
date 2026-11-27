@@ -1,7 +1,6 @@
 package com.gregtechceu.gtceu.api.gui;
 
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -11,31 +10,33 @@ import java.util.regex.Pattern;
 
 public class WidgetUtils {
 
-    public static List<Widget> getWidgetsById(WidgetGroup group, String regex) {
-        return group.getWidgetsById(Pattern.compile(regex));
+    public static List<UIElement> getWidgetsById(UIElement group, String regex) {
+        var pattern = Pattern.compile(regex);
+        return group.selfAndAllChildren().filter(element -> pattern.matcher(element.getId()).matches()).toList();
     }
 
     @Nullable
-    public static Widget getFirstWidgetById(WidgetGroup group, String regex) {
-        return group.getFirstWidgetById(Pattern.compile(regex));
+    public static UIElement getFirstWidgetById(UIElement group, String regex) {
+        var pattern = Pattern.compile(regex);
+        return group.selfAndAllChildren().filter(element -> pattern.matcher(element.getId()).matches())
+                .findFirst().orElse(null);
     }
 
-    public static void widgetByIdForEach(WidgetGroup group, String regex, Consumer<Widget> consumer) {
+    public static void widgetByIdForEach(UIElement group, String regex, Consumer<UIElement> consumer) {
         getWidgetsById(group, regex).forEach(consumer);
     }
 
-    public static <T extends Widget> void widgetByIdForEach(WidgetGroup group, String regex, Class<T> clazz,
-                                                            Consumer<T> consumer) {
-        for (Widget widget : getWidgetsById(group, regex)) {
-            if (clazz.isInstance(widget)) {
-                consumer.accept(clazz.cast(widget));
+    public static <T> void widgetByIdForEach(UIElement group, String regex, Class<T> clazz, Consumer<T> consumer) {
+        for (var element : getWidgetsById(group, regex)) {
+            if (clazz.isInstance(element)) {
+                consumer.accept(clazz.cast(element));
             }
         }
     }
 
-    public static int widgetIdIndex(Widget widget) {
-        var id = widget.getId();
-        if (id == null) return -1;
+    public static int widgetIdIndex(UIElement element) {
+        var id = element.getId();
+        if (id == null || id.isEmpty()) return -1;
         var split = id.split("_");
         if (split.length == 0) return -1;
         var end = split[split.length - 1];

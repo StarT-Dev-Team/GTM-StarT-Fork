@@ -3,11 +3,12 @@ package com.gregtechceu.gtceu.api.machine.trait;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.client.model.machine.MachineRenderState;
 
-import com.lowdragmc.lowdraglib.syncdata.IEnhancedManaged;
-import com.lowdragmc.lowdraglib.syncdata.field.FieldManagedStorage;
+import com.lowdragmc.lowdraglib2.syncdata.holder.blockentity.IBlockEntityManaged;
+import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
 
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.client.model.data.ModelData;
 
 import lombok.Getter;
@@ -21,13 +22,14 @@ import java.util.function.Predicate;
  * represents an abstract capability held by machine. Such as item, fluid, energy, etc.
  * All trait should be added while MetaMachine is creating. you cannot modify it on the fly。
  */
-public abstract class MachineTrait implements IEnhancedManaged {
+public abstract class MachineTrait implements IBlockEntityManaged {
 
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
 
     @Getter
     protected final MetaMachine machine;
+
     @Setter
     protected Predicate<@Nullable Direction> capabilityValidator;
 
@@ -42,8 +44,13 @@ public abstract class MachineTrait implements IEnhancedManaged {
     }
 
     @Override
-    public void onChanged() {
-        machine.onChanged();
+    public BlockEntity asBlockEntity() {
+        return machine.asBlockEntity();
+    }
+
+    @Override
+    public void notifyPersistence() {
+        machine.notifyPersistence();
     }
 
     public void onMachineLoad() {}

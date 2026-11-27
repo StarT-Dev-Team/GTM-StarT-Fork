@@ -194,6 +194,5 @@ public class ItemTagLoader {
         provider.addTag(Tags.Items.ENCHANTING_FUELS)
                 .add(GTMaterialItems.MATERIAL_ITEMS.get(gem, Lazurite).get())
                 .add(GTMaterialItems.MATERIAL_ITEMS.get(gem, Sodalite).get());
-
     }
 }

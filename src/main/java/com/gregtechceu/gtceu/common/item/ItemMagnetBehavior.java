@@ -5,9 +5,9 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.capability.IElectricItem;
 import com.gregtechceu.gtceu.api.cover.filter.ItemFilter;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.EnumSelectorWidget;
+import com.gregtechceu.gtceu.api.gui.util.UICloseHandler;
+import com.gregtechceu.gtceu.api.gui.widget.EnumSelector;
 import com.gregtechceu.gtceu.api.item.ComponentItem;
 import com.gregtechceu.gtceu.api.item.IComponentItem;
 import com.gregtechceu.gtceu.api.item.component.IAddInformation;
@@ -16,12 +16,13 @@ import com.gregtechceu.gtceu.api.item.component.IItemLifeCycle;
 import com.gregtechceu.gtceu.api.item.component.IItemUIFactory;
 import com.gregtechceu.gtceu.common.data.GTItems;
 
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -45,9 +46,11 @@ import net.minecraftforge.event.entity.player.PlayerXpEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import com.tterrag.registrate.util.entry.ItemEntry;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import oshi.util.tuples.Triplet;
 import top.theillusivec4.curios.api.CuriosApi;
 
 import java.util.*;
@@ -67,46 +70,44 @@ public class ItemMagnetBehavior implements IInteractionItem, IItemLifeCycle, IAd
     }
 
     @Override
-    public ModularUI createUI(HeldItemUIFactory.HeldItemHolder holder, Player entityPlayer) {
-        var held = holder.getHeld();
+    public ModularUI createUI(HeldItemUIMenuType.HeldItemUIHolder holder, Player entityPlayer) {
+        var held = holder.itemStack;
         var tag = held.getOrCreateTag();
         var selected = Filter.get(tag.getInt(FILTER_ORDINAL_TAG));
-        var widgets = new HashSet<Triplet<Filter, Widget, Widget>>();
+        var views = new HashMap<Filter, UIElement>();
         var stacks = new HashMap<Filter, ItemStack>();
-        var ui = new ModularUI(176, 157, holder, entityPlayer)
-                .background(GuiTextures.BACKGROUND)
-                .widget(new EnumSelectorWidget<>(146, 5, 20, 20,
-                        Filter.values(), selected, (val) -> updateSelection(tag, val, widgets)))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.SLOT, 7, 75, true));
+
+        var root = UITemplate.panel();
+        root.layout(layout -> layout.minWidth(176).paddingAll(5).gapAll(5));
+
+        var selector = new EnumSelector<>(Filter.values(), () -> Filter.get(tag.getInt(FILTER_ORDINAL_TAG)),
+                filter -> tag.putInt(FILTER_ORDINAL_TAG, filter.ordinal()));
+        var header = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW)
+                .justifyContent(AlignContent.FLEX_END));
+        header.addChild(selector);
+        root.addChild(header);
+
         for (var f : Filter.values()) {
             var stack = f.getFilter(held);
             stack.setTag(tag.getCompound(FILTER_TAG).copy());
             stacks.put(f, stack);
-            var description = new LabelWidget(5, 5, stack.getDescriptionId());
-            var config = ItemFilter
-                    .loadFilter(stack)
-                    .openConfigurator((176 - 80) / 2, (60 - 55) / 2 + 15);
-            var visible = f == selected;
-            description.setVisible(visible);
-            config.setVisible(visible);
-            widgets.add(new Triplet<>(f, description, config));
-            ui.widget(description);
-            ui.widget(config);
+            var view = new UIElement().layout(layout -> layout.alignItems(AlignItems.CENTER).gapAll(5));
+            view.addChild(new Label().setText(Component.translatable(stack.getDescriptionId())));
+            view.addChild(ItemFilter.loadFilter(stack).openConfigurator());
+            view.setDisplay(f == selected);
+            views.put(f, view);
+            root.addChild(view);
         }
-        ui.registerCloseListener(() -> {
+        root.addEventListener(UIEvents.TICK, event -> {
+            var current = selector.getValue();
+            views.forEach((filter, view) -> view.setDisplay(filter == current));
+        });
+        UICloseHandler.onClose(root, () -> {
             var selection = Filter.get(tag.getInt(FILTER_ORDINAL_TAG));
             tag.put(FILTER_TAG, stacks.get(selection).getOrCreateTag());
         });
-        return ui;
-    }
-
-    private void updateSelection(CompoundTag tag, Filter filter, Collection<Triplet<Filter, Widget, Widget>> widgets) {
-        tag.putInt(FILTER_ORDINAL_TAG, filter.ordinal());
-        widgets.forEach(tri -> {
-            var visible = tri.getA() == filter;
-            tri.getB().setVisible(visible);
-            tri.getC().setVisible(visible);
-        });
+        root.addChild(UITemplate.playerInventory());
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     @Override
@@ -287,7 +288,7 @@ public class ItemMagnetBehavior implements IInteractionItem, IItemLifeCycle, IAd
         }
     }
 
-    public enum Filter implements EnumSelectorWidget.SelectableEnum {
+    public enum Filter implements EnumSelector.SelectableEnum {
 
         SIMPLE(GTItems.ITEM_FILTER, "item_filter"),
         TAG(GTItems.TAG_FILTER, "item_tag_filter");
@@ -323,7 +324,7 @@ public class ItemMagnetBehavior implements IInteractionItem, IItemLifeCycle, IAd
 
         @Override
         public @NotNull IGuiTexture getIcon() {
-            return new ResourceTexture("gtceu:textures/item/" + texture + ".png");
+            return SpriteTexture.of("gtceu:textures/item/" + texture + ".png");
         }
     }
 }

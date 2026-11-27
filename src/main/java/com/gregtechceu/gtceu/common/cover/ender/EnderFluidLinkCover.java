@@ -6,7 +6,6 @@ import com.gregtechceu.gtceu.api.cover.filter.FilterHandler;
 import com.gregtechceu.gtceu.api.cover.filter.FilterHandlers;
 import com.gregtechceu.gtceu.api.cover.filter.FluidFilter;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.TankWidget;
 import com.gregtechceu.gtceu.api.misc.virtualregistry.EntryTypes;
 import com.gregtechceu.gtceu.api.misc.virtualregistry.VirtualEnderRegistry;
 import com.gregtechceu.gtceu.api.misc.virtualregistry.VirtualEntry;
@@ -14,26 +13,28 @@ import com.gregtechceu.gtceu.api.misc.virtualregistry.entries.VirtualTank;
 import com.gregtechceu.gtceu.api.transfer.fluid.IFluidHandlerModifiable;
 import com.gregtechceu.gtceu.utils.GTTransferUtils;
 
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.core.Direction;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Supplier;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 public class EnderFluidLinkCover extends AbstractEnderLinkCover<VirtualTank> {
 
-    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(EnderFluidLinkCover.class,
-            AbstractEnderLinkCover.MANAGED_FIELD_HOLDER);
     public static final int TRANSFER_RATE = 8000; // mB/t
 
     @Persisted
@@ -112,19 +113,74 @@ public class EnderFluidLinkCover extends AbstractEnderLinkCover<VirtualTank> {
         return 0;
     }
 
-    @Override
-    public @NotNull ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
     //////////////////////////////////////
     // ************ GUI ************ //
     //////////////////////////////////////
 
     @Override
-    protected Widget addVirtualEntryWidget(VirtualEntry entry, int x, int y, int width, int height, boolean canClick) {
-        return new TankWidget(((VirtualTank) entry).getFluidTank(), 0, x, y, width, height, canClick, canClick)
-                .setBackground(GuiTextures.FLUID_SLOT);
+    protected UIElement addVirtualEntryWidget(Supplier<? extends VirtualEntry> entry, boolean interactive) {
+        var group = new UIElement();
+        var slot = new FluidSlot();
+        slot.style(style -> style.backgroundTexture(GuiTextures.FLUID_SLOT));
+        slot.layout(layout -> layout.width(18).height(18));
+        if (interactive) {
+            slot.bind(new EntryHandler(entry), 0);
+        } else {
+            slot.setAllowClickFilled(false);
+            slot.setAllowClickDrained(false);
+            slot.addEventListener(UIEvents.TICK,
+                    event -> slot.setValue(((VirtualTank) entry.get()).getFluidTank().getFluid(), false));
+        }
+        group.addChild(slot);
+        return group;
+    }
+
+    private static class EntryHandler implements IFluidHandler {
+
+        private final Supplier<? extends VirtualEntry> entry;
+
+        private EntryHandler(Supplier<? extends VirtualEntry> entry) {
+            this.entry = entry;
+        }
+
+        private IFluidHandler delegate() {
+            return ((VirtualTank) entry.get()).getFluidTank();
+        }
+
+        @Override
+        public int getTanks() {
+            return delegate().getTanks();
+        }
+
+        @Override
+        public FluidStack getFluidInTank(int tank) {
+            return delegate().getFluidInTank(tank);
+        }
+
+        @Override
+        public int getTankCapacity(int tank) {
+            return delegate().getTankCapacity(tank);
+        }
+
+        @Override
+        public boolean isFluidValid(int tank, FluidStack stack) {
+            return delegate().isFluidValid(tank, stack);
+        }
+
+        @Override
+        public int fill(FluidStack resource, FluidAction action) {
+            return delegate().fill(resource, action);
+        }
+
+        @Override
+        public FluidStack drain(FluidStack resource, FluidAction action) {
+            return delegate().drain(resource, action);
+        }
+
+        @Override
+        public FluidStack drain(int maxDrain, FluidAction action) {
+            return delegate().drain(maxDrain, action);
+        }
     }
 
     @NotNull

@@ -3,6 +3,7 @@ package com.gregtechceu.gtceu.integration.emi.multipage;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.gui.widget.PatternPreviewWidget;
 import com.gregtechceu.gtceu.common.data.machines.GTMultiMachines;
+import com.gregtechceu.gtceu.integration.emi.recipe.GTRecipeEMICategory;
 
 import net.minecraft.network.chat.Component;
 
@@ -21,7 +22,7 @@ public class MultiblockInfoEmiCategory extends EmiRecipeCategory {
     public static void registerDisplays(EmiRegistry registry) {
         PatternPreviewWidget.getMultiblockPreviews().stream()
                 .map(MultiblockInfoEmiRecipe::new)
-                .forEach(registry::addRecipe);
+                .forEach(recipe -> GTRecipeEMICategory.addSafely(registry, recipe));
     }
 
     @Override

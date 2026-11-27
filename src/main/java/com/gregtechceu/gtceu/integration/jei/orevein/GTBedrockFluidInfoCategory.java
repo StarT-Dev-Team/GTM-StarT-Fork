@@ -7,7 +7,7 @@ import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.integration.xei.widgets.GTOreVeinWidget;
 
-import com.lowdragmc.lowdraglib.jei.ModularUIRecipeCategory;
+import com.lowdragmc.lowdraglib2.integration.xei.jei.ModularUIRecipeCategory;
 
 import net.minecraft.network.chat.Component;
 
@@ -29,6 +29,7 @@ public class GTBedrockFluidInfoCategory extends ModularUIRecipeCategory<GTBedroc
     private final IDrawable icon;
 
     public GTBedrockFluidInfoCategory(IJeiHelpers helpers) {
+        super(GTBedrockFluidInfoWrapper::createModularUI);
         IGuiHelper guiHelper = helpers.getGuiHelper();
         this.background = guiHelper.createBlankDrawable(GTOreVeinWidget.width, 120);
         this.icon = helpers.getGuiHelper()
@@ -74,5 +75,15 @@ public class GTBedrockFluidInfoCategory extends ModularUIRecipeCategory<GTBedroc
     @Override
     public IDrawable getIcon() {
         return icon;
+    }
+
+    @Override
+    public int getWidth() {
+        return GTOreVeinWidget.width;
+    }
+
+    @Override
+    public int getHeight() {
+        return 120;
     }
 }

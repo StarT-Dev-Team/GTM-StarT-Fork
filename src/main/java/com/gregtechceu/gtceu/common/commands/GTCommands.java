@@ -75,7 +75,7 @@ public class GTCommands {
                         .then(literal("ui_editor")
                                 .requires(ctx -> ctx.hasPermission(LEVEL_ADMINS))
                                 .executes(context -> {
-                                    GTUIEditorFactory.INSTANCE.openUI(GTUIEditorFactory.INSTANCE, context.getSource().getPlayerOrException());
+                                    GTUIEditorFactory.INSTANCE.openUI(context.getSource().getPlayerOrException());
                                     return 1;
                                 }))
                         .then(literal("dump_data")

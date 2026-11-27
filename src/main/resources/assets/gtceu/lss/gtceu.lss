@@ -1,0 +1,596 @@
+// panel
+.panel_bg {
+  background: built-in(ui-mc:RECT);
+  padding-all: 5;
+  gap-all: 4;
+}
+
+.preview_bg {
+  background: built-in(ui-mc:BORDER);
+  padding-all: 4;
+}
+
+.configurator_preview_bg {
+  background: built-in(ui-mc:RECT_BLACK);
+  padding-all: 3;
+}
+
+// button
+button:host {
+  base-background: built-in(gtm:BUTTON_NORMAL);
+  hover-background: built-in(gtm:BUTTON_HOVER);
+  pressed-background: built-in(gtm:BUTTON_PRESSED);
+  padding-all: 3;
+  height: 16;
+}
+
+button.__disabled__ .__button_text__ {
+  text-color: #666;
+  text-shadow: false;
+}
+
+button.__pressed__:host {
+  pressed-background: built-in(gtm:BUTTON_PRESSED);
+}
+
+// text-field
+text-field:host,
+.__tag-field_text-field__,
+.__search-component_text-field__ {
+  background: built-in(ui-mc:RECT_5);
+  focus-overlay: built-in(ui-mc:RECT_6);
+  // height: 14;
+  padding-all: 2;
+}
+
+// search-component
+search-component:host {
+  background: built-in(ui-mc:RECT_5);
+  height: 16;
+  focus-overlay: built-in(ui-mc:RECT_6);
+}
+
+// switch
+switch:host {
+  base-background: built-in(ui-mc:RECT_2);
+  pressed-background: group(built-in(ui-mc:RECT_1), rect(#af00ff00) scale(0.9, 0.8));
+  //pressed-background: built-in(ui-mc:RECT_1);
+  unmark-background: built-in(ui-mc:SCROLLER_H);
+  mark-background: built-in(ui-mc:SCROLLER_H);
+  padding-all: 1;
+}
+
+// selector
+selector:host {
+  background: built-in(ui-mc:RECT_BORDER);
+  focus-overlay: built-in(ui-mc:RECT_6);
+  // height: 16;
+}
+
+.__selector_button-icon__ {
+  background: sprite(ldlib2:textures/gui/down.png) scale(0.6);
+}
+
+.__selector_dialog__, .__search-component_dialog__ {
+  background: built-in(ui-mc:RECT_4);
+}
+
+// progress-bar
+progress-bar:host {
+  height: 16;
+}
+
+.__progress-bar_bar-container__ {
+  background: built-in(ui-mc:BORDER);
+}
+
+// slot
+item-slot, .item-slot_bg {
+  background: built-in(ui-mc:RECT_1);
+}
+
+fluid-slot, .fluid-slot_bg {
+  background: built-in(ui-mc:RECT_2);
+}
+
+// color-selector
+color-selector:host text-field {
+  background: built-in(ui-mc:RECT_5);
+  focus-overlay: built-in(ui-mc:RECT_6);
+  height: 16;
+  padding-all: 2;
+}
+
+color-selector:host button {
+  base-background: built-in(ui-mc:RECT_BORDER);
+  hover-background: built-in(ui-mc:RECT_3);
+  pressed-background: built-in(ui-mc:RECT_3);
+}
+
+color-selector:host .__color-selector_alpha-slider__ {
+  background: built-in(ui-mc:RECT_1);
+  margin-right: 2;
+  padding-all: 1;
+}
+
+color-selector:host .__color-selector_color-slider__ {
+  background: built-in(ui-mc:RECT_1);
+  margin-bottom: 2;
+  padding-all: 1;
+}
+
+color-selector:host .__color-selector_color-preview__ {
+  background: built-in(ui-mc:RECT_1);
+  margin-right: 2;
+  margin-bottom: 2;
+  padding-all: 1;
+}
+
+// toggle
+.__toggle_button__ {
+  base-background: built-in(ui-mc:RECT_2);
+  pressed-background: built-in(ui-mc:RECT_2);
+  hover-background: group(built-in(ui-mc:RECT_2), built-in(ui-mc:RECT_6));
+}
+
+// text-area
+text-area {
+  scroller-view-margin: 10;
+}
+
+text-area:host {
+  focus-overlay: built-in(ui-mc:RECT_6);
+}
+
+.__text-area_content-view__ {
+  background: built-in(ui-mc:RECT_5);
+  padding-all: 2;
+}
+
+.__text-area_horizontal-scroller__ {
+  height: 8;
+  margin-top: 2;
+}
+
+.__text-area_vertical-scroller__ {
+  width: 8;
+  margin-left: 2;
+}
+
+// scroller
+scroller-horizontal:host {
+  height: 14;
+}
+
+scroller-vertical:host {
+  width: 14;
+}
+
+.__scroller_scroll_container__ {
+  background: built-in(ui-mc:RECT_1);
+}
+
+scroller-horizontal .__scroller_scroll_bar__ {
+  base-background: built-in(ui-mc:SCROLLER_H);
+  hover-background: built-in(ui-mc:SCROLLER_H_DARK);
+  pressed-background: built-in(ui-mc:SCROLLER_H_DARK) color(#dddddd);
+}
+
+scroller-vertical .__scroller_scroll_bar__ {
+  base-background: built-in(ui-mc:SCROLLER_V);
+  hover-background: built-in(ui-mc:SCROLLER_V_DARK);
+  pressed-background: built-in(ui-mc:SCROLLER_V_DARK) color(#dddddd);
+}
+
+.__scroller_head_button__ {
+  display: none;
+}
+
+.__scroller_tail_button__ {
+  display: none;
+}
+
+// slider
+slider-horizontal:host {
+  height: 9;
+}
+
+slider-vertical:host {
+  width: 9;
+}
+
+slider-horizontal, slider-vertical {
+  slider-track-size: 3;
+  slider-handle-size: 5;
+}
+
+.__slider_track__ {
+  background: built-in(ui-mc:RECT_1);
+}
+
+.__slider_fill__ {
+  background: color(#8b8b8b);
+}
+
+slider-horizontal .__slider_handle__ {
+  base-background: built-in(ui-mc:SCROLLER_H);
+  hover-background: built-in(ui-mc:SCROLLER_H_DARK);
+  pressed-background: built-in(ui-mc:SCROLLER_H_DARK) color(#dddddd);
+}
+
+slider-vertical .__slider_handle__ {
+  base-background: built-in(ui-mc:SCROLLER_V);
+  hover-background: built-in(ui-mc:SCROLLER_V_DARK);
+  pressed-background: built-in(ui-mc:SCROLLER_V_DARK) color(#dddddd);
+}
+
+scroller-view {
+  scroller-view-margin: 10;
+}
+
+.__scroller_view_view-port__ {
+  background: built-in(ui-mc:RECT_1);
+  padding-all: 2;
+}
+
+.__scroller_view_horizontal-scroller__ {
+  height: 8;
+  margin-top: 2;
+}
+
+.__scroller_view_vertical-scroller__ {
+  width: 8;
+  margin-left: 2;
+}
+
+// tab
+.__tab-view_tab_content_container__ {
+  background: built-in(ui-mc:BORDER_4);
+}
+
+tab-view .__tab-view_tab_scroller__ {
+  margin-bottom: -4;
+}
+
+tab:host {
+  base-background: built-in(ui-mc:TAB_OFF);
+  hover-background: built-in(ui-mc:TAB_OFF) color(#ddd);
+  pressed-background: built-in(ui-mc:TAB_ON);
+  padding-all: 4;
+  height: 18;
+}
+
+// dialog
+.__dialog_title__ {
+  background: built-in(ui-mc:BORDER);
+  transform: translateY(1);
+}
+
+.__dialog_content-container__ {
+  background: built-in(ui-mc:RECT_THIN);
+}
+
+.__dialog_button-container__ {
+  background: built-in(ui-mc:RECT_THIN);
+  transform: translateY(-1);
+}
+
+// menu
+menu {
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+// for editor
+.__editor__ code-editor {
+  background: built-in(ui-mc:RECT_5);
+}
+
+.__editor_top__ {
+  background: built-in(ui-mc:RECT_3);
+}
+
+.__view-container__ {
+  background: built-in(ui-mc:RECT_2);
+}
+
+.__editor-gizmo-bar__ {
+  background: built-in(ui-mc:BORDER);
+  width: 22;
+  padding-all: 4;
+  top: 24;
+}
+
+/* A group's panel is a menu, so its rows of white text highlight the way a menu's do rather than
+   with the strip's light tab, which the text would vanish into. */
+.__resource-view_group-flyout__ {
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+.__resource-view_group-flyout__ tab:host,
+.__resource-view_group-flyout__ tab:host:selected {
+  base-background: empty;
+  hover-background: rect(#33ffffff);
+  pressed-background: rect(#55ffffff);
+  height: 16;
+  padding-all: 2;
+  padding-top: 2;
+  padding-bottom: 2;
+  padding-right: 4;
+  margin-all: 0;
+}
+
+ResourceView tab:host {
+  base-background: empty;
+  hover-background: built-in(ui-mc:RECT_THIN);
+  pressed-background: built-in(ui-mc:RECT_THIN);
+  width: 16;
+  height: 16;
+  padding-all: 2;
+  margin-all: 0;
+}
+
+ResourceView .__tab-view_tab_header_container__ {
+  background: empty;
+  /* The thickness the strip takes until the user drags it wider: one 16 pixel tab, with no margins
+     and nothing across it. It cannot size itself to its tabs — a wrapping strip with no width to wrap
+     inside puts every tab on one line — and ResourceView keeps a floor of one tab under whatever is
+     set here, so a taller tab is never cut off. */
+  width: 16;
+  height: 16;
+}
+
+/* Breathing room along the line the tabs run in, and the two pixel nudge that lines the strip up
+   with the frame it sits against. Both turn with the strip. */
+.__resource-view_placement-left__ .__tab-view_tab_header_container__,
+.__resource-view_placement-right__ .__tab-view_tab_header_container__ {
+  padding-vertical: 4;
+  padding-horizontal: 0;
+  transform: translateY(-2);
+}
+
+.__resource-view_placement-top__ .__tab-view_tab_header_container__,
+.__resource-view_placement-bottom__ .__tab-view_tab_header_container__ {
+  padding-vertical: 0;
+  padding-horizontal: 4;
+  transform: translateX(-2);
+}
+
+ResourceView .__tab-view_tab_content_container__ {
+  padding-vertical: 0;
+  background: empty;
+}
+
+.__resource-view_tab-placeholder__ {
+  background: built-in(ui-mc:RECT_THIN);
+}
+
+.__ui-editor-view__ graph-view {
+  background: built-in(ui-mc:RECT_1);
+}
+
+.__ui-editor-view__ {
+  gap-all: 3;
+  padding-all: 1;
+}
+
+.__ui-editor-view_header__ {
+  background: built-in(ui-mc:RECT_INVERSE);
+  padding-all: 3;
+  height: 20;
+}
+
+.__ui-editor-view_header__ button {
+  height: 14;
+}
+
+.__ui-editor-view_header__ .__toggle_button__ {
+  base-background: built-in(ui-mc:RECT_4);
+  pressed-background: built-in(ui-mc:RECT_2);
+  hover-background: built-in(ui-mc:RECT_2);
+}
+
+.__ui-editor-view_canvas__ {
+  background: built-in(ui-mc:RECT_2);
+}
+
+.__ui-editor-view_builtin-styles-toggle__ {
+  padding-all: 0;
+  mark-background: built-in(ui-mc:RECT_6);
+}
+
+.__ui-editor-view_style-view__ {
+  background: built-in(ui-mc:RECT_INVERSE);
+  padding-all: 3;
+  gap-all: 1;
+}
+
+.__editor-window_active__ {
+  background: built-in(ui-mc:RECT_2)
+}
+
+.__editor-window_inactive__ {
+  background: built-in(ui-mc:RECT_3)
+}
+
+// configurator
+.__configurator-group__ .__configurator-group_container__ {
+  background: built-in(ui-mc:BORDER);
+  padding-all: 6;
+}
+
+.__configurator-group__ > .__configurator_line__ {
+  background: built-in(ui-mc:RECT_THIN);
+  padding-bottom: 4;
+}
+
+ToggleSelectorConfigurator toggle {
+  mark-background: built-in(ui-mc:SWITCH);
+}
+
+.__array-configurator_button-group__ {
+  background: built-in(ui-mc:BORDER);
+}
+
+.__array-configurator_item_selected__ {
+  background: built-in(ui-mc:RECT_BORDER);
+}
+
+// node graph
+
+.__blackboard-var-prop_title-bar__ {
+  background: built-in(ui-mc:RECT_BORDER);
+}
+
+.__blackboard-var-prop_content__ {
+  background: built-in(ui-mc:BORDER);
+  padding-all: 6;
+}
+
+.__node-title-element__ {
+  background: built-in(ui-mc:BORDER_4);
+  padding-vertical: 5;
+  padding-horizontal: 5;
+}
+
+.__node-graph-view_canvas__ {
+  background: #191919;
+}
+
+.__node-port-container__ {
+  background: built-in(ui-mc:RECT_3);
+}
+
+.__in-out-port-container_input__ {
+  background: built-in(ui-mc:RECT_THIN);
+}
+
+.__in-out-port-container_output__ {
+  background: built-in(ui-mc:RECT_BORDER)
+}
+
+.__node-element__ {
+  background: built-in(ui-mc:RECT_THIN);
+}
+
+.__capsule-node__ {
+  background: built-in(ui-mc:RECT_BORDER);
+  height: 18;
+}
+
+.__capsule-node__ .__node-title-element__ {
+  background: empty;
+}
+
+.__capsule-node__ .__node-port-container__ {
+  background: empty;
+}
+
+.__context-node__ > .__node-title-element__ {
+  background: built-in(ui-mc:BORDER_2);
+  height: 29;
+}
+
+.__block-node__ > .__node-title-element__ {
+  background: built-in(ui-mc:BORDER);
+}
+
+.__block-list-container__ {
+  background: built-in(ui-mc:RECT_2);
+}
+
+.__subgraph-node__ .__node-title-element__ {
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+.__item-library__ {
+  background: built-in(ui-mc:RECT);
+}
+
+.__node-graph-view_canvas-view__ {
+  color: #555;
+}
+
+.__node-title_collapse-toggle__ {
+  width: 10;
+  height: 10;
+}
+
+.__node-preview__ {
+  background: built-in(ui-mc:BORDER);
+  padding-all: 6;
+}
+
+.__node-graph-view_log-footer__ {
+  background:built-in(ui-mc:RECT_THIN);
+}
+
+.__node-graph-view_log-count__ {
+  text-color:#222;
+}
+
+.__item-library_description-panel__ {
+  background: built-in(ui-mc:RECT);
+  padding-all: 5;
+  gap-all: 4;
+}
+// keymap
+.__keymap_chord__ {
+  background: built-in(ui-mc:RECT_5);
+}
+
+.__keymap_chord__:hovered {
+  background: built-in(ui-mc:RECT_3);
+}
+
+.__keymap_chord__.__capturing__ {
+  background: built-in(ui-mc:RECT_6);
+}
+
+.__keymap_chord-text__ {
+  text-color: #ffffff;
+}
+
+.__keymap_chord__.__conflict__ .__keymap_chord-text__ {
+  text-color: #ff6b6b;
+}
+
+bindable-value:host {
+  position: absolute;
+}
+
+// gregtech classes
+
+.gt-panel {
+  padding-all: 4;
+  gap-all: 2;
+  align-items: center;
+}
+
+.gt-display {
+  background: sprite(gtceu:textures/gui/base/display.png);
+  padding-all: 4;
+  gap-all: 1;
+}
+
+.gt-row {
+  flex-direction: row;
+  align-items: center;
+  gap-all: 2;
+}
+
+.gt-text-dark {
+  text-color: #404040;
+  text-shadow: false;
+}
+
+item-slot, .item-slot_bg {
+  background: sprite(gtceu:textures/gui/base/slot.png, 0, 0, 18, 18, 1, 1, 1, 1);
+}
+
+fluid-slot, .fluid-slot_bg {
+  background: sprite(gtceu:textures/gui/base/fluid_slot.png, 0, 0, 18, 18, 1, 1, 1, 1);
+}
+
+.gt-player-inventory {
+  align-self: center;
+}

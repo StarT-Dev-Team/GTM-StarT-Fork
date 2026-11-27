@@ -1,8 +1,8 @@
 package com.gregtechceu.gtceu.common.item;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
+import com.gregtechceu.gtceu.api.gui.UITemplate;
+import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.api.item.component.IAddInformation;
 import com.gregtechceu.gtceu.api.item.component.IItemUIFactory;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
@@ -13,14 +13,17 @@ import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
-import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -37,9 +40,14 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.settings.KeyModifier;
 
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public class TerminalBehavior implements IItemUIFactory, IAddInformation {
 
@@ -172,51 +180,84 @@ public class TerminalBehavior implements IItemUIFactory, IAddInformation {
     }
 
     @Override
-    public ModularUI createUI(HeldItemUIFactory.HeldItemHolder holder, Player player) {
-        return new ModularUI(176, 152, holder, player).background(GuiTextures.BACKGROUND)
-                .widget(new LabelWidget(8, 6, "metaitem.terminal.ui.title"))
-                .widget(createInfoIcon(27, "metaitem.terminal.help.flipped"))
-                .widget(new LabelWidget(20, 28, "metaitem.terminal.ui.flipped"))
-                .widget(createToggle(holder, 22, FLIPPED_KEY, "metaitem.terminal.ui.flipped.tooltip"))
-                .widget(createInfoIcon(51, "metaitem.terminal.help.no_hatches"))
-                .widget(new LabelWidget(20, 52, "metaitem.terminal.ui.no_hatches"))
-                .widget(createToggle(holder, 46, NO_HATCHES_KEY, "metaitem.terminal.ui.no_hatches.tooltip"))
-                .widget(createInfoIcon(75, "metaitem.terminal.help.layers"))
-                .widget(new LabelWidget(20, 76, "metaitem.terminal.ui.layers"))
-                .widget(new IntInputWidget(8, 88, 160, 20, () -> getLayers(holder.getHeld()), value -> {
-                    holder.getHeld().getOrCreateTag().putInt(LAYERS_KEY, value);
-                    holder.markAsDirty();
-                }).setMin(0).setMax(MAX_LAYERS))
-                .widget(createInfoIcon(111, "metaitem.terminal.help.variant"))
-                .widget(new LabelWidget(20, 112, "metaitem.terminal.ui.variant"))
-                .widget(new IntInputWidget(8, 124, 160, 20, () -> getVariant(holder.getHeld()), value -> {
-                    holder.getHeld().getOrCreateTag().putInt(VARIANT_KEY, value);
-                    holder.markAsDirty();
-                }).setMin(0).setMax(MAX_VARIANT));
+    public ModularUI createUI(HeldItemUIMenuType.HeldItemUIHolder holder, Player player) {
+        Supplier<ItemStack> held = () -> player.getItemInHand(holder.hand);
+        var root = UITemplate.panel();
+        root.layout(layout -> layout.width(176).paddingAll(8).gapAll(4).alignItems(AlignItems.STRETCH));
+
+        var title = new Label().setText(Component.translatable("metaitem.terminal.ui.title"));
+        title.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER));
+        title.layout(layout -> layout.marginBottom(2));
+        root.addChild(title);
+
+        root.addChild(toggleRow(held, "metaitem.terminal.help.flipped", "metaitem.terminal.ui.flipped", FLIPPED_KEY,
+                "metaitem.terminal.ui.flipped.tooltip"));
+        root.addChild(toggleRow(held, "metaitem.terminal.help.no_hatches", "metaitem.terminal.ui.no_hatches",
+                NO_HATCHES_KEY, "metaitem.terminal.ui.no_hatches.tooltip"));
+
+        root.addChild(labelRow("metaitem.terminal.help.layers", "metaitem.terminal.ui.layers"));
+        root.addChild(new IntInput(() -> getLayers(held.get()),
+                value -> held.get().getOrCreateTag().putInt(LAYERS_KEY, value)).setMin(0).setMax(MAX_LAYERS)
+                .layout(layout -> layout.widthAuto().height(20)));
+
+        root.addChild(labelRow("metaitem.terminal.help.variant", "metaitem.terminal.ui.variant"));
+        root.addChild(new IntInput(() -> getVariant(held.get()),
+                value -> held.get().getOrCreateTag().putInt(VARIANT_KEY, value)).setMin(0).setMax(MAX_VARIANT)
+                .layout(layout -> layout.widthAuto().height(20)));
+
+        return UITemplate.modularUI(root, player);
     }
 
-    private static Widget createInfoIcon(int y, String info) {
-        return new ImageWidget(8, y, 10, 10, GuiTextures.INFO_ICON).setHoverTooltips(info);
+    private static UIElement labelRow(String info, String label) {
+        var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2)
+                .alignItems(AlignItems.CENTER));
+        row.addChild(createInfoIcon(info));
+        row.addChild(new Label().setText(Component.translatable(label)).layout(layout -> layout.flex(1).minWidth(0)));
+        return row;
     }
 
-    private static ToggleButtonWidget createToggle(HeldItemUIFactory.HeldItemHolder holder, int y, String key,
-                                                   String tooltip) {
-        ToggleButtonWidget toggle = new ToggleButtonWidget(116, y, 52, 20,
-                () -> holder.getHeld().hasTag() && holder.getHeld().getTag().getBoolean(key), value -> {
-                    holder.getHeld().getOrCreateTag().putBoolean(key, value);
-                    holder.markAsDirty();
-                });
+    private static UIElement toggleRow(Supplier<ItemStack> held, String info, String label, String key,
+                                       String tooltip) {
+        var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(4)
+                .alignItems(AlignItems.CENTER));
+        var state = new MutableBoolean(isSet(held.get(), key));
+        var sync = new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(() -> isSet(held.get(), key))
+                .remoteSetter(state::setValue)
+                .build());
+        sync.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE));
+        row.addChildren(labelRow(info, label).layout(layout -> layout.flex(1).minWidth(0)),
+                createToggle(held, state, key, tooltip), sync);
+        return row;
+    }
 
-        toggle.setTexture(createToggleTexture(false), createToggleTexture(true));
-        toggle.setHoverTooltips(tooltip);
+    private static UIElement createInfoIcon(String info) {
+        var icon = new UIElement().layout(layout -> layout.width(10).height(10));
+        icon.style(style -> style.backgroundTexture(GuiTextures.INFO_ICON).tooltips(info));
+        return icon;
+    }
 
+    private static Button createToggle(Supplier<ItemStack> held, MutableBoolean state, String key, String tooltip) {
+        var toggle = new Button().noText();
+        toggle.layout(layout -> layout.width(52).height(20));
+        var off = createToggleTexture(false);
+        var on = createToggleTexture(true);
+        var texture = DynamicTexture.of(() -> state.booleanValue() ? on : off);
+        toggle.buttonStyle(style -> style.baseTexture(texture).hoverTexture(texture).pressedTexture(texture));
+        toggle.style(style -> style.tooltips(tooltip));
+        toggle.setOnServerClick(event -> {
+            var stack = held.get();
+            stack.getOrCreateTag().putBoolean(key, !isSet(stack, key));
+        });
         return toggle;
     }
 
+    private static boolean isSet(ItemStack stack, String key) {
+        return stack.hasTag() && stack.getTag().getBoolean(key);
+    }
+
     private static IGuiTexture createToggleTexture(boolean on) {
-        return new GuiTextureGroup(GuiTextures.VANILLA_BUTTON,
-                new TextTexture(Component.translatable("cover.voiding.label." + (on ? "enabled" : "disabled"))
-                        .getString()));
+        return IGuiTexture.group(GuiTextures.VANILLA_BUTTON,
+                new TextTexture("cover.voiding.label." + (on ? "enabled" : "disabled")));
     }
 
     private static void displayRange(Player player, IMultiController controller, int layers, int variant) {

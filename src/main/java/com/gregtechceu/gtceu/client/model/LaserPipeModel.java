@@ -2,10 +2,9 @@ package com.gregtechceu.gtceu.client.model;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.blockentity.PipeBlockEntity;
+import com.gregtechceu.gtceu.client.util.StaticFaceBakery;
 import com.gregtechceu.gtceu.common.pipelike.laser.LaserPipeType;
 import com.gregtechceu.gtceu.utils.GTUtil;
-
-import com.lowdragmc.lowdraglib.client.bakedpipeline.FaceQuad;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -97,7 +96,7 @@ public class LaserPipeModel extends PipeModel {
 
         ResourceLocation texture = signs == null ? MIRROR_CORE : mirrorCore(signs, false);
 
-        quads.add(FaceQuad.builder(face, sprite(texture)).cube(coreCube).cubeUV().tintIndex(0).bake());
+        quads.add(StaticFaceBakery.builder(face, sprite(texture)).cube(coreCube).cubeUV().tintIndex(0).bake());
     }
 
     @Override
@@ -107,7 +106,8 @@ public class LaserPipeModel extends PipeModel {
 
         if (side != null) {
             if (PipeBlockEntity.isConnected(connections, side)) {
-                quads.add(FaceQuad.builder(side, sprite(END_OVERLAY)).cube(sideCubes.get(side)).cubeUV().tintIndex(2)
+                quads.add(StaticFaceBakery.builder(side, sprite(END_OVERLAY)).cube(sideCubes.get(side)).cubeUV()
+                        .tintIndex(2)
                         .bake());
             }
 
@@ -125,14 +125,14 @@ public class LaserPipeModel extends PipeModel {
                 }
 
                 if (overlay != null) {
-                    quads.add(FaceQuad.builder(face, sprite(overlay)).cube(coreCube.inflate(0.001)).cubeUV()
+                    quads.add(StaticFaceBakery.builder(face, sprite(overlay)).cube(coreCube.inflate(0.001)).cubeUV()
                             .tintIndex(2).bake());
                 }
             }
 
             for (Direction facing : GTUtil.DIRECTIONS) {
                 if (facing.getAxis() != face.getAxis() && PipeBlockEntity.isConnected(connections, facing)) {
-                    quads.add(FaceQuad.builder(face, sprite(SIDE_OVERLAY))
+                    quads.add(StaticFaceBakery.builder(face, sprite(SIDE_OVERLAY))
                             .cube(sideCubes.get(facing).inflate(0.001)).cubeUV().tintIndex(2).bake());
                 }
             }

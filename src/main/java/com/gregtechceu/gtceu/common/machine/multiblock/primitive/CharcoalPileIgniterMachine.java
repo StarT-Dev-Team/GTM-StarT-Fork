@@ -15,9 +15,8 @@ import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.item.tool.behavior.LighterBehavior;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.BlockInfo;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.utils.data.BlockInfo;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -50,10 +49,6 @@ import java.util.*;
 import static com.gregtechceu.gtceu.api.pattern.util.RelativeDirection.*;
 
 public class CharcoalPileIgniterMachine extends WorkableMultiblockMachine implements IWorkable {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            CharcoalPileIgniterMachine.class,
-            WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     private static final int MIN_RADIUS = 1;
     private static final int MIN_DEPTH = 2;
@@ -104,11 +99,6 @@ public class CharcoalPileIgniterMachine extends WorkableMultiblockMachine implem
     @Override
     public @NotNull CharcoalRecipeLogic getRecipeLogic() {
         return (CharcoalRecipeLogic) super.getRecipeLogic();
-    }
-
-    @Override
-    public @NotNull ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override

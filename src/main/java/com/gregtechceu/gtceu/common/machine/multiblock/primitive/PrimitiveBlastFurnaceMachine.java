@@ -5,7 +5,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.gui.widget.SlotWidget;
+import com.gregtechceu.gtceu.api.gui.widget.ProgressTextureBar;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
@@ -16,18 +16,22 @@ import com.gregtechceu.gtceu.api.pattern.util.RelativeDirection;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
-import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.RequireRerender;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib2.gui.slot.ItemHandlerSlot;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.SupplierDataSource;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.FillDirection;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.RequireRerender;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -37,6 +41,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -51,9 +56,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class PrimitiveBlastFurnaceMachine extends PrimitiveWorkableMachine implements IUIMachine, IFluidRenderMulti {
 
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            PrimitiveBlastFurnaceMachine.class, PrimitiveWorkableMachine.MANAGED_FIELD_HOLDER);
-
     private TickableSubscription hurtSubscription;
 
     @Getter
@@ -64,11 +66,6 @@ public class PrimitiveBlastFurnaceMachine extends PrimitiveWorkableMachine imple
 
     public PrimitiveBlastFurnaceMachine(IMachineBlockEntity holder, Object... args) {
         super(holder, args);
-    }
-
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -153,31 +150,51 @@ public class PrimitiveBlastFurnaceMachine extends PrimitiveWorkableMachine imple
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        return new ModularUI(176, 166, this, entityPlayer)
-                .background(GuiTextures.PRIMITIVE_BACKGROUND)
-                .widget(new LabelWidget(5, 5, getBlockState().getBlock().getDescriptionId()))
-                .widget(new SlotWidget(importItems.storage, 0, 52, 20, true, true)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_INGOT_OVERLAY)))
-                .widget(new SlotWidget(importItems.storage, 1, 52, 38, true, true)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_DUST_OVERLAY)))
-                .widget(new SlotWidget(importItems.storage, 2, 52, 56, true, true)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_FURNACE_OVERLAY)))
-                .widget(new ProgressWidget(recipeLogic::getProgressPercent, 77, 39, 20, 15,
-                        GuiTextures.PRIMITIVE_BLAST_FURNACE_PROGRESS_BAR))
-                .widget(new SlotWidget(exportItems.storage, 0, 104, 38, true, false)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_INGOT_OVERLAY)))
-                .widget(new SlotWidget(exportItems.storage, 1, 122, 38, true, false)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_DUST_OVERLAY)))
-                .widget(new SlotWidget(exportItems.storage, 2, 140, 38, true, false)
-                        .setBackgroundTexture(
-                                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_DUST_OVERLAY)))
-                .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(),
-                        GuiTextures.PRIMITIVE_SLOT, 7, 84, true));
+        var area = new UIElement();
+        area.layout(layout -> layout.widthPercent(100).height(82));
+
+        var title = new Label();
+        title.setText(Component.translatable(getBlockState().getBlock().getDescriptionId()));
+        title.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(5).top(5));
+
+        var in0 = new ItemSlot().bind(importItems.storage, 0);
+        in0.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_INGOT_OVERLAY)));
+        in0.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(52).top(20));
+        var in1 = new ItemSlot().bind(importItems.storage, 1);
+        in1.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_DUST_OVERLAY)));
+        in1.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(52).top(38));
+        var in2 = new ItemSlot().bind(importItems.storage, 2);
+        in2.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_FURNACE_OVERLAY)));
+        in2.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(52).top(56));
+
+        var progress = ProgressTextureBar.of(GuiTextures.PRIMITIVE_BLAST_FURNACE_PROGRESS_BAR,
+                FillDirection.LEFT_TO_RIGHT, 20, 15);
+        progress.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(77).top(39));
+        progress.bindDataSource(SupplierDataSource.of(() -> (float) recipeLogic.getProgressPercent()));
+
+        var out0 = new ItemSlot().bind(new ItemHandlerSlot(exportItems.storage, 0).setCanPlace(stack -> false));
+        out0.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_INGOT_OVERLAY)));
+        out0.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(104).top(38));
+        var out1 = new ItemSlot().bind(new ItemHandlerSlot(exportItems.storage, 1).setCanPlace(stack -> false));
+        out1.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_DUST_OVERLAY)));
+        out1.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(122).top(38));
+        var out2 = new ItemSlot().bind(new ItemHandlerSlot(exportItems.storage, 2).setCanPlace(stack -> false));
+        out2.style(style -> style.backgroundTexture(
+                new GuiTextureGroup(GuiTextures.PRIMITIVE_SLOT, GuiTextures.PRIMITIVE_DUST_OVERLAY)));
+        out2.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE).left(140).top(38));
+
+        area.addChildren(title, in0, in1, in2, progress, out0, out1, out2);
+
+        var root = UITemplate.panel();
+        root.style(style -> style.background(GuiTextures.PRIMITIVE_BACKGROUND));
+        root.layout(layout -> layout.width(176).paddingAll(0).paddingBottom(7));
+        root.addChildren(area, UITemplate.bindPlayerInventory(GuiTextures.PRIMITIVE_SLOT));
+        return UITemplate.modularUI(root, entityPlayer);
     }
 
     @Override
