@@ -54,7 +54,7 @@ public interface IUICover {
         var innerUi = createUIWidget();
         group.addChild(innerUi);
 
-        root.addChildren(group, UITemplate.playerInventory());
+        root.addChild(UITemplate.playerInventory());
         UICloseHandler.onClose(root, this::onUIClosed);
         return UITemplate.modularUI(root, entityPlayer);
     }
