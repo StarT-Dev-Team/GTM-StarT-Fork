@@ -6,7 +6,6 @@ import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
@@ -109,7 +108,7 @@ public class SimpleItemFilter implements ItemFilter {
                     matches[index] = stack;
                     onUpdated.accept(this);
                 });
-                slot.addEventListener(UIEvents.TICK, event -> slot.setMaxStackSize(maxStackSize));
+                slot.setMaxStackSize(() -> maxStackSize);
                 slot.style(style -> style.backgroundTexture(GuiTextures.SLOT));
                 column.addChild(slot);
             }

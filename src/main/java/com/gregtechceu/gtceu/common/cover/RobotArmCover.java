@@ -1,6 +1,5 @@
 package com.gregtechceu.gtceu.common.cover;
 
-import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
@@ -19,7 +18,6 @@ import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 
@@ -189,6 +187,7 @@ public class RobotArmCover extends ConveyorCover {
         this.transferMode = transferMode;
         if (!this.isRemote()) {
             configureFilter();
+            if (stackSizeInput != null) stackSizeInput.setMax(transferMode.maxStackSize);
         }
     }
 

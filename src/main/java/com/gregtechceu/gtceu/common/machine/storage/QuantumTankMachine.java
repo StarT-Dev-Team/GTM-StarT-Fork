@@ -163,6 +163,9 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
             var fluid = FluidStack.loadFluidStackFromNBT(tag.getCompound("stored"));
             stored = new FluidStack(fluid, 1000);
             storedAmount = tag.getLong("storedAmount");
+        } else {
+            stored = FluidStack.EMPTY;
+            storedAmount = 0;
         }
     }
 

@@ -47,9 +47,20 @@ public class GhostCircuitSlot extends ItemSlot {
     public GhostCircuitSlot setCircuitInventory(IItemHandlerModifiable circuitInventory) {
         this.circuitInventory = circuitInventory;
         bind(DataBindingBuilder.itemStack(() -> circuitInventory.getStackInSlot(0),
-                stack -> circuitInventory.setStackInSlot(0, stack)).build());
+                this::setCircuitFromRemote).build());
         buildConfigurator();
         return this;
+    }
+
+    private void setCircuitFromRemote(ItemStack stack) {
+        if (stack.isEmpty()) {
+            circuitInventory.setStackInSlot(0, ItemStack.EMPTY);
+            return;
+        }
+        if (!IntCircuitBehaviour.isIntegratedCircuit(stack)) return;
+        int config = IntCircuitBehaviour.getCircuitConfiguration(stack);
+        if (config < 0 || config > IntCircuitBehaviour.CIRCUIT_MAX) return;
+        circuitInventory.setStackInSlot(0, IntCircuitBehaviour.stack(config));
     }
 
     public boolean isConfiguratorOpen() {

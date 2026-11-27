@@ -1,11 +1,7 @@
 package com.gregtechceu.gtceu.api.block;
 
-import com.gregtechceu.gtceu.api.gui.factory.MachineUIFactory;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.feature.*;
-
-import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -44,7 +40,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @SuppressWarnings("deprecation")
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class MetaMachineBlock extends Block implements IMachineBlock, BlockUIMenuType.BlockUI {
+public class MetaMachineBlock extends Block implements IMachineBlock {
 
     @Getter
     public final MachineDefinition definition;
@@ -103,16 +99,6 @@ public class MetaMachineBlock extends Block implements IMachineBlock, BlockUIMen
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return getHelper().getStateForPlacement(context);
-    }
-
-    @Override
-    public ModularUI createUI(BlockUIMenuType.BlockUIHolder holder) {
-        return MachineUIFactory.createUI(holder);
-    }
-
-    @Override
-    public boolean stillValid(BlockUIMenuType.BlockUIHolder holder) {
-        return MachineUIFactory.stillValid(holder);
     }
 
     @Override

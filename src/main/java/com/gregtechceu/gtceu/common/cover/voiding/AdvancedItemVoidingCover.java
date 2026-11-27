@@ -9,7 +9,9 @@ import com.gregtechceu.gtceu.api.gui.widget.IntInput;
 import com.gregtechceu.gtceu.common.cover.data.VoidingMode;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
@@ -115,11 +117,20 @@ public class AdvancedItemVoidingCover extends ItemVoidingCover {
 
     @Override
     protected void buildAdditionalUI(UIElement group, UIElement actions) {
-        this.stackSizeInput = new IntInput(() -> globalVoidingLimit, val -> globalVoidingLimit = val);
-        this.stackSizeInput.layout(layout -> layout.flex(1).height(20));
+        var input = new IntInput(() -> globalVoidingLimit, val -> globalVoidingLimit = val);
+        input.layout(layout -> layout.flex(1).height(20));
+        this.stackSizeInput = input;
         configureStackSizeInput();
 
-        group.addChild(this.stackSizeInput);
+        group.addChildren(
+                new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(this::shouldShowStackSize)
+                        .remoteSetter(input::setDisplay)
+                        .build()),
+                new BindableValue<Integer>().bind(DataBindingBuilder.intValS2C(() -> voidingMode.maxStackSize)
+                        .remoteSetter(input::setMax)
+                        .build()));
+
+        group.addChild(input);
 
         actions.addChild(new EnumSelector<>(VoidingMode.values(), () -> voidingMode, this::setVoidingMode));
     }

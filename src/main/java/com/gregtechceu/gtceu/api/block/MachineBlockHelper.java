@@ -60,7 +60,8 @@ public class MachineBlockHelper {
     public MachineBlockHelper(IMachineBlock block) {
         this.machineBlock = block;
         this.block = block.self();
-        this.definition = MachineDefinition.getBuilt();
+        var definition = block.getDefinition();
+        this.definition = definition != null ? definition : MachineDefinition.getBuilt();
     }
 
     public BlockState prepareDefaultState() {
@@ -77,10 +78,10 @@ public class MachineBlockHelper {
     }
 
     public void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        RotationState rotationState = MachineDefinition.getBuilt().getRotationState();
+        RotationState rotationState = definition.getRotationState();
         if (rotationState != RotationState.NONE) {
             builder.add(rotationState.property);
-            if (MachineDefinition.getBuilt().isAllowExtendedFacing()) {
+            if (definition.isAllowExtendedFacing()) {
                 builder.add(GTBlockStateProperties.UPWARDS_FACING);
             }
         }

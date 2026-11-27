@@ -6,12 +6,13 @@ import com.gregtechceu.gtceu.api.gui.util.UICloseHandler;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import dev.vfyjxf.taffy.style.AlignItems;
-import dev.vfyjxf.taffy.style.FlexDirection;
-import dev.vfyjxf.taffy.style.TaffyDisplay;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 
 public interface IUICover {
 
@@ -44,7 +45,8 @@ public interface IUICover {
                 .layout(l -> l.minWidth(176));
 
         var group = new UIElement()
-                .layout(s -> s.display(TaffyDisplay.FLEX).flexDirection(FlexDirection.COLUMN).gapAll(4).paddingAll(4).alignItems(AlignItems.CENTER));
+                .layout(s -> s.display(TaffyDisplay.FLEX).flexDirection(FlexDirection.COLUMN).gapAll(4).paddingAll(4)
+                        .alignItems(AlignItems.CENTER));
         root.addChild(group);
 
         var label = new Label().setText(getCoverUITitle())

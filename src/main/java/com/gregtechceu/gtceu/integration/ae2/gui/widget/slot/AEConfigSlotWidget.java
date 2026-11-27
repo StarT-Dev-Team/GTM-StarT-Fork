@@ -356,7 +356,7 @@ public class AEConfigSlotWidget extends UIElement {
     }
 
     private void serverPickUp(Boolean shift) {
-        if (this.parentWidget.isAutoPull()) return;
+        if (this.parentWidget.isAutoPull() || this.parentWidget.isStocking()) return;
 
         var menu = menu();
         var modularUI = getModularUI();

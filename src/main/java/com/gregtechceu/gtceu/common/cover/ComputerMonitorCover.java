@@ -146,7 +146,8 @@ public class ComputerMonitorCover extends CoverBehavior
         {
             mainPage.layout(s -> s.flexDirection(FlexDirection.COLUMN).gapAll(8));
 
-            var cols = new UIElement().layout(s -> s.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER).gapAll(8));
+            var cols = new UIElement()
+                    .layout(s -> s.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER).gapAll(8));
             mainPage.addChild(cols);
 
             var controls = new UIElement();
@@ -156,16 +157,16 @@ public class ComputerMonitorCover extends CoverBehavior
                 int finalI = i;
                 if (i >= formatStringLines.size()) formatStringLines.add("");
                 var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(3)
-                    .alignItems(AlignItems.CENTER));
+                        .alignItems(AlignItems.CENTER));
                 var formatStringInput = new TextField().setAnyString();
                 formatStringInput.layout(layout -> layout.width(160).height(15));
                 formatStringInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
-                    "gtceu.gui.computer_monitor_cover.main_textbox_tooltip", finalI + 1))));
+                        "gtceu.gui.computer_monitor_cover.main_textbox_tooltip", finalI + 1))));
                 formatStringInput.bind(DataBindingBuilder.string(() -> formatStringLines.get(finalI),
-                    s -> formatStringLines.set(finalI, s)).build());
+                        s -> formatStringLines.set(finalI, s)).build());
                 var slot = new ItemSlot().bind(itemStackHandler, i);
                 slot.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
-                    "gtceu.gui.computer_monitor_cover.slot_tooltip", finalI + 1))));
+                        "gtceu.gui.computer_monitor_cover.slot_tooltip", finalI + 1))));
                 row.addChildren(formatStringInput, slot);
                 controls.addChild(row);
             }
@@ -179,20 +180,22 @@ public class ComputerMonitorCover extends CoverBehavior
 
             cols.addChild(PlaceholderHandler.getPlaceholderHandlerUI(""));
 
-            var navigationRow = new UIElement().layout(s -> s.flexDirection(FlexDirection.ROW).justifyContent(AlignContent.FLEX_END));
+            var navigationRow = new UIElement()
+                    .layout(s -> s.flexDirection(FlexDirection.ROW).justifyContent(AlignContent.FLEX_END));
             mainPage.addChild(navigationRow);
 
             var nextPage = new Button().noText();
-            nextPage.layout(layout -> layout.width(20).height(20).alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+            nextPage.layout(layout -> layout.width(20).height(20).alignItems(AlignItems.CENTER)
+                    .justifyContent(AlignContent.CENTER));
             nextPage.style(style -> style
-                .tooltips("gtceu.gui.computer_monitor_cover.edit_blank_placeholders"));
+                    .tooltips("gtceu.gui.computer_monitor_cover.edit_blank_placeholders"));
             nextPage.setOnClick(event -> {
                 mainPage.setDisplay(false);
                 blankPlaceholdersPage.setDisplay(true);
             });
             nextPage.addChild(new UIElement()
-                .layout(s -> s.width(12).height(12))
-                .style(s -> s.background(GuiTextures.BUTTON_PAGE_RIGHT)));
+                    .layout(s -> s.width(12).height(12))
+                    .style(s -> s.background(GuiTextures.BUTTON_PAGE_RIGHT)));
             navigationRow.addChild(nextPage);
         }
 
@@ -208,27 +211,29 @@ public class ComputerMonitorCover extends CoverBehavior
                 var formatStringArgsInput = new TextField().setAnyString();
                 formatStringArgsInput.layout(layout -> layout.width(160).height(15));
                 formatStringArgsInput.style(style -> style.tooltips(toTooltips(LangHandler.getMultiLang(
-                    "gtceu.gui.computer_monitor_cover.second_page_textbox_tooltip",
-                    GTStringUtils.getIntOrderingSuffix(finalI + 1)))));
+                        "gtceu.gui.computer_monitor_cover.second_page_textbox_tooltip",
+                        GTStringUtils.getIntOrderingSuffix(finalI + 1)))));
                 formatStringArgsInput.bind(DataBindingBuilder.string(() -> formatStringArgs.get(finalI),
-                    s -> formatStringArgs.set(finalI, s)).build());
+                        s -> formatStringArgs.set(finalI, s)).build());
                 controls.addChild(formatStringArgsInput);
             }
 
-            var navigationRow = new UIElement().layout(s -> s.flexDirection(FlexDirection.ROW).justifyContent(AlignContent.FLEX_START));
+            var navigationRow = new UIElement()
+                    .layout(s -> s.flexDirection(FlexDirection.ROW).justifyContent(AlignContent.FLEX_START));
             blankPlaceholdersPage.addChild(navigationRow);
 
             var prevPage = new Button().noText();
-            prevPage.layout(layout -> layout.width(20).height(20).alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
+            prevPage.layout(layout -> layout.width(20).height(20).alignItems(AlignItems.CENTER)
+                    .justifyContent(AlignContent.CENTER));
             prevPage.style(style -> style
-                .tooltips("gtceu.gui.computer_monitor_cover.edit_blank_placeholders"));
+                    .tooltips("gtceu.gui.computer_monitor_cover.edit_displayed_text"));
             prevPage.setOnClick(event -> {
                 mainPage.setDisplay(true);
                 blankPlaceholdersPage.setDisplay(false);
             });
             prevPage.addChild(new UIElement()
-                .layout(s -> s.width(12).height(12))
-                .style(s -> s.background(GuiTextures.BUTTON_PAGE_LEFT)));
+                    .layout(s -> s.width(12).height(12))
+                    .style(s -> s.background(GuiTextures.BUTTON_PAGE_LEFT)));
             navigationRow.addChild(prevPage);
         }
         return group;

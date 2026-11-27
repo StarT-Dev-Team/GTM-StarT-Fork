@@ -14,11 +14,13 @@ import com.gregtechceu.gtceu.utils.GTUtil;
 import com.gregtechceu.gtceu.utils.input.SyncedKeyMappings;
 
 import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.texture.DynamicTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 
@@ -40,6 +42,8 @@ import net.minecraftforge.client.settings.KeyModifier;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -213,8 +217,12 @@ public class TerminalBehavior implements IItemUIFactory, IAddInformation {
                                        String tooltip) {
         var row = new UIElement().layout(layout -> layout.flexDirection(FlexDirection.ROW).gapAll(2)
                 .alignItems(AlignItems.CENTER).justifyContent(AlignContent.SPACE_BETWEEN));
-        row.addChild(labelRow(info, label));
-        row.addChild(createToggle(held, key, tooltip));
+        var state = new MutableBoolean(isSet(held.get(), key));
+        var sync = new BindableValue<Boolean>().bind(DataBindingBuilder.boolS2C(() -> isSet(held.get(), key))
+                .remoteSetter(state::setValue)
+                .build());
+        sync.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE));
+        row.addChildren(labelRow(info, label), createToggle(held, state, key, tooltip), sync);
         return row;
     }
 
@@ -224,12 +232,12 @@ public class TerminalBehavior implements IItemUIFactory, IAddInformation {
         return icon;
     }
 
-    private static Button createToggle(Supplier<ItemStack> held, String key, String tooltip) {
+    private static Button createToggle(Supplier<ItemStack> held, MutableBoolean state, String key, String tooltip) {
         var toggle = new Button().noText();
         toggle.layout(layout -> layout.width(52).height(20));
         var off = createToggleTexture(false);
         var on = createToggleTexture(true);
-        var texture = DynamicTexture.of(() -> isSet(held.get(), key) ? on : off);
+        var texture = DynamicTexture.of(() -> state.booleanValue() ? on : off);
         toggle.buttonStyle(style -> style.baseTexture(texture).hoverTexture(texture).pressedTexture(texture));
         toggle.style(style -> style.tooltips(tooltip));
         toggle.setOnServerClick(event -> {

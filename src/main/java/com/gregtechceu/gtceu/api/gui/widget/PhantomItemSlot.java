@@ -11,13 +11,14 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class PhantomItemSlot extends ItemSlot {
 
     private boolean clearSlotOnRightClick;
-    private int maxStackSize = 64;
+    private IntSupplier maxStackSize = () -> 64;
     private Predicate<ItemStack> validator = stack -> true;
 
     public PhantomItemSlot(IItemHandlerModifiable itemHandler, int slotIndex) {
@@ -30,7 +31,10 @@ public class PhantomItemSlot extends ItemSlot {
     }
 
     public PhantomItemSlot(Supplier<ItemStack> getter, Consumer<ItemStack> setter) {
-        bind(DataBindingBuilder.itemStack(getter, setter).build());
+        bind(DataBindingBuilder.itemStack(getter, stack -> {
+            var sanitized = sanitize(stack);
+            if (sanitized != null) setter.accept(sanitized);
+        }).build());
         xeiPhantom();
     }
 
@@ -40,6 +44,10 @@ public class PhantomItemSlot extends ItemSlot {
     }
 
     public PhantomItemSlot setMaxStackSize(int maxStackSize) {
+        return setMaxStackSize(() -> maxStackSize);
+    }
+
+    public PhantomItemSlot setMaxStackSize(IntSupplier maxStackSize) {
         this.maxStackSize = maxStackSize;
         return this;
     }
@@ -49,13 +57,19 @@ public class PhantomItemSlot extends ItemSlot {
         return this;
     }
 
+    @Nullable
+    private ItemStack sanitize(@Nullable ItemStack value) {
+        if (value == null || value.isEmpty()) return ItemStack.EMPTY;
+        if (!validator.test(value)) return null;
+        var max = maxStackSize.getAsInt();
+        return value.getCount() > max ? value.copyWithCount(max) : value;
+    }
+
     @Override
     public ItemSlot setValue(@Nullable ItemStack value, boolean notify) {
         if (value != null && !value.isEmpty()) {
-            if (!validator.test(value)) return this;
-            if (value.getCount() > maxStackSize) {
-                value = value.copyWithCount(maxStackSize);
-            }
+            value = sanitize(value);
+            if (value == null) return this;
         }
         return super.setValue(value, notify);
     }
@@ -103,7 +117,7 @@ public class PhantomItemSlot extends ItemSlot {
         } else {
             stackSize = mouseButton == 0 ? stackSlot.getCount() - 1 : stackSlot.getCount() + 1;
         }
-        stackSlot.setCount(Math.min(maxStackSize, stackSize));
+        stackSlot.setCount(Math.min(maxStackSize.getAsInt(), stackSize));
         setValue(stackSlot, true);
     }
 
@@ -113,7 +127,7 @@ public class PhantomItemSlot extends ItemSlot {
             return;
         }
         var stackSize = mouseButton == 0 ? stackHeld.getCount() : 1;
-        setValue(stackHeld.copyWithCount(Math.min(maxStackSize, stackSize)), true);
+        setValue(stackHeld.copyWithCount(Math.min(maxStackSize.getAsInt(), stackSize)), true);
     }
 
     @Override

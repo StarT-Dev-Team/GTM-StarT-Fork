@@ -319,8 +319,9 @@ public abstract class AbstractEnderLinkCover<T extends VirtualEntry> extends Cov
             });
             onMessage(CHANNEL_CLEAR, tag -> {
                 if (cover.isRemote()) return;
-                VirtualEnderRegistry.getInstance().getEntry(cover.getOwner(), cover.getEntryType(),
-                        tag.getString("name")).setDescription("");
+                var entry = VirtualEnderRegistry.getInstance().getEntry(cover.getOwner(), cover.getEntryType(),
+                        tag.getString("name"));
+                if (entry != null) entry.setDescription("");
             });
         }
 
