@@ -5,7 +5,9 @@ import com.gregtechceu.gtceu.api.gui.widget.PhantomItemSlot;
 import com.gregtechceu.gtceu.api.gui.widget.ToggleButton;
 import com.gregtechceu.gtceu.utils.GTUtil;
 
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +16,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
 import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -118,7 +121,11 @@ public class SimpleItemFilter implements ItemFilter {
         buttons.addChildren(
                 new ToggleButton(GuiTextures.BUTTON_BLACKLIST, this::isBlackList, this::setBlackList),
                 new ToggleButton(GuiTextures.BUTTON_FILTER_NBT, this::isIgnoreNbt, this::setIgnoreNbt));
-        group.addChildren(grid, buttons);
+        var maxStackSync = new BindableValue<Integer>().bind(DataBindingBuilder.intValS2C(() -> maxStackSize)
+                .remoteSetter(size -> maxStackSize = size)
+                .build());
+        maxStackSync.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE));
+        group.addChildren(grid, buttons, maxStackSync);
         return group;
     }
 
